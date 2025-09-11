@@ -1,0 +1,56 @@
+import { Routes, Route, Link } from "react-router-dom";
+import Footer from "./components/Footer";
+import Navbar from "./components/Navbar";
+import AuthPage from "./components/AuthPage";
+import Home from "./pages/Home/Home";
+import Books from "./pages/Books/Books";
+import BookDetails from "./pages/Books/BookDetails";
+import BuyNow from "./pages/Books/BuyNow";
+import ContactUs from "./pages/ContactUs/Contact_Us";
+
+import About from "./pages/About/About";
+import Profile from "./pages/Profile/Profile";
+import CTA from "./components/Home/CTA";
+import Courses from "./pages/Courses/Courses";
+import CourseDetails from "./pages/Courses/CourseDetails";
+import DashboardHome from "./pages/Dashboard/DashboardHome";
+import DashboardBooks from "./pages/Dashboard/DashboardBooks";
+import DashboardUsers from "./pages/Dashboard/DashboardUsers";
+import DashboardCourses from "./pages/Dashboard/DashboardCourses";
+import DashboardInstructors from "./pages/Dashboard/DashboardInstructors";
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-background text-text">
+      <Navbar />
+      <main className="pt-16">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          {/* <Route path="/login" element={<Login />} /> */}
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/books" element={<Books />} />
+          <Route path="/book/:id" element={<BookDetails />} />
+          <Route path="/contact" element={<ContactUs />} />
+
+          <Route path="/buynow" element={<BuyNow />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/courses" element={<Courses />} />
+
+          <Route path="/coursedetails" element={<CourseDetails />} />
+
+          {/* Dashboard Routes */}
+          <Route path="/dashboard" element={<DashboardHome />} />
+          <Route path="/dashboard/books" element={<DashboardBooks />} />
+          <Route path="/dashboard/users" element={<DashboardUsers />} />
+          <Route path="/dashboard/courses" element={<DashboardCourses />} />
+          <Route path="/dashboard/instructors" element={<DashboardInstructors />} />
+          <Route path="/dashboard/*" element={<DashboardHome />} />
+        </Routes>
+      </main>
+                <CTA />
+
+      <Footer />
+    </div>
+  );
+}

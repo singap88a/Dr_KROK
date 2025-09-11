@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Mode Colors */
+  --primary: #0891b2
+; /* Main blue */
+  --secondary: #059669; /* Accent green */
+  --background: #ffffff; /* Main background */
+  --surface: #f8fafc; /* Card/section background */
+  --accent: #e2e8f0; /* Accent elements */
+  --text: #1e293b; /* Primary text */
+  --text-secondary: #475569; /* Secondary text */
+  --text-muted: #64748b; /* Muted text */
+  --border: #e2e8f0; /* Borders */
+}
+
+.dark {
+  /* Dark Mode Colors */
+  --primary: #0891b2
+; /* Light blue */
+  --secondary: #34d399; /* Light green */
+  --background: #0f172a; /* Dark background */
+  --surface: #1e293b; /* Dark surface */
+  --accent: #334155; /* Dark accent */
+  --text: #f1f5f9; /* Light text */
+  --text-secondary: #cbd5e1; /* Medium light text */
+  --text-muted: #94a3b8; /* Muted light text */
+  --border: #334155; /* Dark borders */
+}
+
+
+
+
+
+
+
+
+
+
+/* progressExams.css */
+
+/* الخطوط الأساسية */
+.swiper-pagination-bullet {
+  width: 30px !important;
+  height: 5px !important;
+  border-radius: 4px !important;
+  background: var(--border) !important;
+  opacity: 0.5;
+  margin: 0 4px !important;
+  transition: all 0.3s ease;
+}
+
+/* اللون النشط */
+.swiper-pagination-bullet-active {
+  background: var(--primary) !important;
+  opacity: 1;
+  width: 30px !important;
+}
+
