@@ -48,14 +48,14 @@ export default function Navbar() {
             </Link>
           </li>
           <li>
-            <a href="/courses" className="transition hover:text-primary">
+            <Link to="/courses" className="transition hover:text-primary">
               Courses
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/books" className="transition hover:text-primary">
+            <Link to="/books" className="transition hover:text-primary">
               Books
-            </a>
+            </Link>
           </li>
           <li>
             <Link to="/about" className="transition hover:text-primary">
@@ -63,9 +63,9 @@ export default function Navbar() {
             </Link>
           </li>
           <li>
-            <a href="/contact" className="transition hover:text-primary">
+            <Link to="/contact" className="transition hover:text-primary">
               Contact
-            </a>
+            </Link>
           </li>
         </ul>
 
