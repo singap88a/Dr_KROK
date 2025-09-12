@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiX } from "react-icons/fi";
-
+import ccc from "../../../public/pdfs/anatomy.pdf";
 export default function BookDetails() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -130,7 +130,7 @@ export default function BookDetails() {
 
             {/* PDF Viewer */}
             <iframe
-              src={book.pdf}
+              src={ccc}
               title="Book PDF"
               className="w-full h-full"
             ></iframe>
