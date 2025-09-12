@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft } from "react-icons/fi";
+import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiX } from "react-icons/fi";
 
 export default function BookDetails() {
   const { state } = useLocation();
@@ -8,6 +8,7 @@ export default function BookDetails() {
   const book = state?.book;
 
   const [mainImage, setMainImage] = useState(book?.images[0]);
+  const [showPdf, setShowPdf] = useState(false);
 
   if (!book) {
     return (
@@ -86,20 +87,56 @@ export default function BookDetails() {
               </div>
             </div>
 
-            <p className="mt-6 text-2xl font-semibold text-primary">
-              {book.price}
-            </p>
+            {/* Price */}
+            <div className="flex items-center gap-3 mt-6">
+              <span className="text-lg text-gray-400 line-through">
+                {book.oldPrice}
+              </span>
+              <span className="text-2xl font-semibold text-primary">
+                {book.price}
+              </span>
+            </div>
 
-            {/* Buy Now */}
-            <Link to="/buynow">
-                        <button  className="px-8 py-3 mt-6 font-medium text-white transition rounded-xl bg-primary hover:shadow-lg hover:brightness-110">
-              Buy Now
-            </button>
-            </Link>
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-4 mt-6">
+              <Link to="/buynow">
+                <button className="px-8 py-3 font-medium text-white transition rounded-xl bg-primary hover:shadow-lg hover:brightness-110">
+                  Buy Now
+                </button>
+              </Link>
 
+              <button
+                onClick={() => setShowPdf(true)}
+                className="px-8 py-3 font-medium transition border text-primary rounded-xl border-primary hover:bg-primary hover:text-white"
+              >
+                View PDF
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* PDF Popup */}
+      {showPdf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="relative w-[90%] h-[80%] bg-white rounded-xl overflow-hidden shadow-xl">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPdf(false)}
+              className="absolute z-10 p-2 bg-gray-200 rounded-full top-3 right-3 hover:bg-gray-300"
+            >
+              <FiX className="text-xl text-gray-700" />
+            </button>
+
+            {/* PDF Viewer */}
+            <iframe
+              src={book.pdf}
+              title="Book PDF"
+              className="w-full h-full"
+            ></iframe>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

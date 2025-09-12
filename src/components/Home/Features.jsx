@@ -28,7 +28,7 @@ export default function Features({ features }) {
       id: 1,
       title: "Online & Live Courses",
       description:
-        "Recorded lectures and live sessions with instructors. Attend directly and submit assignments.",
+        "Recorded lectures and live sessions with instructors. Attend directly  .",
       icon: <FiVideo size={24} className="shrink-0" />,
     },
     {
@@ -134,14 +134,7 @@ export default function Features({ features }) {
         </Swiper>
 
         {/* CTA */}
-        <div className="mt-12 text-center">
-          <a
-            href="#courses"
-            className="inline-block px-8 py-3 font-medium text-white transition shadow rounded-xl bg-primary hover:shadow-xl"
-          >
-            Browse Courses
-          </a>
-        </div>
+
       </div>
     </section>
   );

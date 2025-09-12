@@ -1,126 +1,53 @@
-import   { useState,  } from "react";
-import {   FiSearch } from "react-icons/fi";
+import { useState } from "react";
+import { FiSearch } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 export default function Books() {
   const navigate = useNavigate();
 
- 
-
   const allBooks = [
     {
       id: 1,
-      title: "Mastering React",
-      description: "A complete guide to React.js and modern frontend development.",
-      price: "$29.99",
+      title: "Human Anatomy Atlas",
+      description: "Comprehensive guide to human anatomy with detailed illustrations.",
+      oldPrice: "$69.99",
+      price: "$49.99",
+      pdf: "/pdfs/anatomy.pdf",
       images: [
-        "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg",
-        "https://images.pexels.com/photos/590493/pexels-photo-590493.jpeg",
-        "https://images.pexels.com/photos/159751/books-bookstore-book-reading-159751.jpeg",
+        "https://www.kenhub.com/thumbor/dy3RvPtDBA9vgcTJgsGUhjlf72w=/fit-in/800x1600/filters:watermark(/images/logo_url.png,-10,-10,0):background_color(FFFFFF):format(jpeg)/images/article/how-to-choose-the-best-anatomy-atlas/59oXLFGu4YXmcvD4h3Ehw_stacked-anatomy-atlases.jpg",
+        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
+        "https://www.mea.elsevierhealth.com/media/wysiwyg/UKMEAEU/LP-Grays/Grays-inside.png",
       ],
     },
     {
       id: 2,
-      title: "JavaScript Essentials",
-      description: "Learn core JavaScript concepts with hands-on examples.",
-      price: "$19.99",
+      title: "Medical Physiology",
+      description: "Learn how the human body functions at the cellular and organ level.",
+      oldPrice: "$55.99",
+      price: "$39.99",
+      pdf: "/pdfs/physiology.pdf",
       images: [
-        "https://images.pexels.com/photos/590493/pexels-photo-590493.jpeg",
-        "https://images.pexels.com/photos/415071/pexels-photo-415071.jpeg",
-        "https://images.pexels.com/photos/159832/book-open-pages-literature-159832.jpeg",
+        "https://m.media-amazon.com/images/I/71wQlwKF9dL._UF1000,1000_QL80_.jpg",
+        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
+        "https://www.mea.elsevierhealth.com/media/wysiwyg/UKMEAEU/LP-Grays/Grays-inside.png",
       ],
     },
     {
       id: 3,
-      title: "CSS for Designers",
-      description: "Master CSS and create stunning web designs with ease.",
-      price: "$15.00",
+      title: "Pathology Made Simple",
+      description: "A practical guide to understanding human diseases and pathology.",
+      oldPrice: "$49.99",
+      price: "$29.99",
+      pdf: "/pdfs/pathology.pdf",
       images: [
-        "https://images.pexels.com/photos/46274/pexels-photo-46274.jpeg",
-        "https://images.pexels.com/photos/261909/pexels-photo-261909.jpeg",
-        "https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg",
-      ],
-    },
-    {
-      id: 4,
-      title: "HTML & Web Basics",
-      description: "The ultimate beginner’s guide to HTML and web development.",
-      price: "$10.00",
-      images: [
-        "https://images.pexels.com/photos/590493/pexels-photo-590493.jpeg",
-        "https://images.pexels.com/photos/414102/pexels-photo-414102.jpeg",
-        "https://images.pexels.com/photos/374016/pexels-photo-374016.jpeg",
-      ],
-    },
-    {
-      id: 5,
-      title: "Node.js in Action",
-      description: "Build powerful backend applications using Node.js.",
-      price: "$25.00",
-      images: [
-        "https://images.pexels.com/photos/540518/pexels-photo-540518.jpeg",
-        "https://images.pexels.com/photos/4974914/pexels-photo-4974914.jpeg",
-        "https://images.pexels.com/photos/4974915/pexels-photo-4974915.jpeg",
-      ],
-    },
-    {
-      id: 6,
-      title: "Python Crash Course",
-      description: "A fast-paced introduction to programming with Python.",
-      price: "$30.00",
-      images: [
-        "https://images.pexels.com/photos/574071/pexels-photo-574071.jpeg",
-        "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg",
-        "https://images.pexels.com/photos/590020/pexels-photo-590020.jpeg",
-      ],
-    },
-    {
-      id: 7,
-      title: "Data Structures & Algorithms",
-      description: "Learn DSA concepts with practical coding examples.",
-      price: "$35.00",
-      images: [
-        "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg",
-        "https://images.pexels.com/photos/590027/pexels-photo-590027.jpeg",
-        "https://images.pexels.com/photos/590030/pexels-photo-590030.jpeg",
-      ],
-    },
-    {
-      id: 8,
-      title: "Machine Learning 101",
-      description: "Introduction to machine learning and AI concepts.",
-      price: "$40.00",
-      images: [
-        "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg",
-        "https://images.pexels.com/photos/1181271/pexels-photo-1181271.jpeg",
-        "https://images.pexels.com/photos/1181319/pexels-photo-1181319.jpeg",
-      ],
-    },
-    {
-      id: 9,
-      title: "UI/UX Design Principles",
-      description: "Design beautiful and user-friendly interfaces.",
-      price: "$20.00",
-      images: [
-        "https://images.pexels.com/photos/4348404/pexels-photo-4348404.jpeg",
-        "https://images.pexels.com/photos/4348397/pexels-photo-4348397.jpeg",
-        "https://images.pexels.com/photos/4348398/pexels-photo-4348398.jpeg",
-      ],
-    },
-    {
-      id: 10,
-      title: "Database Systems",
-      description: "Understand SQL and database management deeply.",
-      price: "$27.00",
-      images: [
-        "https://images.pexels.com/photos/267507/pexels-photo-267507.jpeg",
-        "https://images.pexels.com/photos/590021/pexels-photo-590021.jpeg",
-        "https://images.pexels.com/photos/590023/pexels-photo-590023.jpeg",
+        "https://m.media-amazon.com/images/I/51FRvQRbvAL._UF1000,1000_QL80_.jpg",
+        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
+        "https://www.mea.elsevierhealth.com/media/wysiwyg/UKMEAEU/LP-Grays/Grays-inside.png",
       ],
     },
   ];
 
-  const [visibleCount, setVisibleCount] = useState(9);
+  const [visibleCount, setVisibleCount] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredBooks = allBooks.filter((book) =>
@@ -130,54 +57,64 @@ export default function Books() {
   const visibleBooks = filteredBooks.slice(0, visibleCount);
 
   return (
-    <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">
+    <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">
-          <h2 className="text-3xl font-bold md:text-4xl">Books Store</h2>
+          <h2 className="text-3xl font-bold md:text-4xl">Medical Books Store</h2>
 
-          {/* Search + Toggle */}
-          <div className="flex items-center w-full gap-4 md:w-auto">
-            {/* Search Bar */}
-            <div className="relative w-full md:w-72">
-              <FiSearch className="absolute text-text-secondary top-3 left-3" />
-              <input
-                type="text"
-                placeholder="Search books..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-2 pl-10 pr-4 text-sm border rounded-full bg-surface border-border focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
- 
+          {/* Search */}
+          <div className="relative w-full md:w-72">
+            <FiSearch className="absolute text-text-secondary top-3 left-3" />
+            <input
+              type="text"
+              placeholder="Search books..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full py-2 pl-10 pr-4 text-sm border rounded-full bg-surface border-border focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </div>
         </div>
 
         {/* Books Grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {visibleBooks.map((book) => (
             <div
               key={book.id}
-              className="flex flex-col overflow-hidden transition-all duration-300 border rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1"
+              className="relative flex flex-col overflow-hidden transition-all duration-500 border group rounded-2xl bg-surface border-border hover:shadow-2xl hover:-translate-y-2"
             >
-              <div className="h-48 overflow-hidden">
+              {/* Book Image */}
+              <div className="relative h-56 overflow-hidden">
                 <img
                   src={book.images[0]}
                   alt={book.title}
-                  className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
+                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                 />
+ 
               </div>
+
+              {/* Book Content */}
               <div className="flex flex-col flex-1 p-5">
-                <h3 className="mb-2 text-lg font-semibold">{book.title}</h3>
+                <h3 className="mb-2 text-lg font-semibold transition group-hover:text-primary">
+                  {book.title}
+                </h3>
                 <p className="mb-3 text-sm text-text-secondary line-clamp-3">
                   {book.description}
                 </p>
-                <p className="mb-4 font-semibold text-primary">{book.price}</p>
 
-                {/* View Details Button */}
+                {/* Price Section */}
+                <div className="mb-4">
+                  <span className="mr-2 text-gray-400 line-through">
+                    {book.oldPrice}
+                  </span>
+                  <span className="font-semibold text-primary">{book.price}</span>
+                </div>
+
+                {/* Button */}
                 <button
-                  onClick={() => navigate(`/book/${book.id}`, { state: { book } })}
+                  onClick={() =>
+                    navigate(`/book/${book.id}`, { state: { book } })
+                  }
                   className="px-4 py-2 mt-auto font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110"
                 >
                   View Details
@@ -186,18 +123,6 @@ export default function Books() {
             </div>
           ))}
         </div>
-
-        {/* Load More */}
-        {visibleCount < filteredBooks.length && (
-          <div className="mt-10 text-center">
-            <button
-              onClick={() => setVisibleCount((prev) => prev + 3)}
-              className="px-8 py-3 font-medium text-white transition shadow rounded-xl bg-primary hover:shadow-lg"
-            >
-              Load More
-            </button>
-          </div>
-        )}
       </div>
     </section>
   );

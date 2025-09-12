@@ -38,7 +38,17 @@ export default function Navbar() {
     <nav className="fixed z-50 w-full border-b shadow-md bg-background border-border">
       <div className="container flex items-center justify-between py-4 mx-auto max-w-7xl">
         {/* Logo */}
-        <div className="text-2xl font-bold text-primary">Dr KROK</div>
+        <div className="relative group">
+          <img
+            src="/logo.png" // حط اللوجو بتاعك هنا
+            alt="Dr KROK Logo"
+            className="h-10 cursor-pointer sm:h-12"
+          />
+          {/* Tooltip يظهر عند الهفر */}
+          <span className="absolute w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
+            Dr KROK
+          </span>
+        </div>
 
         {/* Links (desktop) */}
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
@@ -144,42 +154,30 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <a
-            href="#"
+          <Link
+            to="/courses"
             className="block transition text-textSecondary hover:text-primary"
           >
             Courses
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            to="/books"
             className="block transition text-textSecondary hover:text-primary"
           >
             Books
-          </a>
-          <a
-            href="#"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            Exams
-          </a>
-          <a
-            href="#"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            News
-          </a>
+          </Link>
           <Link
             to="/about"
             className="block transition text-textSecondary hover:text-primary"
           >
             About Us
           </Link>
-          <a
-            href="#"
+          <Link
+            to="/contact"
             className="block transition text-textSecondary hover:text-primary"
           >
             Contact
-          </a>
+          </Link>
           <Link
             to="/auth"
             className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"

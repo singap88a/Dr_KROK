@@ -1,66 +1,21 @@
 import React from "react";
-import { FiClock, FiBookOpen } from "react-icons/fi";
+import { FiClock, FiUsers } from "react-icons/fi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-export default function CoursesPreview({ courses }) {
-  const defaultCourses = [
-    {
-      id: 1,
-      title: "Mastering JavaScript",
-      description: "Learn JavaScript from basics to advanced concepts.",
-      duration: "12h",
-      level: "Beginner",
-      image:
-        "https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg",
-    },
-    {
-      id: 2,
-      title: "React for Developers",
-      description: "Build dynamic and modern web apps with React.js.",
-      duration: "15h",
-      level: "Intermediate",
-      image:
-        "https://images.pexels.com/photos/4974912/pexels-photo-4974912.jpeg",
-    },
-    {
-      id: 3,
-      title: "TailwindCSS Masterclass",
-      description: "Create stunning UIs faster with TailwindCSS.",
-      duration: "8h",
-      level: "All Levels",
-      image:
-        "https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg",
-    },
-    {
-      id: 4,
-      title: "Next.js Full Guide",
-      description: "Server-side rendering & static site generation.",
-      duration: "10h",
-      level: "Advanced",
-      image:
-        "https://images.pexels.com/photos/270404/pexels-photo-270404.jpeg",
-    },
-    {
-      id: 5,
-      title: "React for Developers",
-      description: "Build dynamic and modern web apps with React.js.",
-      duration: "15h",
-      level: "Intermediate",
-      image:
-        "https://images.pexels.com/photos/4974912/pexels-photo-4974912.jpeg",
-    },
-  ];
+import { sampleVideoCourses } from "../../pages/Courses/data/coursesData";
 
-  const list = courses && courses.length ? courses : defaultCourses;
+export default function CoursesPreview({ courses }) {
+  // لو مبعتش props.courses يجيب الداتا من الملف
+  const list = courses && courses.length ? courses : sampleVideoCourses;
 
   return (
     <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="mx-auto max-w-7xl">
+      <div className="px-4 mx-auto max-w-7xl">
         <h2 className="mb-10 text-3xl font-bold tracking-tight text-center md:text-4xl">
-          Featured Courses
+          Featured Medical Courses
         </h2>
 
         {/* Swiper Section */}
@@ -74,7 +29,7 @@ export default function CoursesPreview({ courses }) {
             1024: { slidesPerView: 3 },
             1280: { slidesPerView: 4 },
           }}
-          autoplay={{ delay: 2000, disableOnInteraction: false }}
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
           loop={true}
           pagination={{
             clickable: true,
@@ -84,32 +39,39 @@ export default function CoursesPreview({ courses }) {
         >
           {list.map((course) => (
             <SwiperSlide key={course.id}>
-              <div className="overflow-hidden transition-all duration-300 border rounded-2xl bg-surface border-border hover:shadow-lg hover:-translate-y-1">
-                <div className="h-40 overflow-hidden">
+              <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1">
+                <div className="overflow-hidden h-44">
                   <img
-                    src={course.image}
+                    src={course.img}
                     alt={course.title}
                     className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
                   />
                 </div>
                 <div className="p-5">
-                  <h3 className="mb-2 text-lg font-semibold">{course.title}</h3>
-                  <p className="mb-4 text-sm text-text-secondary">
+                  <h3 className="mb-2 text-lg font-semibold line-clamp-2">
+                    {course.title}
+                  </h3>
+                  <p className="mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
                     {course.description}
                   </p>
 
-                  <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
+                  <div className="flex items-center justify-between mb-3 text-sm text-gray-500 dark:text-gray-400">
                     <span className="flex items-center gap-2">
-                      <FiClock /> {course.duration}
+                      <FiClock /> {course.hours}h
                     </span>
                     <span className="flex items-center gap-2">
-                      <FiBookOpen /> {course.level}
+                      <FiUsers /> {course.students} Students
                     </span>
                   </div>
 
-                  <button className="w-full px-4 py-2 text-sm font-medium text-white transition rounded-xl bg-primary hover:shadow-md hover:brightness-110">
-                    View Course
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-primary">
+                      ${course.price}
+                    </span>
+                    <button className="px-4 py-2 text-sm font-medium text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110">
+                      View Course
+                    </button>
+                  </div>
                 </div>
               </div>
             </SwiperSlide>
@@ -133,12 +95,21 @@ export default function CoursesPreview({ courses }) {
               transition: all 0.3s ease;
             }
             .custom-pagination .swiper-pagination-bullet-active {
-              background: #3b82f6; /* Tailwind primary blue */
+              background: #3b82f6;
               width: 36px;
             }
           `}
         </style>
       </div>
+
+              <div className="text-center ">
+          <a
+            href="#courses"
+            className="inline-block px-8 py-3 font-medium text-white transition shadow rounded-xl bg-primary hover:shadow-xl"
+          >
+            Browse Courses
+          </a>
+        </div>
     </section>
   );
 }
