@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   FaUser,
   FaClock,
@@ -14,6 +14,7 @@ import {
   FaBook,
   FaChalkboardTeacher,
   FaLaptopCode,
+  FaPlay,
 } from "react-icons/fa";
 
 export default function CourseDetails() {
@@ -50,6 +51,8 @@ export default function CourseDetails() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
 
   // Mock logged in user
   const currentUser = {
@@ -71,6 +74,13 @@ export default function CourseDetails() {
     setReviews([newReview, ...reviews]);
     setComment("");
     setRating(0);
+  };
+
+  const handlePlay = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
   };
 
   const renderStaticStars = (filled) => {
@@ -99,14 +109,20 @@ export default function CourseDetails() {
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
         <div className="relative w-full overflow-hidden shadow-lg rounded-2xl lg:mx-0">
-          <img
-            src="https://images.unsplash.com/photo-1581091012184-5c8a0a27f8d4"
-            alt="Course"
-            className="object-cover w-full h-48 sm:h-56 md:h-64"
+          <video
+            ref={videoRef}
+            src="public/dd.mp4" // ضع لينك الفيديو هنا
+            className="object-cover w-full h-full"
+            loop
+            muted
+            playsInline
+            controls={isPlaying}
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <FaVideo className="text-3xl text-white drop-shadow-lg sm:text-4xl" />
-          </div>
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/50" onClick={handlePlay}>
+              <FaPlay className="text-4xl text-white drop-shadow-lg sm:text-5xl" />
+            </div>
+          )}
         </div>
 
         {/* تفاصيل الكورس */}

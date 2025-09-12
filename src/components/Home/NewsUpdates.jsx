@@ -65,10 +65,8 @@ export default function NewsUpdates({ news }) {
           }}
           autoplay={{ delay: 2000, disableOnInteraction: false }}
           loop={true}
-          pagination={{
-            clickable: true,
-            el: ".custom-pagination-news",
-          }}
+          pagination={{ clickable: true }}
+          className="pb-12"
         >
           {list.map((item) => (
             <SwiperSlide key={item.id}>
@@ -95,11 +93,6 @@ export default function NewsUpdates({ news }) {
             </SwiperSlide>
           ))}
         </Swiper>
-
-        {/* Custom Pagination Centered */}
-        <div className="flex justify-center mx-auto mt-6">
-          <div className="flex gap-2 mx-auto custom-pagination-news"></div>
-        </div>
       </div>
     </section>
   );

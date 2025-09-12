@@ -31,10 +31,7 @@ export default function CoursesPreview({ courses }) {
           }}
           autoplay={{ delay: 2500, disableOnInteraction: false }}
           loop={true}
-          pagination={{
-            clickable: true,
-            el: ".custom-pagination",
-          }}
+          pagination={{ clickable: true }}
           className="pb-12"
         >
           {list.map((course) => (
@@ -78,28 +75,6 @@ export default function CoursesPreview({ courses }) {
           ))}
         </Swiper>
 
-        {/* Custom Pagination */}
-        <div className="flex justify-center mt-6">
-          <div className="flex gap-2 custom-pagination"></div>
-        </div>
-
-        {/* Custom Pagination Styles */}
-        <style>
-          {`
-            .custom-pagination .swiper-pagination-bullet {
-              width: 24px;
-              height: 4px;
-              border-radius: 2px;
-              background: #ccc;
-              opacity: 1;
-              transition: all 0.3s ease;
-            }
-            .custom-pagination .swiper-pagination-bullet-active {
-              background: #3b82f6;
-              width: 36px;
-            }
-          `}
-        </style>
       </div>
 
               <div className="text-center ">
