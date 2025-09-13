@@ -6,7 +6,7 @@ import {
   FaUniversity,
 } from "react-icons/fa";
 
-// StatsSection.jsx — بدون framer-motion
+// StatsSection.jsx
 export default function StatsSection({ stats } = { stats: null }) {
   const defaultStats = [
     { id: 1, label: "Instructors", value: 128, icon: <FaChalkboardTeacher /> },
@@ -18,22 +18,24 @@ export default function StatsSection({ stats } = { stats: null }) {
   const data = stats || defaultStats;
 
   const sectionRef = useRef(null);
-  const [startCount, setStartCount] = useState(false);
+  const [triggerCount, setTriggerCount] = useState(false);
 
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
+
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setStartCount(true);
-            obs.unobserve(el);
+            // كل مرة يدخل القسم يبدأ يعد من جديد
+            setTriggerCount((prev) => !prev);
           }
         });
       },
       { threshold: 0.25 }
     );
+
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
@@ -57,7 +59,7 @@ export default function StatsSection({ stats } = { stats: null }) {
               key={s.id}
               label={s.label}
               value={s.value}
-              start={startCount}
+              trigger={triggerCount}
               icon={s.icon}
             />
           ))}
@@ -67,12 +69,11 @@ export default function StatsSection({ stats } = { stats: null }) {
   );
 }
 
-function StatCard({ label, value, start, icon }) {
+function StatCard({ label, value, trigger, icon }) {
   const [display, setDisplay] = useState(0);
   const rafRef = useRef(null);
 
   useEffect(() => {
-    if (!start) return;
     const duration = determineDuration(value);
     const startTime = performance.now();
     const from = 0;
@@ -85,9 +86,10 @@ function StatCard({ label, value, start, icon }) {
       setDisplay(current);
       if (progress < 1) rafRef.current = requestAnimationFrame(step);
     };
+
     rafRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [start, value]);
+  }, [trigger, value]); // مهم: rerun مع كل تغيير في trigger
 
   return (
     <div className="p-8 transition-all duration-300 border group rounded-2xl bg-white/70 backdrop-blur-md dark:bg-gray-800/60 dark:border-gray-700">
