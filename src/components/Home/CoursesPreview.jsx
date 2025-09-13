@@ -79,7 +79,7 @@ export default function CoursesPreview({ courses }) {
 
               <div className="text-center ">
           <a
-            href="#courses"
+            href="/courses"
             className="inline-block px-8 py-3 font-medium text-white transition shadow rounded-xl bg-primary hover:shadow-xl"
           >
             Browse Courses
