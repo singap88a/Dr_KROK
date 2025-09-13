@@ -62,11 +62,11 @@ export default function Navbar() {
               Courses
             </Link>
           </li>
-          {/* <li>
+          <li>
             <Link to="/books" className="transition hover:text-primary">
               Books
             </Link>
-          </li> */}
+          </li>
           <li>
             <Link to="/about" className="transition hover:text-primary">
               About Us

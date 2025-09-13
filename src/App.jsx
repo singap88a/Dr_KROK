@@ -18,6 +18,9 @@ import DashboardBooks from "./pages/Dashboard/DashboardBooks";
 import DashboardUsers from "./pages/Dashboard/DashboardUsers";
 import DashboardCourses from "./pages/Dashboard/DashboardCourses";
 import DashboardInstructors from "./pages/Dashboard/DashboardInstructors";
+import TrainerArticlesPage from "./pages/Articles/Articles";
+ import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
+import AI_Icon from "./pages/GeminiSingap/Icon_Gemini";
 
 export default function App() {
   return (
@@ -46,8 +49,12 @@ export default function App() {
           <Route path="/dashboard/courses" element={<DashboardCourses />} />
           <Route path="/dashboard/instructors" element={<DashboardInstructors />} />
           <Route path="/dashboard/*" element={<DashboardHome />} />
+                    <Route path="/articles" element={<TrainerArticlesPage />} />
+            <Route path="/gemini" element={<GeminiSingap />} />
+
         </Routes>
       </main>
+ <AI_Icon/>
                 <CTA />
 
       <Footer />

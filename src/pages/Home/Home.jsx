@@ -4,7 +4,7 @@ import Features from "../../components/Home/Features";
 import CoursesPreview from "../../components/Home/CoursesPreview";
 import BooksCarousel from "../../components/Home/BooksCarousel";
 import ThemeToggle from "../../components/Home/ThemeToggle";
-import NewsUpdates from "../../components/Home/NewsUpdates";
+import NewsUpdates from "../../components/Home/Articles";
  import InstructorsCarousel from "../../components/Home/InstructorsCarousel";
   
 export default function DrKrokHome() {
