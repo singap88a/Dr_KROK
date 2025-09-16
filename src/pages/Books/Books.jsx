@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 export default function Books() {
@@ -49,6 +50,7 @@ export default function Books() {
 
   const [visibleCount, setVisibleCount] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
+  const [favorites, setFavorites] = useState([]);
 
   const filteredBooks = allBooks.filter((book) =>
     book.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -90,7 +92,15 @@ export default function Books() {
                   alt={book.title}
                   className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                 />
- 
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFavorites(prev => prev.includes(book.id) ? prev.filter(id => id !== book.id) : [...prev, book.id]);
+                  }}
+                  className="absolute p-1 transition rounded-full shadow-md top-3 right-3 bg-white/80 hover:bg-white"
+                >
+                  <FiHeart className={`text-xl ${favorites.includes(book.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+                </button>
               </div>
 
               {/* Book Content */}

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FaStar, FaUserFriends } from "react-icons/fa";
 import Lottie from "lottie-react";
 import HeroAnimation from "../animations/hero.json"; // تأكد إن المسار مظبوط
+import { Link } from "react-router-dom";
 
 export default function Hero() {
   return (
@@ -54,9 +55,9 @@ export default function Hero() {
             <button className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
               Get Started
             </button>
-            <button className="px-6 py-3 font-medium transition border rounded-full text-text border-border hover:bg-accent">
-              Browse Courses
-            </button>
+            <Link to="/test" className="px-6 py-3 font-medium transition border rounded-full text-text border-border hover:bg-accent">
+          Start Test
+            </Link>
           </div>
         </motion.div>
 

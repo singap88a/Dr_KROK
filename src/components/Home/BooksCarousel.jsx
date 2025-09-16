@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
+import { FiHeart } from "react-icons/fi";
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -61,7 +62,7 @@ function BooksCarousel() {
         "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
       ],
     },
-        {
+    {
       id: 5,
       title: "Gray's Anatomy for Students",
       description:
@@ -76,6 +77,8 @@ function BooksCarousel() {
       ],
     },
   ];
+
+  const [favorites, setFavorites] = useState([]);
 
   return (
     <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -125,9 +128,20 @@ All Books  </a>
                   {/* Book Image */}
                   <div className="relative overflow-hidden rounded-t-2xl">
                     {/* Discount Badge */}
-                    <span className="absolute px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded-lg shadow-md top-3 right-3">
+                    <span className="absolute z-10 px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded-lg shadow-md top-3 right-3">
                       -{b.discount}%
                     </span>
+
+                    {/* Favorite Heart */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFavorites(prev => prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]);
+                      }}
+                      className="absolute z-10 p-1 transition rounded-full shadow-md top-3 left-3 bg-white/80 hover:bg-white"
+                    >
+                      <FiHeart className={`text-xl ${favorites.includes(b.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+                    </button>
 
                     <img
                       src={b.images[0]}

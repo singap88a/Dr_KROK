@@ -1,0 +1,34 @@
+[
+  {
+    "id": "q1",
+    "type": "mcq",
+    "prompt": "Which artery supplies the lateral surface of the brain?",
+    "options": ["Anterior cerebral artery", "Middle cerebral artery", "Posterior cerebral artery", "Basilar artery"],
+    "correctAnswer": 1,
+    "maxScore": 2,
+    "timeLimit": 60
+  },
+  {
+    "id": "q2",
+    "type": "multi",
+    "prompt": "Select all that are components of the tetralogy of Fallot:",
+    "options": ["Ventricular septal defect", "Pulmonary stenosis", "Overriding aorta", "Coarctation of the aorta"],
+    "correctAnswer": [0, 1, 2],
+    "maxScore": 3
+  },
+  {
+    "id": "q3",
+    "type": "essay",
+    "prompt": "Describe the pathophysiology of congestive heart failure in 200–300 words.",
+    "maxScore": 10
+  },
+  {
+    "id": "q4",
+    "type": "image",
+    "prompt": "Identify the structure labelled A in the image.",
+    "image": "https://example.com/images/brain_section.png",
+    "options": ["Thalamus", "Hypothalamus", "Putamen", "Caudate nucleus"],
+    "correctAnswer": 0,
+    "maxScore": 2
+  }
+]

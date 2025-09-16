@@ -121,7 +121,7 @@ export default function Navbar() {
 
           {/* Sign Up Button */}
           <Link
-            to="/auth"
+            to="/register"
             className="px-4 py-2 text-white transition rounded-lg bg-primary hover:bg-primary-dark"
           >
             Sign Up
