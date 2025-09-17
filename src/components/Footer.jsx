@@ -20,10 +20,11 @@ export default function Footer() {
         <div>
           <h2 className="mb-4 text-lg font-semibold text-text">Quick Links</h2>
           <ul className="space-y-2 text-text-muted">
-            <li><a href="#" className="transition hover:text-primary">Home</a></li>
-            <li><a href="#" className="transition hover:text-primary">Courses</a></li>
-            <li><a href="#" className="transition hover:text-primary">About Us</a></li>
-            <li><a href="#" className="transition hover:text-primary">Contact</a></li>
+            <li><a href="/" className="transition hover:text-primary">Home</a></li>
+            <li><a href="/courses" className="transition hover:text-primary">Courses</a></li>
+            <li><a href="/about" className="transition hover:text-primary">About Us</a></li>
+            <li><a href="/contact" className="transition hover:text-primary">Contact</a></li>
+            <li><a href="/privacypolicy" className="transition hover:text-primary">Privacy Policy</a></li>
           </ul>
         </div>
 

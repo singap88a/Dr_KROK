@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe } from "react-icons/fa";
+import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser } from "react-icons/fa";
+import { useUser } from "../context/UserContext";
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -13,6 +14,8 @@ export default function Navbar() {
     const saved = localStorage.getItem("language");
     return saved ? saved : "en";
   });
+  
+  const { isLoggedIn, userData, logout } = useUser();
 
   useEffect(() => {
     if (darkMode) {
@@ -34,17 +37,21 @@ export default function Navbar() {
 
   const currentLang = languages.find((l) => l.code === language);
 
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
   return (
     <nav className="fixed z-50 w-full border-b shadow-md bg-background border-border">
       <div className="container flex items-center justify-between py-4 mx-auto max-w-7xl">
         {/* Logo */}
         <div className="relative group">
           <img
-            src="/logo.png" // حط اللوجو بتاعك هنا
+            src="/logo.png"
             alt="Dr KROK Logo"
             className="h-10 cursor-pointer sm:h-12"
           />
-          {/* Tooltip يظهر عند الهفر */}
           <span className="absolute w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
             Dr KROK
           </span>
@@ -119,13 +126,62 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Sign Up Button */}
-          <Link
-            to="/register"
-            className="px-4 py-2 text-white transition rounded-lg bg-primary hover:bg-primary-dark"
-          >
-            Sign Up
-          </Link>
+          {/* User Profile or Sign Up Button */}
+          {isLoggedIn ? (
+            <div className="relative group">
+              <Link
+                to="/profile"
+                className="flex items-center justify-center w-10 h-10 text-white transition rounded-full bg-primary hover:bg-primary-dark"
+              >
+                {userData && userData.avatar ? (
+                  <img 
+                    src={userData.avatar} 
+                    alt="Profile" 
+                    className="w-full h-full rounded-full" 
+                  />
+                ) : (
+                  <FaUser />
+                )}
+              </Link>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 invisible w-48 mt-2 overflow-hidden transition-all duration-300 border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible bg-background border-border">
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-sm font-medium text-text">
+                    {userData ? userData.name : "User"}
+                  </p>
+                  <p className="text-xs text-textSecondary">
+                    {userData ? userData.email : ""}
+                  </p>
+                </div>
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
+                >
+                  Profile
+                </Link>
+                <Link
+                  to="/settings"
+                  className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
+                >
+                  Settings
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full px-4 py-2 text-sm text-left transition hover:bg-surface text-text"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link
+              to="/register"
+              className="px-4 py-2 text-white transition rounded-lg bg-primary hover:bg-primary-dark"
+            >
+              Sign Up
+            </Link>
+          )}
 
           {/* Dark Mode Toggle */}
           <button
@@ -178,12 +234,30 @@ export default function Navbar() {
           >
             Contact
           </Link>
-          <Link
-            to="/auth"
-            className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
-          >
-            Sign Up
-          </Link>
+          
+          {isLoggedIn ? (
+            <>
+              <Link
+                to="/profile"
+                className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
+              >
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block w-full px-4 py-2 text-center text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/register"
+              className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
+            >
+              Sign Up
+            </Link>
+          )}
         </div>
       )}
     </nav>

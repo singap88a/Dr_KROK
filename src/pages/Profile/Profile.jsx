@@ -11,6 +11,8 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FaUser,
   FaBook,
@@ -37,38 +39,62 @@ import {
   FaGlobe,
 } from "react-icons/fa";
 
+import MyProfile from "./MyProfile";
+import MyOrders from "./MyOrders";
+import MyCourses from "./MyCourses";
+
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState("courses");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return document.documentElement.classList.contains("dark");
-  });
+  const [activeTab, setActiveTab] = useState("profile");
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+
+  // Fetch profile data on component mount
   useEffect(() => {
-    if (isDark) document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
-  }, [isDark]);
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+        if (!token) {
+          setError("Authentication required");
+          setLoading(false);
+          return;
+        }
 
-  // Mock user data
-  const user = {
-    name: "Ahmed Krok",
-    email: "ahmed.krok@example.com",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    role: "Frontend Developer",
-    bio: "Passionate frontend developer building beautiful and high-performance web apps.",
-    phone: "+20 100 123 4567",
-    country: "Egypt",
-    city: "Cairo",
-    address: "Zamalek, Cairo, Egypt",
-    website: "https://example.com",
-    joined: "2022-05-12",
-    stats: {
-      courses: 12,
-      orders: 8,
-      rating: 4.8,
-    },
-  };
+        const response = await fetch("https://dr-krok.hudurly.com/api/profile/get-my-profile", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setUser({
+            ...data.data,
+            stats: {
+              courses: data.data.courses_count || 0,
+              orders: data.data.orders_count || 0,
+              rating: data.data.rating || 0,
+            },
+          });
+        } else {
+          setError(data.message || "Failed to load profile");
+          toast.error(data.message || "Failed to load profile");
+        }
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+        setError("Network error occurred");
+        toast.error("Network error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // Mock courses data
   const enrolledCourses = [
@@ -141,9 +167,10 @@ export default function Profile() {
   ];
 
   const menuItems = [
+        { id: "profile", label: "My Profile", icon: FaUser },
+
     { id: "courses", label: "My Courses", icon: FaGraduationCap },
     { id: "orders", label: "My Orders", icon: FaShoppingCart },
-    { id: "profile", label: "My Profile", icon: FaUser },
     { id: "logout", label: "Logout", icon: FaSignOutAlt },
   ];
 
@@ -193,8 +220,8 @@ export default function Profile() {
 
   const Sidebar = () => (
     <div className="h-full">
-      {/* Mobile Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
+      {/* Mobile Header - Not implemented */}
+      {/* <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
         <h2 className="text-lg font-semibold">Dashboard</h2>
         <button
           onClick={() => setIsSidebarOpen(false)}
@@ -202,26 +229,42 @@ export default function Profile() {
         >
           <FaTimes className="text-xl" />
         </button>
-      </div>
+      </div> */}
 
       {/* User Profile Section */}
       <div className="p-6 text-center border-b border-border">
-        <div className="relative w-20 h-20 mx-auto mb-4">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="object-cover w-full h-full rounded-full shadow-lg"
-          />
-          <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
-        </div>
-        <h3 className="text-lg font-semibold">{user.name}</h3>
-        <p className="text-sm text-text-secondary">{user.email}</p>
-        <div className="flex items-center justify-center gap-1 mt-2">
-          {renderStars(user.stats.rating)}
-          <span className="ml-1 text-sm text-text-secondary">
-            ({user.stats.rating})
-          </span>
-        </div>
+        {loading ? (
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gray-300 rounded-full animate-pulse"></div>
+            <div className="w-24 h-4 mx-auto mb-2 bg-gray-300 rounded animate-pulse"></div>
+            <div className="w-32 h-3 mx-auto bg-gray-300 rounded animate-pulse"></div>
+          </div>
+        ) : user ? (
+          <>
+            <div className="relative w-20 h-20 mx-auto mb-4">
+              <img
+                src={user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
+                alt={user.name}
+                className="object-cover w-full h-full rounded-full shadow-lg"
+              />
+              <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
+            </div>
+            <h3 className="text-lg font-semibold">{user.name}</h3>
+            <p className="text-sm text-text-secondary">{user.email}</p>
+            <div className="flex items-center justify-center gap-1 mt-2">
+              {renderStars(user.stats.rating)}
+              <span className="ml-1 text-sm text-text-secondary">
+                ({user.stats.rating})
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gray-300 rounded-full"></div>
+            <div className="w-24 h-4 mx-auto mb-2 bg-gray-300 rounded"></div>
+            <div className="w-32 h-3 mx-auto bg-gray-300 rounded"></div>
+          </div>
+        )}
       </div>
 
       {/* Navigation Menu */}
@@ -234,7 +277,6 @@ export default function Profile() {
                 <button
                   onClick={() => {
                     setActiveTab(item.id);
-                    setIsSidebarOpen(false);
                     if (item.id === "logout") handleLogout();
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -257,19 +299,19 @@ export default function Profile() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-lg font-semibold text-primary">
-              {user.stats.courses}
+              {user ? user.stats.courses : 0}
             </div>
             <div className="text-xs text-text-secondary">Courses</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-primary">
-              {user.stats.orders}
+              {user ? user.stats.orders : 0}
             </div>
             <div className="text-xs text-text-secondary">Orders</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-primary">
-              {user.stats.rating}
+              {user ? user.stats.rating : 0}
             </div>
             <div className="text-xs text-text-secondary">Rating</div>
           </div>
@@ -278,297 +320,53 @@ export default function Profile() {
     </div>
   );
 
-  const MyCourses = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">My Courses</h2>
-        <span className="text-sm text-text-secondary">
-          {enrolledCourses.length} courses enrolled
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-        {enrolledCourses.map((course) => (
-          <div
-            key={course.id}
-            className="overflow-hidden transition-shadow duration-200 border shadow-sm bg-surface border-border rounded-xl hover:shadow-lg"
-          >
-            <div className="relative">
-              <img
-                src={course.image}
-                alt={course.title}
-                className="object-cover w-full h-48"
-              />
-              <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 opacity-0 bg-black/20 hover:opacity-100">
-                <button className="px-4 py-2 font-medium transition-colors rounded-lg bg-white/90 text-text hover:bg-white">
-                  <FaPlay className="inline mr-2" />
-                  Continue Learning
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <h3 className="mb-2 text-lg font-semibold line-clamp-2">
-                {course.title}
-              </h3>
-
-              <div className="flex items-center gap-2 mb-3">
-                <FaUser className="text-sm text-primary" />
-                <span className="text-sm text-text-secondary">
-                  {course.instructor}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 mb-4">
-                <FaClock className="text-sm text-primary" />
-                <span className="text-sm text-text-secondary">
-                  {course.duration}
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="flex justify-between mb-1 text-sm">
-                  <span>Progress</span>
-                  <span>{course.progress}%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full">
-                  <div
-                    className="h-2 transition-all duration-300 rounded-full bg-primary"
-                    style={{ width: `${course.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {renderStars(course.rating)}
-                  <span className="ml-1 text-sm text-text-secondary">
-                    {course.rating}
-                  </span>
-                </div>
-                <button className="px-4 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary">
-                  Continue
-                </button>
-              </div>
-            </div>
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+            <p className="text-text-secondary">Loading profile...</p>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const MyOrders = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">My Orders</h2>
-        <span className="text-sm text-text-secondary">
-          {orders.length} total orders
-        </span>
-      </div>
-
-      <div className="overflow-hidden border shadow-sm bg-surface border-border rounded-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th className="px-6 py-4 text-sm font-semibold text-left text-text">
-                  Order ID
-                </th>
-                <th className="px-6 py-4 text-sm font-semibold text-left text-text">
-                  Item
-                </th>
-                <th className="px-6 py-4 text-sm font-semibold text-left text-text">
-                  Price
-                </th>
-                <th className="px-6 py-4 text-sm font-semibold text-left text-text">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-sm font-semibold text-left text-text">
-                  Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <td className="px-6 py-4 text-sm font-medium">{order.id}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      {order.type === "course" ? (
-                        <FaPlay className="text-primary" />
-                      ) : (
-                        <FaBook className="text-primary" />
-                      )}
-                      <span className="text-sm">{order.item}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    ${order.price}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
-                      {getStatusIcon(order.status)}
-                      <span className="capitalize">{order.status}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-text-secondary">
-                    {new Date(order.date).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      </div>
-    </div>
-  );
+      );
+    }
 
-  const MyProfile = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">My Profile</h2>
-        <button className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary">
-          <FaEdit className="text-sm" />
-          Edit Profile
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Profile Picture Section */}
-        <div className="p-6 text-center border bg-surface border-border rounded-xl">
-          <div className="relative w-32 h-32 mx-auto mb-4">
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="object-cover w-full h-full rounded-full shadow-lg"
-            />
-            <button className="absolute bottom-0 right-0 p-2 text-white transition-colors rounded-full bg-primary hover:bg-secondary">
-              <FaCamera className="text-sm" />
+    if (error) {
+      return (
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 text-red-500">
+              <FaExclamationTriangle className="w-full h-full" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold">Error Loading Profile</h3>
+            <p className="text-text-secondary">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 mt-4 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+            >
+              Try Again
             </button>
           </div>
-          <h3 className="text-lg font-semibold">{user.name}</h3>
-          <p className="text-text-secondary">{user.role}</p>
-          <p className="mt-2 text-sm text-text-secondary">
-            Member since {new Date(user.joined).toLocaleDateString()}
-          </p>
         </div>
+      );
+    }
 
-        {/* Profile Details */}
-        <div className="p-6 border lg:col-span-2 bg-surface border-border rounded-xl">
-          <h3 className="mb-6 text-lg font-semibold">Profile Information</h3>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Full Name
-                </label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaUser className="text-primary" />
-                  <span>{user.name}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Email Address
-                </label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaEnvelope className="text-primary" />
-                  <span>{user.email}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Phone Number
-                </label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaPhone className="text-primary" />
-                  <span>{user.phone}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Country
-                </label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaMapMarkerAlt className="text-primary" />
-                  <span>{user.country}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  City
-                </label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaMapMarkerAlt className="text-primary" />
-                  <span>{user.city}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Website
-                </label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaGlobe className="text-primary" />
-                  <a
-                    href={user.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    {user.website}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <label className="block mb-2 text-sm font-medium text-text-secondary">
-              Bio
-            </label>
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-              <p className="text-sm">{user.bio}</p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <label className="block mb-2 text-sm font-medium text-text-secondary">
-              Address
-            </label>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-              <FaMapMarkerAlt className="text-primary" />
-              <span>{user.address}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderContent = () => {
     switch (activeTab) {
       case "courses":
-        return <MyCourses />;
+        return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
       case "orders":
-        return <MyOrders />;
+        return <MyOrders orders={orders} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />;
       case "profile":
-        return <MyProfile />;
+        return <MyProfile user={user} />;
       default:
-        return <MyCourses />;
+        return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
     }
   };
 
   return (
     <div className="flex min-h-screen bg-background text-text">
+      <ToastContainer />
       {/* Sidebar */}
       <aside className="sticky top-0 flex flex-col h-screen p-6 border-r shadow-xl w-80 bg-surface border-border">
         <Sidebar />

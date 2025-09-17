@@ -1,6 +1,5 @@
 import { Routes, Route, Link } from "react-router-dom";
-import { ApiProvider } from "./context/ApiContext";
-
+ 
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 // import AuthPage from "./components/AuthPage";
@@ -26,11 +25,13 @@ import AI_Icon from "./pages/GeminiSingap/Icon_Gemini";
 import TestYourself from "./pages/Test_yourself/TestYourself";
 import LoginPage from "./pages/auth/Login/LoginPage";
 import RegisterPage from "./pages/auth/Register/RegisterPage";
+import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
+import { UserProvider } from "./context/UserContext";
 
 export default function App() {
   return (
     <div className="min-h-screen bg-background text-text">
-          <ApiProvider>
+     <UserProvider>
 
       <Navbar />
       <main className="pt-16">
@@ -64,13 +65,14 @@ export default function App() {
           <Route path="/articles" element={<TrainerArticlesPage />} />
           <Route path="/gemini" element={<GeminiSingap />} />
           <Route path="/test" element={<TestYourself />} />
+          <Route path="/privacypolicy" element={<Privacypolicy />} />
         </Routes>
       </main>
       <AI_Icon />
       <CTA />
 
       <Footer />
-          </ApiProvider>
+     </UserProvider>
 
     </div>
   );
