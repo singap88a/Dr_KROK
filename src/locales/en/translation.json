@@ -1,0 +1,15 @@
+{
+  "navbar": {
+    "home": "Home",
+    "courses": "Courses",
+    "books": "Books",
+    "about": "About Us",
+    "contact": "Contact",
+    "signUp": "Sign Up",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  }
+}
+
+

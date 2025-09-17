@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
+import { useTranslation } from "react-i18next";
 
 export default function Navbar() {
+  const { t, i18n } = useTranslation();
+
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
@@ -11,8 +14,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [language, setLanguage] = useState(() => {
-    const saved = localStorage.getItem("language");
-    return saved ? saved : "en";
+    const saved = localStorage.getItem("i18nextLng") || localStorage.getItem("language");
+    return saved ? saved.split("-")[0] : "en";
   });
   
   const { isLoggedIn, userData, logout } = useUser();
@@ -27,8 +30,14 @@ export default function Navbar() {
   }, [darkMode]);
 
   useEffect(() => {
+    i18n.changeLanguage(language);
     localStorage.setItem("language", language);
-  }, [language]);
+  }, [language, i18n]);
+
+  // Force LTR direction regardless of language
+  useEffect(() => {
+    document.documentElement.setAttribute("dir", "ltr");
+  }, []);
 
   const languages = [
     { code: "en", name: "EN", flag: "https://flagcdn.com/w20/gb.png" },
@@ -61,27 +70,27 @@ export default function Navbar() {
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
           <li>
             <Link to="/" className="transition hover:text-primary">
-              Home
+              {t('navbar.home')}
             </Link>
           </li>
           <li>
             <Link to="/courses" className="transition hover:text-primary">
-              Courses
+              {t('navbar.courses')}
             </Link>
           </li>
           <li>
             <Link to="/books" className="transition hover:text-primary">
-              Books
+              {t('navbar.books')}
             </Link>
           </li>
           <li>
             <Link to="/about" className="transition hover:text-primary">
-              About Us
+              {t('navbar.about')}
             </Link>
           </li>
           <li>
             <Link to="/contact" className="transition hover:text-primary">
-              Contact
+              {t('navbar.contact')}
             </Link>
           </li>
         </ul>
@@ -158,19 +167,19 @@ export default function Navbar() {
                   to="/profile"
                   className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
                 >
-                  Profile
+                  {t('navbar.profile')}
                 </Link>
                 <Link
                   to="/settings"
                   className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
                 >
-                  Settings
+                  {t('navbar.settings')}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="block w-full px-4 py-2 text-sm text-left transition hover:bg-surface text-text"
                 >
-                  Logout
+                  {t('navbar.logout')}
                 </button>
               </div>
             </div>
@@ -179,7 +188,7 @@ export default function Navbar() {
               to="/register"
               className="px-4 py-2 text-white transition rounded-lg bg-primary hover:bg-primary-dark"
             >
-              Sign Up
+              {t('navbar.signUp')}
             </Link>
           )}
 
@@ -208,31 +217,31 @@ export default function Navbar() {
             to="/"
             className="block transition text-textSecondary hover:text-primary"
           >
-            Home
+            {t('navbar.home')}
           </Link>
           <Link
             to="/courses"
             className="block transition text-textSecondary hover:text-primary"
           >
-            Courses
+            {t('navbar.courses')}
           </Link>
           <Link
             to="/books"
             className="block transition text-textSecondary hover:text-primary"
           >
-            Books
+            {t('navbar.books')}
           </Link>
           <Link
             to="/about"
             className="block transition text-textSecondary hover:text-primary"
           >
-            About Us
+            {t('navbar.about')}
           </Link>
           <Link
             to="/contact"
             className="block transition text-textSecondary hover:text-primary"
           >
-            Contact
+            {t('navbar.contact')}
           </Link>
           
           {isLoggedIn ? (
@@ -241,13 +250,13 @@ export default function Navbar() {
                 to="/profile"
                 className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
               >
-                Profile
+                {t('navbar.profile')}
               </Link>
               <button
                 onClick={handleLogout}
                 className="block w-full px-4 py-2 text-center text-white transition bg-red-600 rounded-lg hover:bg-red-700"
               >
-                Logout
+                {t('navbar.logout')}
               </button>
             </>
           ) : (
@@ -255,7 +264,7 @@ export default function Navbar() {
               to="/register"
               className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
             >
-              Sign Up
+              {t('navbar.signUp')}
             </Link>
           )}
         </div>
