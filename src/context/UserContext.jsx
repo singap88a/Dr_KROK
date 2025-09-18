@@ -47,12 +47,23 @@ export const UserProvider = ({ children }) => {
     setUserData(null);
   };
 
+  const updateUser = (updater) => {
+    setUserData((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      if (next) {
+        localStorage.setItem("user", JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
   const value = {
     isLoggedIn,
     userData,
     login,
     register,
-    logout
+    logout,
+    updateUser
   };
 
   return (

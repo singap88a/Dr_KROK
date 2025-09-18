@@ -9,6 +9,67 @@
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Logout"
+  },
+  "contact": {
+    "title_fallback": "Contact Us",
+    "subtitle": "Have questions or need support? Reach out to our team and we’ll get back to you as quickly as possible.",
+    "phone_label": "Phone / WhatsApp",
+    "email_label": "Email",
+    "address_label": "Address",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "city": "City",
+      "message": "Message",
+      "send": "Send Message",
+      "sending": "Sending..."
+    },
+    "toast": {
+      "success": "Your message has been sent successfully!",
+      "fail": "Failed to send message!",
+      "error": "Something went wrong!"
+    }
+  }
+  ,
+  "profile": {
+    "loading": "Loading profile...",
+    "title": "My Profile",
+    "edit": "Edit Profile",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "info": "Profile Information",
+    "full_name": "Full Name *",
+    "email_address": "Email Address *",
+    "phone_number": "Phone Number",
+    "not_provided": "Not provided",
+    "birth_date": "Birth Date",
+    "gender": "Gender",
+    "select_gender": "Select Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "university": "University *",
+    "select_university": "Select University",
+    "not_selected": "Not selected",
+    "college_year": "College Year *",
+    "select_year": "Select Year",
+    "not_specified": "Not specified",
+    "new_image_selected": "New image selected",
+    "toast": {
+      "image_uploaded": "Image uploaded successfully!",
+      "image_upload_fail": "Failed to upload image",
+      "updated": "Profile updated successfully!",
+      "update_fail": "Failed to update profile. Please check your data and try again.",
+      "update_error": "Failed to update profile. Please try again.",
+      "name_email_required": "Name and email are required",
+      "select_university": "Please select a university",
+      "select_college_year": "Please select your college year",
+      "auth_missing": "Authentication token not found",
+      "image_type": "Please select an image file",
+      "image_size": "Image size should be less than 5MB"
+    }
   }
 }
 

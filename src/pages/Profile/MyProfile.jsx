@@ -12,6 +12,8 @@ import {
   FaVenusMars,
   FaGraduationCap,
 } from "react-icons/fa";
+import { useApi } from "../../context/ApiContext";
+import { useTranslation } from "react-i18next";
 
 const MyProfile = ({ user, onProfileUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -30,54 +32,43 @@ const MyProfile = ({ user, onProfileUpdate }) => {
     image: null,
   });
   const [imagePreview, setImagePreview] = useState("");
+  const { t, i18n } = useTranslation();
+
+  const { request } = useApi();
 
   // Fetch universities and college years on component mount
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const response = await fetch("https://dr-krok.hudurly.com/api/universities", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await response.json();
+        const data = await request('universities');
         if (data.success) {
           setUniversities(data.data);
         } else {
-          toast.error("Failed to load universities");
+          toast.error(t('profile.toast.update_fail'));
         }
       } catch (error) {
         console.error("Error fetching universities:", error);
-        toast.error("Failed to load universities");
+        toast.error(t('profile.toast.update_fail'));
       }
     };
 
     const fetchCollegeYears = async () => {
       try {
-        const response = await fetch("https://dr-krok.hudurly.com/api/college-years", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await response.json();
+        const data = await request('college-years');
         if (data) {
           setCollegeYears(data);
         } else {
-          toast.error("Failed to load college years");
+          toast.error(t('profile.toast.update_fail'));
         }
       } catch (error) {
         console.error("Error fetching college years:", error);
-        toast.error("Failed to load college years");
+        toast.error(t('profile.toast.update_fail'));
       }
     };
 
     fetchUniversities();
     fetchCollegeYears();
-  }, []);
+  }, [request, i18n.language, t]);
 
   // Update form data and local user when user changes
   useEffect(() => {
@@ -168,30 +159,27 @@ const MyProfile = ({ user, onProfileUpdate }) => {
     if (!formData.image) return null;
 
     const imageFormData = new FormData();
-    imageFormData.append("image", formData.image);
+    // Backend expects the field name to be `imageprofile`
+    imageFormData.append("imageprofile", formData.image);
 
     try {
-      const token = localStorage.getItem("token") || localStorage.getItem("userToken");
-      const response = await fetch("https://dr-krok.hudurly.com/api/profile/updateImage", {
+      const data = await request('profile/updateImage', {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
+        auth: true,
+        isFormData: true,
         body: imageFormData,
       });
-
-      const data = await response.json();
       if (data.success) {
-        toast.success("Image uploaded successfully!");
+        toast.success(t('profile.toast.image_uploaded'));
         // Handle different response structures
-        return data.data?.image_url || data.image_url || data.data || imagePreview;
+        return data.data?.imageprofile || data.imageprofile || data.data?.image_url || data.image_url || imagePreview;
       } else {
-        toast.error(data.message || "Failed to upload image");
+        toast.error(data.message || t('profile.toast.image_upload_fail'));
         return null;
       }
     } catch (error) {
       console.error("Image upload error:", error);
-      toast.error("Failed to upload image");
+      toast.error(t('profile.toast.image_upload_fail'));
       return null;
     }
   };
@@ -199,17 +187,17 @@ const MyProfile = ({ user, onProfileUpdate }) => {
   const handleSave = async () => {
     // Basic validation
     if (!formData.name || !formData.email) {
-      toast.error("Name and email are required");
+      toast.error(t('profile.toast.name_email_required'));
       return;
     }
     
     if (!formData.university_id) {
-      toast.error("Please select a university");
+      toast.error(t('profile.toast.select_university'));
       return;
     }
     
     if (!formData.college_year) {
-      toast.error("Please select your college year");
+      toast.error(t('profile.toast.select_college_year'));
       return;
     }
 
@@ -217,13 +205,13 @@ const MyProfile = ({ user, onProfileUpdate }) => {
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("userToken");
       if (!token) {
-        toast.error("Authentication token not found");
+        toast.error(t('profile.toast.auth_missing'));
         setLoading(false);
         return;
       }
 
       // Upload image first if there's a new one
-      let imageUrl = user?.imageprofile;
+      let imageUrl = null;
       if (formData.image) {
         imageUrl = await handleImageUpload();
         if (!imageUrl) {
@@ -241,7 +229,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         gender: formData.gender || "",
         university_id: parseInt(formData.university_id) || 0,
         college_year: formData.college_year,
-        imageprofile: imageUrl || "",
+        // Do NOT send imageprofile here unless we actually uploaded a new one to the image endpoint
       };
 
       // Remove empty fields to avoid validation issues
@@ -251,36 +239,41 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         }
       });
 
-      const response = await fetch("https://dr-krok.hudurly.com/api/profile/update-my-profile", {
+      const data = await request('profile/update-my-profile', {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
+        auth: true,
+        body: updateData,
       });
 
-      const data = await response.json();
-
       if (data.success) {
-        toast.success("Profile updated successfully!");
+        toast.success(t('profile.toast.updated'));
+
+        // Normalize the updated user data
+        const updatedUser = {
+          ...data.data,
+          university_id: data.data.university?.id || data.data.university_id,
+        };
 
         // Update local user state for immediate display
-        setLocalUser(data.data);
+        setLocalUser(() => ({
+          ...updatedUser,
+          // If we uploaded a new image, prefer it
+          imageprofile: imageUrl || updatedUser.imageprofile
+        }));
 
         // Update parent component with new data
         if (onProfileUpdate && typeof onProfileUpdate === "function") {
-          onProfileUpdate(data.data);
+          onProfileUpdate(updatedUser);
         }
 
         setIsEditing(false);
       } else {
         console.error("API Error:", data);
-        toast.error(data.message || "Failed to update profile. Please check your data and try again.");
+        toast.error(data.message || t('profile.toast.update_fail'));
       }
     } catch (error) {
       console.error("Profile update error:", error);
-      toast.error("Failed to update profile. Please try again.");
+      toast.error(t('profile.toast.update_error'));
     } finally {
       setLoading(false);
     }
@@ -314,7 +307,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-          <p className="text-text-secondary">Loading profile...</p>
+          <p className="text-text-secondary">{t('profile.loading')}</p>
         </div>
       </div>
     );
@@ -323,14 +316,14 @@ const MyProfile = ({ user, onProfileUpdate }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">My Profile</h2>
+        <h2 className="text-2xl font-bold">{t('profile.title')}</h2>
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
           >
             <FaEdit className="text-sm" />
-            Edit Profile
+            {t('profile.edit')}
           </button>
         ) : (
           <div className="flex gap-2">
@@ -340,7 +333,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               <FaSave className="text-sm" />
-              {loading ? "Saving..." : "Save"}
+              {loading ? t('profile.saving') : t('profile.save')}
             </button>
             <button
               onClick={handleCancel}
@@ -348,7 +341,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
             >
               <FaTimes className="text-sm" />
-              Cancel
+              {t('profile.cancel')}
             </button>
           </div>
         )}
@@ -390,14 +383,14 @@ const MyProfile = ({ user, onProfileUpdate }) => {
 
         {/* Profile Details */}
         <div className="p-6 border lg:col-span-2 bg-surface border-border rounded-xl">
-          <h3 className="mb-6 text-lg font-semibold">Profile Information</h3>
+          <h3 className="mb-6 text-lg font-semibold">{t('profile.info')}</h3>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-4">
               {/* Full Name */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Full Name *
+                  {t('profile.full_name')}
                 </label>
                 {isEditing ? (
                   <input
@@ -419,7 +412,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               {/* Email */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Email Address *
+                  {t('profile.email_address')}
                 </label>
                 {isEditing ? (
                   <input
@@ -441,7 +434,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               {/* Phone */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Phone Number
+                  {t('profile.phone_number')}
                 </label>
                 {isEditing ? (
                   <input
@@ -454,7 +447,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <FaPhone className="text-primary" />
-                    <span>{user.phone || "Not provided"}</span>
+                    <span>{user.phone || t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -464,7 +457,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               {/* Birth Date */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Birth Date
+                  {t('profile.birth_date')}
                 </label>
                 {isEditing ? (
                   <input
@@ -477,7 +470,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <FaCalendarAlt className="text-primary" />
-                    <span>{user.birth ? new Date(user.birth).toLocaleDateString() : "Not provided"}</span>
+                    <span>{user.birth ? new Date(user.birth).toLocaleDateString() : t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -485,7 +478,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               {/* Gender */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  Gender
+                  {t('profile.gender')}
                 </label>
                 {isEditing ? (
                   <select
@@ -494,15 +487,15 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="">{t('profile.select_gender')}</option>
+                    <option value="male">{t('profile.male')}</option>
+                    <option value="female">{t('profile.female')}</option>
+                    <option value="other">{t('profile.other')}</option>
                   </select>
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <FaVenusMars className="text-primary" />
-                    <span className="capitalize">{user.gender || "Not provided"}</span>
+                    <span className="capitalize">{user.gender || t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -510,7 +503,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               {/* University */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  University *
+                  {t('profile.university')}
                 </label>
                 {isEditing ? (
                   <select
@@ -520,7 +513,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                     className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
                     required
                   >
-                    <option value="">Select University</option>
+                    <option value="">{t('profile.select_university')}</option>
                     {universities.map((university) => (
                       <option key={university.id} value={university.id}>
                         {university.name}
@@ -530,7 +523,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <FaGraduationCap className="text-primary" />
-                    <span>{universities.find((u) => u.id == localUser.university_id)?.name || "Not selected"}</span>
+                    <span>{localUser.university?.name || universities.find((u) => u.id == localUser.university_id)?.name || t('profile.not_selected')}</span>
                   </div>
                 )}
               </div>
@@ -538,7 +531,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               {/* College Year */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  College Year *
+                  {t('profile.college_year')}
                 </label>
               {isEditing ? (
                 <select
@@ -548,7 +541,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                   className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 >
-                  <option value="">Select Year</option>
+                  <option value="">{t('profile.select_year')}</option>
                   {collegeYears.map((year) => (
                     <option key={year.id} value={year.id}>
                       {year.name}
@@ -559,7 +552,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                   <FaGraduationCap className="text-primary" />
                   <span>
-                    {collegeYears.find((year) => year.id == localUser.college_year)?.name || "Not specified"}
+                    {collegeYears.find((year) => year.id == localUser.college_year)?.name || t('profile.not_specified')}
                   </span>
                 </div>
               )}

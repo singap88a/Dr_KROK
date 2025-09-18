@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import he from 'he'
+import { useApi } from '../../context/ApiContext'
 
 export default function Privacypolicy() {
+  const { request } = useApi()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -9,11 +11,7 @@ export default function Privacypolicy() {
   useEffect(() => {
     const fetchPrivacyPolicy = async () => {
       try {
-        const response = await fetch('https://dr-krok.hudurly.com/api/privacypolicy')
-        if (!response.ok) {
-          throw new Error('Failed to fetch privacy policy')
-        }
-        const result = await response.json()
+        const result = await request('privacypolicy')
         // ✅ فك ترميز الـ entities
         const decoded = result.data.map(item => ({
           ...item,

@@ -1,62 +1,56 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiSearch, FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useApi } from "../../context/ApiContext";
 
 export default function Books() {
   const navigate = useNavigate();
+  const { request } = useApi();
 
-  const allBooks = [
-    {
-      id: 1,
-      title: "Human Anatomy Atlas",
-      description: "Comprehensive guide to human anatomy with detailed illustrations.",
-      oldPrice: "$69.99",
-      price: "$49.99",
-      pdf: "/pdfs/anatomy.pdf",
-      images: [
-        "https://www.kenhub.com/thumbor/dy3RvPtDBA9vgcTJgsGUhjlf72w=/fit-in/800x1600/filters:watermark(/images/logo_url.png,-10,-10,0):background_color(FFFFFF):format(jpeg)/images/article/how-to-choose-the-best-anatomy-atlas/59oXLFGu4YXmcvD4h3Ehw_stacked-anatomy-atlases.jpg",
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
-        "https://www.mea.elsevierhealth.com/media/wysiwyg/UKMEAEU/LP-Grays/Grays-inside.png",
-      ],
-    },
-    {
-      id: 2,
-      title: "Medical Physiology",
-      description: "Learn how the human body functions at the cellular and organ level.",
-      oldPrice: "$55.99",
-      price: "$39.99",
-      pdf: "/pdfs/physiology.pdf",
-      images: [
-        "https://m.media-amazon.com/images/I/71wQlwKF9dL._UF1000,1000_QL80_.jpg",
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
-        "https://www.mea.elsevierhealth.com/media/wysiwyg/UKMEAEU/LP-Grays/Grays-inside.png",
-      ],
-    },
-    {
-      id: 3,
-      title: "Pathology Made Simple",
-      description: "A practical guide to understanding human diseases and pathology.",
-      oldPrice: "$49.99",
-      price: "$29.99",
-      pdf: "/pdfs/pathology.pdf",
-      images: [
-        "https://m.media-amazon.com/images/I/51FRvQRbvAL._UF1000,1000_QL80_.jpg",
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1178682308i/821821.jpg",
-        "https://www.mea.elsevierhealth.com/media/wysiwyg/UKMEAEU/LP-Grays/Grays-inside.png",
-      ],
-    },
-  ];
-
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [favorites, setFavorites] = useState([]);
 
-  const filteredBooks = allBooks.filter((book) =>
-    book.title.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await request("books");
+        setBooks(response.data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, [request]);
+
+  const filteredBooks = books.filter((book) =>
+    book.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const visibleBooks = filteredBooks.slice(0, visibleCount);
+  if (loading) {
+    return (
+      <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center">Loading books...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center text-red-500">Error: {error}</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
@@ -80,58 +74,73 @@ export default function Books() {
 
         {/* Books Grid */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleBooks.map((book) => (
-            <div
-              key={book.id}
-              className="relative flex flex-col overflow-hidden transition-all duration-500 border group rounded-2xl bg-surface border-border hover:shadow-2xl hover:-translate-y-2"
-            >
+          {filteredBooks.map((book) => {
+            const price = parseFloat(book.price);
+            const discountAmount = parseFloat(book.discount);
+            const oldPrice = discountAmount > 0 ? (price + discountAmount).toFixed(2) : null;
+            const discountPercent = discountAmount > 0 ? Math.round((discountAmount / (price + discountAmount)) * 100) : 0;
+            return (
+              <div
+                key={book.id}
+                className="relative flex flex-col overflow-hidden transition-all duration-500 border group rounded-2xl bg-surface border-border hover:shadow-2xl hover:-translate-y-2"
+              >
               {/* Book Image */}
               <div className="relative h-56 overflow-hidden">
-                <img
-                  src={book.images[0]}
-                  alt={book.title}
-                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                />
+                {/* Discount Badge */}
+                {book.discount > 0 && (
+                  <span className="absolute z-10 px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded-lg shadow-md top-3 right-3">
+                    -{book.discount}%
+                  </span>
+                )}
+
+                {/* Favorite Heart */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setFavorites(prev => prev.includes(book.id) ? prev.filter(id => id !== book.id) : [...prev, book.id]);
                   }}
-                  className="absolute p-1 transition rounded-full shadow-md top-3 right-3 bg-white/80 hover:bg-white"
+                  className="absolute p-1 transition rounded-full shadow-md top-3 left-3 bg-white/80 hover:bg-white"
                 >
                   <FiHeart className={`text-xl ${favorites.includes(book.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
                 </button>
+
+                <img
+                  src={book.image}
+                  alt={book.name}
+                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                />
               </div>
 
-              {/* Book Content */}
-              <div className="flex flex-col flex-1 p-5">
-                <h3 className="mb-2 text-lg font-semibold transition group-hover:text-primary">
-                  {book.title}
-                </h3>
-                <p className="mb-3 text-sm text-text-secondary line-clamp-3">
-                  {book.description}
-                </p>
+                {/* Book Content */}
+                <div className="flex flex-col flex-1 p-5">
+                  <h3 className="mb-2 text-lg font-semibold transition group-hover:text-primary">
+                    {book.name}
+                  </h3>
+                  <p className="mb-3 text-sm text-text-secondary line-clamp-3">
+                    {book.description}
+                  </p>
 
-                {/* Price Section */}
-                <div className="mb-4">
-                  <span className="mr-2 text-gray-400 line-through">
-                    {book.oldPrice}
-                  </span>
-                  <span className="font-semibold text-primary">{book.price}</span>
+                  {/* Price Section */}
+                  <div className="mb-4">
+                    {oldPrice && (
+                      <span className="mr-2 text-gray-400 line-through">
+                        ${oldPrice}
+                      </span>
+                    )}
+                    <span className="font-semibold text-primary">${price.toFixed(2)}</span>
+                  </div>
+
+                  {/* Button */}
+                  <button
+                    onClick={() => navigate(`/book/${book.id}`)}
+                    className="px-4 py-2 mt-auto font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110"
+                  >
+                    View Details
+                  </button>
                 </div>
-
-                {/* Button */}
-                <button
-                  onClick={() =>
-                    navigate(`/book/${book.id}`, { state: { book } })
-                  }
-                  className="px-4 py-2 mt-auto font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110"
-                >
-                  View Details
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

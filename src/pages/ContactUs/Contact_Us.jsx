@@ -14,8 +14,12 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useApi } from "../../context/ApiContext";
+import { useTranslation } from "react-i18next";
 
 export default function ContactUs() {
+  const { request } = useApi();
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,17 +35,16 @@ export default function ContactUs() {
   useEffect(() => {
     const fetchContact = async () => {
       try {
-        const res = await fetch("https://dr-krok.hudurly.com/api/contact");
-        const json = await res.json();
+        const json = await request('contact');
         if (json.success) {
-          setContactData(json.data[0]); // أول عنصر من الكونتاكت
+          setContactData(json.data[0]);
         }
       } catch (error) {
         console.error("Error fetching contact:", error);
       }
     };
     fetchContact();
-  }, []);
+  }, [request, i18n.language]);
 
   // ✅ تحديث الفورم
   const handleChange = (e) => {
@@ -54,18 +57,13 @@ export default function ContactUs() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://dr-krok.hudurly.com/api/message", {
+      const json = await request('message', {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        body: formData,
       });
 
-      const json = await res.json();
-
       if (json.success) {
-        toast.success("✅ Your message has been sent successfully!", {
+        toast.success("✅ " + t('contact.toast.success'), {
           position: "top-right",
           autoClose: 3000,
         });
@@ -77,14 +75,14 @@ export default function ContactUs() {
           message: "",
         });
       } else {
-        toast.error("❌ Failed to send message!", {
+        toast.error("❌ " + t('contact.toast.fail'), {
           position: "top-right",
           autoClose: 3000,
         });
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("⚠️ Something went wrong!", {
+      toast.error("⚠️ " + t('contact.toast.error'), {
         position: "top-right",
         autoClose: 3000,
       });
@@ -108,11 +106,10 @@ export default function ContactUs() {
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white sm:p-6">
           <h1 className="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl lg:text-6xl animate-fade-in">
-            {contactData?.title_page || "Contact Us"}
+            {contactData?.title_page || t('contact.title_fallback')}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed sm:text-lg md:text-xl lg:text-2xl">
-            Have questions or need support? Reach out to our team and we’ll get
-            back to you as quickly as possible.
+            {t('contact.subtitle')}
           </p>
         </div>
       </div>
@@ -128,7 +125,7 @@ export default function ContactUs() {
                   <div className="flex items-center gap-4">
                     <FiPhone className="w-8 h-8 text-primary" />
                     <div>
-                      <h4 className="font-semibold">Phone / WhatsApp</h4>
+                      <h4 className="font-semibold">{t('contact.phone_label')}</h4>
                       <p className="text-text-secondary">
                         {contactData.phone || contactData.whatsapp}
                       </p>
@@ -138,7 +135,7 @@ export default function ContactUs() {
                   <div className="flex items-center gap-4">
                     <FiMail className="w-8 h-8 text-primary" />
                     <div>
-                      <h4 className="font-semibold">Email</h4>
+                      <h4 className="font-semibold">{t('contact.email_label')}</h4>
                       <p className="text-text-secondary">{contactData.email}</p>
                     </div>
                   </div>
@@ -146,7 +143,7 @@ export default function ContactUs() {
                   <div className="flex items-center gap-4">
                     <FiMapPin className="w-8 h-8 text-primary" />
                     <div>
-                      <h4 className="font-semibold">Address</h4>
+                      <h4 className="font-semibold">{t('contact.address_label')}</h4>
                       <p className="text-text-secondary">
                         {contactData.address}
                       </p>
@@ -230,7 +227,7 @@ export default function ContactUs() {
               <input
                 type="text"
                 name="name"
-                placeholder="Name"
+                placeholder={t('contact.form.name')}
                 value={formData.name}
                 onChange={handleChange}
                 required
@@ -240,7 +237,7 @@ export default function ContactUs() {
               <input
                 type="email"
                 name="email"
-                placeholder="Email"
+                placeholder={t('contact.form.email')}
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -250,7 +247,7 @@ export default function ContactUs() {
               <input
                 type="tel"
                 name="phone"
-                placeholder="Phone"
+                placeholder={t('contact.form.phone')}
                 value={formData.phone}
                 onChange={handleChange}
                 required
@@ -260,7 +257,7 @@ export default function ContactUs() {
               <input
                 type="text"
                 name="city"
-                placeholder="City"
+                placeholder={t('contact.form.city')}
                 value={formData.city}
                 onChange={handleChange}
                 required
@@ -270,7 +267,7 @@ export default function ContactUs() {
               <textarea
                 name="message"
                 rows="5"
-                placeholder="Message"
+                placeholder={t('contact.form.message')}
                 value={formData.message}
                 onChange={handleChange}
                 required
@@ -282,7 +279,7 @@ export default function ContactUs() {
                 disabled={loading}
                 className="w-full py-3 font-medium text-white transition rounded-xl bg-primary hover:shadow-lg disabled:opacity-70"
               >
-                {loading ? "Sending..." : "Send Message"}
+                {loading ? t('contact.form.sending') : t('contact.form.send')}
               </button>
             </form>
           </div>

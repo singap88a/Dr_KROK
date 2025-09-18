@@ -142,9 +142,9 @@ export default function Navbar() {
                 to="/profile"
                 className="flex items-center justify-center w-10 h-10 text-white transition rounded-full bg-primary hover:bg-primary-dark"
               >
-                {userData && userData.avatar ? (
+                {userData && (userData.imageprofile || userData.avatar) ? (
                   <img 
-                    src={userData.avatar} 
+                    src={userData.imageprofile || userData.avatar} 
                     alt="Profile" 
                     className="w-full h-full rounded-full" 
                   />

@@ -40,10 +40,12 @@ import {
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
+import { useUser } from "../../context/UserContext";
 import MyOrders from "./MyOrders";
 import MyCourses from "./MyCourses";
 
 export default function Profile() {
+  const { updateUser } = useUser();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,14 +74,16 @@ export default function Profile() {
         const data = await response.json();
 
         if (data.success) {
-          setUser({
+          const full = {
             ...data.data,
             stats: {
               courses: data.data.courses_count || 0,
               orders: data.data.orders_count || 0,
               rating: data.data.rating || 0,
             },
-          });
+          };
+          setUser(full);
+          updateUser((prev) => ({ ...(prev || {}), ...full }));
         } else {
           setError(data.message || "Failed to load profile");
           toast.error(data.message || "Failed to load profile");
@@ -243,7 +247,7 @@ export default function Profile() {
           <>
             <div className="relative w-20 h-20 mx-auto mb-4">
               <img
-                src={user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
+                src={user.imageprofile || user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
                 alt={user.name}
                 className="object-cover w-full h-full rounded-full shadow-lg"
               />
@@ -251,12 +255,7 @@ export default function Profile() {
             </div>
             <h3 className="text-lg font-semibold">{user.name}</h3>
             <p className="text-sm text-text-secondary">{user.email}</p>
-            <div className="flex items-center justify-center gap-1 mt-2">
-              {renderStars(user.stats.rating)}
-              <span className="ml-1 text-sm text-text-secondary">
-                ({user.stats.rating})
-              </span>
-            </div>
+ 
           </>
         ) : (
           <div className="flex flex-col items-center">
@@ -299,19 +298,19 @@ export default function Profile() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-lg font-semibold text-primary">
-              {user ? user.stats.courses : 0}
+              {user?.stats?.courses || 0}
             </div>
             <div className="text-xs text-text-secondary">Courses</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-primary">
-              {user ? user.stats.orders : 0}
+              {user?.stats?.orders || 0}
             </div>
             <div className="text-xs text-text-secondary">Orders</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-primary">
-              {user ? user.stats.rating : 0}
+              {user?.stats?.rating || 0}
             </div>
             <div className="text-xs text-text-secondary">Rating</div>
           </div>
@@ -358,7 +357,14 @@ export default function Profile() {
       case "orders":
         return <MyOrders orders={orders} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />;
       case "profile":
-        return <MyProfile user={user} />;
+        return <MyProfile user={user} onProfileUpdate={(updated)=>{
+          const merged = {
+            ...updated,
+            stats: user?.stats || { courses: 0, orders: 0, rating: 0 },
+          };
+          setUser(merged);
+          updateUser((prev)=>({ ...(prev||{}), ...merged }));
+        }} />;
       default:
         return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
     }
