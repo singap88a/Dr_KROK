@@ -4,8 +4,11 @@ import { FaStar, FaUserFriends } from "react-icons/fa";
 import Lottie from "lottie-react";
 import HeroAnimation from "../animations/hero.json"; // تأكد إن المسار مظبوط
 import { Link } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
 
 export default function Hero() {
+  const { isLoggedIn } = useUser();
+
   return (
     <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container grid items-center grid-cols-1 gap-10 py-16 mx-auto lg:grid-cols-2 max-w-7xl">
@@ -52,9 +55,15 @@ export default function Hero() {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4">
-            <button className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
-              Get Started
-            </button>
+            {!isLoggedIn ? (
+              <Link to="/register" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
+                Get Started
+              </Link>
+            ) : (
+              <Link to="/courses" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
+                Go to Courses
+              </Link>
+            )}
             <Link to="/test" className="px-6 py-3 font-medium transition border rounded-full text-text border-border hover:bg-accent">
           Start Test
             </Link>

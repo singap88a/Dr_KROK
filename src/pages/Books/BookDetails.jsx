@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiX } from "react-icons/fi";
 import { useApi } from "../../context/ApiContext";
+import he from 'he';
+import { useTranslation } from 'react-i18next';
 
 export default function BookDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { request } = useApi();
+  const { t, i18n } = useTranslation();
 
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,8 +21,10 @@ export default function BookDetails() {
     const fetchBookDetails = async () => {
       try {
         const response = await request(`books/${id}`);
-        setBook(response.data);
-        const images = Object.values(response.data.images || {});
+        const bookData = response.data;
+        bookData.description = he.decode(bookData.description);
+        setBook(bookData);
+        const images = Object.values(bookData.images || {});
         setMainImage(images[0]?.original_url || "");
       } catch (err) {
         setError(err.message);
@@ -28,12 +33,12 @@ export default function BookDetails() {
       }
     };
     if (id) fetchBookDetails();
-  }, [id, request]);
+  }, [id, request, i18n.language]);
 
   if (loading) {
     return (
       <div className="p-10 text-center">
-        <p className="text-lg">Loading book details...</p>
+        <p className="text-lg">{t('books.loading_book_details')}</p>
       </div>
     );
   }
@@ -41,12 +46,12 @@ export default function BookDetails() {
   if (error || !book) {
     return (
       <div className="p-10 text-center">
-        <p className="text-lg text-red-500">{error || "Book not found."}</p>
+        <p className="text-lg text-red-500">{error || t('books.book_not_found')}</p>
         <button
           onClick={() => navigate("/books")}
           className="px-6 py-2 mt-4 text-white rounded-lg bg-primary"
         >
-          Back to Books
+          {t('books.back_to_books')}
         </button>
       </div>
     );
@@ -63,7 +68,7 @@ export default function BookDetails() {
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 mb-6 text-text-secondary hover:text-primary"
         >
-          <FiArrowLeft /> Back
+          <FiArrowLeft /> {t('books.back')}
         </button>
 
         <div className="grid gap-10 lg:grid-cols-2">
@@ -98,21 +103,27 @@ export default function BookDetails() {
           {/* Details */}
           <div>
             <h1 className="text-3xl font-bold">{book.name}</h1>
-            <p className="mt-3 text-lg text-text-secondary">{book.description}</p>
+            <div className="mt-3 text-lg text-text-secondary" dangerouslySetInnerHTML={{ __html: book.description }} />
 
             {/* Icons Info */}
             <div className="grid grid-cols-2 gap-4 mt-6 text-sm text-text-secondary">
               <div className="flex items-center gap-2">
-                <FiBook className="text-primary" /> {book.pages_count} Pages
+                <FiBook className="text-primary" /> {book.pages_count} {t('books.pages')}
               </div>
               <div className="flex items-center gap-2">
-                <FiUser className="text-primary" /> Author: {book.author}
+                <FiUser className="text-primary" /> {t('books.author')}: {book.author}
               </div>
               <div className="flex items-center gap-2">
-                <FiStar className="text-primary" /> Rating: 4.7/5
+                <FiStar className="text-primary" /> {t('books.rating')}: 4.7/5
               </div>
               <div className="flex items-center gap-2">
-                <FiGlobe className="text-primary" /> Language: {book.language}
+                <FiGlobe className="text-primary" /> {t('books.language')}: {book.language}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiGlobe className="text-primary" /> {t('books.category')}: {book.category?.name}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiGlobe className="text-primary" /> {t('books.quantity')}: {book.quantity}
               </div>
             </div>
 
@@ -130,7 +141,7 @@ export default function BookDetails() {
             <div className="flex flex-wrap gap-4 mt-6">
               <Link to="/buynow" state={{ book }}>
                 <button className="px-8 py-3 font-medium text-white transition rounded-xl bg-primary hover:shadow-lg hover:brightness-110">
-                  Buy Now
+                  {t('books.buy_now')}
                 </button>
               </Link>
 
@@ -139,7 +150,7 @@ export default function BookDetails() {
                   onClick={() => setShowPdf(true)}
                   className="px-8 py-3 font-medium transition border text-primary rounded-xl border-primary hover:bg-primary hover:text-white"
                 >
-                  View PDF
+                  {t('books.view_pdf')}
                 </button>
               )}
             </div>

@@ -70,6 +70,85 @@
       "image_type": "Please select an image file",
       "image_size": "Image size should be less than 5MB"
     }
+  },
+  "books": {
+    "loading": "Loading books...",
+    "error": "Error",
+    "medical_books_store": "Medical Books Store",
+    "search_books": "Search books...",
+    "view_details": "View Details",
+    "loading_featured_books": "Loading featured books...",
+    "featured_books": "Featured Books",
+    "discover_best_selling": "Discover our best-selling books with exclusive discounts",
+    "all_books": "All Books",
+    "loading_book_details": "Loading book details...",
+    "book_not_found": "Book not found.",
+    "back_to_books": "Back to Books",
+    "back": "Back",
+    "pages": "Pages",
+    "author": "Author",
+    "rating": "Rating",
+    "language": "Language",
+    "category": "Category",
+    "quantity": "Quantity",
+    "buy_now": "Buy Now",
+    "view_pdf": "View PDF"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to continue learning.",
+      "email": "Email",
+      "password": "Password",
+      "forgot_password": "Forgot password?",
+      "sign_in": "Sign in",
+      "signing_in": "Signing in...",
+      "no_account": "Don't have an account?",
+      "register": "Register",
+      "errors": {
+        "email": "Invalid email format",
+        "password": "Password must be at least 6 characters"
+      },
+      "toast": {
+        "success": "Login successful!",
+        "fail": "Login failed: ",
+        "error": "Server connection error!"
+      }
+    },
+    "register": {
+      "title": "Create an Account",
+      "subtitle": "Start your journey with us today.",
+      "full_name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "university": "University",
+      "agree_terms": "I agree to the",
+      "terms_conditions": "Terms and Conditions",
+      "create_account": "Create account",
+      "creating": "Creating...",
+      "have_account": "Already have an account?",
+      "login": "Login",
+      "errors": {
+        "name": "Full name is required",
+        "email": "Invalid email format",
+        "password": "Password must be at least 6 characters",
+        "confirm": "Please confirm your password",
+        "match": "Passwords do not match",
+        "agree": "You must agree to the Terms and Conditions"
+      },
+      "toast": {
+        "success": "Account created successfully!",
+        "fail": "Registration failed: ",
+        "error": "Network error. Please try again later."
+      },
+      "terms": {
+        "title": "Terms and Conditions",
+        "loading": "Loading...",
+        "close": "Close",
+        "agree": "I Agree"
+      }
+    }
   }
 }
 

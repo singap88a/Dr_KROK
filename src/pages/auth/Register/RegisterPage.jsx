@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import Lottie from "lottie-react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
+import { useApi } from "../../../context/ApiContext";
 import loginAnimation from "../../../components/animations/Login_animation.json";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import he from "he";
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { register } = useUser();
+  const { request } = useApi();
 
   const [form, setForm] = useState({
     name: "",
@@ -31,11 +36,11 @@ export default function RegisterPage() {
   useEffect(() => {
     if (showTerms) {
       setTermsLoading(true);
-      fetch("https://dr-krok.hudurly.com/api/termsandcondition")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data.length > 0) {
-            setTermsText(data.data[0].description);
+      request("termsandcondition")
+        .then((result) => {
+          if (result.data && result.data.length > 0) {
+            const decoded = he.decode(result.data[0].description);
+            setTermsText(decoded);
           } else {
             setTermsText("⚠️ Unable to load Terms and Conditions.");
           }
@@ -45,18 +50,18 @@ export default function RegisterPage() {
         })
         .finally(() => setTermsLoading(false));
     }
-  }, [showTerms]);
+  }, [showTerms, request]);
 
   function validate() {
     const e = {};
-    if (!form.name.trim()) e.name = "Full name is required";
-    if (!form.email.includes("@")) e.email = "Invalid email format";
+    if (!form.name.trim()) e.name = t('auth.register.errors.name');
+    if (!form.email.includes("@")) e.email = t('auth.register.errors.email');
     if (form.password.length < 6)
-      e.password = "Password must be at least 6 characters";
-    if (!form.confirm) e.confirm = "Please confirm your password";
+      e.password = t('auth.register.errors.password');
+    if (!form.confirm) e.confirm = t('auth.register.errors.confirm');
     if (form.password !== form.confirm)
-      e.confirm = "Passwords do not match";
-    if (!agree) e.agree = "You must agree to the Terms and Conditions";
+      e.confirm = t('auth.register.errors.match');
+    if (!agree) e.agree = t('auth.register.errors.agree');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -121,9 +126,9 @@ export default function RegisterPage() {
           {/* Left Animation */}
           <div className="relative flex-col items-center justify-center hidden p-8 md:flex bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
             <div className="w-full mb-6 text-center text-text">
-              <h2 className="text-2xl font-semibold">Create an Account</h2>
+              <h2 className="text-2xl font-semibold">{t('auth.register.title')}</h2>
               <p className="mt-2 text-sm opacity-90">
-                Start your journey with us today.
+                {t('auth.register.subtitle')}
               </p>
             </div>
             <div className="w-3/4 max-w-sm mt-6">
@@ -133,17 +138,17 @@ export default function RegisterPage() {
 
           {/* Right Form */}
           <div className="p-8 md:p-12">
-            <h3 className="mb-6 text-xl font-semibold">Register</h3>
+            <h3 className="mb-6 text-xl font-semibold">{t('auth.register.title')}</h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Full Name */}
               <div>
-                <label className="text-sm font-medium">Full Name</label>
+                <label className="text-sm font-medium">{t('auth.register.full_name')}</label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder="Your full name"
+                  placeholder={t('auth.register.full_name')}
                 />
                 {errors.name && (
                   <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -152,13 +157,13 @@ export default function RegisterPage() {
 
               {/* Email */}
               <div>
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium">{t('auth.register.email')}</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder="Your email"
+                  placeholder={t('auth.register.email')}
                 />
                 {errors.email && (
                   <p className="mt-1 text-xs text-red-500">{errors.email}</p>
@@ -167,7 +172,7 @@ export default function RegisterPage() {
 
               {/* Password */}
               <div>
-                <label className="text-sm font-medium">Password</label>
+                <label className="text-sm font-medium">{t('auth.register.password')}</label>
                 <input
                   type="password"
                   value={form.password}
@@ -175,7 +180,7 @@ export default function RegisterPage() {
                     setForm({ ...form, password: e.target.value })
                   }
                   className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder="Enter password"
+                  placeholder={t('auth.register.password')}
                 />
                 {errors.password && (
                   <p className="mt-1 text-xs text-red-500">{errors.password}</p>
@@ -184,7 +189,7 @@ export default function RegisterPage() {
 
               {/* Confirm Password */}
               <div>
-                <label className="text-sm font-medium">Confirm Password</label>
+                <label className="text-sm font-medium">{t('auth.register.confirm_password')}</label>
                 <input
                   type="password"
                   value={form.confirm}
@@ -192,7 +197,7 @@ export default function RegisterPage() {
                     setForm({ ...form, confirm: e.target.value })
                   }
                   className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder="Confirm password"
+                  placeholder={t('auth.register.confirm_password')}
                 />
                 {errors.confirm && (
                   <p className="mt-1 text-xs text-red-500">{errors.confirm}</p>
@@ -208,13 +213,13 @@ export default function RegisterPage() {
                   className="w-4 h-4"
                 />
                 <span className="text-sm">
-                  I agree to the{" "}
+                  {t('auth.register.agree_terms')}{" "}
                   <button
                     type="button"
                     onClick={() => setShowTerms(true)}
                     className="underline text-primary"
                   >
-                    Terms and Conditions
+                    {t('auth.register.terms_conditions')}
                   </button>
                 </span>
               </div>
@@ -228,18 +233,18 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="w-full py-3 font-semibold text-white transition rounded-lg bg-primary hover:bg-primary-dark disabled:opacity-50"
               >
-                {loading ? "Creating..." : "Create account"}
+                {loading ? t('auth.register.creating') : t('auth.register.create_account')}
               </button>
             </form>
 
             {/* Link to Login */}
             <div className="mt-4 text-sm text-center">
-              Already have an account?{" "}
+              {t('auth.register.have_account')}{" "}
               <Link
                 to="/login"
                 className="font-medium text-primary hover:underline"
               >
-                Login
+                {t('auth.register.login')}
               </Link>
             </div>
           </div>
@@ -250,12 +255,12 @@ export default function RegisterPage() {
       {showTerms && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg">
-            <h2 className="mb-4 text-lg font-semibold">Terms and Conditions</h2>
+            <h2 className="mb-4 text-lg font-semibold">{t('auth.register.terms.title')}</h2>
             <div className="overflow-y-auto text-sm text-gray-700 max-h-64">
               {termsLoading ? (
-                <p>Loading...</p>
+                <p>{t('auth.register.terms.loading')}</p>
               ) : (
-                <p>{termsText}</p>
+                <div dangerouslySetInnerHTML={{ __html: termsText }} />
               )}
             </div>
             <div className="flex justify-end mt-6 space-x-3">
@@ -263,7 +268,7 @@ export default function RegisterPage() {
                 className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
                 onClick={() => setShowTerms(false)}
               >
-                Close
+                {t('auth.register.terms.close')}
               </button>
               <button
                 className="px-4 py-2 text-sm text-white rounded bg-primary hover:bg-primary-dark"
@@ -272,7 +277,7 @@ export default function RegisterPage() {
                   setShowTerms(false);
                 }}
               >
-                I Agree
+                {t('auth.register.terms.agree')}
               </button>
             </div>
           </div>

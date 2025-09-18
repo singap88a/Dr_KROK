@@ -166,12 +166,7 @@ export default function Navbar() {
                 >
                   {t('navbar.profile')}
                 </Link>
-                <Link
-                  to="/settings"
-                  className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
-                >
-                  {t('navbar.settings')}
-                </Link>
+ 
                 <button
                   onClick={handleLogout}
                   className="block w-full px-4 py-2 text-sm text-left transition hover:bg-surface text-text"

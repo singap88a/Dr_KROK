@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import { FiSearch, FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
+import { useTranslation } from 'react-i18next';
 
 export default function Books() {
   const navigate = useNavigate();
   const { request } = useApi();
+  const { t, i18n } = useTranslation();
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function Books() {
       }
     };
     fetchBooks();
-  }, [request]);
+  }, [request, i18n.language]);
 
   const filteredBooks = books.filter((book) =>
     book.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -36,7 +38,7 @@ export default function Books() {
     return (
       <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
         <div className="mx-auto max-w-7xl">
-          <div className="text-center">Loading books...</div>
+          <div className="text-center">{t('books.loading')}</div>
         </div>
       </section>
     );
@@ -46,7 +48,7 @@ export default function Books() {
     return (
       <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
         <div className="mx-auto max-w-7xl">
-          <div className="text-center text-red-500">Error: {error}</div>
+          <div className="text-center text-red-500">{t('books.error')}: {error}</div>
         </div>
       </section>
     );
@@ -57,14 +59,14 @@ export default function Books() {
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">
-          <h2 className="text-3xl font-bold md:text-4xl">Medical Books Store</h2>
+          <h2 className="text-3xl font-bold md:text-4xl">{t('books.medical_books_store')}</h2>
 
           {/* Search */}
           <div className="relative w-full md:w-72">
             <FiSearch className="absolute text-text-secondary top-3 left-3" />
             <input
               type="text"
-              placeholder="Search books..."
+              placeholder={t('books.search_books')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full py-2 pl-10 pr-4 text-sm border rounded-full bg-surface border-border focus:outline-none focus:ring-2 focus:ring-primary"
@@ -78,7 +80,6 @@ export default function Books() {
             const price = parseFloat(book.price);
             const discountAmount = parseFloat(book.discount);
             const oldPrice = discountAmount > 0 ? (price + discountAmount).toFixed(2) : null;
-            const discountPercent = discountAmount > 0 ? Math.round((discountAmount / (price + discountAmount)) * 100) : 0;
             return (
               <div
                 key={book.id}
@@ -135,7 +136,7 @@ export default function Books() {
                     onClick={() => navigate(`/book/${book.id}`)}
                     className="px-4 py-2 mt-auto font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110"
                   >
-                    View Details
+                    {t('books.view_details')}
                   </button>
                 </div>
               </div>

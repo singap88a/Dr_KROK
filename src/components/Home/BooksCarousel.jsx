@@ -4,12 +4,14 @@ import { Pagination, Autoplay } from "swiper/modules";
 import { FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
+import { useTranslation } from 'react-i18next';
 import "swiper/css";
 import "swiper/css/pagination";
 
 function BooksCarousel() {
   const navigate = useNavigate();
   const { request } = useApi();
+  const { t, i18n } = useTranslation();
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +30,12 @@ function BooksCarousel() {
       }
     };
     fetchBooks();
-  }, [request]);
+  }, [request, i18n.language]);
 
   if (loading) {
     return (
       <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="mx-auto max-w-7xl text-center">Loading featured books...</div>
+        <div className="mx-auto text-center max-w-7xl">{t('books.loading_featured_books')}</div>
       </section>
     );
   }
@@ -41,7 +43,7 @@ function BooksCarousel() {
   if (error) {
     return (
       <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="mx-auto max-w-7xl text-center text-red-500">Error: {error}</div>
+        <div className="mx-auto text-center text-red-500 max-w-7xl">{t('books.error')}: {error}</div>
       </section>
     );
   }
@@ -52,10 +54,10 @@ function BooksCarousel() {
 <div className="flex items-center justify-between mx-auto max-w-7xl">
   <div className="">
      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-    Featured Books
+    {t('books.featured_books')}
   </h2>
 <p className="mt-2 text-gray-600 dark:text-gray-300">
-  Discover our best-selling books with exclusive discounts
+  {t('books.discover_best_selling')}
 </p> 
   </div>
 
@@ -64,7 +66,7 @@ function BooksCarousel() {
     href="/books"
     className="font-medium underline text-primary dark:text-primary-400"
   >
-All Books  </a>
+{t('books.all_books')}  </a>
 </div>
 
 
@@ -152,7 +154,7 @@ All Books  </a>
                       onClick={() => navigate(`/book/${b.id}`)}
                       className="px-4 py-2 mt-5 text-sm font-medium text-white transition rounded-lg bg-primary hover:bg-primary/90"
                     >
-                      View Details
+                      {t('books.view_details')}
                     </button>
                   </div>
                 </div>

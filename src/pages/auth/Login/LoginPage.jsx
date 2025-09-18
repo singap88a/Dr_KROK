@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import Lottie from "lottie-react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext"; // ✅ Context
 import loginAnimation from "../../../components/animations/Login_animation.json";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -13,8 +16,8 @@ export default function LoginPage() {
 
   function validate() {
     const e = {};
-    if (!form.email.includes("@")) e.email = "Invalid email format";
-    if (form.password.length < 6) e.password = "Password must be at least 6 characters";
+    if (!form.email.includes("@")) e.email = t('auth.login.errors.email');
+    if (form.password.length < 6) e.password = t('auth.login.errors.password');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -72,9 +75,9 @@ export default function LoginPage() {
           {/* Left: Animation */}
           <div className="relative flex-col items-center justify-center hidden p-8 md:flex bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
             <div className="w-full mb-6 text-center text-text">
-              <h2 className="text-2xl font-semibold">Welcome Back</h2>
+              <h2 className="text-2xl font-semibold">{t('auth.login.title')}</h2>
               <p className="mt-2 text-sm opacity-90">
-                Sign in to continue learning.
+                {t('auth.login.subtitle')}
               </p>
             </div>
             <div className="w-3/4 max-w-sm mt-6">
@@ -84,23 +87,23 @@ export default function LoginPage() {
 
           {/* Right: Form */}
           <div className="p-8 md:p-12">
-            <h3 className="mb-6 text-xl font-semibold">Login</h3>
+            <h3 className="mb-6 text-xl font-semibold">{t('auth.login.title')}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium">{t('auth.login.email')}</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder="Enter your email"
+                  placeholder={t('auth.login.email')}
                 />
                 {errors.email && (
                   <p className="mt-1 text-xs text-red-500">{errors.email}</p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">Password</label>
+                <label className="text-sm font-medium">{t('auth.login.password')}</label>
                 <input
                   type="password"
                   value={form.password}
@@ -108,7 +111,7 @@ export default function LoginPage() {
                     setForm({ ...form, password: e.target.value })
                   }
                   className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder="Enter your password"
+                  placeholder={t('auth.login.password')}
                 />
                 {errors.password && (
                   <p className="mt-1 text-xs text-red-500">{errors.password}</p>
@@ -117,7 +120,7 @@ export default function LoginPage() {
 
               <div className="flex justify-between text-sm">
                 <a href="#" className="text-primary hover:underline">
-                  Forgot password?
+                  {t('auth.login.forgot_password')}
                 </a>
               </div>
 
@@ -126,9 +129,20 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full py-3 font-semibold text-white transition rounded-lg bg-primary hover:bg-primary-dark disabled:opacity-50"
               >
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? t('auth.login.signing_in') : t('auth.login.sign_in')}
               </button>
             </form>
+
+            {/* Link to Register */}
+            <div className="mt-4 text-sm text-center">
+              {t('auth.login.no_account')}{" "}
+              <Link
+                to="/auth/register"
+                className="font-medium text-primary hover:underline"
+              >
+                {t('auth.login.register')}
+              </Link>
+            </div>
           </div>
         </div>
       </div>
