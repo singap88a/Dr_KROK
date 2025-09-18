@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
+    "dompurify": "^3.2.7",
     "framer-motion": "^12.23.12",
     "he": "^1.2.0",
     "i18next": "^25.5.2",

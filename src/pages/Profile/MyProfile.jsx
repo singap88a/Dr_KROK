@@ -89,7 +89,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
       if (user.imageprofile) {
         setImagePreview(user.imageprofile);
       } else {
-        setImagePreview("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face");
+        setImagePreview("/user.png");
       }
     }
   }, [user]);
@@ -296,7 +296,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
       if (user.imageprofile) {
         setImagePreview(user.imageprofile);
       } else {
-        setImagePreview("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face");
+        setImagePreview("/user.png");
       }
     }
     setIsEditing(false);
@@ -352,9 +352,10 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         <div className="p-6 text-center border bg-surface border-border rounded-xl">
           <div className="relative w-32 h-32 mx-auto mb-4">
             <img
-              src={imagePreview}
+              src={imagePreview || "/user.png"}
               alt={localUser.name}
               className="object-cover w-full h-full rounded-full shadow-lg"
+              onError={(e)=>{ e.currentTarget.onerror=null; e.currentTarget.src='/user.png'; }}
             />
             {isEditing && (
               <>

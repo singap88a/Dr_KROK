@@ -142,15 +142,12 @@ export default function Navbar() {
                 to="/profile"
                 className="flex items-center justify-center w-10 h-10 text-white transition rounded-full bg-primary hover:bg-primary-dark"
               >
-                {userData && (userData.imageprofile || userData.avatar) ? (
-                  <img 
-                    src={userData.imageprofile || userData.avatar} 
-                    alt="Profile" 
-                    className="w-full h-full rounded-full" 
-                  />
-                ) : (
-                  <FaUser />
-                )}
+                <img 
+                  src={(userData && (userData.imageprofile || userData.avatar)) || "/user.png"}
+                  alt="Profile"
+                  className="w-full h-full rounded-full"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/user.png"; }}
+                />
               </Link>
               
               {/* Dropdown Menu */}

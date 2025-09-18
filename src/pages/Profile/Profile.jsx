@@ -247,9 +247,10 @@ export default function Profile() {
           <>
             <div className="relative w-20 h-20 mx-auto mb-4">
               <img
-                src={user.imageprofile || user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
+                src={user.imageprofile || user.avatar || "/user.png"}
                 alt={user.name}
                 className="object-cover w-full h-full rounded-full shadow-lg"
+                onError={(e)=>{ e.currentTarget.onerror=null; e.currentTarget.src='/user.png'; }}
               />
               <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
