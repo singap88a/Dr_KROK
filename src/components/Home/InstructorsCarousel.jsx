@@ -63,7 +63,8 @@ function InstructorsCarousel() {
 
   return (
     <section className="relative py-16 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Title */}
+      <div className="px-4">
+            {/* Title */}
       <h2 className="text-4xl font-extrabold text-center text-gray-900 dark:text-white">
         Meet Our Instructors
       </h2>
@@ -142,7 +143,9 @@ function InstructorsCarousel() {
             </SwiperSlide>
           ))}
         </Swiper>
+      </div>  
       </div>
+
     </section>
   );
 }

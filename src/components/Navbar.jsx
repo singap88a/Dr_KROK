@@ -52,7 +52,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed z-50 w-full border-b shadow-md bg-background border-border">
+    <nav className="fixed z-50 w-full px-4 border-b shadow-md bg-background border-border">
       <div className="container flex items-center justify-between py-4 mx-auto max-w-7xl">
         {/* Logo */}
         <div className="relative group">
@@ -204,7 +204,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="px-6 py-4 space-y-4 border-t md:hidden bg-background border-border">
+        <div className="py-4 space-y-4 border-t md:hidden bg-background border-border">
           <Link
             to="/"
             className="block transition text-textSecondary hover:text-primary"

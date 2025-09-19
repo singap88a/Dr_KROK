@@ -45,7 +45,8 @@ export default function StatsSection({ stats } = { stats: null }) {
       ref={sectionRef}
       className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
     >
-      <div className="py-6 mx-auto text-center max-w-7xl">
+      <div className="px-4">
+              <div className="py-6 mx-auto text-center max-w-7xl">
         <h2 className="text-3xl font-extrabold text-gray-900 md:text-4xl dark:text-white">
           Our Impact in Numbers
         </h2>
@@ -65,6 +66,8 @@ export default function StatsSection({ stats } = { stats: null }) {
           ))}
         </div>
       </div>
+      </div>
+
     </section>
   );
 }

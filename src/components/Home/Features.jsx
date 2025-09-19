@@ -72,7 +72,8 @@ export default function Features({ features }) {
 
   return (
     <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="py-10 mx-auto max-w-7xl">
+      <div className="px-4">
+            <div className="py-10 mx-auto  max-w-7xl">
         {/* Title & Toggle */}
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">
           <div className="text-center md:text-left">
@@ -135,7 +136,9 @@ export default function Features({ features }) {
 
         {/* CTA */}
 
+      </div>  
       </div>
+
     </section>
   );
 }

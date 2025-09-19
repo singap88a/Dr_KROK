@@ -35,7 +35,7 @@ function BooksCarousel() {
   if (loading) {
     return (
       <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="mx-auto text-center max-w-7xl">{t('books.loading_featured_books')}</div>
+        <div className="px-6 mx-auto text-center max-w-7xl">{t('books.loading_featured_books')}</div>
       </section>
     );
   }
@@ -51,6 +51,7 @@ function BooksCarousel() {
   return (
     <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 {/* Title + Link */}
+<div className="px-4">
 <div className="flex items-center justify-between mx-auto max-w-7xl">
   <div className="">
      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -162,7 +163,9 @@ function BooksCarousel() {
             );
           })}
         </Swiper>
-      </div>
+      </div>  
+</div>
+
     </section>
   );
 }

@@ -30,8 +30,7 @@
       "fail": "Failed to send message!",
       "error": "Something went wrong!"
     }
-  }
-  ,
+  },
   "profile": {
     "loading": "Loading profile...",
     "title": "My Profile",
@@ -69,7 +68,34 @@
       "auth_missing": "Authentication token not found",
       "image_type": "Please select an image file",
       "image_size": "Image size should be less than 5MB"
+    },
+    "password": {
+      "title": "Change Password",
+      "change": "Change Password",
+      "changing": "Changing...",
+      "cancel": "Cancel",
+      "old_password": "Current Password",
+      "old_password_placeholder": "Enter your current password",
+      "new_password": "New Password",
+      "new_password_placeholder": "Enter your new password",
+      "confirm_password": "Confirm New Password",
+      "confirm_password_placeholder": "Confirm your new password",
+      "requirements": {
+        "title": "Password requirements:",
+        "length": "At least 6 characters",
+        "match": "Passwords must match"
+      },
+      "toast": {
+        "success": "Password changed successfully!",
+        "fail": "Failed to change password",
+        "fields_required": "Please fill all password fields",
+        "mismatch": "New password and confirmation do not match",
+        "too_short": "Password must be at least 6 characters"
+      }
     }
+  },
+  "footer": {
+    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by Icode Teck software company."
   },
   "books": {
     "loading": "Loading books...",
@@ -151,5 +177,3 @@
     }
   }
 }
-
-

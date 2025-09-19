@@ -249,7 +249,7 @@ export default function Profile() {
               <img
                 src={user.imageprofile || user.avatar || "/user.png"}
                 alt={user.name}
-                className="object-cover w-full h-full rounded-full shadow-lg"
+                className="object-cover w-full h-full rounded-full shadow-lg bg-primary"
                 onError={(e)=>{ e.currentTarget.onerror=null; e.currentTarget.src='/user.png'; }}
               />
               <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>

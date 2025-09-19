@@ -1,11 +1,14 @@
 import React from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaYoutube } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
-    <footer className="py-12 mt-12 bg-surface text-text">
+    <footer className="px-6 py-12 mt-12 bg-surface text-text">
       <div className="container grid grid-cols-1 gap-10 mx-auto max-w-7xl md:grid-cols-4">
-        
+
         {/* Logo & Description */}
         <div>
           <h1 className="mb-4 text-2xl font-bold text-text">Dr KROK</h1>
@@ -53,7 +56,7 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="pt-6 mt-10 text-sm text-center border-t border-border text-text-muted">
-        © {new Date().getFullYear()} Dr KROK. All rights reserved.
+        {t('footer.copyright', { year: new Date().getFullYear() })}
       </div>
     </footer>
   );

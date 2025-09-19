@@ -44,7 +44,8 @@ export default function FeaturedArticles({ articles }) {
 
   return (
     <section className="relative py-16 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="mx-auto max-w-7xl">
+      <div className="px-4">
+             <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-3">
@@ -52,7 +53,7 @@ export default function FeaturedArticles({ articles }) {
               Featured Articles
             </h2>
           </div>
-          <Link className="px-5 py-2 text-sm font-bold underline transition text-primary border-primary " to="/articles">
+          <Link className="py-2 text-sm font-bold underline transition text-primary border-primary" to="/articles">
             View All Articles
           </Link>
         </div>
@@ -122,7 +123,9 @@ export default function FeaturedArticles({ articles }) {
             </SwiperSlide>
           ))}
         </Swiper>
+      </div> 
       </div>
+
     </section>
   );
 }

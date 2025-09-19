@@ -11,7 +11,8 @@ export default function Hero() {
 
   return (
     <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container grid items-center grid-cols-1 gap-10 py-16 mx-auto lg:grid-cols-2 max-w-7xl">
+      <div className="px-4">
+             <div className="container grid items-center grid-cols-1 gap-10 py-16 mx-auto lg:grid-cols-2 max-w-7xl">
         
         {/* Left Content */}
         <motion.div
@@ -101,7 +102,9 @@ export default function Hero() {
             </div>
           </div>
         </motion.div>
+      </div> 
       </div>
+
     </section>
   );
 }

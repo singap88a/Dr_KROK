@@ -13,7 +13,7 @@ export default function CoursesPreview({ courses }) {
 
   return (
     <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="px-4 mx-auto max-w-7xl">
+      <div className="px-6 mx-auto max-w-7xl">
         <h2 className="mb-10 text-3xl font-bold tracking-tight text-center md:text-4xl">
           Featured Medical Courses
         </h2>

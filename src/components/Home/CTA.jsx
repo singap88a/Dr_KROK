@@ -2,7 +2,7 @@ import React from "react";
 
 function CTA() {
   return (
-    <section id="cta" className="py-4">
+    <section id="cta" className="px-4 py-4">
       <div className="container mx-auto max-w-7xl">
         <div className="relative overflow-hidden border rounded-2xl bg-surface border-border">
           <div className="relative z-10 flex flex-col items-center justify-between gap-8 px-8 py-12 md:flex-row">

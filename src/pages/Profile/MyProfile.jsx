@@ -11,9 +11,11 @@ import {
   FaCalendarAlt,
   FaVenusMars,
   FaGraduationCap,
+  FaLock,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const MyProfile = ({ user, onProfileUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -35,6 +37,9 @@ const MyProfile = ({ user, onProfileUpdate }) => {
   const { t, i18n } = useTranslation();
 
   const { request } = useApi();
+
+  // State for password change modal
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // Fetch universities and college years on component mount
   useEffect(() => {
@@ -67,8 +72,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
     };
 
     fetchUniversities();
-    fetchCollegeYears();
-  }, [request, i18n.language, t]);
+    fetchCollegeYears();  }, [request, i18n.language, t]);
 
   // Update form data and local user when user changes
   useEffect(() => {
@@ -314,17 +318,26 @@ const MyProfile = ({ user, onProfileUpdate }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="pt-10 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">{t('profile.title')}</h2>
         {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
-          >
-            <FaEdit className="text-sm" />
-            {t('profile.edit')}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+            >
+              <FaLock className="text-sm" />
+              {t('profile.password.change')}
+            </button>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+            >
+              <FaEdit className="text-sm" />
+              {t('profile.edit')}
+            </button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <button
@@ -354,7 +367,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
             <img
               src={imagePreview || "/user.png"}
               alt={localUser.name}
-              className="object-cover w-full h-full rounded-full shadow-lg"
+              className="object-cover w-full h-full rounded-full shadow-lg bg-primary"
               onError={(e)=>{ e.currentTarget.onerror=null; e.currentTarget.src='/user.png'; }}
             />
             {isEditing && (
@@ -562,6 +575,14 @@ const MyProfile = ({ user, onProfileUpdate }) => {
           </div>
         </div>
       </div>
+
+
+
+      {/* Password Change Modal */}
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </div>
   );
 };
