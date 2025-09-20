@@ -3,8 +3,7 @@ import OurStory from "../../components/About/OurStory";
 import Mission_Vision from "../../components/About/Mission_Vision";
 import Stand_For from "../../components/About/Stand_For";
 import Testimonials from "../../components/About/Testimonials";
-import Faq from "../../components/About/Faq";
-
+ 
 export default function About() {
   return (
     <section className="min-h-screen text-text">
@@ -19,8 +18,7 @@ export default function About() {
         <Mission_Vision />
         <Stand_For />
         <Testimonials />
-        <Faq/>
-      </div>
+       </div>
     </section>
   );
 }

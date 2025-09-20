@@ -97,6 +97,17 @@
   "footer": {
     "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by Icode Teck software company."
   },
+  "homeBanners": {
+    "title": "Our Courses & Topics",
+    "description": "Curated playlists and video resources — swipe to explore. Responsive, accessible and optimized for both light & dark themes.",
+    "loading": "Loading banners...",
+    "noBanners": "No banners available.",
+    "openLink": "Open Link",
+    "details": "Details",
+    "previousBanner": "Previous banner",
+    "nextBanner": "Next banner",
+    "closeDetails": "Close details"
+  },
   "books": {
     "loading": "Loading books...",
     "error": "Error",
