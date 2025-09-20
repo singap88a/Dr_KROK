@@ -4,6 +4,10 @@ import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiX } from "react-icons/f
 import { useApi } from "../../context/ApiContext";
 import he from 'he';
 import { useTranslation } from 'react-i18next';
+import { Document, Page, pdfjs } from 'react-pdf';
+
+// Configure PDF.js worker with a more reliable source
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -16,6 +20,11 @@ export default function BookDetails() {
   const [error, setError] = useState(null);
   const [mainImage, setMainImage] = useState("");
   const [showPdf, setShowPdf] = useState(false);
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [scale] = useState(1.0);
+  const [pdfError, setPdfError] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -34,6 +43,52 @@ export default function BookDetails() {
     };
     if (id) fetchBookDetails();
   }, [id, request, i18n.language]);
+
+  // PDF event handlers
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+    setPageNumber(1);
+    setPdfError(null);
+    setPdfLoading(false);
+  };
+
+  const onDocumentLoadError = (error) => {
+    console.error('Error loading PDF:', error);
+    setPdfError('فشل في تحميل ملف PDF. يرجى المحاولة مرة أخرى.');
+    setPdfLoading(false);
+  };
+
+  const goToPrevPage = () => {
+    setPageNumber(Math.max(1, pageNumber - 1));
+  };
+
+  const goToNextPage = () => {
+    setPageNumber(Math.min(numPages, pageNumber + 1));
+  };
+
+  // Prevent context menu (right-click)
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+  };
+
+  // Prevent keyboard shortcuts
+  const handleKeyDown = (e) => {
+    // Disable common PDF shortcuts
+    if ((e.ctrlKey || e.metaKey) && (
+      e.key === 'p' || // Print
+      e.key === 's' || // Save
+      e.key === 'a' || // Select all
+      e.key === 'c'    // Copy
+    )) {
+      e.preventDefault();
+    }
+  };
+
+  const handleViewPdf = () => {
+    setShowPdf(true);
+    setPdfLoading(true);
+    setPdfError(null);
+  };
 
   if (loading) {
     return (
@@ -154,7 +209,7 @@ export default function BookDetails() {
 
               {pdfUrl && (
                 <button
-                  onClick={() => setShowPdf(true)}
+                  onClick={handleViewPdf}
                   className="px-8 py-3 font-medium transition border text-primary rounded-xl border-primary hover:bg-primary hover:text-white"
                 >
                   {t('books.view_pdf')}
@@ -165,13 +220,18 @@ export default function BookDetails() {
         </div>
       </div>
 
-      {/* PDF Popup */}
+      {/* Secure PDF Viewer Popup */}
       {showPdf && pdfUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
           <div className="relative w-[90%] h-[80%] bg-white rounded-xl overflow-hidden shadow-xl">
             {/* Close Button */}
             <button
-              onClick={() => setShowPdf(false)}
+              onClick={() => {
+                setShowPdf(false);
+                setPageNumber(1);
+                setNumPages(null);
+                setPdfError(null);
+              }}
               className="absolute z-10 p-2 bg-gray-200 rounded-full top-3 right-3 hover:bg-gray-300"
             >
               <FiX className="text-xl text-gray-700" />
@@ -179,7 +239,7 @@ export default function BookDetails() {
 
             {/* PDF Info */}
             {pdfFiles.length > 0 && (
-              <div className="absolute z-10 p-3 bg-white/90 top-3 left-3 rounded-lg">
+              <div className="absolute z-10 p-3 rounded-lg bg-white/90 top-3 left-3">
                 <p className="text-sm font-medium text-gray-700">
                   {pdfFiles[0].file_name}
                 </p>
@@ -189,12 +249,80 @@ export default function BookDetails() {
               </div>
             )}
 
-            {/* PDF Viewer */}
-            <iframe
-              src={pdfUrl}
-              title="Book PDF"
-              className="w-full h-full"
-            ></iframe>
+            {/* Navigation Controls */}
+            <div className="absolute z-10 flex items-center gap-2 px-4 py-2 transform -translate-x-1/2 rounded-lg bottom-4 left-1/2 bg-white/90">
+              <button
+                onClick={goToPrevPage}
+                disabled={pageNumber <= 1}
+                className="px-3 py-1 text-sm bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-700">
+                Page {pageNumber} of {numPages}
+              </span>
+              <button
+                onClick={goToNextPage}
+                disabled={pageNumber >= numPages}
+                className="px-3 py-1 text-sm bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+              >
+                Next
+              </button>
+            </div>
+
+            {/* PDF Viewer Container */}
+            <div
+              className="w-full h-full overflow-auto bg-gray-100"
+              onContextMenu={handleContextMenu}
+              onKeyDown={handleKeyDown}
+              tabIndex={-1}
+            >
+              {pdfLoading && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary"></div>
+                    <p className="text-lg">جاري تحميل PDF...</p>
+                  </div>
+                </div>
+              )}
+
+              {pdfError && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="mb-4 text-lg text-red-500">{pdfError}</p>
+                    <button
+                      onClick={() => {
+                        setPdfError(null);
+                        setPdfLoading(true);
+                        window.location.reload();
+                      }}
+                      className="px-4 py-2 text-white rounded-lg bg-primary hover:bg-primary/90"
+                    >
+                      إعادة المحاولة
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!pdfLoading && !pdfError && (
+                <Document
+                  file={pdfUrl}
+                  onLoadSuccess={onDocumentLoadSuccess}
+                  onLoadError={onDocumentLoadError}
+                  loading=""
+                  error=""
+                >
+                  <Page
+                    pageNumber={pageNumber}
+                    scale={scale}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                    className="flex justify-center"
+                    onContextMenu={handleContextMenu}
+                  />
+                </Document>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -18,24 +18,20 @@ export default function Hero() {
     titleTwo: "",
     description: ""
   });
-  const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        setSettingsLoading(true);
         const response = await getSettings();
         if (response && response.data) {
           setHeroData({
             titleOne: response.data.title_one_section_one_home || "",
             titleTwo: response.data.title_tow_section_one_home || "",
-            description: response.data.description_section_start_your_journey_home || ""
+            description: response.data.description_about_us_Our_Story || ""
           });
         }
       } catch (error) {
         console.error("Failed to fetch hero settings:", error);
-      } finally {
-        setSettingsLoading(false);
       }
     };
 
@@ -54,12 +50,7 @@ export default function Hero() {
             </span>
 
             <h1 className="text-4xl font-extrabold leading-tight text-text md:text-5xl">
-              {settingsLoading ? (
-                <div className="space-y-2">
-                  <div className="h-8 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-3/4 h-8 bg-gray-300 rounded animate-pulse"></div>
-                </div>
-              ) : heroData.titleOne && heroData.titleTwo ? (
+              {heroData.titleOne && heroData.titleTwo ? (
                 <>
                   {heroData.titleOne}{" "}
                   <span className="text-primary">{heroData.titleTwo}</span>
@@ -73,13 +64,7 @@ export default function Hero() {
             </h1>
 
             <p className="max-w-lg text-lg leading-relaxed text-text-secondary">
-              {settingsLoading ? (
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-5/6 h-4 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-4/6 h-4 bg-gray-300 rounded animate-pulse"></div>
-                </div>
-              ) : heroData.description ? (
+              {heroData.description ? (
                 <div dangerouslySetInnerHTML={{ __html: he.decode(heroData.description) }} />
               ) : (
                 t('hero.description')

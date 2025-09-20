@@ -106,10 +106,11 @@ export default function ContactUs() {
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white sm:p-6">
           <h1 className="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl lg:text-6xl animate-fade-in">
-            {contactData?.title_page || t('contact.title_fallback')}
+            {t('contact.title_fallback')}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed sm:text-lg md:text-xl lg:text-2xl">
-            {t('contact.subtitle')}
+                        {contactData?.title_page || t('contact.title_fallback')}
+
           </p>
         </div>
       </div>

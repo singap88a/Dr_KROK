@@ -12,8 +12,7 @@
   },
   "contact": {
     "title_fallback": "Contact Us",
-    "subtitle": "Have questions or need support? Reach out to our team and we'll get back to you as quickly as possible.",
-    "phone_label": "Phone / WhatsApp",
+     "phone_label": "Phone / WhatsApp",
     "email_label": "Email",
     "address_label": "Address",
     "form": {
@@ -285,5 +284,62 @@
   },
   "common": {
     "retry": "Retry"
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "description": "We value your privacy and are committed to protecting your personal data. This page explains how we collect, use, and safeguard your information when you interact with our website.",
+    "loading": "Loading...",
+    "error": "Error",
+    "noData": "No privacy policy data available."
+  },
+  "cta": {
+    "title": "Start Your Journey with",
+    "titleHighlight": "Dr. Krok",
+    "description": "Join thousands of learners and earn recognized certificates. Your first lesson is completely free — start today!",
+    "descriptionHighlight": "completely free",
+    "button": {
+      "getStarted": "Get Started",
+      "goToCourses": "Go to Courses"
+    }
+  },
+  "ourStory": {
+    "badge": "Trusted & Growing",
+    "title": "Our Story",
+    "subtitle": "How we began and where we are heading",
+    "description": "Our platform is dedicated to empowering university students through high-quality medical and academic courses. Designed to make learning practical, engaging, and accessible, we connect students with expert instructors and innovative resources. With recognized certificates and a supportive community, we help learners build knowledge and skills that truly prepare them for their future careers.",
+    "features": {
+      "expertInstructors": "Expert instructors",
+      "handsOnProjects": "Hands-on projects",
+      "communitySupport": "Community support"
+    },
+    "buttons": {
+      "getStarted": "Get Started",
+      "goToCourses": "Go to Courses",
+      "watchVideo": "Watch Video"
+    },
+    "video": {
+      "playStory": "Play the story",
+      "duration": "3m 42s",
+      "founded": "Founded 2019"
+    }
+  },
+  "missionVision": {
+    "title": "Our Mission & Vision",
+    "mission": {
+      "title": "Our Mission",
+      "description": "Our mission is to make high-quality medical and academic education accessible to every university student. We aim to empower learners with the knowledge, skills, and confidence they need to succeed in their studies and build a strong future in healthcare."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "description": "Our vision is to become the leading e-learning platform for university students, shaping the future of medical and academic education through innovation, accessibility, and excellence. We aspire to create a world where every learner has the opportunity to reach their full potential."
+    }
+  },
+  "heroAbout": {
+    "title": "About Dr. KROK",
+    "description": "Empowering university students with high-quality medical and academic education through innovative e-learning solutions."
+  },
+  "about": {
+    "title": "About Us",
+    "description": "Learn more about our mission, vision, and the story behind Dr. KROK's commitment to quality education."
   }
 }
