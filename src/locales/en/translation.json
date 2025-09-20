@@ -12,7 +12,7 @@
   },
   "contact": {
     "title_fallback": "Contact Us",
-    "subtitle": "Have questions or need support? Reach out to our team and we’ll get back to you as quickly as possible.",
+    "subtitle": "Have questions or need support? Reach out to our team and we'll get back to you as quickly as possible.",
     "phone_label": "Phone / WhatsApp",
     "email_label": "Email",
     "address_label": "Address",
@@ -95,7 +95,60 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by Icode Teck software company."
+    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by Icode Teck software company.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "courses": "Courses",
+    "about": "About Us",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy",
+    "categories": "Categories",
+    "dentistry": "Dentistry",
+    "pharmacy": "Pharmacy",
+    "nursing": "Nursing",
+    "surgery": "Surgery",
+    "followUs": "Follow Us"
+  },
+  "hero": {
+    "badge": "Learn. Grow. Succeed.",
+    "titleOne": "Enhance Your Skills with",
+    "titleTwo": "Guided Online Learning",
+    "description": "Unlock your potential with structured online learning designed to match real-world needs, guided by expert mentors and interactive lessons.",
+    "stats": {
+      "users": "50K+ Users",
+      "rating": "5.0 Rating"
+    },
+    "cta": {
+      "getStarted": "Get Started",
+      "goToCourses": "Go to Courses",
+      "startTest": "Start Test"
+    },
+    "expert": {
+      "name": "Alex Albert",
+      "title": "Medical Expert",
+      "message": "Message"
+    }
+  },
+  "features": {
+    "title": "Platform Features",
+    "subtitle": "Everything you need for a smooth and professional learning journey.",
+    "learnMore": "Learn More",
+    "videoCourses": {
+      "title": "Video Courses",
+      "description": "Learn anytime with our high-quality video courses designed by top instructors"
+    },
+    "liveCourses": {
+      "title": "Live Sessions",
+      "description": "Join interactive live sessions with expert doctors and teachers for real-time learning"
+    },
+    "books": {
+      "title": "Educational Books",
+      "description": "Access and purchase trusted educational books directly from our platform"
+    },
+    "quizzes": {
+      "title": "Interactive Quizzes",
+      "description": "Test your knowledge with engaging quizzes to track and improve your progress"
+    }
   },
   "homeBanners": {
     "title": "Our Courses & Topics",
@@ -129,7 +182,42 @@
     "category": "Category",
     "quantity": "Quantity",
     "buy_now": "Buy Now",
-    "view_pdf": "View PDF"
+    "view_pdf": "View PDF",
+    "type": "Type",
+    "delivery": "Delivery",
+    "pdf_only": "PDF Only",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "created": "Created",
+    "no_book_selected": "No book selected",
+    "delivery_included": "Delivery included",
+    "pdf_download": "PDF Download",
+    "delivery_order": "Delivery Order",
+    "purchase_pdf": "Purchase PDF",
+    "fill_delivery_info": "Fill in your delivery information",
+    "select_payment_method": "Select payment method",
+    "total": "Total",
+    "free": "Free",
+    "client_name": "Client Name",
+    "enter_client_name": "Enter client name",
+    "phone_number": "Phone Number",
+    "enter_phone_number": "Enter phone number",
+    "city": "City",
+    "enter_city": "Enter city",
+    "address": "Address",
+    "enter_address": "Enter address",
+    "street": "Street",
+    "enter_street": "Enter street",
+    "place_order": "Place Order",
+    "placing_order": "Placing Order...",
+    "order_placed_successfully": "Order placed successfully!",
+    "order_failed": "Order failed. Please try again.",
+    "purchase_now": "Purchase Now",
+    "processing": "Processing...",
+    "purchase_successful": "Purchase successful!",
+    "purchase_failed": "Purchase failed. Please try again.",
+    "select_payment_method": "Please select a payment method"
   },
   "auth": {
     "login": {
@@ -186,5 +274,16 @@
         "agree": "I Agree"
       }
     }
+  },
+  "testimonials": {
+    "title": "Students Testimonials",
+    "loading": "Loading testimonials...",
+    "error": "Failed to load testimonials",
+    "no_testimonials": "No testimonials available",
+    "rating": "Rating",
+    "university": "University"
+  },
+  "common": {
+    "retry": "Retry"
   }
 }

@@ -58,7 +58,8 @@ export default function BookDetails() {
   }
 
   const images = Object.values(book.images || {});
-  const pdfUrl = book.book_pdf?.length > 0 ? book.book_pdf[0].original_url : null;
+  const pdfFiles = Object.values(book.book_pdf || {});
+  const pdfUrl = pdfFiles.length > 0 ? pdfFiles[0].original_url : null;
 
   return (
     <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">
@@ -105,16 +106,13 @@ export default function BookDetails() {
             <h1 className="text-3xl font-bold">{book.name}</h1>
             <div className="mt-3 text-lg text-text-secondary" dangerouslySetInnerHTML={{ __html: book.description }} />
 
-            {/* Icons Info */}
-            <div className="grid grid-cols-2 gap-4 mt-6 text-sm text-text-secondary">
+            {/* Book Information */}
+            <div className="grid grid-cols-1 gap-4 mt-6 text-sm text-text-secondary md:grid-cols-2">
               <div className="flex items-center gap-2">
-                <FiBook className="text-primary" /> {book.pages_count} {t('books.pages')}
+                <FiBook className="text-primary" /> {t('books.pages')}: {book.pages_count}
               </div>
               <div className="flex items-center gap-2">
                 <FiUser className="text-primary" /> {t('books.author')}: {book.author}
-              </div>
-              <div className="flex items-center gap-2">
-                <FiStar className="text-primary" /> {t('books.rating')}: 4.7/5
               </div>
               <div className="flex items-center gap-2">
                 <FiGlobe className="text-primary" /> {t('books.language')}: {book.language}
@@ -124,6 +122,15 @@ export default function BookDetails() {
               </div>
               <div className="flex items-center gap-2">
                 <FiGlobe className="text-primary" /> {t('books.quantity')}: {book.quantity}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiGlobe className="text-primary" /> {t('books.type')}: {book.type === 1 ? t('books.delivery') : t('books.pdf_only')}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiGlobe className="text-primary" /> {t('books.status')}: {book.is_active ? t('books.active') : t('books.inactive')}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiGlobe className="text-primary" /> {t('books.created')}: {new Date(book.created_at).toLocaleDateString()}
               </div>
             </div>
 
@@ -139,7 +146,7 @@ export default function BookDetails() {
 
             {/* Buttons */}
             <div className="flex flex-wrap gap-4 mt-6">
-              <Link to="/buynow" state={{ book }}>
+              <Link to="/buynow" state={{ book, bookType: book.type }}>
                 <button className="px-8 py-3 font-medium text-white transition rounded-xl bg-primary hover:shadow-lg hover:brightness-110">
                   {t('books.buy_now')}
                 </button>
@@ -169,6 +176,18 @@ export default function BookDetails() {
             >
               <FiX className="text-xl text-gray-700" />
             </button>
+
+            {/* PDF Info */}
+            {pdfFiles.length > 0 && (
+              <div className="absolute z-10 p-3 bg-white/90 top-3 left-3 rounded-lg">
+                <p className="text-sm font-medium text-gray-700">
+                  {pdfFiles[0].file_name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {(pdfFiles[0].size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            )}
 
             {/* PDF Viewer */}
             <iframe

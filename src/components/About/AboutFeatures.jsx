@@ -5,7 +5,6 @@ import {
   FiPlayCircle,
   FiUsers,
   FiBookOpen,
-  FiCheckCircle,
 } from "react-icons/fi";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -13,7 +12,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 
-export default function Features({ features }) {
+export default function AboutFeatures({ features }) {
   const { t, i18n } = useTranslation();
   const { getSettings } = useApi();
 
@@ -25,8 +24,7 @@ export default function Features({ features }) {
   const [featuresData, setFeaturesData] = useState({
     videoCourses: "",
     liveCourses: "",
-    books: "",
-    quizzes: ""
+    books: ""
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
 
@@ -39,8 +37,7 @@ export default function Features({ features }) {
           setFeaturesData({
             videoCourses: response.data.description_features_videos_course || "",
             liveCourses: response.data.description_features_live_courses || "",
-            books: response.data.description_features_books || "",
-            quizzes: response.data.description_features_quizzes || ""
+            books: response.data.description_features_books || ""
           });
         }
       } catch (error) {
@@ -77,18 +74,12 @@ export default function Features({ features }) {
       description: featuresData.books || t('features.books.description'),
       icon: <FiBookOpen size={24} className="shrink-0" />,
     },
-    {
-      id: 4,
-      title: t('features.quizzes.title'),
-      description: featuresData.quizzes || t('features.quizzes.description'),
-      icon: <FiCheckCircle size={24} className="shrink-0" />,
-    },
   ];
 
   const list = features && features.length ? features : defaultFeatures;
 
   return (
-    <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <section className="relative w-full transition-colors duration-300 bg-gradient-to-r ">
       <div className="px-4">
         <div className="py-10 mx-auto max-w-7xl">
           {/* Title & Toggle */}
@@ -109,7 +100,7 @@ export default function Features({ features }) {
             spaceBetween={24}
             slidesPerView={1}
             breakpoints={{
-              640: { slidesPerView: 2 },
+              640: { slidesPerView: 1 },
               768: { slidesPerView: 2 },
               1024: { slidesPerView: 3 },
             }}
@@ -119,10 +110,10 @@ export default function Features({ features }) {
           >
             {list.map((item) => (
               <SwiperSlide key={item.id}>
-                <article className="flex flex-col justify-between h-full min-h-[24px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1">
+                <article className="flex flex-col justify-between h-full min-h-[28px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1">
                   <div className="flex items-start gap-4">
                     <div className="flex items-center justify-center p-4 transition-transform duration-200 rounded-xl bg-accent text-primary group-hover:scale-105">
-                      {item.icon ?? <FiCheckCircle size={24} />}
+                      {item.icon ?? <FiBookOpen size={24} />}
                     </div>
 
                     <div className="flex-1">

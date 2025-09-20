@@ -1,9 +1,9 @@
 import Heroabout from "../../components/About/Heroabout";
 import OurStory from "../../components/About/OurStory";
 import Mission_Vision from "../../components/About/Mission_Vision";
-import Stand_For from "../../components/About/Stand_For";
+import AboutFeatures from "../../components/About/AboutFeatures";
 import Testimonials from "../../components/About/Testimonials";
- 
+
 export default function About() {
   return (
     <section className="min-h-screen text-text">
@@ -16,7 +16,7 @@ export default function About() {
         />
         <OurStory />
         <Mission_Vision />
-        <Stand_For />
+        <AboutFeatures />
         <Testimonials />
        </div>
     </section>

@@ -1,55 +1,98 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { FaStar } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
+import { useApi } from "../../context/ApiContext";
 import "swiper/css";
 import "swiper/css/pagination";
 
 export default function Testimonials() {
-  const testimonials = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      role: "Frontend Developer",
-      rating: 5,
-      feedback:
-        "This platform completely transformed my learning experience. The courses are hands-on and really well structured.",
-      image: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    {
-      id: 2,
-      name: "Michael Smith",
-      role: "Fullstack Engineer",
-      rating: 4,
-      feedback:
-        "The projects gave me confidence to apply for jobs. I learned React and Node.js in a practical way.",
-      image: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      id: 3,
-      name: "Aisha Ali",
-      role: "UI/UX Designer",
-      rating: 5,
-      feedback:
-        "The design courses are up-to-date and focused on real trends. It really boosted my career as a designer.",
-      image: "https://randomuser.me/api/portraits/women/68.jpg",
-    },
-    {
-      id: 4,
-      name: "David Brown",
-      role: "Software Engineer",
-      rating: 5,
-      feedback:
-        "Clear explanations and amazing support from instructors. Highly recommend this platform.",
-      image: "https://randomuser.me/api/portraits/men/41.jpg",
-    },
-  ];
+  const { t } = useTranslation();
+  const { request } = useApi();
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        setLoading(true);
+        const response = await request("testimonial");
+        setTestimonials(response.data || []);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch testimonials:", err);
+        setError(t("testimonials.error"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTestimonials();
+  }, [request, t]);
+
+  if (loading) {
+    return (
+      <section className="relative w-full transition-colors duration-300">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-12 text-3xl font-bold text-center">
+            {t("testimonials.title")}
+          </h2>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary"></div>
+              <p className="text-text-muted">{t("testimonials.loading")}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="relative w-full transition-colors duration-300">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-12 text-3xl font-bold text-center">
+            {t("testimonials.title")}
+          </h2>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <p className="mb-4 text-red-500">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
+              >
+                {t("common.retry", "Retry")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!testimonials || testimonials.length === 0) {
+    return (
+      <section className="relative w-full transition-colors duration-300">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-12 text-3xl font-bold text-center">
+            {t("testimonials.title")}
+          </h2>
+          <div className="flex items-center justify-center h-64">
+            <p className="text-text-muted">{t("testimonials.no_testimonials")}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="relative w-full transition-colors duration-300 ">
+    <section className="relative w-full py-10 transition-colors duration-300">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-12 text-3xl font-bold text-center">
-          Students <span className="text-primary">Testimonials</span>
+          {t("testimonials.title")}
         </h2>
 
         <Swiper
@@ -59,43 +102,65 @@ export default function Testimonials() {
           spaceBetween={30}
           breakpoints={{
             640: { slidesPerView: 1 },
-            1024: { slidesPerView: 3},
+            1024: { slidesPerView: 3 },
           }}
         >
           {testimonials.map((item) => (
             <SwiperSlide key={item.id}>
-              <div className="flex flex-col items-center h-full gap-6 p-8 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border md:flex-row">
-                {/* صورة الشخص */}
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="object-cover w-24 h-24 border-4 rounded-full border-primary"
-                />
-
-                {/* النص */}
-                <div className="flex flex-col text-center md:text-left">
-                  <h3 className="text-lg font-semibold">{item.name}</h3>
-                  <span className="mb-2 text-sm text-text-muted">
-                    {item.role}
-                  </span>
-
-                  {/* Rating */}
-                  <div className="flex justify-center mb-3 md:justify-start">
-                    {[...Array(item.rating)].map((_, i) => (
-                      <FaStar key={i} className="text-yellow-400" />
-                    ))}
+              <div className="flex flex-col justify-between h-full p-6 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border min-h-[220px]  ">
+                
+                {/* الصورة + البيانات */}
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="object-cover w-20 h-20 border-4 rounded-full border-primary"
+                        onError={(e) => {
+                          e.target.src =
+                            "https://via.placeholder.com/96x96?text=No+Image";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center w-20 h-20 bg-gray-200 border-4 rounded-full border-primary dark:bg-gray-700">
+                        <span className="text-xl font-bold text-primary">
+                          {item.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <p className="leading-relaxed text-text-secondary">
-                    "{item.feedback}"
-                  </p>
+                  <div className="flex flex-col">
+                    <h3 className="mb-1 text-lg font-semibold">{item.name}</h3>
+                    {item.university && (
+                      <span className="mb-2 text-sm text-text-muted">
+                        {item.university}
+                      </span>
+                    )}
+
+                    {item.rating && (
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar
+                            key={i}
+                            className={i < item.rating ? "text-yellow-400" : "text-gray-300"}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* الوصف */}
+                <p className="mt-4 text-sm leading-relaxed text-left text-text-secondary">
+                  "{item.description}"
+                </p>
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
 
-        {/* Pagination in center */}
         <div className="flex justify-center mt-8 custom-pagination"></div>
       </div>
     </section>

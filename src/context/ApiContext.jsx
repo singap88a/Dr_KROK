@@ -71,12 +71,14 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
     [buildUrl, getAuthToken]
   );
 
+  const getSettings = useCallback(async () => {
+    return await request("setting");
+  }, [request]);
+
   const value = useMemo(
-    () => ({ baseUrl, buildUrl, request, getAuthToken }),
-    [baseUrl, buildUrl, request, getAuthToken]
+    () => ({ baseUrl, buildUrl, request, getAuthToken, getSettings }),
+    [baseUrl, buildUrl, request, getAuthToken, getSettings]
   );
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
 };
-
-
