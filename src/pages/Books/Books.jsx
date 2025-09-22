@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { FiSearch, FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
+import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,6 +12,7 @@ export default function Books() {
   const navigate = useNavigate();
   const { request, getFavorites, toggleFavorite } = useApi();
   const { t, i18n } = useTranslation();
+  const { isLoggedIn } = useUser();
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,11 @@ export default function Books() {
   );
 
   const handleToggleFavorite = async (bookId) => {
+    if (!isLoggedIn) {
+      toast.info(t('auth.login_required') || 'Please login to use favorites');
+      navigate('/Login');
+      return;
+    }
     setFavoritesLoading(true);
     try {
       const response = await toggleFavorite(bookId, 'book');

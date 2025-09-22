@@ -52,6 +52,7 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [orders, setOrders] = useState([]);
 
 
   // Fetch profile data on component mount
@@ -136,41 +137,29 @@ export default function Profile() {
     },
   ];
 
-  // Mock orders data
-  const orders = [
-    {
-      id: "ORD-001",
-      item: "Mastering React.js From Zero to Hero",
-      type: "course",
-      price: 49.99,
-      status: "completed",
-      date: "2024-01-05",
-    },
-    {
-      id: "ORD-002",
-      item: "JavaScript Fundamentals",
-      type: "book",
-      price: 29.99,
-      status: "completed",
-      date: "2024-01-03",
-    },
-    {
-      id: "ORD-003",
-      item: "Advanced CSS Techniques",
-      type: "course",
-      price: 39.99,
-      status: "pending",
-      date: "2024-01-08",
-    },
-    {
-      id: "ORD-004",
-      item: "React Design Patterns",
-      type: "book",
-      price: 34.99,
-      status: "cancelled",
-      date: "2024-01-06",
-    },
-  ];
+  // Load real orders for the logged-in user
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+        if (!token) return;
+        const res = await fetch("https://dr-krok.hudurly.com/api/order_books", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.data)) {
+          setOrders(data.data);
+        }
+      } catch (e) {
+        console.warn("Failed to load orders", e);
+      }
+    };
+    loadOrders();
+  }, []);
 
   const menuItems = [
     { id: "profile", label: "My Profile", icon: FaUser },

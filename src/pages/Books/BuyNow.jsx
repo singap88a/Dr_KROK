@@ -11,7 +11,7 @@ export default function BuyNowPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { request } = useApi();
-  const { userData } = useUser();
+  const { userData, isLoggedIn } = useUser();
   const { t } = useTranslation();
 
   const book = state?.book;
@@ -150,8 +150,21 @@ export default function BuyNowPage() {
     setSuccess("");
 
     try {
+      // Require authentication to place an order
+      const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+      if (!isLoggedIn || !token) {
+        setError("You must be logged in to place an order.");
+        setLoading(false);
+        setTimeout(() => navigate('/Login'), 1200);
+        return;
+      }
+
       // Prepare form data for multipart/form-data
       const formDataToSend = new FormData();
+      // Backend expects client_id as part of the payload
+      if (formData.client_id) {
+        formDataToSend.append('client_id', formData.client_id);
+      }
       formDataToSend.append('client_name', formData.client_name);
       formDataToSend.append('phone1', formData.phone1);
       formDataToSend.append('phone2', formData.phone2 || '');

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiHeart, FiX } from "react-icons/fi";
 import { useApi } from "../../context/ApiContext";
+import { useUser } from "../../context/UserContext";
 import he from 'he';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
@@ -11,6 +12,7 @@ export default function BookDetails() {
   const navigate = useNavigate();
   const { request, toggleFavorite } = useApi();
   const { t, i18n } = useTranslation();
+  const { isLoggedIn } = useUser();
 
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +65,11 @@ export default function BookDetails() {
 
   const handleToggleFavorite = async () => {
     if (!book) return;
+    if (!isLoggedIn) {
+      toast.info(t('auth.login_required') || 'Please login to use favorites');
+      navigate('/Login');
+      return;
+    }
     
     setFavoriteLoading(true);
     try {
