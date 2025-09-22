@@ -1,7 +1,8 @@
 import { Routes, Route, Link } from "react-router-dom";
- 
+
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
+import ScrollToTop from "./components/ScrollToTop";
 // import AuthPage from "./components/AuthPage";
 import Home from "./pages/Home/Home";
 import Books from "./pages/Books/Books";
@@ -33,6 +34,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background text-text">
      <UserProvider>
+      <ScrollToTop />
 
       <Navbar />
       <main className="pt-16">
