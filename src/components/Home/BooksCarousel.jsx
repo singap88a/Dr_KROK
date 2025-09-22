@@ -99,7 +99,7 @@ function BooksCarousel() {
   </h2>
 <p className="mt-2 text-gray-600 dark:text-gray-300">
   {t('books.discover_best_selling')}
-</p> 
+</p>
   </div>
 
   {/* Link to All Books */}
@@ -131,19 +131,20 @@ function BooksCarousel() {
         >
           {books.slice(0, 5).map((b) => {
             const price = parseFloat(b.price);
-            const discountAmount = parseFloat(b.discount);
-            const discountedPrice = discountAmount > 0 ? price.toFixed(2) : price.toFixed(2);
-            const oldPrice = discountAmount > 0 ? (price + discountAmount).toFixed(2) : null;
-            const discountPercent = discountAmount > 0 ? Math.round((discountAmount / (price + discountAmount)) * 100) : 0;
+            const discountPercent = parseFloat(b.discount);
+            const discountAmount = discountPercent > 0 ? (price * discountPercent / 100) : 0;
+            const oldPrice = discountPercent > 0 ? price.toFixed(2) : null;
+            const discountedPrice = discountPercent > 0 ? Math.max(0, price - discountAmount).toFixed(2) : price.toFixed(2);
+
             return (
               <SwiperSlide key={b.id}>
                 <div className="flex flex-col h-full transition-transform duration-300 bg-white border border-gray-200 shadow-lg rounded-2xl dark:bg-gray-800 dark:border-gray-700 ">
                   {/* Book Image */}
                   <div className="relative overflow-hidden rounded-t-2xl">
                     {/* Discount Badge */}
-                    {discountAmount > 0 && (
+                    {discountPercent > 0 && (
                       <span className="absolute z-10 px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded-lg shadow-md top-3 right-3">
-                        -{discountPercent}%
+                        {discountPercent}%
                       </span>
                     )}
 
@@ -175,7 +176,7 @@ function BooksCarousel() {
                       {b.description}
                     </p>
 
-       
+
 
                     {/* Price Section */}
                     <div className="flex items-center justify-between mt-4">
@@ -204,7 +205,7 @@ function BooksCarousel() {
             );
           })}
         </Swiper>
-      </div>  
+      </div>
 </div>
 
     </section>

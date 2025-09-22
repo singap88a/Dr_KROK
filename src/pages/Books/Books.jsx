@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FiSearch, FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +31,7 @@ export default function Books() {
         setLoading(false);
       }
     };
-    
+
     const fetchFavorites = async () => {
       try {
         const response = await getFavorites();
@@ -60,8 +59,8 @@ export default function Books() {
     setFavoritesLoading(true);
     try {
       const response = await toggleFavorite(bookId, 'book');
-      setFavorites(prev => 
-        response.message === "Added to favorites" 
+      setFavorites(prev =>
+        response.message === "Added to favorites"
           ? [...prev, bookId]
           : prev.filter(id => id !== bookId)
       );
@@ -118,8 +117,11 @@ export default function Books() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {filteredBooks.map((book) => {
             const price = parseFloat(book.price);
-            const discountAmount = parseFloat(book.discount);
-            const oldPrice = discountAmount > 0 ? (price + discountAmount).toFixed(2) : null;
+            const discountPercent = parseFloat(book.discount);
+            const discountAmount = discountPercent > 0 ? (price * discountPercent / 100) : 0;
+            const oldPrice = discountPercent > 0 ? price.toFixed(2) : null;
+            const discountedPrice = discountPercent > 0 ? Math.max(0, price - discountAmount).toFixed(2) : price.toFixed(2);
+
             return (
               <div
                 key={book.id}
@@ -128,9 +130,9 @@ export default function Books() {
               {/* Book Image */}
               <div className="relative h-56 overflow-hidden">
                 {/* Discount Badge */}
-                {book.discount > 0 && (
+                {discountPercent > 0 && (
                   <span className="absolute z-10 px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded-lg shadow-md top-3 right-3">
-                    -{book.discount}%
+                    {discountPercent}%
                   </span>
                 )}
 
@@ -141,7 +143,7 @@ export default function Books() {
                     handleToggleFavorite(book.id);
                   }}
                   disabled={favoritesLoading}
-                  className="absolute z-20 p-2 transition-all duration-200 rounded-full shadow-lg top-3 left-3 bg-white/90 hover:bg-white disabled:opacity-50 group-hover:opacity-100 opacity-100"
+                  className="absolute z-20 p-2 transition-all duration-200 rounded-full shadow-lg opacity-100 top-3 left-3 bg-white/90 hover:bg-white disabled:opacity-50 group-hover:opacity-100"
                 >
                   <FiHeart className={`text-xl transition-colors ${favorites.includes(book.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'}`} />
                 </button>
@@ -169,7 +171,7 @@ export default function Books() {
                         ${oldPrice}
                       </span>
                     )}
-                    <span className="font-semibold text-primary">${price.toFixed(2)}</span>
+                    <span className="font-semibold text-primary">${discountedPrice}</span>
                   </div>
 
                   {/* Button */}
