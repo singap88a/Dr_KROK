@@ -119,7 +119,7 @@ export default function Testimonials() {
         >
           {testimonials.map((item) => (
             <SwiperSlide key={item.id}>
-              <div className="flex flex-col justify-between h-full p-6 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border min-h-[220px]  ">
+              <div className="flex flex-col justify-between h-full p-6 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border min-h-[242px]  ">
                 
                 {/* الصورة + البيانات */}
                 <div className="flex items-start gap-4">
