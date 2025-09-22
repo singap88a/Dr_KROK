@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaPlay, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import "swiper/css";
@@ -13,6 +13,8 @@ export default function Testimonials() {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -31,6 +33,16 @@ export default function Testimonials() {
 
     fetchTestimonials();
   }, [request, t]);
+
+  const openVideoModal = (videoUrl) => {
+    setSelectedVideo(videoUrl);
+    setShowVideoModal(true);
+  };
+
+  const closeVideoModal = () => {
+    setShowVideoModal(false);
+    setSelectedVideo(null);
+  };
 
   if (loading) {
     return (
@@ -153,9 +165,24 @@ export default function Testimonials() {
                 </div>
 
                 {/* الوصف */}
-                <p className="mt-4 text-sm leading-relaxed text-left text-text-secondary">
-                  "{item.description}"
-                </p>
+    <p className="mt-4 text-sm leading-relaxed text-left text-text-secondary line-clamp-2">
+  {item.description}
+</p>
+
+
+                {/* Video Button */}
+                {item.video && item.video.trim() !== "" && (
+                  <div className="mt-4">
+                    <button
+                      onClick={() => openVideoModal(item.video)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
+                      title={t("testimonials.watch_video")}
+                    >
+                      <FaPlay className="text-xs" />
+                      {t("testimonials.watch_video")}
+                    </button>
+                  </div>
+                )}
               </div>
             </SwiperSlide>
           ))}
@@ -163,6 +190,34 @@ export default function Testimonials() {
 
         <div className="flex justify-center mt-8 custom-pagination"></div>
       </div>
+
+      {/* Video Modal */}
+      {showVideoModal && selectedVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="relative w-full max-w-4xl p-4 mx-4 bg-white rounded-lg dark:bg-gray-800">
+            {/* Close Button */}
+            <button
+              onClick={closeVideoModal}
+              className="absolute z-10 p-2 text-gray-500 top-2 right-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              title={t("testimonials.close_video")}
+            >
+              <FaTimes className="text-xl" />
+            </button>
+
+            {/* Video Player */}
+            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                src={selectedVideo}
+                title="Testimonial Video"
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

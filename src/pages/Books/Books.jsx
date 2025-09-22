@@ -4,10 +4,12 @@ import { FiSearch, FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from 'react-i18next';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Books() {
   const navigate = useNavigate();
-  const { request } = useApi();
+  const { request, getFavorites, toggleFavorite } = useApi();
   const { t, i18n } = useTranslation();
 
   const [books, setBooks] = useState([]);
@@ -15,6 +17,7 @@ export default function Books() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [favorites, setFavorites] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -27,12 +30,41 @@ export default function Books() {
         setLoading(false);
       }
     };
+    
+    const fetchFavorites = async () => {
+      try {
+        const response = await getFavorites();
+        const favoriteIds = (response.data || []).map(fav => fav.table_id);
+        setFavorites(favoriteIds);
+      } catch (err) {
+        console.error("Failed to fetch favorites:", err);
+      }
+    };
+
     fetchBooks();
-  }, [request, i18n.language]);
+    fetchFavorites();
+  }, [request, getFavorites, i18n.language]);
 
   const filteredBooks = books.filter((book) =>
     book.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleToggleFavorite = async (bookId) => {
+    setFavoritesLoading(true);
+    try {
+      const response = await toggleFavorite(bookId, 'book');
+      setFavorites(prev => 
+        response.message === "Added to favorites" 
+          ? [...prev, bookId]
+          : prev.filter(id => id !== bookId)
+      );
+      toast.success(response.message);
+    } catch (err) {
+      toast.error("Failed to update favorites");
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -56,6 +88,7 @@ export default function Books() {
 
   return (
     <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
+      <ToastContainer />
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">
@@ -98,11 +131,12 @@ export default function Books() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setFavorites(prev => prev.includes(book.id) ? prev.filter(id => id !== book.id) : [...prev, book.id]);
+                    handleToggleFavorite(book.id);
                   }}
-                  className="absolute p-1 transition rounded-full shadow-md top-3 left-3 bg-white/80 hover:bg-white"
+                  disabled={favoritesLoading}
+                  className="absolute z-20 p-2 transition-all duration-200 rounded-full shadow-lg top-3 left-3 bg-white/90 hover:bg-white disabled:opacity-50 group-hover:opacity-100 opacity-100"
                 >
-                  <FiHeart className={`text-xl ${favorites.includes(book.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+                  <FiHeart className={`text-xl transition-colors ${favorites.includes(book.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'}`} />
                 </button>
 
                 <img

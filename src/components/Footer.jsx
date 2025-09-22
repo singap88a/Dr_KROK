@@ -65,7 +65,7 @@ export default function Footer() {
                 e.currentTarget.src = "/logo.png";
               }}
             />
-            <span className="absolute w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
+            <span className="w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0  left-1/2 group-hover:opacity-100 bg-primary">
               Dr KROK
             </span>
           </div>

@@ -12,6 +12,10 @@ import {
   FaVenusMars,
   FaGraduationCap,
   FaLock,
+  FaFacebook,
+  FaInstagram,
+  FaTelegram,
+  FaWhatsapp,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
@@ -32,6 +36,10 @@ const MyProfile = ({ user, onProfileUpdate }) => {
     university_id: "",
     college_year: "",
     image: null,
+    facebook: "",
+    instagram: "",
+    telegram: "",
+    whatsapp: "",
   });
   const [imagePreview, setImagePreview] = useState("");
   const { t, i18n } = useTranslation();
@@ -74,9 +82,9 @@ const MyProfile = ({ user, onProfileUpdate }) => {
     fetchUniversities();
     fetchCollegeYears();  }, [request, i18n.language, t]);
 
-  // Update form data and local user when user changes
+  // Update form data and local user when user changes (only when not editing)
   useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setLocalUser(user);
       setFormData({
         name: user.name || "",
@@ -87,6 +95,10 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
         image: null,
+        facebook: user.facebook || "",
+        instagram: user.instagram || "",
+        telegram: user.telegram || "",
+        whatsapp: user.whatsapp || "",
       });
 
       // Set image preview
@@ -96,7 +108,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         setImagePreview("/user.png");
       }
     }
-  }, [user]);
+  }, [user, isEditing]);
 
   // Helper function to format date for input[type=date]
   const formatDateForInput = (dateString) => {
@@ -233,6 +245,10 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         gender: formData.gender || "",
         university_id: parseInt(formData.university_id) || 0,
         college_year: formData.college_year,
+        facebook: formData.facebook || "",
+        instagram: formData.instagram || "",
+        telegram: formData.telegram || "",
+        whatsapp: formData.whatsapp || "",
         // Do NOT send imageprofile here unless we actually uploaded a new one to the image endpoint
       };
 
@@ -294,8 +310,12 @@ const MyProfile = ({ user, onProfileUpdate }) => {
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
         image: null,
+        facebook: user.facebook || "",
+        instagram: user.instagram || "",
+        telegram: user.telegram || "",
+        whatsapp: user.whatsapp || "",
       });
-      
+
       // Reset image preview
       if (user.imageprofile) {
         setImagePreview(user.imageprofile);
@@ -570,6 +590,104 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                   </span>
                 </div>
               )}
+              </div>
+            </div>
+          </div>
+
+          {/* Social Media Section */}
+          <div className="mt-8">
+            <h4 className="mb-4 text-lg font-semibold">{t('profile.social_media')}</h4>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/* Facebook */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                  <FaFacebook className="inline mr-2 text-blue-600" />
+                  {t('profile.facebook')}
+                </label>
+                {isEditing ? (
+                  <input
+                    type="url"
+                    name="facebook"
+                    value={formData.facebook}
+                    onChange={handleInputChange}
+                    placeholder={t('profile.social_placeholder', { platform: 'Facebook' })}
+                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaFacebook className="text-blue-600" />
+                    <span>{user.facebook || t('profile.not_provided')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Instagram */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                  <FaInstagram className="inline mr-2 text-pink-600" />
+                  {t('profile.instagram')}
+                </label>
+                {isEditing ? (
+                  <input
+                    type="url"
+                    name="instagram"
+                    value={formData.instagram}
+                    onChange={handleInputChange}
+                    placeholder={t('profile.social_placeholder', { platform: 'Instagram' })}
+                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaInstagram className="text-pink-600" />
+                    <span>{user.instagram || t('profile.not_provided')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Telegram */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                  <FaTelegram className="inline mr-2 text-blue-500" />
+                  {t('profile.telegram')}
+                </label>
+                {isEditing ? (
+                  <input
+                    type="url"
+                    name="telegram"
+                    value={formData.telegram}
+                    onChange={handleInputChange}
+                    placeholder={t('profile.social_placeholder', { platform: 'Telegram' })}
+                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaTelegram className="text-blue-500" />
+                    <span>{user.telegram || t('profile.not_provided')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                  <FaWhatsapp className="inline mr-2 text-green-600" />
+                  {t('profile.whatsapp')}
+                </label>
+                {isEditing ? (
+                  <input
+                    type="url"
+                    name="whatsapp"
+                    value={formData.whatsapp}
+                    onChange={handleInputChange}
+                    placeholder={t('profile.social_placeholder', { platform: 'WhatsApp' })}
+                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaWhatsapp className="text-green-600" />
+                    <span>{user.whatsapp || t('profile.not_provided')}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

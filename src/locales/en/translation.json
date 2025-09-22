@@ -55,6 +55,12 @@
     "select_year": "Select Year",
     "not_specified": "Not specified",
     "new_image_selected": "New image selected",
+    "social_media": "Social Media",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "social_placeholder": "Enter your {{platform}} profile URL",
     "toast": {
       "image_uploaded": "Image uploaded successfully!",
       "image_upload_fail": "Failed to upload image",
@@ -280,7 +286,10 @@
     "error": "Failed to load testimonials",
     "no_testimonials": "No testimonials available",
     "rating": "Rating",
-    "university": "University"
+    "university": "University",
+    "watch_video": "Watch Video",
+    "close_video": "Close Video",
+    "no_video": "No video available"
   },
   "common": {
     "retry": "Retry"
@@ -341,5 +350,24 @@
   "about": {
     "title": "About Us",
     "description": "Learn more about our mission, vision, and the story behind Dr. KROK's commitment to quality education."
+  },
+  "favorites": {
+    "title": "My Favorites",
+    "loading": "Loading favorites...",
+    "error": "Error Loading Favorites",
+    "tryAgain": "Try Again",
+    "noFavorites": "No Favorites Yet",
+    "noFavoritesDescription": "Start adding books and courses to your favorites to see them here.",
+    "browseBooks": "Browse Books",
+    "itemsCount_one": "{{count}} item in your favorites",
+    "itemsCount_other": "{{count}} items in your favorites",
+    "book": "Book",
+    "course": "Course",
+    "pages": "pages",
+    "rating": "Rating",
+    "viewDetails": "View Details",
+    "removedFromFavorites": "Removed from favorites",
+    "failedToRemove": "Failed to remove from favorites",
+    "failedToLoad": "Failed to load favorites"
   }
 }

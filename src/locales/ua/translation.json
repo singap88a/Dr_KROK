@@ -55,6 +55,12 @@
     "select_year": "Оберіть курс",
     "not_specified": "Не вказано",
     "new_image_selected": "Обрано нове зображення",
+    "social_media": "Соціальні мережі",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "social_placeholder": "Введіть URL вашого профілю {{platform}}",
     "toast": {
       "image_uploaded": "Зображення успішно завантажено!",
       "image_upload_fail": "Не вдалося завантажити зображення",
@@ -224,7 +230,10 @@
     "error": "Не вдалося завантажити відгуки",
     "no_testimonials": "Відгуки відсутні",
     "rating": "Рейтинг",
-    "university": "Університет"
+    "university": "Університет",
+    "watch_video": "Переглянути відео",
+    "close_video": "Закрити відео",
+    "no_video": "Відео відсутнє"
   },
   "common": {
     "retry": "Повторити"
@@ -285,5 +294,24 @@
   "about": {
     "title": "Про нас",
     "description": "Дізнайтеся більше про нашу місію, бачення та історію, що стоїть за відданістю Dr. KROK якісній освіті."
+  },
+  "favorites": {
+    "title": "Мої улюблені",
+    "loading": "Завантаження улюблених...",
+    "error": "Помилка завантаження улюблених",
+    "tryAgain": "Спробувати знову",
+    "noFavorites": "Ще немає улюблених",
+    "noFavoritesDescription": "Почніть додавати книги та курси до улюблених, щоб побачити їх тут.",
+    "browseBooks": "Переглянути книги",
+    "itemsCount_one": "{{count}} елемент в улюблених",
+    "itemsCount_other": "{{count}} елементи в улюблених",
+    "book": "Книга",
+    "course": "Курс",
+    "pages": "сторінок",
+    "rating": "Рейтинг",
+    "viewDetails": "Переглянути деталі",
+    "removedFromFavorites": "Видалено з улюблених",
+    "failedToRemove": "Не вдалося видалити з улюблених",
+    "failedToLoad": "Не вдалося завантажити улюблені"
   }
 }

@@ -5,18 +5,21 @@ import { FiHeart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from 'react-i18next';
+import { toast, ToastContainer } from 'react-toastify';
 import "swiper/css";
 import "swiper/css/pagination";
+import 'react-toastify/dist/ReactToastify.css';
 
 function BooksCarousel() {
   const navigate = useNavigate();
-  const { request } = useApi();
+  const { request, getFavorites, toggleFavorite } = useApi();
   const { t, i18n } = useTranslation();
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [favorites, setFavorites] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -29,12 +32,42 @@ function BooksCarousel() {
         setLoading(false);
       }
     };
+
+    const fetchFavorites = async () => {
+      try {
+        const response = await getFavorites();
+        const favoriteIds = (response.data || []).map(fav => fav.table_id);
+        setFavorites(favoriteIds);
+      } catch (err) {
+        console.error("Failed to fetch favorites:", err);
+      }
+    };
+
     fetchBooks();
-  }, [request, i18n.language]);
+    fetchFavorites();
+  }, [request, getFavorites, i18n.language]);
+
+  const handleToggleFavorite = async (bookId) => {
+    setFavoritesLoading(true);
+    try {
+      const response = await toggleFavorite(bookId, 'book');
+      setFavorites(prev =>
+        response.message === "Added to favorites"
+          ? [...prev, bookId]
+          : prev.filter(id => id !== bookId)
+      );
+      toast.success(response.message);
+    } catch (err) {
+      toast.error("Failed to update favorites");
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
 
   if (loading) {
-    return (
-      <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+  return (
+    <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <ToastContainer />
         <div className="px-6 mx-auto text-center max-w-7xl">{t('books.loading_featured_books')}</div>
       </section>
     );
@@ -111,11 +144,12 @@ function BooksCarousel() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setFavorites(prev => prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]);
+                        handleToggleFavorite(b.id);
                       }}
-                      className="absolute z-10 p-1 transition rounded-full shadow-md top-3 left-3 bg-white/80 hover:bg-white"
+                      disabled={favoritesLoading}
+                      className="absolute z-10 p-2 transition-all duration-200 rounded-full shadow-lg top-3 left-3 bg-white/90 hover:bg-white disabled:opacity-50"
                     >
-                      <FiHeart className={`text-xl ${favorites.includes(b.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+                      <FiHeart className={`text-xl transition-colors ${favorites.includes(b.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'}`} />
                     </button>
 
                     <img

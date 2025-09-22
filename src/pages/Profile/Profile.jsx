@@ -37,12 +37,14 @@ import {
   FaPhone,
   FaEnvelope,
   FaGlobe,
+  FaHeart,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
 import { useUser } from "../../context/UserContext";
 import MyOrders from "./MyOrders";
 import MyCourses from "./MyCourses";
+import MyFavorites from "./MyFavorites";
 
 export default function Profile() {
   const { updateUser } = useUser();
@@ -98,7 +100,7 @@ export default function Profile() {
     };
 
     fetchProfile();
-  }, []);
+  }, [updateUser]);
 
   // Mock courses data
   const enrolledCourses = [
@@ -171,10 +173,10 @@ export default function Profile() {
   ];
 
   const menuItems = [
-        { id: "profile", label: "My Profile", icon: FaUser },
-
+    { id: "profile", label: "My Profile", icon: FaUser },
     { id: "courses", label: "My Courses", icon: FaGraduationCap },
     { id: "orders", label: "My Orders", icon: FaShoppingCart },
+    { id: "favorites", label: "My Favorites", icon: FaHeart },
     { id: "logout", label: "Logout", icon: FaSignOutAlt },
   ];
 
@@ -357,6 +359,8 @@ export default function Profile() {
         return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
       case "orders":
         return <MyOrders orders={orders} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />;
+      case "favorites":
+        return <MyFavorites />;
       case "profile":
         return <MyProfile user={user} onProfileUpdate={(updated)=>{
           const merged = {

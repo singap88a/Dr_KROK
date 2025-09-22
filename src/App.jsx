@@ -27,6 +27,7 @@ import LoginPage from "./pages/auth/Login/LoginPage";
 import RegisterPage from "./pages/auth/Register/RegisterPage";
 import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
+import WhatsAppIcon from "./components/WhatsAppIcon";
 
 export default function App() {
   return (
@@ -69,6 +70,7 @@ export default function App() {
         </Routes>
       </main>
       <AI_Icon />
+      <WhatsAppIcon/>
       <CTA />
 
       <Footer />
