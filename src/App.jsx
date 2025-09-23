@@ -29,6 +29,7 @@ import RegisterPage from "./pages/auth/Register/RegisterPage";
 import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
 import WhatsAppIcon from "./components/WhatsAppIcon";
+import Instructors from "./pages/Instructors/Instructors";
 
 export default function App() {
   return (
@@ -69,6 +70,8 @@ export default function App() {
           <Route path="/gemini" element={<GeminiSingap />} />
           <Route path="/test" element={<TestYourself />} />
           <Route path="/privacypolicy" element={<Privacypolicy />} />
+                    <Route path="/instructors" element={<Instructors />} />
+
         </Routes>
       </main>
       <AI_Icon />

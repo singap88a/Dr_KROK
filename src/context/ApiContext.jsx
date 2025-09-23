@@ -29,7 +29,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
     async (path, { method = "GET", headers = {}, body, auth = false, isFormData = false } = {}) => {
       const url = buildUrl(path);
       const finalHeaders = { ...headers };
-      
+
       // Special handling for palce_order endpoint
       const isPalceOrder = path === 'palce_order';
 
@@ -73,7 +73,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       if (isPalceOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
         // For palce_order, try to get the response anyway as it might still contain data
         console.warn('palce_order endpoint redirected, but continuing...');
-        
+
         // If we can't get the response due to redirect, try a different approach
         if (res.type === 'opaqueredirect') {
           // Try to make the request again with different settings
@@ -85,7 +85,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
               redirect: 'follow',
               mode: 'no-cors', // Try no-cors mode as fallback
             });
-            
+
             if (retryRes.ok) {
               res = retryRes;
             }
@@ -109,14 +109,14 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
 
       if (!res.ok) {
         let message = data?.message || `Request failed: ${res.status}`;
-        
+
         // Handle specific error cases
         if (res.status === 302) {
           message = "Request was redirected. Please try again.";
         } else if (res.status === 0) {
           message = "Network error or CORS issue. Please check your connection.";
         }
-        
+
         const error = new Error(message);
         error.status = res.status;
         error.data = data;
@@ -140,7 +140,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
     const formData = new FormData();
     formData.append("table_id", tableId);
     formData.append("type", type);
-    
+
     return await request("favorites/toggle", {
       method: "POST",
       body: formData,
@@ -149,17 +149,29 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
     });
   }, [request]);
 
+  // Instructor API functions
+  const getInstructors = useCallback(async () => {
+    const response = await request("instructor");
+    return response.data || [];
+  }, [request]);
+
+  const getInstructorById = useCallback(async (id) => {
+    return await request(`instructors/${id}`);
+  }, [request]);
+
   const value = useMemo(
-    () => ({ 
-      baseUrl, 
-      buildUrl, 
-      request, 
-      getAuthToken, 
+    () => ({
+      baseUrl,
+      buildUrl,
+      request,
+      getAuthToken,
       getSettings,
       getFavorites,
-      toggleFavorite
+      toggleFavorite,
+      getInstructors,
+      getInstructorById
     }),
-    [baseUrl, buildUrl, request, getAuthToken, getSettings, getFavorites, toggleFavorite]
+    [baseUrl, buildUrl, request, getAuthToken, getSettings, getFavorites, toggleFavorite, getInstructors, getInstructorById]
   );
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;

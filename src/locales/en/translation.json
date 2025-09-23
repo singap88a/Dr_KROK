@@ -369,5 +369,24 @@
     "removedFromFavorites": "Removed from favorites",
     "failedToRemove": "Failed to remove from favorites",
     "failedToLoad": "Failed to load favorites"
+  },
+  "instructors": {
+    "title": "Our Instructors",
+    "subtitle": "Learn from industry experts with years of real-world experience",
+    "meetInstructors": "Meet Our Instructors",
+    "allInstructors": "All Instructors",
+    "loading": "Loading instructors...",
+    "error": "Error loading instructors",
+    "noInstructors": "No instructors available",
+    "viewAll": "View All Instructors",
+    "socialLinks": "Social Links",
+    "contact": "Contact",
+    "email": "Email",
+    "jobTitle": "Job Title",
+    "noJobTitle": "Not specified",
+    "visitProfile": "Visit Profile",
+    "connect": "Connect",
+    "instructorDetails": "Instructor Details",
+    "backToInstructors": "Back to Instructors"
   }
 }
