@@ -444,7 +444,7 @@ export default function BuyNowPage() {
 
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    <FiPhone /> {t('books.phone_number_2')} (Optional)
+                    <FiPhone /> {t('books.phone_number_2')} ({t('books.optional')})
                   </label>
                   <input
                     type="tel"
