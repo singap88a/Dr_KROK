@@ -156,8 +156,8 @@
     }
   },
   "homeBanners": {
-    "title": "Our Courses & Topics",
-    "description": "Curated playlists and video resources — swipe to explore. Responsive, accessible and optimized for both light & dark themes.",
+    "title": "Watch Latest Announcements",
+    "description": "Discover our latest announcements, updates, and featured content. Stay informed with the newest information and exciting developments from our platform. Swipe to explore all our current announcements and updates.",
     "loading": "Loading banners...",
     "noBanners": "No banners available.",
     "openLink": "Open Link",

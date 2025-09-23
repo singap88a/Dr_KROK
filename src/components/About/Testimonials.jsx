@@ -109,7 +109,12 @@ export default function Testimonials() {
 
         <Swiper
           modules={[Pagination, Autoplay]}
-          pagination={{ clickable: true, el: ".custom-pagination" }}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+            dynamicMainBullets: 4,
+            el: ".custom-pagination"
+          }}
           autoplay={{ delay: 4000 }}
           spaceBetween={30}
           breakpoints={{
@@ -188,7 +193,7 @@ export default function Testimonials() {
           ))}
         </Swiper>
 
-        <div className="flex justify-center mt-8 custom-pagination"></div>
+        <div className="flex justify-center mx-auto mt-8 custom-pagination"></div>
       </div>
 
       {/* Video Modal */}

@@ -40,8 +40,8 @@ function BooksCarousel() {
         const response = await getFavorites();
         const favoriteIds = (response.data || []).map(fav => fav.table_id);
         setFavorites(favoriteIds);
-      } catch (err) {
-        console.error("Failed to fetch favorites:", err);
+      } catch {
+        console.error("Failed to fetch favorites");
       }
     };
 
@@ -119,7 +119,11 @@ function BooksCarousel() {
           modules={[Pagination, Autoplay]}
           spaceBetween={25}
           slidesPerView={1}
-          pagination={{ clickable: true }}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+            dynamicMainBullets: 4
+          }}
           loop={true}
           autoplay={{ delay: 4000, disableOnInteraction: false }}
           grabCursor={true}

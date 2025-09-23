@@ -115,7 +115,11 @@ function InstructorsCarousel() {
             modules={[Pagination, Autoplay]}
             spaceBetween={25}
             slidesPerView={1}
-            pagination={{ clickable: true }}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true,
+              dynamicMainBullets: 4
+            }}
             loop={true}
             autoplay={{ delay: 4000, disableOnInteraction: false }}
             grabCursor={true}

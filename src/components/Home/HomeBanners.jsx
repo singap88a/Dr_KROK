@@ -81,24 +81,28 @@ export default function HomeBanners() {
         <div className="relative">
           <Swiper
             onSwiper={(swiper) => (swiperRef.current = swiper)}
-            modules={[Autoplay, Navigation, Pagination, Keyboard, EffectFade]}
+            modules={[Autoplay, Navigation, Pagination, Keyboard]}
             spaceBetween={20}
             slidesPerView={1}
+            slidesPerGroup={1}
             loop={true}
             autoplay={{ delay: 5000, disableOnInteraction: false }}
             navigation={{
               nextEl: ".banner-next",
               prevEl: ".banner-prev",
             }}
-            pagination={{ clickable: true }}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true,
+              dynamicMainBullets: 4
+            }}
             keyboard={{ enabled: true }}
-            effect="fade"
             a11y={{ enabled: true }}
             className="overflow-hidden rounded-2xl"
           >
             {loading ? (
               <SwiperSlide key="loading">
-                <div className="flex items-center justify-center h-64 md:h-96 bg-accent rounded-2xl">
+                <div className="flex items-center justify-center h-80 md:h-96 lg:h-[28rem] bg-accent rounded-2xl">
                   <div className="text-center">
                     <div className="w-12 h-12 mb-4 ease-linear border-4 border-t-4 rounded-full loader border-primary animate-spin"></div>
                     <p className="text-text-secondary">{t('homeBanners.loading')}</p>
@@ -107,14 +111,14 @@ export default function HomeBanners() {
               </SwiperSlide>
             ) : banners.length === 0 ? (
               <SwiperSlide key="empty">
-                <div className="flex items-center justify-center h-64 md:h-96 bg-accent rounded-2xl">
+                <div className="flex items-center justify-center h-80 md:h-96 lg:h-[28rem] bg-accent rounded-2xl">
                   <p className="text-text-secondary">{t('homeBanners.noBanners')}</p>
                 </div>
               </SwiperSlide>
             ) : (
               banners.map((b) => (
                 <SwiperSlide key={b.id}>
-                  <div className="relative h-64 overflow-hidden md:h-80 lg:h-96 rounded-2xl">
+                  <div className="relative h-80 overflow-hidden md:h-96 lg:h-[28rem] rounded-2xl">
                     {/* Background image */}
                     <img
                       src={b.image}
