@@ -333,4 +333,23 @@
     "instructorDetails": "Деталі викладача",
     "backToInstructors": "Повернутися до викладачів"
   }
+  ,
+  "articles": {
+    "title": "Статті",
+    "featured": "Рекомендовані статті",
+    "viewAll": "Переглянути всі статті",
+    "loading": "Завантаження статей...",
+    "error": "Не вдалося завантажити статті",
+    "noArticles": "Статті відсутні",
+    "instructors": "Викладачі",
+    "allInstructors": "Всі викладачі",
+    "allArticles": "Всі статті",
+    "byInstructor": "Статті від {{name}}",
+    "count": "Статті",
+    "showMore": "Показати більше",
+    "showLess": "Показати менше",
+    "readMore": "Читати далі",
+    "instructorCard": "Автор вибраних статей",
+    "selectInstructorInfo": "Оберіть викладача, щоб переглянути інформацію тут."
+  }
 }

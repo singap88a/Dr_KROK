@@ -389,4 +389,23 @@
     "instructorDetails": "Instructor Details",
     "backToInstructors": "Back to Instructors"
   }
+  ,
+  "articles": {
+    "title": "Articles",
+    "featured": "Featured Articles",
+    "viewAll": "View All Articles",
+    "loading": "Loading articles...",
+    "error": "Failed to load articles",
+    "noArticles": "No articles available",
+    "instructors": "Instructors",
+    "allInstructors": "All Instructors",
+    "allArticles": "All Articles",
+    "byInstructor": "Articles by {{name}}",
+    "count": "Articles",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "readMore": "Read More",
+    "instructorCard": "Author of selected articles",
+    "selectInstructorInfo": "Select an instructor to view their info here."
+  }
 }

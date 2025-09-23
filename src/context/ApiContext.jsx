@@ -169,9 +169,33 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       getFavorites,
       toggleFavorite,
       getInstructors,
-      getInstructorById
+      getInstructorById,
+      // Blogs API
+      async getBlogs(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        if (params.per_page) query.set("per_page", params.per_page);
+        if (params.instructor_id) query.set("instructor_id", params.instructor_id);
+        const path = query.toString() ? `blog?${query.toString()}` : "blog";
+        const response = await request(path);
+        return {
+          data: Array.isArray(response?.data) ? response.data : [],
+          pagination: response?.pagination || null,
+          raw: response
+        };
+      }
     }),
-    [baseUrl, buildUrl, request, getAuthToken, getSettings, getFavorites, toggleFavorite, getInstructors, getInstructorById]
+    [
+      baseUrl,
+      buildUrl,
+      request,
+      getAuthToken,
+      getSettings,
+      getFavorites,
+      toggleFavorite,
+      getInstructors,
+      getInstructorById
+    ]
   );
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
