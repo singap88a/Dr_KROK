@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FaFacebook, FaInstagram, FaYoutube, FaStar } from 'react-icons/fa';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
  
 
@@ -13,7 +14,6 @@ export default function TrainerArticlesPage() {
   const { t, i18n } = useTranslation();
   const [instructors, setInstructors] = useState([]);
   const [blogs, setBlogs] = useState([]);
-  const [pagination, setPagination] = useState(null);
   const [selectedInstructorId, setSelectedInstructorId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -36,7 +36,6 @@ export default function TrainerArticlesPage() {
         const res = await getBlogs({ page: 1, per_page: 15 });
         if (!mounted) return;
         setBlogs(Array.isArray(res.data) ? res.data : []);
-        setPagination(res.pagination || null);
       } catch (e) {
         if (!mounted) return;
         setError(e?.message || t('articles.error'));
@@ -112,7 +111,13 @@ export default function TrainerArticlesPage() {
             </div>
 
             {loading ? (
-              <div className="p-6 text-center bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">{t('articles.loading')}</div>
+              <div className="p-6 text-center bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">
+                <LoadingSpinner
+                  variant="spinner"
+                  size="lg"
+                  className="text-primary"
+                />
+              </div>
             ) : error ? (
               <div className="p-6 text-center text-red-600 bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">{t('articles.error')}</div>
             ) : !filteredBlogs.length ? (

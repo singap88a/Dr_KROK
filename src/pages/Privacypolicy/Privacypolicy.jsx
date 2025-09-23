@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import he from 'he'
 import { useApi } from '../../context/ApiContext'
 import { useTranslation } from 'react-i18next'
+import LoadingSpinner from '../../components/LoadingSpinner'
 
 export default function Privacypolicy() {
   const { request } = useApi()
@@ -50,11 +51,7 @@ export default function Privacypolicy() {
   }, [request, i18n.language]) // Add i18n.language dependency to re-fetch when language changes
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">{t('privacyPolicy.loading')}</div>
-      </div>
-    )
+    return <LoadingSpinner fullScreen={true} text={t('privacyPolicy.loading')} />
   }
 
   if (error) {

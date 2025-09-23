@@ -6,6 +6,7 @@ import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Books() {
   const navigate = useNavigate();
@@ -37,8 +38,8 @@ export default function Books() {
         const response = await getFavorites();
         const favoriteIds = (response.data || []).map(fav => fav.table_id);
         setFavorites(favoriteIds);
-      } catch (err) {
-        console.error("Failed to fetch favorites:", err);
+      } catch {
+        console.error("Failed to fetch favorites");
       }
     };
 
@@ -76,7 +77,11 @@ export default function Books() {
     return (
       <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
         <div className="mx-auto max-w-7xl">
-          <div className="text-center">{t('books.loading')}</div>
+          <LoadingSpinner
+            variant="spinner"
+            size="lg"
+            className="text-primary"
+          />
         </div>
       </section>
     );

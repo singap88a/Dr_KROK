@@ -6,6 +6,7 @@ import { useUser } from "../../context/UserContext";
 import he from 'he';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -83,32 +84,19 @@ export default function BookDetails() {
     }
   };
 
-  // منع النقر بزر الماوس الأيمن لمنع خيارات التحميل
-  const disableRightClick = (e) => {
-    e.preventDefault();
-    return false;
-  };
 
-  // منع استخدام مفاتيح الاختصار للتحميل أو الطباعة
-  const disableKeys = (e) => {
-    // Ctrl+S, Ctrl+P, F12, etc.
-    if (e.ctrlKey && (e.key === 's' || e.key === 'p')) {
-      e.preventDefault();
-      return false;
-    }
-    
-    // منع فتح أدوات المطورين
-    if (e.key === 'F12') {
-      e.preventDefault();
-      return false;
-    }
-  };
 
   if (loading) {
     return (
-      <div className="p-10 text-center">
-        <p className="text-lg">{t('books.loading_book_details')}</p>
-      </div>
+      <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">
+        <div className="max-w-6xl mx-auto">
+          <LoadingSpinner
+            variant="spinner"
+            size="lg"
+            className="text-primary"
+          />
+        </div>
+      </section>
     );
   }
 
@@ -277,14 +265,12 @@ export default function BookDetails() {
                   </button>
                 </div>
               ) : (
-                <iframe
-                  src={pdfUrl}
-                  className="w-full h-full border-0"
-                  title="PDF Viewer"
-                  onContextMenu={disableRightClick}
-                  onKeyDown={disableKeys}
-                  onError={() => setPdfLoadError(true)}
-                />
+<iframe
+  src={`${pdfUrl}#toolbar=0`}
+  className="w-full h-full border-0"
+  title="PDF Viewer"
+/>
+
               )}
             </div>
             
