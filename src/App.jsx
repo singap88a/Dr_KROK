@@ -26,6 +26,7 @@ import AI_Icon from "./pages/GeminiSingap/Icon_Gemini";
 import TestYourself from "./pages/Test_yourself/TestYourself";
 import LoginPage from "./pages/auth/Login/LoginPage";
 import RegisterPage from "./pages/auth/Register/RegisterPage";
+import SocialCallback from "./pages/auth/SocialCallback";
 import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
 import WhatsAppIcon from "./components/WhatsAppIcon";
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
                   <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/callback" element={<SocialCallback />} />
           <Route path="/about" element={<About />} />
           {/* <Route path="/login" element={<Login />} /> */}
           {/* <Route path="/auth" element={<AuthPage />} /> */}

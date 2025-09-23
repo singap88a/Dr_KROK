@@ -8,6 +8,7 @@ import loginAnimation from "../../../components/animations/Login_animation.json"
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import he from "he";
+import { GoogleIcon, AppleIcon } from "../SocialIcons";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -237,8 +238,39 @@ export default function RegisterPage() {
               </button>
             </form>
 
+            {/* Social Login Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 text-gray-500 bg-surface">{t('auth.register.or_continue_with')}</span>
+              </div>
+            </div>
+
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => window.location.href = 'https://dr-krok.hudurly.com/api/auth/google?register=true'}
+                className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <GoogleIcon className="w-5 h-5 mr-3" />
+                <span className="font-medium text-gray-700">{t('auth.register.sign_up_with_google')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.location.href = 'https://dr-krok.hudurly.com/api/auth/apple?register=true'}
+                className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <AppleIcon className="w-5 h-5 mr-3" />
+                <span className="font-medium text-gray-700">{t('auth.register.sign_up_with_apple')}</span>
+              </button>
+            </div>
+
             {/* Link to Login */}
-            <div className="mt-4 text-sm text-center">
+            <div className="mt-6 text-sm text-center">
               {t('auth.register.have_account')}{" "}
               <Link
                 to="/login"
