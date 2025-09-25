@@ -1,9 +1,10 @@
 import React from "react";
 import { FaPlayCircle, FaUserTie, FaClock } from "react-icons/fa";
+import { FiHeart } from "react-icons/fi";
 import RatingStars from "./RatingStars";
 import { Link } from "react-router-dom";
 
-export default function VideoCourseCard({ course, onClick }) {
+export default function VideoCourseCard({ course, onClick, isFavorite, onToggleFavorite }) {
   return (
     <article
       onClick={() => onClick(course)}
@@ -21,6 +22,17 @@ export default function VideoCourseCard({ course, onClick }) {
         <div className="absolute px-2 py-1 text-xs text-white rounded top-3 left-3 bg-black/40 backdrop-blur">
           <FaPlayCircle className="inline mr-2" /> Video
         </div>
+        <button
+          aria-label="toggle favorite"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite(course.id);
+          }}
+          className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
+        >
+          <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+        </button>
       </div>
 
       <div className="p-4 sm:p-5">
@@ -42,9 +54,21 @@ export default function VideoCourseCard({ course, onClick }) {
           </div>
 
           <div className="text-right">
+            {/* السعر بعد الخصم */}
             <div className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-              ${course.price}
+              {course.discount && course.discount > 0
+                ? (course.price - course.discount).toFixed(2)
+                : course.price.toFixed(2)}
             </div>
+            {/* السعر الأصلي */}
+            {course.discount && course.discount > 0 && (
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-gray-500 line-through dark:text-gray-400">
+                  ${course.price.toFixed(2)}
+                </span>
+ 
+              </div>
+            )}
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {course.students} students
             </div>
@@ -58,7 +82,7 @@ export default function VideoCourseCard({ course, onClick }) {
               {course.rating}
             </span>
           </div>
-          <Link to="/coursedetails">
+          <Link to={`/courses/${course.id}`}>
                     <button
             onClick={(e) => {
               e.stopPropagation(); /* quick-buy placeholder */

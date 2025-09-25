@@ -1,8 +1,9 @@
 import React from "react";
 import { FaVideo, FaUserTie, FaClock, FaUsers } from "react-icons/fa";
+import { FiHeart } from "react-icons/fi";
 import RatingStars from "./RatingStars";
 
-export default function LiveCourseCard({ course, onClick }) {
+export default function LiveCourseCard({ course, onClick, isFavorite, onToggleFavorite }) {
   return (
     <article
       onClick={() => onClick(course)}
@@ -17,6 +18,17 @@ export default function LiveCourseCard({ course, onClick }) {
           <div className="absolute flex items-center gap-1 px-2 py-1 text-xs text-white bg-red-500 rounded top-3 left-3">
             <FaVideo /> Live
           </div>
+          <button
+            aria-label="toggle favorite"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleFavorite(course.id);
+            }}
+            className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
+          >
+            <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+          </button>
         </div>
 
         <div className="flex-1 p-4 sm:p-5">

@@ -170,6 +170,45 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      // Video Courses API
+      async getVideoCourses(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        if (params.per_page) query.set("per_page", params.per_page);
+        const path = query.toString() ? `video_courses?${query.toString()}` : "video_courses";
+        const response = await request(path);
+        return {
+          data: Array.isArray(response?.data) ? response.data : [],
+          pagination: response?.pagination || null,
+          raw: response,
+        };
+      },
+      async getVideoCourseById(id) {
+        if (!id) throw new Error("Course id is required");
+        try {
+          const response = await request(`video_courses/${id}`);
+          return response?.data || null;
+        } catch (err) {
+          // Fallbacks for different backend routes
+          if (err?.status === 404) {
+            const candidates = [
+              `video_courses/show/${id}`,
+              `video_course/${id}`,
+              `courses/video/${id}`,
+              `courses/${id}`,
+            ];
+            for (const path of candidates) {
+              try {
+                const res2 = await request(path);
+                if (res2?.data) return res2.data;
+              } catch (e2) {
+                // try next
+              }
+            }
+          }
+          throw err;
+        }
+      },
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();

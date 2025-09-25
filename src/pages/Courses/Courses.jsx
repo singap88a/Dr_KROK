@@ -1,5 +1,5 @@
 // CoursesPage.jsx
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FaClock,
   FaStar,
@@ -8,27 +8,113 @@ import {
   FaVideo,
   FaUsers,
 } from "react-icons/fa";
-import { sampleVideoCourses, sampleLiveCourses } from "./data/coursesData";
+import { FiHeart } from "react-icons/fi";
+import { sampleLiveCourses } from "./data/coursesData";
 import RatingStars from "./components/RatingStars";
 import VideoCourseCard from "./components/VideoCourseCard";
 import LiveCourseCard from "./components/LiveCourseCard";
+import { useApi } from "../../context/ApiContext";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useUser } from "../../context/UserContext";
+import { toast } from "react-toastify";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Courses() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { getVideoCourses, getFavorites, toggleFavorite } = useApi();
+  const { isLoggedIn } = useUser();
   const [activeTab, setActiveTab] = useState("video"); // video | live
   const [query, setQuery] = useState("");
-
-  const videoCourses = sampleVideoCourses;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [videoCourses, setVideoCourses] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const liveCourses = sampleLiveCourses;
 
+  useEffect(() => {
+    if (activeTab !== "video") return;
+    let mounted = true;
+    setLoading(true);
+    setError("");
+    getVideoCourses({ page: 1, per_page: 30 })
+      .then((res) => {
+        if (!mounted) return;
+        const mapped = (res.data || []).map((c) => ({
+          id: c.id,
+          type: "video",
+          title: c.title,
+          description: c.description,
+          instructor: c.instructor?.name || c.instructor || "",
+          hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
+          students: c.enrolled_count ?? 0,
+          rating: c.avg_rating ?? 0,
+          price: c.price ? Number(c.price) : 0,
+          discount: c.discount ? Number(c.discount) : 0, // أضف هذا السطر
+          img:
+            c.image && typeof c.image === "string" && c.image.length > 0
+              ? c.image
+              : "/logo.png",
+        }));
+        setVideoCourses(mapped);
+      })
+      .catch((e) => {
+        if (!mounted) return;
+        setError(e?.message || "Failed to load courses");
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, [activeTab, getVideoCourses]);
+
+  // Load favorites to reflect heart state
+  useEffect(() => {
+    let mounted = true;
+    getFavorites()
+      .then((res) => {
+        if (!mounted) return;
+        const favs = (res.data || [])
+          .filter((f) => f.type === "course")
+          .map((f) => f.table_id);
+        setFavoriteIds(favs);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [getFavorites]);
+
+  const onToggleFavorite = async (courseId) => {
+    if (!isLoggedIn) {
+      toast.info(t("auth.login_required", "Please login to use favorites"));
+      return;
+    }
+    try {
+      const res = await toggleFavorite(courseId, "course");
+      setFavoriteIds((prev) =>
+        res.message === "Added to favorites"
+          ? [...new Set([...prev, courseId])]
+          : prev.filter((id) => id !== courseId)
+      );
+      toast.success(res.message);
+    } catch (e) {
+      toast.error(t("favorites.failedToRemove", "Failed to remove from favorites"));
+    }
+  };
+
   const visible = activeTab === "video" ? videoCourses : liveCourses;
-  const filtered = visible.filter((c) => {
-    const t = `${c.title} ${c.instructor} ${c.description}`.toLowerCase();
-    return t.includes(query.toLowerCase());
-  });
+  const filtered = useMemo(() => {
+    return visible.filter((c) => {
+      const text = `${c.title} ${c.instructor || ""} ${c.description || ""}`.toLowerCase();
+      return text.includes(query.toLowerCase());
+    });
+  }, [visible, query]);
 
   function goToDetails(course) {
-    // connect to your routing logic here
-    alert(`Open details page for: ${course.title}`);
+    if (!course?.id) return;
+    navigate(`/courses/${course.id}`);
   }
 
   return (
@@ -37,12 +123,9 @@ export default function Courses() {
         {/* Header */}
         <header className="flex items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl dark:text-white">
-              All Courses
-            </h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl dark:text-white">{t("courses.allCourses", "All Courses")}</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-              Choose course type — Recorded Video Courses or Interactive Live
-              Courses.
+              {t("courses.chooseType", "Choose course type — Recorded Video Courses or Interactive Live Courses.")}
             </p>
           </div>
 
@@ -56,7 +139,7 @@ export default function Courses() {
                     : "text-gray-600 dark:text-gray-200"
                 }`}
               >
-                <FaPlayCircle className="inline mr-2" /> Video Course
+                <FaPlayCircle className="inline mr-2" /> {t("courses.videoCourse", "Video Course")}
               </button>
               <button
                 onClick={() => setActiveTab("live")}
@@ -66,7 +149,7 @@ export default function Courses() {
                     : "text-gray-600 dark:text-gray-200"
                 }`}
               >
-                <FaVideo className="inline mr-2" /> Live Course
+                <FaVideo className="inline mr-2" /> {t("courses.liveCourse", "Live Course")}
               </button>
             </div>
 
@@ -110,15 +193,22 @@ export default function Courses() {
         {/* Summary */}
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="text-sm text-gray-600 dark:text-gray-300">
-            Showing {filtered.length} of {visible.length} — Type:{" "}
+            {t("courses.showing", "Showing")} {filtered.length} {t("courses.of", "of")} {visible.length} — {t("courses.type", "Type")}:{" "}
             <span className="font-medium">
-              {activeTab === "video" ? "Video Course" : "Live Course"}
+              {activeTab === "video" ? t("courses.videoCourse", "Video Course") : t("courses.liveCourse", "Live Course")}
             </span>
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Layout: Modern Cards
+            {t("courses.layoutModern", "Layout: Modern Cards")}
           </div>
         </div>
+
+        {activeTab === "video" && loading && <LoadingSpinner />}
+        {activeTab === "video" && !!error && (
+          <div className="p-6 mb-6 text-center text-red-600 bg-white shadow dark:bg-gray-800 rounded-2xl">
+            {t("common.error", "Error")}: {error}
+          </div>
+        )}
 
         {/* Grid */}
         <section>
@@ -135,23 +225,25 @@ export default function Courses() {
                   key={course.id}
                   course={course}
                   onClick={goToDetails}
+                  isFavorite={favoriteIds.includes(course.id)}
+                  onToggleFavorite={onToggleFavorite}
                 />
               ) : (
                 <LiveCourseCard
                   key={course.id}
                   course={course}
                   onClick={goToDetails}
+                  isFavorite={favoriteIds.includes(course.id)}
+                  onToggleFavorite={onToggleFavorite}
                 />
               )
             )}
 
             {filtered.length === 0 && (
               <div className="p-8 text-center bg-white shadow col-span-full dark:bg-gray-800 rounded-2xl">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  No results found
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("courses.noResults", "No results found")}</h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Try different search keywords or choose another course type.
+                  {t("courses.tryDifferentSearch", "Try different search keywords or choose another course type.")}
                 </p>
               </div>
             )}
@@ -161,3 +253,5 @@ export default function Courses() {
     </div>
   );
 }
+
+

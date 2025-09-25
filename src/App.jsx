@@ -55,8 +55,7 @@ export default function App() {
           <Route path="/buynow" element={<BuyNow />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/courses" element={<Courses />} />
-
-          <Route path="/coursedetails" element={<CourseDetails />} />
+          <Route path="/courses/:id" element={<CourseDetails />} />
 
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardHome />} />

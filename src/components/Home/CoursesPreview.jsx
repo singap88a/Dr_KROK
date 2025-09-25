@@ -1,90 +1,222 @@
-import React from "react";
-import { FiClock, FiUsers } from "react-icons/fi";
+import React, { useEffect, useMemo, useState } from "react";
+import { FiClock, FiUsers, FiHeart, FiStar } from "react-icons/fi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { sampleVideoCourses } from "../../pages/Courses/data/coursesData";
+import { Link } from "react-router-dom";
+import { useApi } from "../../context/ApiContext";
+import { useTranslation } from "react-i18next";
+import { useUser } from "../../context/UserContext";
+import { toast } from "react-toastify";
+import LoadingSpinner from "../LoadingSpinner";
 
 export default function CoursesPreview({ courses }) {
-  // لو مبعتش props.courses يجيب الداتا من الملف
-  const list = courses && courses.length ? courses : sampleVideoCourses;
+  const { t } = useTranslation();
+  const { getVideoCourses, getFavorites, toggleFavorite } = useApi();
+  const { isLoggedIn } = useUser();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [apiCourses, setApiCourses] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
+
+  useEffect(() => {
+    if (courses && courses.length) return;
+    let isMounted = true;
+    setLoading(true);
+    setError("");
+    getVideoCourses({ per_page: 10, page: 1 })
+      .then((res) => {
+        if (!isMounted) return;
+        setApiCourses(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((e) => {
+        if (!isMounted) return;
+        setError(e?.message || "Failed to load courses");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [courses, getVideoCourses]);
+
+  // Load favorites to reflect heart state
+  useEffect(() => {
+    let mounted = true;
+    getFavorites()
+      .then((res) => {
+        if (!mounted) return;
+        const favs = (res.data || [])
+          .filter((f) => f.type === "course")
+          .map((f) => f.table_id);
+        setFavoriteIds(favs);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [getFavorites]);
+
+  const onToggleFavorite = async (courseId) => {
+    if (!isLoggedIn) {
+      toast.info(t("auth.login_required", "Please login to use favorites"));
+      return;
+    }
+    try {
+      const res = await toggleFavorite(courseId, "course");
+      setFavoriteIds((prev) =>
+        res.message === "Added to favorites"
+          ? [...new Set([...prev, courseId])]
+          : prev.filter((id) => id !== courseId)
+      );
+      toast.success(res.message);
+    } catch (e) {
+      toast.error(t("favorites.failedToRemove", "Failed to remove from favorites"));
+    }
+  };
+
+  const list = useMemo(() => {
+    const src = courses && courses.length ? courses : apiCourses;
+    return src.map((c) => ({
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
+      students: c.enrolled_count ?? 0,
+      price: c.price ? Number(c.price) : 0,
+      discount: c.discount ? Number(c.discount) : 0,
+      rating: c.avg_rating ?? 0,
+      img:
+        c.image && typeof c.image === "string" && c.image.length > 0
+          ? c.image
+          : "/logo.png",
+    }));
+  }, [courses, apiCourses]);
 
   return (
-    <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="px-6 mx-auto max-w-7xl">
+    <section className="relative w-full py-10 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="px-4 mx-auto max-w-7xl">
         <h2 className="mb-10 text-3xl font-bold tracking-tight text-center md:text-4xl">
-          Featured Medical Courses
+          {t("courses.featuredVideoCourses", "Featured Video Courses")}
         </h2>
 
-        {/* Swiper Section */}
+        {loading && <LoadingSpinner />}
+        {!!error && (
+          <div className="py-4 mb-6 text-center text-red-600">
+            {t("common.error", "Error")}: {error}
+          </div>
+        )}
+
         <Swiper
           modules={[Pagination, Autoplay]}
-          spaceBetween={20}
+          spaceBetween={24}
           slidesPerView={1}
           breakpoints={{
             640: { slidesPerView: 1 },
             768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-            1280: { slidesPerView: 4 },
+            1200: { slidesPerView: 3 },
           }}
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+            dynamicMainBullets: 4
+          }}
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
           loop={true}
-          pagination={{ clickable: true }}
-          className="pb-12"
+          grabCursor={true}
+          style={{ paddingBottom: "40px" }}
         >
-          {list.map((course) => (
-            <SwiperSlide key={course.id}>
-              <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1">
-                <div className="overflow-hidden h-44">
-                  <img
-                    src={course.img}
-                    alt={course.title}
-                    className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="mb-2 text-lg font-semibold line-clamp-2">
-                    {course.title}
-                  </h3>
-                  <p className="mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                    {course.description}
-                  </p>
-
-                  <div className="flex items-center justify-between mb-3 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="flex items-center gap-2">
-                      <FiClock /> {course.hours}h
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <FiUsers /> {course.students} Students
-                    </span>
+          {list.map((course) => {
+            const hasDiscount = course.discount && course.discount > 0;
+            const finalPrice = hasDiscount
+              ? (course.price - course.discount).toFixed(2)
+              : course.price.toFixed(2);
+            const discountPercent = hasDiscount
+              ? Math.round((course.discount / course.price) * 100)
+              : 0;
+            return (
+              <SwiperSlide key={course.id}>
+                <div className="relative flex flex-col overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 group">
+                  <Link
+                    to={`/courses/${course.id}`}
+                    style={{ textDecoration: "none" }}
+                    className="block"
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={course.img}
+                        alt={course.title}
+                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <button
+                        aria-label="toggle favorite"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onToggleFavorite(course.id);
+                        }}
+                        className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 left-3 hover:bg-white/90"
+                      >
+                        <FiHeart className={`text-xl ${favoriteIds.includes(course.id) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+                      </button>
+                      {hasDiscount && (
+                        <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 right-3">
+                           {discountPercent}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col flex-1 p-6">
+                      <h3 className="mb-2 text-lg font-bold text-primary line-clamp-1">{course.title}</h3>
+                      <p className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{course.description}</p>
+                      <div className="flex items-center justify-between mb-3 text-xs text-gray-500 dark:text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <FiClock /> {course.hours}h
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FiUsers /> {course.students} {t("courses.students", "Students")}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FiStar className="text-yellow-400" /> {course.rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                                 <div className="flex items-center ">
+                        <span className="text-xl font-bold text-primary">${finalPrice}</span>
+                        {hasDiscount && (
+                          <span className="ml-2 text-sm text-gray-400 line-through">${course.price.toFixed(2)}</span>
+                        )}
+                      </div> 
+                      </div>
+            
+                    </div>
+                  </Link>
+                  <div className="px-6 pb-4">
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"
+                    >
+                      {t("courses.details", "تفاصيل")}
+                    </Link>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-primary">
-                      ${course.price}
-                    </span>
-                    <button className="px-4 py-2 text-sm font-medium text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110">
-                      View Course
-                    </button>
-                  </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
-      </div>
-
-              <div className="text-center ">
-          <a
-            href="/courses"
+        <div className="mt-10 text-center">
+          <Link
+            to="/courses"
             className="inline-block px-8 py-3 font-medium text-white transition shadow rounded-xl bg-primary hover:shadow-xl"
           >
-            Browse Courses
-          </a>
+            {t("courses.browseCourses", "Browse Courses")}
+          </Link>
         </div>
+      </div>
     </section>
   );
 }
