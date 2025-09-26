@@ -172,10 +172,10 @@ export default function CoursesPreview({ courses }) {
                     <div className="flex flex-col flex-1 p-6">
                       <h3 className="mb-2 text-lg font-bold text-primary line-clamp-1">{course.title}</h3>
                       <p className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{course.description}</p>
-                      <div className="flex items-center justify-between mb-3 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-10 mb-3 text-xs text-gray-500 dark:text-gray-400">
+                        {/* <span className="flex items-center gap-1">
                           <FiClock /> {course.hours}h
-                        </span>
+                        </span> */}
                         <span className="flex items-center gap-1">
                           <FiUsers /> {course.students} {t("courses.students", "Students")}
                         </span>
