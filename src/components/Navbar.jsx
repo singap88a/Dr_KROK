@@ -71,6 +71,15 @@ export default function Navbar() {
 
   const currentLang = languages.find((l) => l.code === language);
 
+  const navItems = [
+    { path: '/', label: 'navbar.home' },
+    { path: '/courses', label: 'navbar.courses' },
+    { path: '/articles', label: 'navbar.blogs' },
+    { path: '/books', label: 'navbar.books' },
+    { path: '/about', label: 'navbar.about' },
+    { path: '/contact', label: 'navbar.contact' },
+  ];
+
   const handleLogout = () => {
     logout();
     window.location.href = "/";
@@ -101,42 +110,17 @@ export default function Navbar() {
 
         {/* Links (desktop) */}
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
-          <li className="group">
-            <Link to="/" className={`relative transition hover:text-primary ${location.pathname === '/' ? 'font-bold text-primary' : ''}`}>
-              {t('navbar.home')}
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
-          <li className="group">
-            <Link to="/courses" className={`relative transition hover:text-primary ${location.pathname === '/courses' ? 'font-bold text-primary' : ''}`}>
-              {t('navbar.courses')}
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/courses' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
-          <li className="group">
-            <Link to="/articles" className={`relative transition hover:text-primary ${location.pathname === '/articles' ? 'font-bold text-primary' : ''}`}>
-              {t('navbar.blogs')}
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/articles' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
-          <li className="group">
-            <Link to="/books" className={`relative transition hover:text-primary ${location.pathname === '/books' ? 'font-bold text-primary' : ''}`}>
-              {t('navbar.books')}
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/books' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
-          <li className="group">
-            <Link to="/about" className={`relative transition hover:text-primary ${location.pathname === '/about' ? 'font-bold text-primary' : ''}`}>
-              {t('navbar.about')}
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
-          <li className="group">
-            <Link to="/contact" className={`relative transition hover:text-primary ${location.pathname === '/contact' ? 'font-bold text-primary' : ''}`}>
-              {t('navbar.contact')}
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/contact' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
+          {navItems.map((item) => (
+            <li key={item.path} className="group">
+              <Link
+                to={item.path}
+                className={`relative transition hover:text-primary ${location.pathname === item.path ? 'font-bold text-primary' : ''}`}
+              >
+                {t(item.label)}
+                <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === item.path ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+              </Link>
+            </li>
+          ))}
         </ul>
         {/* Icons and Buttons */}
         <div className="relative flex items-center space-x-4">
@@ -248,42 +232,15 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="py-4 space-y-4 border-t md:hidden bg-background border-border">
-          <Link
-            to="/"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            {t('navbar.home')}
-          </Link>
-          <Link
-            to="/courses"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            {t('navbar.courses')}
-          </Link>
-          <Link
-            to="/articles"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            {t('navbar.blogs')}
-          </Link>
-          <Link
-            to="/books"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            {t('navbar.books')}
-          </Link>
-          <Link
-            to="/about"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            {t('navbar.about')}
-          </Link>
-          <Link
-            to="/contact"
-            className="block transition text-textSecondary hover:text-primary"
-          >
-            {t('navbar.contact')}
-          </Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="block transition text-textSecondary hover:text-primary"
+            >
+              {t(item.label)}
+            </Link>
+          ))}
 
           {isLoggedIn ? (
             <>

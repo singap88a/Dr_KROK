@@ -340,7 +340,26 @@
     "visitProfile": "Переглянути профіль",
     "connect": "Зв'язатися",
     "instructorDetails": "Деталі викладача",
-    "backToInstructors": "Повернутися до викладачів"
+    "backToInstructors": "Повернутися до викладачів",
+    "details": {
+      "title": "Профіль викладача",
+      "bio": "Біографія",
+      "yearsOfExperience": "Років досвіду",
+      "expertise": "Експертиза",
+      "phone": "Телефон",
+      "gender": "Стать",
+      "courses": "Курси",
+      "noCourses": "Курси ще недоступні",
+      "viewCourse": "Переглянути курс",
+      "socialMedia": "Соціальні мережі",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "youtube": "YouTube",
+      "telegram": "Telegram",
+      "whatsapp": "WhatsApp",
+      "male": "Чоловіча",
+      "female": "Жіноча"
+    }
   },
   "auth": {
     "login": {

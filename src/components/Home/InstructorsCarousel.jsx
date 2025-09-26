@@ -135,7 +135,8 @@ function InstructorsCarousel() {
           >
             {instructors.map((ins) => (
               <SwiperSlide key={ins.id}>
-                <div className="flex flex-col items-center h-full p-8 transition-transform duration-300 border border-gray-200 shadow-xl rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                <Link to={`/instructors/${ins.id}`} className="block">
+                  <div className="flex flex-col items-center h-full p-8 transition-transform duration-300 border border-gray-200 shadow-xl rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
 
                   {/* Instructor Image */}
                   <div className="flex justify-center">
@@ -200,6 +201,7 @@ function InstructorsCarousel() {
                     </div>
                   </div>
                 </div>
+                </Link>
               </SwiperSlide>
             ))}
           </Swiper>

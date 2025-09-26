@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   FaFacebookF,
   FaInstagram,
@@ -124,70 +125,75 @@ function Instructors() {
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {filteredInstructors.map((instructor) => (
-              <div
+              <Link
                 key={instructor.id}
-                className="overflow-hidden transition-all duration-300 bg-white border shadow-sm group dark:bg-gray-800 rounded-2xl hover:shadow-lg"
+                to={`/instructors/${instructor.id}`}
+                className="block"
               >
-                <div className="relative">
-                  <img
-                    src={instructor.image || "/placeholder-avatar.jpg"}
-                    alt={instructor.name}
-                    className="object-cover w-full h-56"
-                    onError={(e) => {
-                      e.target.src = "/placeholder-avatar.jpg";
-                    }}
-                  />
-                  <div className="absolute inset-0 transition-opacity opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/40 to-transparent"></div>
-                </div>
-                <div className="p-6 text-center">
-                  <h3 className="mb-1 text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary">
-                    {instructor.name}
-                  </h3>
-                  <p className="mb-4 text-sm font-medium text-primary">
-                    {instructor.job_title || t("instructors.instructor")}
-                  </p>
+                <div
+                  className="overflow-hidden transition-all duration-300 bg-white border shadow-sm group dark:bg-gray-800 rounded-2xl hover:shadow-lg"
+                >
+                  <div className="relative">
+                    <img
+                      src={instructor.image || "/placeholder-avatar.jpg"}
+                      alt={instructor.name}
+                      className="object-cover w-full h-56"
+                      onError={(e) => {
+                        e.target.src = "/placeholder-avatar.jpg";
+                      }}
+                    />
+                    <div className="absolute inset-0 transition-opacity opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/40 to-transparent"></div>
+                  </div>
+                  <div className="p-6 text-center">
+                    <h3 className="mb-1 text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary">
+                      {instructor.name}
+                    </h3>
+                    <p className="mb-4 text-sm font-medium text-primary">
+                      {instructor.job_title || t("instructors.instructor")}
+                    </p>
 
-                  {/* Social Icons Centered */}
-                  <div className="flex justify-center space-x-3">
-                    {instructor.facebook && (
+                    {/* Social Icons Centered */}
+                    <div className="flex justify-center space-x-3">
+                      {instructor.facebook && (
+                        <a
+                          href={instructor.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
+                        >
+                          <FaFacebookF size={15} />
+                        </a>
+                      )}
+                      {instructor.instagram && (
+                        <a
+                          href={instructor.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
+                        >
+                          <FaInstagram size={15} />
+                        </a>
+                      )}
+                      {instructor.youtube && (
+                        <a
+                          href={instructor.youtube}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
+                        >
+                          <FaYoutube size={15} />
+                        </a>
+                      )}
                       <a
-                        href={instructor.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`mailto:${instructor.email}`}
                         className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
                       >
-                        <FaFacebookF size={15} />
+                        <FaEnvelope size={15} />
                       </a>
-                    )}
-                    {instructor.instagram && (
-                      <a
-                        href={instructor.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
-                      >
-                        <FaInstagram size={15} />
-                      </a>
-                    )}
-                    {instructor.youtube && (
-                      <a
-                        href={instructor.youtube}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
-                      >
-                        <FaYoutube size={15} />
-                      </a>
-                    )}
-                    <a
-                      href={`mailto:${instructor.email}`}
-                      className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
-                    >
-                      <FaEnvelope size={15} />
-                    </a>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

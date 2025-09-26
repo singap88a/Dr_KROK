@@ -31,6 +31,7 @@ import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
 import WhatsAppIcon from "./components/WhatsAppIcon";
 import Instructors from "./pages/Instructors/Instructors";
+import InstructorDetails from "./pages/Instructors/InstructorDetails";
 
 export default function App() {
   return (
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/test" element={<TestYourself />} />
           <Route path="/privacypolicy" element={<Privacypolicy />} />
                     <Route path="/instructors" element={<Instructors />} />
+          <Route path="/instructors/:id" element={<InstructorDetails />} />
 
         </Routes>
       </main>

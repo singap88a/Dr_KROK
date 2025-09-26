@@ -403,7 +403,26 @@
     "visitProfile": "Visit Profile",
     "connect": "Connect",
     "instructorDetails": "Instructor Details",
-    "backToInstructors": "Back to Instructors"
+    "backToInstructors": "Back to Instructors",
+    "details": {
+      "title": "Instructor Profile",
+      "bio": "Biography",
+      "yearsOfExperience": "Years of Experience",
+      "expertise": "Expertise",
+      "phone": "Phone",
+      "gender": "Gender",
+      "courses": "Courses",
+      "noCourses": "No courses available yet",
+      "viewCourse": "View Course",
+      "socialMedia": "Social Media",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "youtube": "YouTube",
+      "telegram": "Telegram",
+      "whatsapp": "WhatsApp",
+      "male": "Male",
+      "female": "Female"
+    }
   }
   ,
   "articles": {

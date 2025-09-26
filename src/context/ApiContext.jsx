@@ -156,7 +156,8 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
   }, [request]);
 
   const getInstructorById = useCallback(async (id) => {
-    return await request(`instructors/${id}`);
+    const response = await request(`instructor/${id}`);
+    return response.data;
   }, [request]);
 
   const value = useMemo(
