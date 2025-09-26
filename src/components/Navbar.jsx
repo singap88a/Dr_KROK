@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { useApi } from "../context/ApiContext";
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const { getSettings } = useApi();
+  const location = useLocation();
 
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
@@ -100,38 +101,43 @@ export default function Navbar() {
 
         {/* Links (desktop) */}
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
-          <li>
-            <Link to="/" className="transition hover:text-primary">
+          <li className="group">
+            <Link to="/" className={`relative transition hover:text-primary ${location.pathname === '/' ? 'font-bold text-primary' : ''}`}>
               {t('navbar.home')}
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
-          <li>
-            <Link to="/courses" className="transition hover:text-primary">
+          <li className="group">
+            <Link to="/courses" className={`relative transition hover:text-primary ${location.pathname === '/courses' ? 'font-bold text-primary' : ''}`}>
               {t('navbar.courses')}
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/courses' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
-          <li>
-            <Link to="/articles" className="transition hover:text-primary">
+          <li className="group">
+            <Link to="/articles" className={`relative transition hover:text-primary ${location.pathname === '/articles' ? 'font-bold text-primary' : ''}`}>
               {t('navbar.blogs')}
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/articles' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
-          <li>
-            <Link to="/books" className="transition hover:text-primary">
+          <li className="group">
+            <Link to="/books" className={`relative transition hover:text-primary ${location.pathname === '/books' ? 'font-bold text-primary' : ''}`}>
               {t('navbar.books')}
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/books' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
-          <li>
-            <Link to="/about" className="transition hover:text-primary">
+          <li className="group">
+            <Link to="/about" className={`relative transition hover:text-primary ${location.pathname === '/about' ? 'font-bold text-primary' : ''}`}>
               {t('navbar.about')}
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
-          <li>
-            <Link to="/contact" className="transition hover:text-primary">
+          <li className="group">
+            <Link to="/contact" className={`relative transition hover:text-primary ${location.pathname === '/contact' ? 'font-bold text-primary' : ''}`}>
               {t('navbar.contact')}
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === '/contact' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
         </ul>
-
         {/* Icons and Buttons */}
         <div className="relative flex items-center space-x-4">
           {/* Language Toggle */}
