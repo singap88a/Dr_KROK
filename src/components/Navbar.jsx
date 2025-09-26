@@ -111,6 +111,11 @@ export default function Navbar() {
             </Link>
           </li>
           <li>
+            <Link to="/articles" className="transition hover:text-primary">
+              {t('navbar.blogs')}
+            </Link>
+          </li>
+          <li>
             <Link to="/books" className="transition hover:text-primary">
               {t('navbar.books')}
             </Link>
@@ -248,6 +253,12 @@ export default function Navbar() {
             className="block transition text-textSecondary hover:text-primary"
           >
             {t('navbar.courses')}
+          </Link>
+          <Link
+            to="/articles"
+            className="block transition text-textSecondary hover:text-primary"
+          >
+            {t('navbar.blogs')}
           </Link>
           <Link
             to="/books"

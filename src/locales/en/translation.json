@@ -2,6 +2,7 @@
   "navbar": {
     "home": "Home",
     "courses": "Courses",
+    "blogs": "Blogs",
     "books": "Books",
     "about": "About Us",
     "contact": "Contact",
@@ -100,7 +101,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by Icode Teck software company.",
+    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by <strong>Icode Teck</strong> software company.",
     "quickLinks": "Quick Links",
     "home": "Home",
     "courses": "Courses",

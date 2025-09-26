@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaYoutube, FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import { useApi } from "../context/ApiContext";
 import he from 'he';
 
@@ -65,7 +65,7 @@ export default function Footer() {
                 e.currentTarget.src = "/logo.png";
               }}
             />
-            <span className="w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0  left-1/2 group-hover:opacity-100 bg-primary">
+            <span className="w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
               Dr KROK
             </span>
           </div>
@@ -179,7 +179,13 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="pt-6 mt-10 text-sm text-center border-t border-border text-text-muted">
-        {t('footer.copyright', { year: new Date().getFullYear() })}
+        <Trans
+          i18nKey="footer.copyright"
+          values={{ year: new Date().getFullYear() }}
+          components={{
+            strong: <strong style={{ color: '#0891b2', fontWeight: '900' }} />
+          }}
+        />
       </div>
     </footer>
   );

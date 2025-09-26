@@ -2,6 +2,7 @@
   "navbar": {
     "home": "Головна",
     "courses": "Курси",
+    "blogs": "Блоги",
     "books": "Книги",
     "about": "Про нас",
     "contact": "Контакти",
@@ -100,7 +101,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} Dr KROK. Всі права захищені. Розроблено та розроблено компанією Icode Teck.",
+    "copyright": "© {{year}} Dr KROK. Всі права захищені. Розроблено та розроблено компанією <strong>Icode Teck</strong>.",
     "quickLinks": "Швидкі посилання",
     "home": "Головна",
     "courses": "Курси",

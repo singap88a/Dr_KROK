@@ -268,7 +268,7 @@ export default function CourseDetails() {
             <div className="flex items-center gap-2">
               <FaUsers className="text-primary" /> {t("courses.enrolledStudents", "Enrolled Students")} <span className="font-medium">{course.enrolled_count ?? 0}</span>
             </div>
-            {course.university && (
+            {/* {course.university && (
               <div className="flex items-center gap-2">
                 <FaUniversity className="text-primary" /> {t("courses.university", "University")} <span className="font-medium">
                   {typeof course.university === "string"
@@ -276,7 +276,7 @@ export default function CourseDetails() {
                     : (course.university?.name || "")}
                 </span>
               </div>
-            )}
+            )} */}
             {course.avg_rating && (
               <div className="flex items-center gap-2">
                 <FaStar className="text-primary" /> {t("courses.averageRating", "Average Rating")} <span className="font-medium">{course.avg_rating.toFixed(1)} / 5.0</span>

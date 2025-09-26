@@ -82,7 +82,7 @@ function InstructorsCarousel() {
   }
 
   return (
-    <section className="relative py-16 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+<section className="relative py-16 w-full transition-colors duration-300 bg-gradient-to-b from-[#e0f9fa] via-[#e0f9fa] to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="px-4">
         {/* Title */}
         <div className="flex items-center justify-between mx-auto mt-12 max-w-7xl">
