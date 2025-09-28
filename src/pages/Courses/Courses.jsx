@@ -47,8 +47,9 @@ export default function Courses() {
           title: c.title,
           description: c.description,
           instructor: c.instructor?.name || c.instructor || "",
+          instructorImg: c.instructor_image || "/user.png",
           hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
-          students: c.enrolled_count ?? 0,
+          lessons: c.lessons_count ?? 0,
           rating: c.avg_rating ?? 0,
           price: c.price ? Number(c.price) : 0,
           discount: c.discount ? Number(c.discount) : 0, // أضف هذا السطر

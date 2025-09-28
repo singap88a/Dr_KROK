@@ -1,61 +1,62 @@
 import React from "react";
-import { FaVideo, FaUserTie, FaClock, FaUsers } from "react-icons/fa";
+import { FaVideo } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import RatingStars from "./RatingStars";
 
 export default function LiveCourseCard({ course, onClick, isFavorite, onToggleFavorite }) {
+  const instructorImg = course.instructorImg || '/user.png';
+
   return (
     <article
       onClick={() => onClick(course)}
-      className="group cursor-pointer bg-gradient-to-br from-white to-slate-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl shadow-lg overflow-hidden transform transition hover:scale-[1.01] hover:shadow-2xl"
+      className="relative flex flex-col overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 group"
       role="button"
       tabIndex={0}
       aria-label={`Open details for ${course.title}`}
     >
-      <div className="flex flex-col sm:flex-row">
-        <div className="relative w-full h-40 sm:w-60 sm:h-auto">
-          <img src={course.img} alt={course.title} className="object-cover w-full h-full" />
-          <div className="absolute flex items-center gap-1 px-2 py-1 text-xs text-white bg-red-500 rounded top-3 left-3">
-            <FaVideo /> Live
-          </div>
-          <button
-            aria-label="toggle favorite"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onToggleFavorite(course.id);
-            }}
-            className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
-          >
-            <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
-          </button>
+      <div className="relative h-48 overflow-hidden">
+        <img
+          src={course.img}
+          alt={course.title}
+          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute px-2 py-1 text-xs text-white rounded top-3 left-3 bg-red-500/90 backdrop-blur">
+          <FaVideo className="inline mr-1" /> Live
         </div>
-
-        <div className="flex-1 p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{course.title}</h3>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{course.description}</p>
-
-          <div className="grid grid-cols-1 gap-2 mt-3 text-sm text-gray-600 sm:grid-cols-2 dark:text-gray-300">
-            <div className="flex items-center gap-2"><FaUserTie /> {course.instructor}</div>
-            <div className="flex items-center gap-2"><FaClock /> {course.date}</div>
-            <div className="flex items-center gap-2"><FaClock /> {course.sessionDuration}</div>
-            <div className="flex items-center gap-2"><FaUsers /> {course.students} enrolled</div>
-          </div>
-
-          <div className="flex items-center justify-between mt-4">
+        <button
+          aria-label="toggle favorite"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite(course.id);
+          }}
+          className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
+        >
+          <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+        </button>
+      </div>
+      <div className="flex flex-col flex-1 p-6">
+        <h3 className="mb-2 text-lg font-bold text-primary line-clamp-1">{course.title}</h3>
+        <p className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{course.description}</p>
+        <div className="mb-3 space-y-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RatingStars value={course.rating} />
-              <span className="text-sm text-gray-600 dark:text-gray-300">{course.rating}</span>
+              <img
+                src={instructorImg}
+                alt={course.instructor}
+                className="w-5 h-5 rounded-full"
+              />
+              <span>{course.instructor}</span>
             </div>
-
-            <div className="text-right">
-              <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">${course.price}</div>
-              <button
-                onClick={(e) => { e.stopPropagation(); /* join placeholder */ }}
-                className="px-3 py-1 mt-2 text-sm text-white transition rounded-lg bg-emerald-600 hover:bg-emerald-500"
-              >
-                Join
-              </button>
+            <span>{course.sessionDuration}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <RatingStars value={course.rating} size={12} />
+              <span>{course.rating.toFixed(1)}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="text-xl font-bold text-primary">${course.price.toFixed(2)}</span>
             </div>
           </div>
         </div>

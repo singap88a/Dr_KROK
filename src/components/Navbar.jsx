@@ -4,6 +4,7 @@ import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser } from "react-icons/fa"
 import { useUser } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../context/ApiContext";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -22,6 +23,7 @@ export default function Navbar() {
   });
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const { isLoggedIn, userData, logout } = useUser();
 
@@ -81,8 +83,7 @@ export default function Navbar() {
   ];
 
   const handleLogout = () => {
-    logout();
-    window.location.href = "/";
+    setLogoutModalOpen(true);
   };
 
   return (
@@ -267,6 +268,15 @@ export default function Navbar() {
           )}
         </div>
       )}
+
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          logout();
+          window.location.href = "/";
+        }}
+      />
     </nav>
   );
 }

@@ -25,6 +25,7 @@ import {
   FaUniversity,
   FaBriefcase,
   FaUserGraduate,
+  FaCalendarAlt,
 } from "react-icons/fa";
 
 import { useParams, Link } from "react-router-dom";
@@ -167,6 +168,18 @@ export default function CourseDetails() {
     return levelMap[level] || level;
   };
 
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+    // Format: "22-09-2025 03:47 PM"
+    const [datePart, timePart, ampm] = dateString.split(' ');
+    const [day, month, year] = datePart.split('-');
+    let [hour, minute] = timePart.split(':');
+    hour = parseInt(hour);
+    if (ampm === 'PM' && hour !== 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    return new Date(year, month - 1, day, hour, minute);
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -266,17 +279,12 @@ export default function CourseDetails() {
               <FaGlobe className="text-primary" /> {t("courses.language", "Language")} <span className="font-medium">{course.language}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FaUsers className="text-primary" /> {t("courses.enrolledStudents", "Enrolled Students")} <span className="font-medium">{course.enrolled_count ?? 0}</span>
+              <FaBook className="text-primary" /> {t("courses.lectures", "Lectures")} <span className="font-medium">{course.lessons_count || 0}</span>
             </div>
-            {/* {course.university && (
-              <div className="flex items-center gap-2">
-                <FaUniversity className="text-primary" /> {t("courses.university", "University")} <span className="font-medium">
-                  {typeof course.university === "string"
-                    ? course.university
-                    : (course.university?.name || "")}
-                </span>
-              </div>
-            )} */}
+            <div className="flex items-center gap-2">
+              <FaCalendarAlt className="text-primary" /> {t("courses.courseDate", "Course Date")} <span className="font-medium">{course.instructor?.created_at ? parseDate(course.instructor.created_at).toLocaleDateString() : ''}</span>
+            </div>
+
             {course.avg_rating && (
               <div className="flex items-center gap-2">
                 <FaStar className="text-primary" /> {t("courses.averageRating", "Average Rating")} <span className="font-medium">{course.avg_rating.toFixed(1)} / 5.0</span>
@@ -285,7 +293,7 @@ export default function CourseDetails() {
           </div>
 
           <button className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3">
-            {t("books.buy_now", "Buy Now")}
+            {t("courses.startCourse", "Start Course")}
           </button>
         </div>
       </div>

@@ -45,14 +45,16 @@ import { useUser } from "../../context/UserContext";
 import MyOrders from "./MyOrders";
 import MyCourses from "./MyCourses";
 import MyFavorites from "./MyFavorites";
+import LogoutConfirmModal from "../../components/LogoutConfirmModal";
 
 export default function Profile() {
-  const { updateUser } = useUser();
+  const { updateUser, logout } = useUser();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
 
   // Fetch profile data on component mount
@@ -170,10 +172,7 @@ export default function Profile() {
   ];
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      // Handle logout logic here
-      console.log("User logged out");
-    }
+    setLogoutModalOpen(true);
   };
 
   const getStatusColor = (status) => {
@@ -376,6 +375,15 @@ export default function Profile() {
       <main className="flex-1 p-6 pt-20 lg:p-8 lg:pt-8">
         <div className="mx-auto max-w-7xl">{renderContent()}</div>
       </main>
+
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          logout();
+          window.location.href = "/";
+        }}
+      />
     </div>
   );
 }

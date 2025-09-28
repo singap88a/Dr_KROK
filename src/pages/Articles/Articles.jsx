@@ -69,6 +69,20 @@ export default function TrainerArticlesPage() {
     return div.textContent || div.innerText || '';
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const [date, time] = dateStr.split(' ');
+    const [day, month, year] = date.split('-');
+    const dateObj = new Date(`${year}-${month}-${day}T${time.replace(' ', '')}`);
+    return dateObj.toLocaleDateString(currentLang === 'ua' ? 'uk-UA' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <div className="min-h-screen text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-gray-100">
       <div className="p-4 mx-auto max-w-7xl sm:p-6 lg:p-8">
@@ -134,6 +148,7 @@ export default function TrainerArticlesPage() {
                   return (
                     <article key={b.id} className="p-4 overflow-hidden bg-white border border-gray-100 shadow-sm dark:bg-gray-800 rounded-2xl dark:border-gray-700">
                       <h4 className="mb-2 text-lg font-semibold">{b.name}</h4>
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">{formatDate(b.created_at)}</p>
                       <p className="mb-3 text-sm text-gray-600 whitespace-pre-line dark:text-gray-300">{display}</p>
                       {showToggle && (
                         <button onClick={() => toggleExpand(b.id)} className="mb-3 text-sm font-medium text-primary hover:underline">

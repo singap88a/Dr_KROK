@@ -446,6 +446,7 @@
   "courses": {
     "featuredVideoCourses": "Рекомендовані відеокурси",
     "students": "Студенти",
+    "lessons": "Уроки",
     "viewCourse": "Переглянути курс",
     "browseCourses": "Переглянути курси",
     "allCourses": "Всі курси",
@@ -501,6 +502,9 @@
     "beginner": "Початківець",
     "intermediate": "Середній",
     "advanced": "Просунутий",
-    "details": "Деталі"
+    "details": "Деталі",
+    "lectures": "Лекції",
+    "courseDate": "Дата курсу",
+    "startCourse": "Почати курс"
   }
 }

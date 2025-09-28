@@ -447,6 +447,7 @@
   "courses": {
     "featuredVideoCourses": "Featured Video Courses",
     "students": "Students",
+    "lessons": "Lessons",
     "viewCourse": "View Course",
     "browseCourses": "Browse Courses",
     "allCourses": "All Courses",
@@ -502,6 +503,9 @@
     "beginner": "Beginner",
     "intermediate": "Intermediate",
     "advanced": "Advanced",
-    "details": "Details"
+    "details": "Details",
+    "lectures": "Lectures",
+    "courseDate": "Course Date",
+    "startCourse": "Start Course"
   }
 }

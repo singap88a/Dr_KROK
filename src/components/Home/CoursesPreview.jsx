@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiClock, FiUsers, FiHeart, FiStar } from "react-icons/fi";
+import { FaPlayCircle } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -11,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../LoadingSpinner";
+import RatingStars from "../../pages/Courses/components/RatingStars";
 
 export default function CoursesPreview({ courses }) {
   const { t } = useTranslation();
@@ -86,7 +88,9 @@ export default function CoursesPreview({ courses }) {
       title: c.title,
       description: c.description,
       hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
-      students: c.enrolled_count ?? 0,
+      lessons: c.lessons_count ?? 0,
+      instructor: c.instructor || '',
+      instructorImg: c.instructor_image || '/user.png',
       price: c.price ? Number(c.price) : 0,
       discount: c.discount ? Number(c.discount) : 0,
       rating: c.avg_rating ?? 0,
@@ -152,44 +156,49 @@ export default function CoursesPreview({ courses }) {
                         alt={course.title}
                         className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
+              
                       <button
                         aria-label="toggle favorite"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
+                        onClick={() => {
                           onToggleFavorite(course.id);
                         }}
-                        className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 left-3 hover:bg-white/90"
+                        className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
                       >
                         <FiHeart className={`text-xl ${favoriteIds.includes(course.id) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
                       </button>
                       {hasDiscount && (
-                        <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 right-3">
-                           {discountPercent}%
+                        <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 left-3">
+                          {discountPercent}%
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-col flex-1 p-6">
+                    <div className="flex flex-col flex-1 px-6 pt-6">
                       <h3 className="mb-2 text-lg font-bold text-primary line-clamp-1">{course.title}</h3>
                       <p className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{course.description}</p>
-                      <div className="flex items-center gap-10 mb-3 text-xs text-gray-500 dark:text-gray-400">
-                        {/* <span className="flex items-center gap-1">
-                          <FiClock /> {course.hours}h
-                        </span> */}
-                        <span className="flex items-center gap-1">
-                          <FiUsers /> {course.students} {t("courses.students", "Students")}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FiStar className="text-yellow-400" /> {course.rating.toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                                 <div className="flex items-center ">
-                        <span className="text-xl font-bold text-primary">${finalPrice}</span>
-                        {hasDiscount && (
-                          <span className="ml-2 text-sm text-gray-400 line-through">${course.price.toFixed(2)}</span>
-                        )}
-                      </div> 
+                      <div className="mb-3 space-y-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={course.instructorImg}
+                              alt={course.instructor}
+                              className="w-8 h-8 rounded-full"
+                            />
+                            <span>{course.instructor}</span>
+                          </div>
+                          <span>{course.lessons} lessons</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <RatingStars value={course.rating} size={12} />
+                            <span>{course.rating.toFixed(1)}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-xl font-bold text-primary">${finalPrice}</span>
+                            {hasDiscount && (
+                              <span className="ml-2 text-sm text-gray-400 line-through">${course.price.toFixed(2)}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
             
                     </div>
