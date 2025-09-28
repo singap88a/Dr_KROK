@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { FaPlayCircle } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import RatingStars from "./RatingStars";
 
 export default function VideoCourseCard({ course, isFavorite, onToggleFavorite }) {
+  const { t } = useTranslation();
   const hasDiscount = course.discount && course.discount > 0;
   const finalPrice = hasDiscount
     ? (course.price - course.discount).toFixed(2)
@@ -27,8 +29,24 @@ export default function VideoCourseCard({ course, isFavorite, onToggleFavorite }
             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute px-2 py-1 text-xs rounded text-[#fff] top-3 left-3 bg-[#0202023f] backdrop-blur">
-            <FaPlayCircle className="inline mr-1" /> Video
+            <FaPlayCircle className="inline mr-1" /> {t("courses.video")}
           </div>
+          {hasDiscount && (
+            <div className="absolute px-2 py-1 text-xs font-bold text-white bg-red-500 rounded top-3 right-3">
+              -{discountPercent}%
+            </div>
+          )}
+          <button
+            aria-label="toggle favorite"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleFavorite(course.id);
+            }}
+            className={`absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow hover:bg-white/90 ${hasDiscount ? 'top-12 right-3' : 'top-3 right-3'}`}
+          >
+            <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+          </button>
  
         </div>
         <div className="flex flex-col flex-1 px-6 pt-6">
@@ -44,7 +62,7 @@ export default function VideoCourseCard({ course, isFavorite, onToggleFavorite }
                 />
                 <span>{course.instructor}</span>
               </div>
-              <span>{course.lessons} lessons</span>
+              <span>{course.lessons} {t("courses.lessons")}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
@@ -66,7 +84,7 @@ export default function VideoCourseCard({ course, isFavorite, onToggleFavorite }
           to={`/courses/${course.id}`}
           className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"
         >
-          Details
+          {t("courses.details")}
         </Link>
       </div>
     </div>

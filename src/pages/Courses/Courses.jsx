@@ -21,7 +21,7 @@ import { toast } from "react-toastify";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Courses() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { getVideoCourses, getFavorites, toggleFavorite } = useApi();
   const { isLoggedIn } = useUser();
@@ -31,7 +31,20 @@ export default function Courses() {
   const [error, setError] = useState("");
   const [videoCourses, setVideoCourses] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [renderKey, setRenderKey] = useState(0);
   const liveCourses = sampleLiveCourses;
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setRenderKey((prev) => prev + 1);
+    };
+
+    i18n.on("languageChanged", handleLanguageChange);
+
+    return () => {
+      i18n.off("languageChanged", handleLanguageChange);
+    };
+  }, [i18n]);
 
   useEffect(() => {
     if (activeTab !== "video") return;
@@ -68,7 +81,7 @@ export default function Courses() {
     return () => {
       mounted = false;
     };
-  }, [activeTab, getVideoCourses]);
+  }, [activeTab, getVideoCourses, i18n.language]);
 
   // Load favorites to reflect heart state
   useEffect(() => {
@@ -214,6 +227,7 @@ export default function Courses() {
         {/* Grid */}
         <section>
           <div
+            key={renderKey}
             className={`grid grid-cols-1 gap-6 ${
               activeTab === "video"
                 ? "sm:grid-cols-2 lg:grid-cols-3"

@@ -506,6 +506,10 @@
     "details": "Details",
     "lectures": "Lectures",
     "courseDate": "Course Date",
-    "startCourse": "Start Course"
+    "startCourse": "Start Course",
+    "video": "Video",
+    "details": "Details",
+    "lessons": "lessons",
+    "live": "Live"
   }
 }

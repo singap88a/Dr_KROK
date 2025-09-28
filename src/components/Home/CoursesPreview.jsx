@@ -44,7 +44,7 @@ export default function CoursesPreview({ courses }) {
     return () => {
       isMounted = false;
     };
-  }, [courses, getVideoCourses]);
+  }, [courses, getVideoCourses, t]);
 
   // Load favorites to reflect heart state
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function CoursesPreview({ courses }) {
           ? c.image
           : "/logo.png",
     }));
-  }, [courses, apiCourses]);
+  }, [courses, apiCourses, t]);
 
   return (
     <section className="relative w-full py-10 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -185,7 +185,7 @@ export default function CoursesPreview({ courses }) {
                             />
                             <span>{course.instructor}</span>
                           </div>
-                          <span>{course.lessons} lessons</span>
+                          <span>{course.lessons} {t("courses.lessons")}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">

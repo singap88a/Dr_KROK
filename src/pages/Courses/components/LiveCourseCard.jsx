@@ -1,9 +1,11 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { FaVideo } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import RatingStars from "./RatingStars";
 
 export default function LiveCourseCard({ course, onClick, isFavorite, onToggleFavorite }) {
+  const { t } = useTranslation();
   const instructorImg = course.instructorImg || '/user.png';
 
   return (
@@ -21,7 +23,7 @@ export default function LiveCourseCard({ course, onClick, isFavorite, onToggleFa
           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute px-2 py-1 text-xs text-white rounded top-3 left-3 bg-red-500/90 backdrop-blur">
-          <FaVideo className="inline mr-1" /> Live
+          <FaVideo className="inline mr-1" /> {t("courses.live")}
         </div>
         <button
           aria-label="toggle favorite"
