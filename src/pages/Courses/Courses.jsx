@@ -32,6 +32,7 @@ export default function Courses() {
   const [videoCourses, setVideoCourses] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [renderKey, setRenderKey] = useState(0);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const liveCourses = sampleLiveCourses;
 
   useEffect(() => {
@@ -49,7 +50,10 @@ export default function Courses() {
   useEffect(() => {
     if (activeTab !== "video") return;
     let mounted = true;
-    setLoading(true);
+    // Only show loading on initial load, not on language changes
+    if (!initialLoadDone) {
+      setLoading(true);
+    }
     setError("");
     getVideoCourses({ page: 1, per_page: 30 })
       .then((res) => {
@@ -72,6 +76,7 @@ export default function Courses() {
               : "/logo.png",
         }));
         setVideoCourses(mapped);
+        setInitialLoadDone(true);
       })
       .catch((e) => {
         if (!mounted) return;
@@ -81,7 +86,7 @@ export default function Courses() {
     return () => {
       mounted = false;
     };
-  }, [activeTab, getVideoCourses, i18n.language]);
+  }, [activeTab, getVideoCourses, i18n.language, initialLoadDone]);
 
   // Load favorites to reflect heart state
   useEffect(() => {

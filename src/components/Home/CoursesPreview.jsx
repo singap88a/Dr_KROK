@@ -22,16 +22,21 @@ export default function CoursesPreview({ courses }) {
   const [error, setError] = useState("");
   const [apiCourses, setApiCourses] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   useEffect(() => {
     if (courses && courses.length) return;
     let isMounted = true;
-    setLoading(true);
+    // Only show loading on initial load, not on language changes
+    if (!initialLoadDone) {
+      setLoading(true);
+    }
     setError("");
     getVideoCourses({ per_page: 10, page: 1 })
       .then((res) => {
         if (!isMounted) return;
         setApiCourses(Array.isArray(res.data) ? res.data : []);
+        setInitialLoadDone(true);
       })
       .catch((e) => {
         if (!isMounted) return;
@@ -44,7 +49,7 @@ export default function CoursesPreview({ courses }) {
     return () => {
       isMounted = false;
     };
-  }, [courses, getVideoCourses, t]);
+  }, [courses, getVideoCourses, t, initialLoadDone]);
 
   // Load favorites to reflect heart state
   useEffect(() => {
