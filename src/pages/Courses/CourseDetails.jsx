@@ -31,57 +31,24 @@ import {
 import { useParams, Link } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
+import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import LeaveReview from "./LeaveReview";
 
 export default function CourseDetails() {
   const { id } = useParams();
   const { t } = useTranslation();
   const { getVideoCourseById } = useApi();
+  const { userData, isLoggedIn } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [course, setCourse] = useState(null);
-  const [reviews, setReviews] = useState([
-    {
-      name: "Omar Ali",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      rating: 4,
-      comment: "Great course! Learned a lot about React fundamentals.",
-      date: "12/09/2025",
-    },
-    {
-      name: "Sara Mohamed",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      rating: 5,
-      comment: "Very clear explanations and useful projects.",
-      date: "10/09/2025",
-    },
-    {
-      name: "Mostafa Ahmed",
-      avatar: "https://randomuser.me/api/portraits/men/65.jpg",
-      rating: 3,
-      comment: "Good course but could include more advanced topics.",
-      date: "09/09/2025",
-    },
-    {
-      name: "Laila Hassan",
-      avatar: "https://randomuser.me/api/portraits/women/12.jpg",
-      rating: 5,
-      comment: "Excellent! Highly recommended for beginners.",
-      date: "08/09/2025",
-    },
-  ]);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [reviews, setReviews] = useState([]);
   const [showAll, setShowAll] = useState(false);
+  const [userHasReviewed, setUserHasReviewed] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
 
-  // Mock logged in user
-  const currentUser = {
-    name: "Ahmed Mohamed",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -91,6 +58,10 @@ export default function CourseDetails() {
       .then((data) => {
         if (!mounted) return;
         setCourse(data);
+        // Set reviews from course data
+        if (data.ratings && Array.isArray(data.ratings)) {
+          setReviews(data.ratings);
+        }
       })
       .catch((e) => {
         if (!mounted) return;
@@ -102,19 +73,23 @@ export default function CourseDetails() {
     };
   }, [id, getVideoCourseById]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!comment || rating === 0) return;
-    const newReview = {
-      name: currentUser.name,
-      avatar: currentUser.avatar,
-      rating,
-      comment,
-      date: new Date().toLocaleDateString(),
-    };
-    setReviews([newReview, ...reviews]);
-    setComment("");
-    setRating(0);
+  // Check if user has already reviewed this course
+  useEffect(() => {
+    if (isLoggedIn && userData && reviews.length > 0) {
+      const userReview = reviews.find(review => review.client?.id === userData.id);
+      setUserHasReviewed(!!userReview);
+    } else {
+      setUserHasReviewed(false);
+    }
+  }, [isLoggedIn, userData, reviews]);
+
+  const handleReviewSubmitted = (newReview) => {
+    // Add the new review to the list
+    // The API returns the review data in the response
+    if (newReview && newReview.id) {
+      setReviews([newReview, ...reviews]);
+      setUserHasReviewed(true);
+    }
   };
 
   const handlePlay = () => {
@@ -122,6 +97,10 @@ export default function CourseDetails() {
       videoRef.current.play();
       setIsPlaying(true);
     }
+  };
+
+  const handleVideoEnd = () => {
+    setIsPlaying(false);
   };
 
   const renderStaticStars = (filled) => {
@@ -133,17 +112,6 @@ export default function CourseDetails() {
     ));
   };
 
-  const renderClickableStars = () => {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <FaStar
-        key={i}
-        className={`cursor-pointer text-2xl ${
-          i < rating ? "text-yellow-400" : "text-gray-300"
-        } hover:text-yellow-400 transition-colors`}
-        onClick={() => setRating(i + 1)}
-      />
-    ));
-  };
 
   const imageUrl = useMemo(() => {
     if (!course) return "/logo.png";
@@ -180,6 +148,43 @@ export default function CourseDetails() {
     return new Date(year, month - 1, day, hour, minute);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      // Handle DD-MM-YYYY HH:MM AM/PM format
+      const parts = dateString.split(' ');
+      if (parts.length >= 2) {
+        const datePart = parts[0]; // DD-MM-YYYY
+        const timePart = parts[1]; // HH:MM
+        const ampm = parts[2]; // AM/PM
+
+        const [day, month, year] = datePart.split('-');
+        const [hours, minutes] = timePart.split(':');
+
+        // Convert to 24-hour format
+        let hour24 = parseInt(hours);
+        if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+        if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+        const date = new Date(year, month - 1, day, hour24, minutes);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      // Fallback for other formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return date.toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -203,10 +208,10 @@ export default function CourseDetails() {
               ref={videoRef}
               src={videoUrl}
               className="object-cover w-full h-full"
-              loop
               muted
               playsInline
               controls={isPlaying}
+              onEnded={handleVideoEnd}
             />
           ) : (
             <img src={imageUrl} alt={course.title} className="object-cover w-full h-full" />
@@ -302,56 +307,53 @@ export default function CourseDetails() {
       <div className="grid max-w-6xl gap-8 mx-auto mt-12 sm:mt-16 lg:grid-cols-3">
         {/* Reviews */}
         <div className="lg:col-span-2">
-          <h2 className="mb-6 text-xl font-bold sm:text-2xl">Leave a Review</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <textarea
-              placeholder="Write your comment..."
-              className="w-full p-3 border rounded-lg border-border bg-surface text-text"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={4}
+          {/* Leave Review Component */}
+          <div className="mb-8">
+            <LeaveReview 
+              courseId={id} 
+              onReviewSubmitted={handleReviewSubmitted}
+              userHasReviewed={userHasReviewed}
             />
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-              <label className="font-medium">Your Rating:</label>
-              <div className="flex gap-1">{renderClickableStars()}</div>
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm text-white transition rounded-lg bg-secondary hover:bg-primary sm:px-5 sm:py-2"
-            >
-              Submit Review
-            </button>
-          </form>
+          </div>
 
-          {/* عرض الريفيوز */}
-          <div className="mt-8 space-y-4">
-            <h3 className="text-lg font-semibold sm:text-xl">Reviews</h3>
+          {/* Display Reviews */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold sm:text-xl">
+              {t('courses.reviews') || 'Reviews'} ({reviews.length})
+            </h3>
             {reviews.length === 0 && (
-              <p className="text-text-muted">No reviews yet.</p>
+              <p className="text-text-muted">
+                {t('courses.noReviews') || 'No reviews yet.'}
+              </p>
             )}
-            {(showAll ? reviews : reviews.slice(0, 3)).map((rev, index) => (
+            {(showAll ? reviews : reviews.slice(0, 3)).map((review, index) => (
               <div
-                key={index}
+                key={review.id || index}
                 className="p-4 border rounded-lg shadow-sm border-border bg-surface"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <img
-                    src={rev.avatar}
-                    alt={rev.name}
+                    src={review.client?.imageprofile || review.client?.avatar || "/user.png"}
+                    alt={review.client?.name || 'User'}
                     className="object-cover w-8 h-8 rounded-full sm:w-10 sm:h-10"
+                    onError={(e) => {
+                      e.currentTarget.src = '/user.png';
+                    }}
                   />
                   <div>
                     <p className="text-sm font-semibold sm:text-base">
-                      {rev.name}
+                      {review.client?.name || 'Anonymous'}
                     </p>
-                    <p className="text-xs text-text-muted">{rev.date}</p>
+                    <p className="text-xs text-text-muted">
+                      {formatDate(review.created_at)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mb-2 text-yellow-400">
-                  {renderStaticStars(rev.rating)}
+                  {renderStaticStars(review.rate_number)}
                 </div>
                 <p className="text-sm text-text-secondary sm:text-base">
-                  {rev.comment}
+                  {review.rate_comment}
                 </p>
               </div>
             ))}
@@ -360,7 +362,7 @@ export default function CourseDetails() {
                 className="px-4 py-2 mt-2 text-sm text-white rounded-lg bg-primary hover:bg-secondary"
                 onClick={() => setShowAll(!showAll)}
               >
-                {showAll ? "Show Less" : "Show More"}
+                {showAll ? (t('courses.showLess') || 'Show Less') : (t('courses.showMore') || 'Show More')}
               </button>
             )}
           </div>

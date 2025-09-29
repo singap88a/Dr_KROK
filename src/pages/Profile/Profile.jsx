@@ -45,6 +45,7 @@ import { useUser } from "../../context/UserContext";
 import MyOrders from "./MyOrders";
 import MyCourses from "./MyCourses";
 import MyFavorites from "./MyFavorites";
+import MyRatings from "./MyRatings";
 import LogoutConfirmModal from "../../components/LogoutConfirmModal";
 
 export default function Profile() {
@@ -168,6 +169,7 @@ export default function Profile() {
     { id: "courses", label: "My Courses", icon: FaGraduationCap },
     { id: "orders", label: "My Orders", icon: FaShoppingCart },
     { id: "favorites", label: "My Favorites", icon: FaHeart },
+    { id: "ratings", label: "My Ratings", icon: FaStar },
     { id: "logout", label: "Logout", icon: FaSignOutAlt },
   ];
 
@@ -349,6 +351,13 @@ export default function Profile() {
         return <MyOrders orders={orders} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />;
       case "favorites":
         return <MyFavorites />;
+      case "ratings":
+        return <MyRatings user={user} onRatingsUpdate={(updatedRatings) => {
+          setUser(prev => ({
+            ...prev,
+            ratings: updatedRatings
+          }));
+        }} />;
       case "profile":
         return <MyProfile user={user} onProfileUpdate={(updated)=>{
           const merged = {

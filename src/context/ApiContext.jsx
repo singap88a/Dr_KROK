@@ -223,6 +223,37 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           pagination: response?.pagination || null,
           raw: response
         };
+      },
+      // Reviews API
+      async submitCourseReview(courseId, rating, comment) {
+        const formData = new FormData();
+        formData.append('course_id', courseId);
+        formData.append('rate_number', rating);
+        formData.append('rate_comment', comment);
+
+        console.log('API Request - submitCourseReview:', {
+          courseId,
+          rating,
+          comment,
+          formData: {
+            course_id: courseId,
+            rate_number: rating,
+            rate_comment: comment
+          }
+        });
+
+        return await request('ratings/add', {
+          method: 'POST',
+          body: formData,
+          auth: true,
+          isFormData: true
+        });
+      },
+      async getUserRatings() {
+        return await request('user/ratings', { auth: true });
+      },
+      async checkUserReview(courseId) {
+        return await request(`courses/${courseId}/user-review`, { auth: true });
       }
     }),
     [
