@@ -284,10 +284,19 @@ const MyRatings = ({ user, onRatingsUpdate }) => {
                       {/* Course Info with better layout */}
                       <div className="flex flex-wrap gap-3 mb-4">
                         {rating.course?.instructor && (
-                          <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 rounded-lg dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20">
-                            <FaUser className="text-blue-500" />
+                          <Link
+                            to={`/instructors/${rating.course.instructor.id}`}
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 transition-colors rounded-lg dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                          >
+                            {rating.course.instructor.image && (
+                              <img
+                                src={rating.course.instructor.image}
+                                alt={rating.course.instructor.name}
+                                className="object-cover w-6 h-6 rounded-full"
+                              />
+                            )}
                             <span>{rating.course.instructor.name || rating.course.instructor}</span>
-                          </div>
+                          </Link>
                         )}
                         {rating.course?.category && (
                           <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-700 rounded-lg dark:text-green-300 bg-green-50 dark:bg-green-900/20">
