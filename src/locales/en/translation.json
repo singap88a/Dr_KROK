@@ -535,6 +535,10 @@
     "ratingSubmitted": "Rating Submitted",
     "ratingUpdated": "Rating Updated",
     "course_rated": "Course Rated",
-    "already_rated_message": "You have already rated this course. Thank you!"
+    "already_rated_message": "You have already rated this course. Thank you!",
+    "free": "Free",
+    "paid": "Paid",
+    "min": "min",
+    "h": "h"
   }
 }

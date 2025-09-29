@@ -15,7 +15,8 @@ import Profile from "./pages/Profile/Profile";
 import CTA from "./components/Home/CTA";
 import Courses from "./pages/Courses/Courses";
 import CourseDetails from "./pages/Courses/CourseDetails";
- 
+import CourseLessons from "./pages/Courses/CourseLessons";
+
 import TrainerArticlesPage from "./pages/Articles/Articles";
 import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
 import AI_Icon from "./pages/GeminiSingap/Icon_Gemini";
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
+          <Route path="/courses/:id/lessons" element={<CourseLessons />} />
 
  
           <Route path="/articles" element={<TrainerArticlesPage />} />

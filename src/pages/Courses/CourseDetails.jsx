@@ -28,7 +28,7 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
@@ -37,6 +37,7 @@ import LeaveReview from "./LeaveReview";
 
 export default function CourseDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { getVideoCourseById } = useApi();
   const { userData, isLoggedIn } = useUser();
@@ -107,7 +108,7 @@ export default function CourseDetails() {
     return Array.from({ length: 5 }).map((_, i) => (
       <FaStar
         key={i}
-        className={i < filled ? "text-yellow-400" : "text-gray-400"}
+        className={i < filled ? "text-yellow-400" : "text-text-muted"}
       />
     ));
   };
@@ -297,7 +298,10 @@ export default function CourseDetails() {
             )}
           </div>
 
-          <button className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3">
+          <button
+            onClick={() => navigate(`/courses/${id}/lessons`)}
+            className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
+          >
             {t("courses.startCourse", "Start Course")}
           </button>
         </div>

@@ -534,6 +534,10 @@
     "ratingSubmitted": "Оцінка надіслана",
     "ratingUpdated": "Оцінка оновлена",
     "course_rated": "Курс оцінено",
-    "already_rated_message": "Ви вже оцінили цей курс. Дякуємо!"
+    "already_rated_message": "Ви вже оцінили цей курс. Дякуємо!",
+    "free": "Безкоштовно",
+    "paid": "Платно",
+    "min": "хв",
+    "h": "г"
   }
 }

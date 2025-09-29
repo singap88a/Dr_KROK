@@ -45,7 +45,7 @@ export default function VideoCourseCard({ course, isFavorite, onToggleFavorite }
             }}
             className={`absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow hover:bg-white/90 ${hasDiscount ? 'top-12 right-3' : 'top-3 right-3'}`}
           >
-            <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+            <FiHeart className={`text-xl ${isFavorite ? "text-red-500 fill-red-500" : "text-text-muted"}`} />
           </button>
  
         </div>
@@ -72,14 +72,14 @@ export default function VideoCourseCard({ course, isFavorite, onToggleFavorite }
               <div className="flex items-center">
                 <span className="text-xl font-bold text-primary">${finalPrice}</span>
                 {hasDiscount && (
-                  <span className="ml-2 text-sm text-gray-400 line-through">${course.price.toFixed(2)}</span>
+                  <span className="ml-2 text-sm line-through text-text-muted">${course.price.toFixed(2)}</span>
                 )}
               </div>
             </div>
           </div>
         </div>
       </Link>
-      <div className="px-6 pb-4">
+      <div className="px-6 pb-4 ">
         <Link
           to={`/courses/${course.id}`}
           className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"

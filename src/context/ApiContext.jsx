@@ -210,6 +210,55 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           throw err;
         }
       },
+      // Course Lessons API
+      async getCourseLessons(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        try {
+          const response = await request(`video_courses/${courseId}/lessons`);
+          return {
+            data: Array.isArray(response?.data) ? response.data : [],
+            raw: response,
+          };
+        } catch (err) {
+          // Fallback endpoints
+          const candidates = [
+            `courses/${courseId}/lessons`,
+            `lessons?course_id=${courseId}`,
+          ];
+          for (const path of candidates) {
+            try {
+              const res2 = await request(path);
+              if (res2?.data) {
+                return {
+                  data: Array.isArray(res2.data) ? res2.data : [],
+                  raw: res2,
+                };
+              }
+            } catch (e2) {
+              // try next
+            }
+          }
+          throw err;
+        }
+      },
+      async getCourseAccess(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        try {
+          const response = await request(`video_courses/${courseId}/access`, { auth: true });
+          return response?.has_access || false;
+        } catch (err) {
+          // Fallback
+          if (err?.status === 404) {
+            try {
+              const userCourses = await request('user/courses', { auth: true });
+              return userCourses?.data?.some(course => course.id === parseInt(courseId)) || false;
+            } catch (e2) {
+              return false;
+            }
+          }
+          throw err;
+        }
+      },
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();
