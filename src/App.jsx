@@ -15,11 +15,7 @@ import Profile from "./pages/Profile/Profile";
 import CTA from "./components/Home/CTA";
 import Courses from "./pages/Courses/Courses";
 import CourseDetails from "./pages/Courses/CourseDetails";
-import DashboardHome from "./pages/Dashboard/DashboardHome";
-import DashboardBooks from "./pages/Dashboard/DashboardBooks";
-import DashboardUsers from "./pages/Dashboard/DashboardUsers";
-import DashboardCourses from "./pages/Dashboard/DashboardCourses";
-import DashboardInstructors from "./pages/Dashboard/DashboardInstructors";
+ 
 import TrainerArticlesPage from "./pages/Articles/Articles";
 import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
 import AI_Icon from "./pages/GeminiSingap/Icon_Gemini";
@@ -58,16 +54,7 @@ export default function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
 
-          {/* Dashboard Routes */}
-          <Route path="/dashboard" element={<DashboardHome />} />
-          <Route path="/dashboard/books" element={<DashboardBooks />} />
-          <Route path="/dashboard/users" element={<DashboardUsers />} />
-          <Route path="/dashboard/courses" element={<DashboardCourses />} />
-          <Route
-            path="/dashboard/instructors"
-            element={<DashboardInstructors />}
-          />
-          <Route path="/dashboard/*" element={<DashboardHome />} />
+ 
           <Route path="/articles" element={<TrainerArticlesPage />} />
           <Route path="/gemini" element={<GeminiSingap />} />
           <Route path="/test" element={<TestYourself />} />
