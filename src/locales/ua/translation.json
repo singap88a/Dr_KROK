@@ -226,7 +226,18 @@
     "processing": "Обробка...",
     "purchase_successful": "Покупка успішна!",
     "purchase_failed": "Не вдалося здійснити покупку. Спробуйте ще раз.",
-    "select_payment_method": "Будь ласка, оберіть спосіб оплати"
+    "select_payment_method": "Будь ласка, оберіть спосіб оплати",
+    "coupon": {
+      "label": "Код купона",
+      "placeholder": "Введіть код купона",
+      "apply": "Застосувати",
+      "invalid": "Купон недійсний",
+      "applied": "Купон успішно застосовано!",
+      "discount": "Знижка: {{percent}}%",
+      "discount_label": "Знижка купона ({{percent}}%)",
+      "required": "Будь ласка, введіть код купона"
+    },
+    "original_total": "Початкова сума"
   },
   "testimonials": {
     "title": "Відгуки студентів",

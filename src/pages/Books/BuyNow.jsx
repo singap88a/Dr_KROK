@@ -6,6 +6,7 @@ import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import CitySelector from "../../components/CitySelector";
+import CouponInput from "../../components/CouponInput";
 
 export default function BuyNowPage() {
   const navigate = useNavigate();
@@ -41,9 +42,12 @@ export default function BuyNowPage() {
 
   // Paint order data
   const [loadingPaintData, setLoadingPaintData] = useState(false);
-  
-  // Cities data
-  const [cities, setCities] = useState([]);
+
+  // Coupon states
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponId, setCouponId] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponMessage, setCouponMessage] = useState("");
 
   useEffect(() => {
     if (book?.images) {
@@ -68,20 +72,7 @@ export default function BuyNowPage() {
     }
   }, [userData, book]);
 
-  // Fetch cities
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await request('cities');
-        if (response && response.data) {
-          setCities(response.data);
-        }
-      } catch (err) {
-        console.error('Error fetching cities:', err);
-      }
-    };
-    fetchCities();
-  }, [request]);
+
 
   // Fetch paint order data
   const fetchPaintOrderData = async () => {
@@ -134,6 +125,10 @@ export default function BuyNowPage() {
   const priceNumber = parseFloat(book.price) || 0;
   const discountAmount = parseFloat(book.discount) || 0;
   const finalPrice = priceNumber;
+  
+  // Calculate coupon discount amount
+  const couponDiscountAmount = finalPrice * (couponDiscount / 100);
+  const discountedPrice = finalPrice - couponDiscountAmount;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -174,6 +169,9 @@ export default function BuyNowPage() {
       formDataToSend.append('book_id', formData.book_id);
       formDataToSend.append('quantity', formData.quantity.toString());
       formDataToSend.append('city_id', formData.city_id);
+      if (couponId) {
+        formDataToSend.append('coupon_id', couponId.toString());
+      }
 
       console.log('Sending order data:', {
         client_name: formData.client_name,
@@ -240,7 +238,8 @@ export default function BuyNowPage() {
       const orderData = {
         book_id: book.id,
         payment_method: selectedPayment,
-        amount: finalPrice
+        amount: discountedPrice,
+        coupon_id: couponId
       };
 
       await request('purchase_pdf', {
@@ -259,6 +258,30 @@ export default function BuyNowPage() {
       setError(err.message || t('books.purchase_failed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCouponApply = (result) => {
+    if (result.error) {
+      setCouponError(result.error);
+      setCouponMessage("");
+      // Reset coupon data on error
+      setCouponDiscount(0);
+      setCouponId(null);
+    } else {
+      setCouponDiscount(result.discount);
+      setCouponId(result.id);
+      setCouponError("");
+      setCouponMessage(t('books.coupon.applied') || 'Coupon applied successfully!');
+      
+      // Debug log to verify the discount is being set
+      console.log('Coupon applied:', {
+        discount: result.discount,
+        id: result.id,
+        finalPrice: finalPrice,
+        discountAmount: finalPrice * (result.discount / 100),
+        newTotal: finalPrice - (finalPrice * (result.discount / 100))
+      });
     }
   };
 
@@ -349,6 +372,13 @@ export default function BuyNowPage() {
               <div className="mt-4 leading-relaxed text-text-secondary"
                    dangerouslySetInnerHTML={{ __html: book.description }} />
             </div>
+
+            {/* Coupon Input */}
+            <CouponInput
+              onApply={handleCouponApply}
+              t={t}
+              initialDiscount={couponDiscount}
+            />
           </div>
         </aside>
 
@@ -371,6 +401,18 @@ export default function BuyNowPage() {
             {success && (
               <div className="p-4 mt-4 text-green-600 border border-green-200 rounded-lg bg-green-50">
                 {success}
+              </div>
+            )}
+
+            {/* Coupon Messages */}
+            {couponError && (
+              <div className="p-4 mt-4 text-red-600 border border-red-200 rounded-lg bg-red-50">
+                {couponError}
+              </div>
+            )}
+            {couponMessage && (
+              <div className="p-4 mt-4 text-green-600 border border-green-200 rounded-lg bg-green-50">
+                {couponMessage}
               </div>
             )}
 
@@ -397,6 +439,18 @@ export default function BuyNowPage() {
                 <div className="text-sm text-text-secondary">{book.name}</div>
                 <div className="font-semibold">${finalPrice.toFixed(2)}</div>
               </div>
+              {couponDiscount > 0 && (
+                <>
+                  <div className="flex items-center justify-between mt-2 text-sm text-green-600">
+                    <div>{t('books.coupon.discount_label', { percent: couponDiscount }) || `Coupon Discount (${couponDiscount}%)`}</div>
+                    <div>-${couponDiscountAmount.toFixed(2)}</div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
+                    <div>{t('books.original_total') || 'Original Total'}</div>
+                    <div className="line-through">${finalPrice.toFixed(2)}</div>
+                  </div>
+                </>
+              )}
               {bookType === 1 && (
                 <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
                   <div>{t('books.delivery')}</div>
@@ -405,7 +459,7 @@ export default function BuyNowPage() {
               )}
               <div className="flex items-center justify-between mt-4 text-lg font-semibold">
                 <div>{t('books.total')}</div>
-                <div>${finalPrice.toFixed(2)}</div>
+                <div className={couponDiscount > 0 ? "text-green-600" : ""}>${discountedPrice.toFixed(2)}</div>
               </div>
             </div>
 

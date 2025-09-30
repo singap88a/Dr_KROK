@@ -226,7 +226,18 @@
     "processing": "Processing...",
     "purchase_successful": "Purchase successful!",
     "purchase_failed": "Purchase failed. Please try again.",
-    "select_payment_method": "Please select a payment method"
+    "select_payment_method": "Please select a payment method",
+    "coupon": {
+      "label": "Coupon Code",
+      "placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "invalid": "The coupon is not valid",
+      "applied": "Coupon applied successfully!",
+      "discount": "Discount: {{percent}}%",
+      "discount_label": "Coupon Discount ({{percent}}%)",
+      "required": "Please enter a coupon code"
+    },
+    "original_total": "Original Total"
   },
   "auth": {
     "login": {
