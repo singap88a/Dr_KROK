@@ -48,6 +48,7 @@ export default function CourseLessons() {
   const [currentLesson, setCurrentLesson] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [completedLessons, setCompletedLessons] = useState(new Set());
+  // Removed unused state variables for description toggle as title and description moved below video
 
   useEffect(() => {
     let mounted = true;
@@ -199,6 +200,29 @@ export default function CourseLessons() {
             <div className="flex-1">
               <h1 className="mb-2 text-3xl font-bold">{course.title}</h1>
 
+              {/* Current Lesson Title and Description */}
+              {/* Removed from here as per user request */}
+              {/* {currentLesson && (
+                <div className="mb-4">
+                  <h2 className="mb-2 text-xl font-bold text-text">{currentLesson.title}</h2>
+                  {currentLesson.description && (
+                    <div className="text-sm text-text-secondary">
+                      <p className={`leading-relaxed ${!showFullDescription ? 'line-clamp-2' : ''}`}>
+                        {currentLesson.description}
+                      </p>
+                      {currentLesson.description.length > 100 && (
+                        <button
+                          onClick={() => setShowFullDescription(!showFullDescription)}
+                          className="mt-1 text-xs font-medium transition-colors text-primary hover:text-secondary"
+                        >
+                          {showFullDescription ? t('common.showLess', 'Show less') : t('common.showMore', 'Show more')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )} */}
+
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <FaBookOpen className="text-primary" />
@@ -348,9 +372,6 @@ export default function CourseLessons() {
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
               {currentLesson ? (
                 <div>
-                  <div className="p-4 border-b border-border">
-                    <h3 className="text-lg font-semibold text-text">{currentLesson.title}</h3>
-                  </div>
                   <div className="aspect-video">
                     {currentLesson.video ? (
                       <video
@@ -366,6 +387,16 @@ export default function CourseLessons() {
                           <FaVideo className="mx-auto mb-2 text-4xl text-text-muted" />
                           <p className="text-text-muted">{t('courses.videoNotAvailable', 'Video not available')}</p>
                         </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-text">{currentLesson.title}</h3>
+                    {currentLesson.description && (
+                      <div className="mt-2 text-sm text-text-secondary">
+                        <p className="leading-relaxed line-clamp-2">
+                          {currentLesson.description}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -392,7 +423,6 @@ export default function CourseLessons() {
                 </div>
               )}
             </div>
-
             {/* Instructor Card */}
             {course.instructor && (
               <div className="p-6 border rounded-lg bg-surface border-border">
