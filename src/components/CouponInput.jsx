@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useApi } from "../context/ApiContext";
 import { FiCheck, FiX, FiLoader } from "react-icons/fi";
 
-const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
+const CouponInput = ({ onApply, t, initialDiscount = 0, type = "book" }) => {
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -10,7 +10,7 @@ const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      setLocalError(t("books.coupon.required") || "Please enter a coupon code");
+      setLocalError(t(`${type}s.coupon.required`) || "Please enter a coupon code");
       return;
     }
 
@@ -20,7 +20,7 @@ const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
     try {
       const response = await request("check_coupon", {
         method: "POST",
-        body: { coupon: couponCode.trim(), type: "book" },
+        body: { coupon: couponCode.trim(), type: type },
         auth: true
       });
 
@@ -30,10 +30,10 @@ const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
           id: response.data.id
         });
       } else {
-        onApply({ error: response.message || (t("books.coupon.invalid") || "The coupon is not valid") });
+        onApply({ error: response.message || (t(`${type}s.coupon.invalid`) || "The coupon is not valid") });
       }
     } catch (err) {
-      const errorMsg = err.message || (t("books.coupon.invalid") || "The coupon is not valid");
+      const errorMsg = err.message || (t(`${type}s.coupon.invalid`) || "The coupon is not valid");
       onApply({ error: errorMsg });
     } finally {
       setLoading(false);
@@ -43,14 +43,14 @@ const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
   return (
     <div className="p-4 border rounded-xl border-border bg-surface">
       <label className="block mb-2 text-sm font-medium text-text-secondary">
-        {t("books.coupon.label") || "Coupon Code"}
+        {t(`${type}s.coupon.label`) || "Coupon Code"}
       </label>
       <div className="flex gap-2">
         <input
           type="text"
           value={couponCode}
           onChange={(e) => setCouponCode(e.target.value)}
-          placeholder={t("books.coupon.placeholder") || "Enter coupon code"}
+          placeholder={t(`${type}s.coupon.placeholder`) || "Enter coupon code"}
           className="flex-1 p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
           disabled={loading || initialDiscount > 0}
         />
@@ -62,7 +62,7 @@ const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
           {loading ? (
             <FiLoader className="w-4 h-4 animate-spin" />
           ) : (
-            t("books.coupon.apply") || "Apply"
+            t(`${type}s.coupon.apply`) || "Apply"
           )}
         </button>
       </div>
@@ -73,7 +73,7 @@ const CouponInput = ({ onApply, t, initialDiscount = 0 }) => {
       )}
       {initialDiscount > 0 && (
         <p className="flex items-center gap-1 mt-2 text-sm text-green-600">
-          <FiCheck className="w-4 h-4" /> {t("books.coupon.applied") || "Coupon applied!"} {t("books.coupon.discount", { percent: initialDiscount }) || `Discount: ${initialDiscount}%`}
+          <FiCheck className="w-4 h-4" /> {t(`${type}s.coupon.applied`) || "Coupon applied!"} {t(`${type}s.coupon.discount`, { percent: initialDiscount }) || `Discount: ${initialDiscount}%`}
         </p>
       )}
     </div>

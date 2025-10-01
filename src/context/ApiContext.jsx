@@ -303,6 +303,23 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       },
       async checkUserReview(courseId) {
         return await request(`courses/${courseId}/user-review`, { auth: true });
+      },
+      // Course subscription
+      async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
+        const formData = new FormData();
+        formData.append('course_id', courseId);
+        formData.append('payment_method', paymentMethod);
+        formData.append('amount', amount);
+        if (couponId) {
+          formData.append('coupon_id', couponId);
+        }
+
+        return await request('place_video_course', {
+          method: 'POST',
+          body: formData,
+          auth: true,
+          isFormData: true
+        });
       }
     }),
     [

@@ -39,7 +39,7 @@ export default function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getVideoCourseById } = useApi();
+  const { getVideoCourseById, getCourseAccess } = useApi();
   const { userData, isLoggedIn } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,32 +47,53 @@ export default function CourseDetails() {
   const [reviews, setReviews] = useState([]);
   const [showAll, setShowAll] = useState(false);
   const [userHasReviewed, setUserHasReviewed] = useState(false);
+  const [userHasAccess, setUserHasAccess] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
 
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    setError("");
-    getVideoCourseById(id)
-      .then((data) => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        
+        const data = await getVideoCourseById(id);
         if (!mounted) return;
         setCourse(data);
+        
         // Set reviews from course data
         if (data.ratings && Array.isArray(data.ratings)) {
           setReviews(data.ratings);
         }
-      })
-      .catch((e) => {
+
+        // Check course access if logged in
+        if (isLoggedIn) {
+          try {
+            const access = await getCourseAccess(id);
+            setUserHasAccess(access);
+          } catch {
+            // If access check fails, assume no access for paid content
+            setUserHasAccess(data.price === 0 || data.price === "0");
+          }
+        } else {
+          setUserHasAccess(false);
+        }
+      } catch (e) {
         if (!mounted) return;
         setError(e?.message || "Failed to load course details");
-      })
-      .finally(() => mounted && setLoading(false));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    
     return () => {
       mounted = false;
     };
-  }, [id, getVideoCourseById]);
+  }, [id, getVideoCourseById, getCourseAccess, isLoggedIn]);
 
   // Check if user has already reviewed this course
   useEffect(() => {
@@ -298,12 +319,29 @@ export default function CourseDetails() {
             )}
           </div>
 
-          <button
-            onClick={() => navigate(`/courses/${id}/lessons`)}
-            className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
-          >
-            {t("courses.startCourse", "Start Course")}
-          </button>
+          <div className="flex gap-3">
+            {userHasAccess ? (
+              <button
+                onClick={() => navigate(`/courses/${id}/lessons`)}
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
+              >
+                {t("courses.startCourse", "Start Course")}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate(`/courses/${id}/subscribe`)}
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
+              >
+                {t("courses.subscribeNow", "Subscribe Now")}
+              </button>
+            )}
+            <button
+              onClick={() => navigate(`/courses/${id}/lessons`)}
+              className="px-4 py-2 text-sm border transition rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
+            >
+              {t("courses.previewCourse", "Preview Course")}
+            </button>
+          </div>
         </div>
       </div>
 

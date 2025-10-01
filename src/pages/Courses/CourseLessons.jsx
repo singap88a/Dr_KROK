@@ -265,17 +265,24 @@ export default function CourseLessons() {
             {/* Price & Enroll */}
             <div className="flex flex-col items-end gap-3">
               <div className="text-right">
-                {course.discount && course.discount !== "0" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold">{course.price}</span>
-                    <span className="text-lg line-through text-text-muted">${(parseFloat(course.price) * (1 + parseFloat(course.discount) / 100)).toFixed(2)}</span>
-                    <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
-                      -{course.discount}%
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-2xl font-bold">{course.price}</span>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold">
+                    ${
+                      (Number(course.discount) > 0
+                        ? (Number(course.price) - Number(course.discount))
+                        : Number(course.price)
+                      ).toFixed(2)
+                    }
+                  </span>
+                  {Number(course.discount) > 0 && (
+                    <>
+                      <span className="text-lg line-through text-text-muted">${Number(course.price).toFixed(2)}</span>
+                      <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
+                        {Math.round((Number(course.discount) / Number(course.price)) * 100)}%
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
               {!hasAccess && (
                 <button
@@ -530,7 +537,7 @@ export default function CourseLessons() {
 
               <div className="space-y-3">
                 <Link
-                  to={`/courses/${id}`}
+                  to={`/courses/${id}/subscribe`}
                   className="flex items-center justify-center w-full gap-2 px-6 py-3 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
                 >
                   <FaShoppingCart />

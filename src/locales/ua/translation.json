@@ -549,6 +549,57 @@
     "free": "Безкоштовно",
     "paid": "Платно",
     "min": "хв",
-    "h": "г"
+    "h": "г",
+    "subscribeNow": "Підписатися зараз",
+    "previewCourse": "Попередній перегляд курсу",
+    "backToCourse": "Повернутися до курсу",
+    "subscribeToCourse": "Підписатися на курс",
+    "subscriptionDescription": "Отримайте повний доступ до всього контенту курсу та розпочніть свою навчальну подорож",
+    "subscriptionDetails": "Деталі підписки",
+    "coursePrice": "Ціна курсу",
+    "couponDiscount": "Знижка купона",
+    "total": "Всього",
+    "selectPaymentMethod": "Оберіть спосіб оплати",
+    "loginRequired": "Будь ласка, увійдіть, щоб підписатися на цей курс",
+    "loginToSubscribe": "Увійти для підписки",
+    "subscribing": "Підписка...",
+    "subscriptionSuccess": "Підписка успішна! Перенаправлення...",
+    "subscriptionFailed": "Не вдалося підписатися",
+    "whatYouGet": "Що ви отримуєте",
+    "lifetimeAccess": "Довічний доступ до всього контенту",
+    "mobileAccess": "Доступ з мобільного та настільного пристрою",
+    "certificate": "Сертифікат про завершення",
+    "support": "Підтримка 24/7",
+    "alreadyEnrolled": "Вже зареєстровані!",
+    "alreadyEnrolledMessage": "Ви вже зареєстровані на цей курс. Ви можете почати навчання зараз!",
+    "startLearning": "Почати навчання",
+    "enrollRequired": "Ви повинні бути зареєстровані на цей курс, щоб залишити відгук",
+    "loginToReview": "Увійти для відгуку",
+    "loginToReviewMessage": "Будь ласка, увійдіть, щоб залишити відгук про цей курс.",
+    "enrollToReview": "Зареєструватися для відгуку",
+    "enrollToReviewMessage": "Ви повинні бути зареєстровані на цей курс, щоб залишити відгук.",
+    "alreadyReviewed": "Вже оцінено",
+    "coupon": {
+      "label": "Код купона",
+      "placeholder": "Введіть код купона",
+      "apply": "Застосувати",
+      "invalid": "Купон недійсний",
+      "applied": "Купон успішно застосовано!",
+      "discount": "Знижка: {{percent}}%",
+      "discount_label": "Знижка купона ({{percent}}%)",
+      "required": "Будь ласка, введіть код купона"
+    }
+  },
+  "video_courses": {
+    "coupon": {
+      "label": "Код купона",
+      "placeholder": "Введіть код купона",
+      "apply": "Застосувати",
+      "invalid": "Купон недійсний",
+      "applied": "Купон успішно застосовано!",
+      "discount": "Знижка: {{percent}}%",
+      "discount_label": "Знижка купона ({{percent}}%)",
+      "required": "Будь ласка, введіть код купона"
+    }
   }
 }

@@ -550,6 +550,57 @@
     "free": "Free",
     "paid": "Paid",
     "min": "min",
-    "h": "h"
+    "h": "h",
+    "subscribeNow": "Subscribe Now",
+    "previewCourse": "Preview Course",
+    "backToCourse": "Back to Course",
+    "subscribeToCourse": "Subscribe to Course",
+    "subscriptionDescription": "Get full access to all course content and start your learning journey",
+    "subscriptionDetails": "Subscription Details",
+    "coursePrice": "Course Price",
+    "couponDiscount": "Coupon Discount",
+    "total": "Total",
+    "selectPaymentMethod": "Select Payment Method",
+    "loginRequired": "Please login to subscribe to this course",
+    "loginToSubscribe": "Login to subscribe",
+    "subscribing": "Subscribing...",
+    "subscriptionSuccess": "Subscription successful! Redirecting...",
+    "subscriptionFailed": "Subscription failed",
+    "whatYouGet": "What you get",
+    "lifetimeAccess": "Lifetime access to all content",
+    "mobileAccess": "Mobile and desktop access",
+    "certificate": "Certificate of completion",
+    "support": "24/7 support",
+    "alreadyEnrolled": "Already Enrolled!",
+    "alreadyEnrolledMessage": "You are already enrolled in this course. You can start learning now!",
+    "startLearning": "Start Learning",
+    "enrollRequired": "You must be enrolled in this course to leave a review",
+    "loginToReview": "Login to Review",
+    "loginToReviewMessage": "Please login to leave a review for this course.",
+    "enrollToReview": "Enroll to Review",
+    "enrollToReviewMessage": "You must be enrolled in this course to leave a review.",
+    "alreadyReviewed": "Already Reviewed",
+    "coupon": {
+      "label": "Coupon Code",
+      "placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "invalid": "The coupon is not valid",
+      "applied": "Coupon applied successfully!",
+      "discount": "Discount: {{percent}}%",
+      "discount_label": "Coupon Discount ({{percent}}%)",
+      "required": "Please enter a coupon code"
+    }
+  },
+  "video_courses": {
+    "coupon": {
+      "label": "Coupon Code",
+      "placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "invalid": "The coupon is not valid",
+      "applied": "Coupon applied successfully!",
+      "discount": "Discount: {{percent}}%",
+      "discount_label": "Coupon Discount ({{percent}}%)",
+      "required": "Please enter a coupon code"
+    }
   }
 }

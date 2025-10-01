@@ -92,26 +92,46 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) =
     ));
   };
 
-  if (hasReviewed) {
+  // Show login message if not logged in
+  if (!isLoggedIn) {
     return (
-      <div className="p-6 border border-green-200 shadow-sm dark:border-green-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 rounded-xl">
+      <div className="p-6 border border-blue-200 shadow-sm dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 rounded-xl">
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-3 bg-green-100 rounded-full shadow-sm dark:bg-green-900">
-            <FaStar className="text-xl text-green-600 dark:text-green-400" />
+          <div className="p-3 bg-blue-100 rounded-full shadow-sm dark:bg-blue-900">
+            <FaStar className="text-xl text-blue-600 dark:text-blue-400" />
           </div>
-          <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-            {t('courses.course_rated')}
+          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+            {t('courses.login_to_review') || 'Login to Review'}
           </h3>
         </div>
-        <p className="leading-relaxed text-green-700 dark:text-green-300">
-          {t('courses.already_rated_message')}
+        <p className="leading-relaxed text-blue-700 dark:text-blue-300">
+          {t('courses.login_to_review_message') || 'Please login to leave a review for this course.'}
         </p>
       </div>
     );
   }
 
+  // Don't return early for hasReviewed - show the form with disabled state
+
   return (
     <div className="p-6 transition-shadow duration-200 border shadow-sm bg-background border-border rounded-xl hover:shadow-md">
+      {/* Show success message if already reviewed */}
+      {hasReviewed && (
+        <div className="mb-6 p-4 border border-green-200 shadow-sm dark:border-green-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 rounded-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-green-100 rounded-full shadow-sm dark:bg-green-900">
+              <FaStar className="text-lg text-green-600 dark:text-green-400" />
+            </div>
+            <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">
+              {t('courses.course_rated')}
+            </h4>
+          </div>
+          <p className="text-sm leading-relaxed text-green-700 dark:text-green-300">
+            {t('courses.already_rated_message')}
+          </p>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 rounded-lg bg-primary/10">
           <FaStar className="text-xl text-primary" />
@@ -170,13 +190,18 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) =
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting || rating === 0 || !comment.trim()}
+          disabled={isSubmitting || rating === 0 || !comment.trim() || hasReviewed}
           className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
               {t('courses.submitting') || 'Submitting...'}
+            </div>
+          ) : hasReviewed ? (
+            <div className="flex items-center justify-center gap-2">
+              <FaStar />
+              {t('courses.alreadyReviewed') || 'Already Reviewed'}
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">

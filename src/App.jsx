@@ -16,6 +16,7 @@ import CTA from "./components/Home/CTA";
 import Courses from "./pages/Courses/Courses";
 import CourseDetails from "./pages/Courses/CourseDetails";
 import CourseLessons from "./pages/Courses/CourseLessons";
+import CourseSubscription from "./pages/Courses/CourseSubscription";
 
 import TrainerArticlesPage from "./pages/Articles/Articles";
 import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
@@ -26,6 +27,7 @@ import RegisterPage from "./pages/auth/Register/RegisterPage";
 import SocialCallback from "./pages/auth/SocialCallback";
 import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
+import { ApiProvider } from "./context/ApiContext";
 import WhatsAppIcon from "./components/WhatsAppIcon";
 import Instructors from "./pages/Instructors/Instructors";
 import InstructorDetails from "./pages/Instructors/InstructorDetails";
@@ -33,11 +35,12 @@ import InstructorDetails from "./pages/Instructors/InstructorDetails";
 export default function App() {
   return (
     <div className="min-h-screen bg-background text-text">
-     <UserProvider>
-      <ScrollToTop />
+     <ApiProvider>
+      <UserProvider>
+        <ScrollToTop />
 
-      <Navbar />
-      <main className="pt-16">
+        <Navbar />
+        <main className="pt-16">
         <Routes>
           <Route path="/" element={<Home />} />
                   <Route path="/login" element={<LoginPage />} />
@@ -55,6 +58,7 @@ export default function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/courses/:id/lessons" element={<CourseLessons />} />
+          <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
 
  
           <Route path="/articles" element={<TrainerArticlesPage />} />
@@ -70,8 +74,9 @@ export default function App() {
       <WhatsAppIcon/>
       <CTA />
 
-      <Footer />
-     </UserProvider>
+        <Footer />
+      </UserProvider>
+     </ApiProvider>
 
     </div>
   );
