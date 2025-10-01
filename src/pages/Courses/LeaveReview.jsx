@@ -31,7 +31,7 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) =
     
     if (!isLoggedIn) {
       toast.info(t('auth.login_required') || 'Please login to leave a review');
-      navigate('/Login');
+      navigate('/login');
       return;
     }
 
@@ -92,32 +92,13 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) =
     ));
   };
 
-  // Show login message if not logged in
-  if (!isLoggedIn) {
-    return (
-      <div className="p-6 border border-blue-200 shadow-sm dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 rounded-xl">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-3 bg-blue-100 rounded-full shadow-sm dark:bg-blue-900">
-            <FaStar className="text-xl text-blue-600 dark:text-blue-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-            {t('courses.login_to_review') || 'Login to Review'}
-          </h3>
-        </div>
-        <p className="leading-relaxed text-blue-700 dark:text-blue-300">
-          {t('courses.login_to_review_message') || 'Please login to leave a review for this course.'}
-        </p>
-      </div>
-    );
-  }
-
   // Don't return early for hasReviewed - show the form with disabled state
 
   return (
     <div className="p-6 transition-shadow duration-200 border shadow-sm bg-background border-border rounded-xl hover:shadow-md">
       {/* Show success message if already reviewed */}
       {hasReviewed && (
-        <div className="mb-6 p-4 border border-green-200 shadow-sm dark:border-green-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 rounded-xl">
+        <div className="p-4 mb-6 border border-green-200 shadow-sm dark:border-green-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 rounded-xl">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-green-100 rounded-full shadow-sm dark:bg-green-900">
               <FaStar className="text-lg text-green-600 dark:text-green-400" />
@@ -190,7 +171,7 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) =
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting || rating === 0 || !comment.trim() || hasReviewed}
+          disabled={isSubmitting || hasReviewed || (isLoggedIn && (rating === 0 || !comment.trim()))}
           className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md"
         >
           {isSubmitting ? (
