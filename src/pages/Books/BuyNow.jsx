@@ -185,7 +185,7 @@ export default function BuyNowPage() {
         city_id: formData.city_id
       });
 
-      const response = await request('palce_order', {
+      const response = await request('place_order_book', {
         method: 'POST',
         body: formDataToSend,
         auth: true,

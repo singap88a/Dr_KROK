@@ -304,6 +304,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       async checkUserReview(courseId) {
         return await request(`courses/${courseId}/user-review`, { auth: true });
       },
+      // Orders API
+      async getOrders() {
+        const response = await request('orders', { auth: true });
+        return response.data || { orders: [] };
+      },
       // Course subscription
       async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();

@@ -47,16 +47,17 @@ import MyCourses from "./MyCourses";
 import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
 import LogoutConfirmModal from "../../components/LogoutConfirmModal";
+import { useApi } from "../../context/ApiContext";
 
 export default function Profile() {
   const { updateUser, logout } = useUser();
+  const { getOrders } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -144,25 +145,14 @@ export default function Profile() {
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const token = localStorage.getItem("token") || localStorage.getItem("userToken");
-        if (!token) return;
-        const res = await fetch("https://dr-krok.hudurly.com/api/order_books", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await res.json();
-        if (data?.success && Array.isArray(data.data)) {
-          setOrders(data.data);
-        }
+        const ordersData = await getOrders();
+        setOrders(ordersData.orders || ordersData); // handle response shape with orders array
       } catch (e) {
         console.warn("Failed to load orders", e);
       }
     };
     loadOrders();
-  }, []);
+  }, [getOrders]);
 
   const menuItems = [
     { id: "profile", label: "My Profile", icon: FaUser },
@@ -248,7 +238,7 @@ export default function Profile() {
             </div>
             <h3 className="text-lg font-semibold">{user.name}</h3>
             <p className="text-sm text-text-secondary">{user.email}</p>
- 
+
           </>
         ) : (
           <div className="flex flex-col items-center">
