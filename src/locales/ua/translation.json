@@ -601,5 +601,25 @@
       "discount_label": "Знижка купона ({{percent}}%)",
       "required": "Будь ласка, введіть код купона"
     }
+  },
+  "orders": {
+    "title": "Мої замовлення",
+    "totalOrders": "{{count}} загалом замовлень",
+    "all": "Всі",
+    "books": "Книги",
+    "courses": "Курси",
+    "number": "#",
+    "item": "Товар",
+    "price": "Ціна",
+    "status": "Статус",
+    "date": "Дата",
+    "statuses": {
+      "pending": "Очікує",
+      "completed": "Завершено",
+      "cancelled": "Скасовано",
+      "processing": "Обробка",
+      "shipped": "Відправлено",
+      "delivered": "Доставлено"
+    }
   }
 }

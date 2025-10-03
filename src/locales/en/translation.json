@@ -602,5 +602,25 @@
       "discount_label": "Coupon Discount ({{percent}}%)",
       "required": "Please enter a coupon code"
     }
+  },
+  "orders": {
+    "title": "My Orders",
+    "totalOrders": "{{count}} total orders",
+    "all": "All",
+    "books": "Books",
+    "courses": "Courses",
+    "number": "#",
+    "item": "Item",
+    "price": "Price",
+    "status": "Status",
+    "date": "Date",
+    "statuses": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered"
+    }
   }
 }
