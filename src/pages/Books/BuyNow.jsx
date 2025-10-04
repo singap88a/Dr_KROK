@@ -123,9 +123,10 @@ export default function BuyNowPage() {
 
   const images = Object.values(book.images || {});
   const priceNumber = parseFloat(book.price) || 0;
-  const discountAmount = parseFloat(book.discount) || 0;
-  const finalPrice = priceNumber;
-  
+  const discountPercent = parseFloat(book.discount) || 0;
+  const discountAmount = discountPercent > 0 ? (priceNumber * discountPercent / 100) : 0;
+  const finalPrice = priceNumber - discountAmount;
+
   // Calculate coupon discount amount
   const couponDiscountAmount = finalPrice * (couponDiscount / 100);
   const discountedPrice = finalPrice - couponDiscountAmount;
@@ -346,7 +347,7 @@ export default function BuyNowPage() {
                   <div className="flex items-center gap-2">
                     {discountAmount > 0 && (
                       <span className="text-sm text-gray-400 line-through">
-                        ${(priceNumber + discountAmount).toFixed(2)}
+                        ${priceNumber.toFixed(2)}
                       </span>
                     )}
                     <span className="text-lg font-semibold text-primary">

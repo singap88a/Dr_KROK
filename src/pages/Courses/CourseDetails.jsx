@@ -283,9 +283,7 @@ export default function CourseDetails() {
             <div className="flex items-center gap-2">
               <FaUser className="text-primary" /> {t("courses.instructor", "Instructor")} <span className="font-medium">{course.instructor?.name || (typeof course.instructor === 'string' ? course.instructor : "")}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <FaClock className="text-primary" /> {t("courses.duration", "Duration")} <span className="font-medium">{Math.max(1, Math.round((course.duration_minutes || 0) / 60))}h</span>
-            </div>
+
             <div className="flex items-center gap-2">
               <FaLayerGroup className="text-primary" /> {t("courses.level", "Level")} <span className="font-medium">{getLevelTranslation(course.level)}</span>
             </div>
@@ -337,7 +335,7 @@ export default function CourseDetails() {
             )}
             <button
               onClick={() => navigate(`/courses/${id}/lessons`)}
-              className="px-4 py-2 text-sm border transition rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
+              className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
             >
               {t("courses.previewCourse", "Preview Course")}
             </button>
