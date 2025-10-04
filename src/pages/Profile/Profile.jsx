@@ -105,7 +105,7 @@ export default function Profile() {
     };
 
     fetchProfile();
-  }, [updateUser]);
+  }, []);
 
   // Mock courses data
   const enrolledCourses = [
