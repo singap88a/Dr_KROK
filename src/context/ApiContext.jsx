@@ -121,7 +121,16 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
         let message = data?.message || `Request failed: ${res.status}`;
 
         // Handle specific error cases
-        if (res.status === 302) {
+        if (res.status === 401) {
+          // Token expired or invalid - auto logout
+          localStorage.removeItem("token");
+          localStorage.removeItem("userToken");
+          localStorage.removeItem("user");
+          localStorage.removeItem("userName");
+          // Dispatch custom event to notify UserContext
+          window.dispatchEvent(new CustomEvent('user-logout'));
+          message = "Session expired. Please login again.";
+        } else if (res.status === 302) {
           message = "Request was redirected. Please try again.";
         } else if (res.status === 0) {
           message = "Network error or CORS issue. Please check your connection.";

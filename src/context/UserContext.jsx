@@ -15,13 +15,26 @@ export const UserProvider = ({ children }) => {
     // التحقق من وجود توكن المستخدم عند تحميل التطبيق
     const token = localStorage.getItem("token") || localStorage.getItem("userToken");
     const user = localStorage.getItem("user");
-    
+
     if (token) {
       setIsLoggedIn(true);
       if (user) {
         setUserData(JSON.parse(user));
       }
     }
+  }, []);
+
+  // Listen for logout events from ApiContext (when token expires)
+  useEffect(() => {
+    const handleLogoutEvent = () => {
+      logout();
+    };
+
+    window.addEventListener('user-logout', handleLogoutEvent);
+
+    return () => {
+      window.removeEventListener('user-logout', handleLogoutEvent);
+    };
   }, []);
 
   const login = (token, user) => {
