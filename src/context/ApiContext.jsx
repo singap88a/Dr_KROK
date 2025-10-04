@@ -289,6 +289,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
         formData.append('course_id', courseId);
         formData.append('rate_number', rating);
         formData.append('rate_comment', comment);
+        formData.append('type', 'video_course');
 
         console.log('API Request - submitCourseReview:', {
           courseId,
@@ -297,7 +298,8 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           formData: {
             course_id: courseId,
             rate_number: rating,
-            rate_comment: comment
+            rate_comment: comment,
+            type: 'video_course'
           }
         });
 
