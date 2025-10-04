@@ -5,6 +5,7 @@ import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import CouponInput from "../../components/CouponInput";
+import SubscriptionSuccess from "../../components/SubscriptionSuccess";
 import {
   FaArrowLeft,
   FaPlay,
@@ -39,7 +40,7 @@ export default function CourseSubscription() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getVideoCourseById, getCourseAccess, subscribeToCourse } = useApi();
-  const { isLoggedIn, userData } = useUser();
+  const { isLoggedIn } = useUser();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,6 +48,7 @@ export default function CourseSubscription() {
   const [hasAccess, setHasAccess] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscriptionSuccess, setSubscriptionSuccess] = useState(false);
+  const [orderData, setOrderData] = useState(null);
 
   // Coupon states
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -126,18 +128,26 @@ export default function CourseSubscription() {
     setError("");
 
     try {
+      console.log('Starting subscription with:', {
+        courseId: id,
+        paymentMethod: selectedPayment,
+        amount: discountedPrice,
+        couponId,
+        userData: JSON.parse(localStorage.getItem("user") || "{}")
+      });
+
       const response = await subscribeToCourse(id, selectedPayment, discountedPrice, couponId);
 
-      if (response.success) {
+      console.log('Subscription response:', response);
+
+      if (response && (response.success || response.code === 200)) {
+        setOrderData(response.data);
         setSubscriptionSuccess(true);
-        // Redirect to course lessons after successful subscription
-        setTimeout(() => {
-          navigate(`/courses/${id}/lessons`);
-        }, 2000);
       } else {
-        throw new Error(response.message || 'Subscription failed');
+        throw new Error(response?.message || 'Subscription failed');
       }
     } catch (err) {
+      console.error('Subscription error:', err);
       setError(err.message || t('courses.subscription_failed') || 'Subscription failed');
     } finally {
       setIsSubscribing(false);
@@ -193,11 +203,16 @@ export default function CourseSubscription() {
   const couponDiscountAmount = subtotalAfterDiscount * (couponDiscount / 100);
   const discountedPrice = Math.max(0, subtotalAfterDiscount - couponDiscountAmount);
 
+  // Show success page if subscription was successful
+  if (subscriptionSuccess) {
+    return <SubscriptionSuccess course={course} orderData={orderData} />;
+  }
+
   // If user already has access, redirect to lessons
   if (hasAccess) {
     return (
       <section className="min-h-screen py-10 bg-background text-text">
-        <div className="px-4 py-6 mx-auto max-w-4xl sm:px-6 lg:px-8">
+        <div className="max-w-4xl px-4 py-6 mx-auto sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="p-6 mx-auto mb-6 bg-green-100 border border-green-200 rounded-full w-fit dark:bg-green-900 dark:border-green-700">
               <FaCheck className="text-4xl text-green-600 dark:text-green-400" />
@@ -311,7 +326,7 @@ export default function CourseSubscription() {
 
               {/* Instructor Card */}
               {course.instructor && (
-                <div className="mt-6 p-4 border rounded-lg border-border bg-background/50">
+                <div className="p-4 mt-6 border rounded-lg border-border bg-background/50">
                   <h3 className="mb-3 text-lg font-semibold text-text">{t('courses.instructor', 'Instructor')}</h3>
                   <div className="flex items-center gap-4">
                     <img
@@ -368,7 +383,7 @@ export default function CourseSubscription() {
                   {/* Platform discount as amount with percent badge */}
                   {discountAmount > 0 && (
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-text-secondary flex items-center gap-2">
+                      <span className="flex items-center gap-2 text-text-secondary">
                         {t('courses.discount', 'Discount')}
                         <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded">{discountPercent}%</span>
                       </span>
@@ -408,12 +423,6 @@ export default function CourseSubscription() {
                   </div>
                 )}
 
-                {subscriptionSuccess && (
-                  <div className="flex items-center gap-2 p-3 mb-4 text-green-600 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                    <FaCheck />
-                    <span className="text-sm">{t('courses.subscriptionSuccess', 'Subscription successful! Redirecting...')}</span>
-                  </div>
-                )}
 
                 {couponError && (
                   <div className="flex items-center gap-2 p-3 mb-4 text-red-600 border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/20 dark:border-red-800">
@@ -506,7 +515,7 @@ export default function CourseSubscription() {
                 )}
 
                 {/* Course Benefits */}
-                <div className="mt-6 p-4 border rounded-lg border-border bg-background/50">
+                <div className="p-4 mt-6 border rounded-lg border-border bg-background/50">
                   <h4 className="mb-3 text-sm font-semibold text-text-secondary">
                     {t('courses.whatYouGet', 'What you get')}
                   </h4>

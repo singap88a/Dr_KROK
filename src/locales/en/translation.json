@@ -622,5 +622,26 @@
       "shipped": "Shipped",
       "delivered": "Delivered"
     }
+  },
+  "subscription": {
+    "congratulations": "Congratulations!",
+    "successMessage": "You have successfully enrolled in the course!",
+    "enrolledIn": "Enrolled in",
+    "orderDetails": "Order Details",
+    "orderId": "Order ID",
+    "clientName": "Client Name",
+    "whatsNext": "What's Next?",
+    "step1": "Access your course materials immediately",
+    "step2": "Start learning at your own pace",
+    "step3": "Get your certificate upon completion",
+    "startLearning": "Start Learning Now",
+    "browseMore": "Browse More Courses",
+    "autoRedirect": "You will be automatically redirected to the course lessons in 5 seconds...",
+    "lifetimeAccess": "Lifetime Access",
+    "lifetimeAccessDesc": "Access forever",
+    "certificate": "Certificate",
+    "certificateDesc": "Get certified",
+    "support": "24/7 Support",
+    "supportDesc": "Always here to help"
   }
 }
