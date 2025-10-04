@@ -57,8 +57,8 @@ export default function CourseLessons() {
         setLoading(true);
         setError("");
 
-        // Load course details (includes lessons)
-        const courseData = await getVideoCourseById(id);
+        // Load course details (includes lessons) with auth token if logged in
+        const courseData = await getVideoCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(courseData);
         setLessons(courseData.lessons || []);
@@ -79,7 +79,7 @@ export default function CourseLessons() {
 
         // Set first free lesson as current if available
         if (courseData.lessons && courseData.lessons.length > 0) {
-          const firstFreeLesson = courseData.lessons.find(lesson => lesson.type === "Free");
+          const firstFreeLesson = courseData.lessons.find(lesson => lesson.type === "free" || lesson.type === "Free");
           if (firstFreeLesson) {
             setCurrentLesson(firstFreeLesson);
           }
@@ -109,8 +109,8 @@ export default function CourseLessons() {
   // Sort lessons: free first, then paid
   const sortedLessons = useMemo(() => {
     return [...lessons].sort((a, b) => {
-      const aFree = a.type === "Free";
-      const bFree = b.type === "Free";
+      const aFree = a.type === "free" || a.type === "Free";
+      const bFree = b.type === "free" || b.type === "Free";
       if (aFree && !bFree) return -1;
       if (!aFree && bFree) return 1;
       return (a.id || 0) - (b.id || 0);
@@ -118,9 +118,9 @@ export default function CourseLessons() {
   }, [lessons]);
 
   const handleLessonClick = (lesson) => {
-    const isFree = lesson.type === "Free";
-    if (!isFree && !hasAccess) {
-      // Show purchase modal
+    const isFree = lesson.type === "free" || lesson.type === "Free";
+    if (!isFree) {
+      // Show purchase modal for paid lessons
       if (!isLoggedIn) {
         navigate('/login');
         return;
@@ -304,8 +304,10 @@ export default function CourseLessons() {
 
             <div className="space-y-2">
               {sortedLessons.map((lesson, index) => {
-                const isFree = lesson.type === "Free";
-                const isAccessible = isFree || hasAccess;
+                const isFree = lesson.type === "free" || lesson.type === "Free";
+                // If API returns "free" for a lesson, it means user has access to it
+                // If API returns "paid", it means user doesn't have access
+                const isAccessible = isFree;
                 const isCompleted = completedLessons.has(lesson.id);
                 const isActive = currentLesson?.id === lesson.id;
 
@@ -350,7 +352,7 @@ export default function CourseLessons() {
                             <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
                               {lesson.video && <FaVideo />}
                               {lesson.file && <FaFileAlt />}
-                              <span>{t(`courses.${lesson.type.toLowerCase()}`)}</span>
+                              <span>{isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}</span>
                               {lesson.duration && (
                                 <>
                                   <span>•</span>

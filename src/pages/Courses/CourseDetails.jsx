@@ -59,7 +59,7 @@ export default function CourseDetails() {
         setLoading(true);
         setError("");
         
-        const data = await getVideoCourseById(id);
+        const data = await getVideoCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(data);
         

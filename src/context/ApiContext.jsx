@@ -184,10 +184,10 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           raw: response,
         };
       },
-      async getVideoCourseById(id) {
+      async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
-          const response = await request(`video_courses/${id}`);
+          const response = await request(`video_courses/${id}`, { auth });
           return response?.data || null;
         } catch (err) {
           // Fallbacks for different backend routes
@@ -200,7 +200,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
             ];
             for (const path of candidates) {
               try {
-                const res2 = await request(path);
+                const res2 = await request(path, { auth });
                 if (res2?.data) return res2.data;
               } catch (e2) {
                 // try next
