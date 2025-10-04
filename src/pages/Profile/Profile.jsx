@@ -48,15 +48,18 @@ import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
 import LogoutConfirmModal from "../../components/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Profile() {
   const { updateUser, logout } = useUser();
-  const { getOrders } = useApi();
+  const { getOrders, getMyCourses } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   // Fetch profile data on component mount
@@ -107,39 +110,24 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  // Mock courses data
-  const enrolledCourses = [
-    {
-      id: 1,
-      title: "Mastering React.js From Zero to Hero",
-      instructor: "John Doe",
-      image: "https://images.unsplash.com/photo-1581091012184-5c8a0a27f8d4",
-      progress: 75,
-      duration: "8 weeks",
-      rating: 4.5,
-      lastAccessed: "2024-01-15",
-    },
-    {
-      id: 2,
-      title: "Advanced JavaScript Concepts",
-      instructor: "Jane Smith",
-      image: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a",
-      progress: 45,
-      duration: "6 weeks",
-      rating: 4.8,
-      lastAccessed: "2024-01-12",
-    },
-    {
-      id: 3,
-      title: "Node.js Backend Development",
-      instructor: "Mike Johnson",
-      image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31",
-      progress: 90,
-      duration: "10 weeks",
-      rating: 4.7,
-      lastAccessed: "2024-01-10",
-    },
-  ];
+  // Fetch enrolled courses when courses tab is active
+  useEffect(() => {
+    if (activeTab === "courses") {
+      const fetchEnrolledCourses = async () => {
+        try {
+          setCoursesLoading(true);
+          const courses = await getMyCourses();
+          setEnrolledCourses(courses);
+        } catch (err) {
+          console.error("Failed to fetch enrolled courses:", err);
+          toast.error("Failed to load enrolled courses");
+        } finally {
+          setCoursesLoading(false);
+        }
+      };
+      fetchEnrolledCourses();
+    }
+  }, [activeTab, getMyCourses]);
 
   // Load real orders for the logged-in user
   useEffect(() => {
@@ -167,8 +155,6 @@ export default function Profile() {
     setLogoutModalOpen(true);
   };
 
-
-
   const renderStars = (rating) => {
     return Array.from({ length: 5 }).map((_, i) => (
       <FaStar
@@ -182,17 +168,6 @@ export default function Profile() {
 
   const Sidebar = () => (
     <div className="h-full">
-      {/* Mobile Header - Not implemented */}
-      {/* <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
-        <h2 className="text-lg font-semibold">Dashboard</h2>
-        <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="p-2 rounded-lg hover:bg-surface"
-        >
-          <FaTimes className="text-xl" />
-        </button>
-      </div> */}
-
       {/* User Profile Section */}
       <div className="p-6 text-center border-b border-border">
         {loading ? (
@@ -214,7 +189,6 @@ export default function Profile() {
             </div>
             <h3 className="text-lg font-semibold">{user.name}</h3>
             <p className="text-sm text-text-secondary">{user.email}</p>
-
           </>
         ) : (
           <div className="flex flex-col items-center">
@@ -312,7 +286,13 @@ export default function Profile() {
 
     switch (activeTab) {
       case "courses":
-        return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
+        return coursesLoading ? (
+          <div className="flex items-center justify-center min-h-96">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />
+        );
       case "orders":
         return <MyOrders orders={orders} />;
       case "favorites":
@@ -334,7 +314,13 @@ export default function Profile() {
           updateUser((prev)=>({ ...(prev||{}), ...merged }));
         }} />;
       default:
-        return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
+        return coursesLoading ? (
+          <div className="flex items-center justify-center min-h-96">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />
+        );
     }
   };
 

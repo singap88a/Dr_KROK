@@ -220,7 +220,6 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           throw err;
         }
       },
-      // Course Lessons API
       async getCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -324,14 +323,14 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       // Course subscription
       async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();
-        
+
         // Get user ID from token or user data
         const userData = JSON.parse(localStorage.getItem("user") || "{}");
         const userId = userData.id || userData.user_id || userData.client_id || courseId; // fallback to courseId if no user ID
-        
+
         console.log('User data from localStorage:', userData);
         console.log('Extracted user ID:', userId);
-        
+
         formData.append('client_id', userId.toString()); // API expects client_id (user ID) as string
         formData.append('course_id', courseId.toString()); // API expects course_id as string
         formData.append('payment_method', paymentMethod);
@@ -367,22 +366,12 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           // Handle CORS issues - if the API actually succeeded but we got a CORS error
           if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
             console.warn('CORS error detected, trying no-cors fallback:', error);
-            
+
             // Try with no-cors mode as fallback
             try {
               const url = buildUrl('place_video_course');
               const token = getAuthToken();
-              
-              // Create fresh FormData for no-cors request
-              const noCorsFormData = new FormData();
-              noCorsFormData.append('client_id', userId.toString());
-              noCorsFormData.append('course_id', courseId.toString());
-              noCorsFormData.append('payment_method', paymentMethod);
-              noCorsFormData.append('amount', amount.toString());
-              if (couponId) {
-                noCorsFormData.append('coupon_id', couponId);
-              }
-              
+
               const headers = {
                 'Authorization': `Bearer ${token}`,
                 'Accept-Language': (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0]
@@ -400,12 +389,12 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
               const noCorsResponse = await fetch(url, {
                 method: 'POST',
                 headers,
-                body: noCorsFormData,
+                body: formData,
                 mode: 'no-cors'
               });
 
               console.log('No-cors response:', noCorsResponse);
-              
+
               // If no-cors request doesn't throw, assume it succeeded
               return {
                 code: 200,
@@ -450,6 +439,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           }
           throw error;
         }
+      },
+      // Get user's enrolled courses
+      async getMyCourses() {
+        const response = await request("profile/get-my-courses", { auth: true });
+        return response.data || [];
       }
     }),
     [
