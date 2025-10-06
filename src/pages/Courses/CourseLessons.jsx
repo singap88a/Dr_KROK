@@ -459,59 +459,13 @@ export default function CourseLessons() {
                       {course.instructor.bio}
                     </p>
 
-                    {/* Social Links */}
-                    <div className="flex flex-wrap gap-2">
-                      {course.instructor.facebook && (
-                        <a
-                          href={course.instructor.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center w-8 h-8 text-white transition-colors bg-blue-600 rounded-full hover:bg-blue-700"
-                        >
-                          <FaFacebook className="text-xs" />
-                        </a>
-                      )}
-                      {course.instructor.instagram && (
-                        <a
-                          href={course.instructor.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center w-8 h-8 text-white transition-colors bg-pink-600 rounded-full hover:bg-pink-700"
-                        >
-                          <FaInstagram className="text-xs" />
-                        </a>
-                      )}
-                      {course.instructor.youtube && (
-                        <a
-                          href={course.instructor.youtube}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center w-8 h-8 text-white transition-colors bg-red-600 rounded-full hover:bg-red-700"
-                        >
-                          <FaYoutube className="text-xs" />
-                        </a>
-                      )}
-                      {course.instructor.telegram && (
-                        <a
-                          href={course.instructor.telegram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center w-8 h-8 text-white transition-colors bg-blue-500 rounded-full hover:bg-blue-600"
-                        >
-                          <FaTelegram className="text-xs" />
-                        </a>
-                      )}
-                      {course.instructor.whatsapp && (
-                        <a
-                          href={`https://wa.me/${course.instructor.whatsapp.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center w-8 h-8 text-white transition-colors bg-green-600 rounded-full hover:bg-green-700"
-                        >
-                          <FaWhatsapp className="text-xs" />
-                        </a>
-                      )}
-                    </div>
+                    {/* View Details Button */}
+                    <Link
+                      to={`/instructors/${course.instructor.id}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+                    >
+                      {t("instructors.viewDetails", "View Details")}
+                    </Link>
                   </div>
                 </div>
               </div>

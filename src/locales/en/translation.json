@@ -415,6 +415,7 @@
     "connect": "Connect",
     "instructorDetails": "Instructor Details",
     "backToInstructors": "Back to Instructors",
+    "viewDetails": "View Details",
     "details": {
       "title": "Instructor Profile",
       "bio": "Biography",
