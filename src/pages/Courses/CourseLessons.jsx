@@ -229,10 +229,6 @@ export default function CourseLessons() {
                   <span>{lessons.length} {t('courses.lessons', 'Lessons')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaClock className="text-primary" />
-                  <span>{Math.max(1, Math.round((course.duration_minutes || 0) / 60))}h {t('courses.duration', 'Duration')}</span>
-                </div>
-                <div className="flex items-center gap-2">
                   <FaUsers className="text-primary" />
                   <span>{course.enrolled_count || 0} {t('courses.students', 'Students')}</span>
                 </div>
