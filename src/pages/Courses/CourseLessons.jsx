@@ -520,6 +520,32 @@ export default function CourseLessons() {
                 </div>
               </div>
             )}
+
+            {/* Ask the Instructor Section */}
+            {course.instructor && course.instructor.whatsapp && (
+              <div className="p-6 border rounded-lg bg-surface border-border">
+                <div className="flex items-start gap-4">
+                  <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full dark:bg-green-900">
+                    <FaWhatsapp className="text-2xl text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="mb-2 text-lg font-semibold text-text">{t('courses.askInstructor', 'Ask the Instructor')}</h3>
+                    <p className="mb-4 text-sm text-text-muted">
+                      {t('courses.askInstructorDescription', 'Have a question about this course? Contact the instructor directly through WhatsApp for personal assistance.')}
+                    </p>
+                    <a
+                      href={`https://wa.me/${course.instructor.whatsapp.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+                    >
+                      <FaWhatsapp />
+                      {t('courses.contactInstructor', 'Contact Instructor')}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

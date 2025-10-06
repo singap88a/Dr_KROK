@@ -456,6 +456,9 @@
   }
   ,
   "courses": {
+    "askInstructor": "Ask the Instructor",
+    "askInstructorDescription": "Have questions about this course? Contact the instructor directly via WhatsApp for personalized assistance.",
+    "contactInstructor": "Contact Instructor",
     "featuredVideoCourses": "Featured Video Courses",
     "students": "Students",
     "lessons": "Lessons",

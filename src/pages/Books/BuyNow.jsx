@@ -198,7 +198,7 @@ export default function BuyNowPage() {
       setSuccess(t('books.order_placed_successfully'));
       // Redirect to order confirmation or profile
       setTimeout(() => {
-        navigate('/profile');
+        navigate('/profile', { state: { activeTab: 'orders' } });
       }, 2000);
 
     } catch (err) {
@@ -214,7 +214,7 @@ export default function BuyNowPage() {
         // Don't show this as an error, show as success with warning
         setSuccess("Order submitted successfully! Please check your profile for order status.");
         setTimeout(() => {
-          navigate('/profile');
+          navigate('/profile', { state: { activeTab: 'orders' } });
         }, 2000);
         return;
       }
@@ -252,7 +252,7 @@ export default function BuyNowPage() {
       setSuccess(t('books.purchase_successful'));
       // Redirect to download or profile
       setTimeout(() => {
-        navigate('/profile');
+        navigate('/profile', { state: { activeTab: 'orders' } });
       }, 2000);
 
     } catch (err) {

@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -51,6 +52,7 @@ import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Profile() {
+  const location = useLocation();
   const { updateUser, logout } = useUser();
   const { getOrders, getMyCourses } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
@@ -141,6 +143,13 @@ export default function Profile() {
     };
     loadOrders();
   }, [getOrders]);
+
+  // Set active tab from location state
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const menuItems = [
     { id: "profile", label: "My Profile", icon: FaUser },

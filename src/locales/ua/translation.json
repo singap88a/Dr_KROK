@@ -455,6 +455,9 @@
   }
   ,
   "courses": {
+    "askInstructor": "Задати питання викладачу",
+    "askInstructorDescription": "Маєте питання щодо цього курсу? Зв'яжіться з викладачем безпосередньо через WhatsApp для персональної допомоги.",
+    "contactInstructor": "Зв'язатися з викладачем",
     "featuredVideoCourses": "Рекомендовані відеокурси",
     "students": "Студенти",
     "lessons": "Уроки",
