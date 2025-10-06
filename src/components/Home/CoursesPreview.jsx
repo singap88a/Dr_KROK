@@ -58,7 +58,7 @@ export default function CoursesPreview({ courses }) {
       .then((res) => {
         if (!mounted) return;
         const favs = (res.data || [])
-          .filter((f) => f.type === "course")
+          .filter((f) => f.type === "video_course")
           .map((f) => f.table_id);
         setFavoriteIds(favs);
       })
@@ -74,14 +74,14 @@ export default function CoursesPreview({ courses }) {
       return;
     }
     try {
-      const res = await toggleFavorite(courseId, "course");
+      const res = await toggleFavorite(courseId, "video_course");
       setFavoriteIds((prev) =>
         res.message === "Added to favorites"
           ? [...new Set([...prev, courseId])]
           : prev.filter((id) => id !== courseId)
       );
       toast.success(res.message);
-    } catch (e) {
+    } catch {
       toast.error(t("favorites.failedToRemove", "Failed to remove from favorites"));
     }
   };

@@ -55,7 +55,7 @@ export default function MyFavorites() {
                 ...favorite,
                 bookData: bookResponse.data
               };
-            } else if (favorite.type === 'course') {
+            } else if (favorite.type === 'video_course') {
               // Use resilient course fetcher that handles multiple backend routes
               const course = await getVideoCourseById(favorite.table_id);
               return {
@@ -156,8 +156,8 @@ export default function MyFavorites() {
             <FiBook className="inline mr-1" /> {t("favorites.filterBooks", "Books")}
           </button>
           <button
-            onClick={() => setActiveFilter("course")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "course" ? "bg-primary text-white" : "bg-surface text-text"}`}
+            onClick={() => setActiveFilter("video_course")}
+            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "video_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
             title={t("favorites.filterCourses", "Courses")}
           >
             <FiUser className="inline mr-1" /> {t("favorites.filterCourses", "Courses")}
@@ -169,7 +169,7 @@ export default function MyFavorites() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredFavorites.map((item) => {
           // If it's a course, render the same card style as books
-          if (item.type === 'course') {
+          if (item.type === 'video_course') {
             const c = item.courseData || item;
             const images = c.images ? Object.values(c.images) : [];
             const mainImage = images.length > 0 ? images[0].original_url : (c.image || "/logo.png");
@@ -204,7 +204,7 @@ export default function MyFavorites() {
                     <FiHeart className="w-5 h-5 text-red-500 fill-red-500" />
                   </button>
 
-                  {/* Type Badge - course */}
+                  {/* Type Badge - video_course */}
                   <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-lg bottom-3 left-3 bg-primary/80">
                     {t("favorites.course")}
                   </div>

@@ -78,9 +78,9 @@ export default function Courses() {
         setVideoCourses(mapped);
         setInitialLoadDone(true);
       })
-      .catch((e) => {
+      .catch((err) => {
         if (!mounted) return;
-        setError(e?.message || "Failed to load courses");
+        setError(err?.message || "Failed to load courses");
       })
       .finally(() => mounted && setLoading(false));
     return () => {
@@ -95,7 +95,7 @@ export default function Courses() {
       .then((res) => {
         if (!mounted) return;
         const favs = (res.data || [])
-          .filter((f) => f.type === "course")
+          .filter((f) => f.type === "video_course")
           .map((f) => f.table_id);
         setFavoriteIds(favs);
       })
@@ -111,14 +111,14 @@ export default function Courses() {
       return;
     }
     try {
-      const res = await toggleFavorite(courseId, "course");
+      const res = await toggleFavorite(courseId, "video_course");
       setFavoriteIds((prev) =>
         res.message === "Added to favorites"
           ? [...new Set([...prev, courseId])]
           : prev.filter((id) => id !== courseId)
       );
       toast.success(res.message);
-    } catch (e) {
+    } catch {
       toast.error(t("favorites.failedToRemove", "Failed to remove from favorites"));
     }
   };
