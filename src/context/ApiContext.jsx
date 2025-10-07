@@ -61,11 +61,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       } catch (fetchError) {
         // Handle network errors, CORS errors, etc.
         if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
-          // Check if this is a CORS issue with place_video_course specifically
-          if (path === 'place_video_course') {
-            console.warn('CORS issue with place_video_course endpoint, but request might have succeeded on server side');
-            // For place_video_course, we'll handle this in the calling function
-            const error = new Error("CORS issue detected with place_video_course endpoint");
+          // Check if this is a CORS issue with place_video_course or place_order_book specifically
+          if (path === 'place_video_course' || path === 'place_order_book') {
+            console.warn(`CORS issue with ${path} endpoint, but request might have succeeded on server side`);
+            // For these endpoints, we'll handle this in the calling function
+            const error = new Error(`CORS issue detected with ${path} endpoint`);
             error.status = 0;
             error.data = null;
             error.isCorsIssue = true;

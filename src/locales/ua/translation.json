@@ -237,7 +237,15 @@
       "discount_label": "Знижка купона ({{percent}}%)",
       "required": "Будь ласка, введіть код купона"
     },
-    "original_total": "Початкова сума"
+    "original_total": "Початкова сума",
+    "agree_terms": "Я погоджуюся з",
+    "terms_conditions": "Умовами та положеннями",
+    "terms": {
+      "title": "Умови та положення",
+      "loading": "Завантаження...",
+      "close": "Закрити",
+      "agree": "Я погоджуюся"
+    }
   },
   "testimonials": {
     "title": "Відгуки студентів",
