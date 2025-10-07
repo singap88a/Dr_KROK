@@ -148,7 +148,7 @@ export default function LoginPage() {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.hudurly.com/api/auth/google'}
+                onClick={() => window.location.href = 'https://dr-krok.hudurly.com/api/auth/google/redirect'}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <GoogleIcon className="w-5 h-5 mr-3" />

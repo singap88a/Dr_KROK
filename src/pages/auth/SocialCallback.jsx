@@ -1,52 +1,38 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { useUser } from '../../context/UserContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default function SocialCallback() {
+const GoogleCallback = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { login, register } = useUser();
+  const { login } = useUser();
 
   useEffect(() => {
-    const handleSocialCallback = async () => {
+    const fetchUser = async () => {
       try {
-        // Get the token from URL parameters
-        const token = searchParams.get('token');
-        const userData = searchParams.get('user');
-        const isRegister = searchParams.get('register') === 'true';
-
-        if (token && userData) {
-          const user = JSON.parse(decodeURIComponent(userData));
-
-          if (isRegister) {
-            register(token, user);
-            toast.success('🎉 Account created successfully!', {
-              position: 'top-right',
-            });
-            setTimeout(() => {
-              navigate('/profile');
-            }, 1500);
-          } else {
-            login(token, user);
-            toast.success('✅ Login successful!', {
-              position: 'top-right',
-            });
-            setTimeout(() => {
-              navigate('/');
-            }, 1500);
+        // هنا هنكلم API بتاع لارافيل اللي بيهندل الكولباك
+        const response = await axios.get(
+          "https://dr-krok.hudurly.com/api/auth/google/callback",
+          {
+            withCredentials: true,
           }
-        } else {
-          toast.error('❌ Authentication failed. Please try again.', {
-            position: 'top-right',
-          });
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
-        }
+        );
+
+        // خزن التوكن اللي جالك
+        localStorage.setItem("token", response.data.token);
+
+        // روح على الصفحة الرئيسية أو الداشبورد
+        login(response.data.token, response.data.user);
+        toast.success('✅ Login successful!', {
+          position: 'top-right',
+        });
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       } catch (error) {
-        console.error('Social callback error:', error);
+        console.error("Google login failed:", error);
         toast.error('❌ Authentication failed. Please try again.', {
           position: 'top-right',
         });
@@ -56,8 +42,8 @@ export default function SocialCallback() {
       }
     };
 
-    handleSocialCallback();
-  }, [searchParams, login, register, navigate]);
+    fetchUser();
+  }, [navigate, login]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
@@ -68,4 +54,6 @@ export default function SocialCallback() {
       </div>
     </div>
   );
-}
+};
+
+export default GoogleCallback;
