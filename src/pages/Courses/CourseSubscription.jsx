@@ -56,8 +56,8 @@ export default function CourseSubscription() {
   const [couponError, setCouponError] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
 
-  // Payment method
-  const [selectedPayment, setSelectedPayment] = useState("");
+  // Payment method (default to visa for informational display)
+  const selectedPayment = "visa";
 
   useEffect(() => {
     let mounted = true;
@@ -116,11 +116,6 @@ export default function CourseSubscription() {
   const handleSubscription = async () => {
     if (!isLoggedIn) {
       navigate('/login');
-      return;
-    }
-
-    if (!selectedPayment) {
-      setError(t('courses.select_payment_method') || 'Please select a payment method');
       return;
     }
 
@@ -205,7 +200,7 @@ export default function CourseSubscription() {
 
   // Show success page if subscription was successful
   if (subscriptionSuccess) {
-    return <SubscriptionSuccess course={course} orderData={orderData} />;
+    return <SubscriptionSuccess course={course} orderData={orderData} totalPrice={discountedPrice} />;
   }
 
   // If user already has access, redirect to lessons
@@ -450,7 +445,7 @@ export default function CourseSubscription() {
                 {isLoggedIn && (
                   <div className="mb-6">
                     <h4 className="mb-3 text-sm font-semibold text-text-secondary">
-                      {t('courses.selectPaymentMethod', 'Select Payment Method')}
+                      {t('courses.availablePaymentMethods', 'Available Payment Methods')}
                     </h4>
                     <div className="space-y-2">
                       {[
@@ -460,23 +455,13 @@ export default function CourseSubscription() {
                       ].map((method) => {
                         const IconComponent = method.icon;
                         return (
-                          <button
+                          <div
                             key={method.id}
-                            onClick={() => setSelectedPayment(method.id)}
-                            className={`w-full p-3 border rounded-lg flex items-center gap-3 transition ${
-                              selectedPayment === method.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
+                            className="flex items-center w-full gap-3 p-3 border rounded-lg border-border bg-surface"
                           >
                             <IconComponent className={`text-xl ${method.color}`} />
                             <span className="font-medium">{method.name}</span>
-                            {selectedPayment === method.id && (
-                              <div className="flex items-center justify-center w-4 h-4 ml-auto rounded-full bg-primary">
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                              </div>
-                            )}
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -486,7 +471,7 @@ export default function CourseSubscription() {
                 {/* Subscribe Button */}
                 <button
                   onClick={handleSubscription}
-                  disabled={isSubscribing || !isLoggedIn || !selectedPayment}
+                  disabled={isSubscribing || !isLoggedIn}
                   className="w-full px-6 py-4 font-semibold text-white transition-all rounded-lg bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubscribing ? (
