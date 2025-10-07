@@ -98,6 +98,19 @@
         "mismatch": "New password and confirmation do not match",
         "too_short": "Password must be at least 6 characters"
       }
+    },
+    "sidebar": {
+      "myProfile": "My Profile",
+      "myCourses": "My Courses",
+      "myOrders": "My Orders",
+      "myFavorites": "My Favorites",
+      "myRatings": "My Ratings",
+      "logout": "Logout"
+    },
+    "stats": {
+      "courses": "Courses",
+      "orders": "Orders",
+      "rating": "Rating"
     }
   },
   "footer": {

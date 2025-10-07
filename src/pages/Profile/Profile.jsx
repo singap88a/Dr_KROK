@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -53,6 +54,7 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Profile() {
   const location = useLocation();
+  const { t } = useTranslation();
   const { updateUser, logout } = useUser();
   const { getOrders, getMyCourses } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
@@ -63,6 +65,7 @@ export default function Profile() {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -152,12 +155,12 @@ export default function Profile() {
   }, [location.state]);
 
   const menuItems = [
-    { id: "profile", label: "My Profile", icon: FaUser },
-    { id: "courses", label: "My Courses", icon: FaGraduationCap },
-    { id: "orders", label: "My Orders", icon: FaShoppingCart },
-    { id: "favorites", label: "My Favorites", icon: FaHeart },
-    { id: "ratings", label: "My Ratings", icon: FaStar },
-    { id: "logout", label: "Logout", icon: FaSignOutAlt },
+    { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
+    { id: "courses", label: t('profile.sidebar.myCourses'), icon: FaGraduationCap },
+    { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart },
+    { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
+    { id: "ratings", label: t('profile.sidebar.myRatings'), icon: FaStar },
+    { id: "logout", label: t('profile.sidebar.logout'), icon: FaSignOutAlt },
   ];
 
   const handleLogout = () => {
@@ -177,8 +180,17 @@ export default function Profile() {
 
   const Sidebar = () => (
     <div className="h-full">
+      {/* Close Button for Mobile */}
+      <div className="flex justify-end p-4 lg:hidden">
+        <button
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="p-2 text-text-secondary hover:text-text"
+        >
+          <FaTimes className="text-lg" />
+        </button>
+      </div>
       {/* User Profile Section */}
-      <div className="p-6 text-center border-b border-border">
+      <div className="px-6 pt-20 pb-6 text-center border-b border-border">
         {loading ? (
           <div className="flex flex-col items-center">
             <div className="w-20 h-20 mx-auto mb-4 bg-gray-300 rounded-full animate-pulse"></div>
@@ -218,6 +230,7 @@ export default function Profile() {
                 <button
                   onClick={() => {
                     setActiveTab(item.id);
+                    setIsMobileMenuOpen(false);
                     if (item.id === "logout") handleLogout();
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -242,19 +255,19 @@ export default function Profile() {
             <div className="text-lg font-semibold text-primary">
               {user?.stats?.courses || 0}
             </div>
-            <div className="text-xs text-text-secondary">Courses</div>
+            <div className="text-xs text-text-secondary">{t('profile.stats.courses')}</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-primary">
               {user?.stats?.orders || 0}
             </div>
-            <div className="text-xs text-text-secondary">Orders</div>
+            <div className="text-xs text-text-secondary">{t('profile.stats.orders')}</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-primary">
               {user?.stats?.rating || 0}
             </div>
-            <div className="text-xs text-text-secondary">Rating</div>
+            <div className="text-xs text-text-secondary">{t('profile.stats.rating')}</div>
           </div>
         </div>
       </div>
@@ -336,8 +349,32 @@ export default function Profile() {
   return (
     <div className="flex min-h-screen bg-background text-text">
       <ToastContainer />
+      {/* Mobile Menu Button */}
+<button
+  onClick={() => setIsMobileMenuOpen(true)}
+  className="fixed z-40 p-2 text-white rounded-lg shadow-lg left-4 bg-primary lg:hidden"
+  style={{ top: "20rem" }} // ← بيجبرها تنزل تحت النـافبار
+>
+  <FaBars className="text-lg" />
+</button>
+
+
+
+      {/* Mobile Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+          <aside className="fixed top-0 left-0 z-50 h-full border-r shadow-xl w-80 bg-surface border-border">
+            <Sidebar />
+          </aside>
+        </div>
+      )}
+
       {/* Sidebar */}
-      <aside className="sticky top-0 flex flex-col h-screen p-6 border-r shadow-xl w-80 bg-surface border-border">
+      <aside className="sticky top-0 flex-col hidden h-screen p-6 border-r shadow-xl lg:flex w-80 bg-surface border-border">
         <Sidebar />
       </aside>
 
