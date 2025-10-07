@@ -313,6 +313,7 @@ export default function BuyNowPage() {
       const formDataToSend = new FormData();
       formDataToSend.append('book_id', book.id);
       formDataToSend.append('quantity', 1);
+      formDataToSend.append('type', 'PDF');
       if (couponId) {
         formDataToSend.append('coupon_id', couponId.toString());
       }

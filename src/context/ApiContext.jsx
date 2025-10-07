@@ -30,8 +30,8 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
       const url = buildUrl(path);
       const finalHeaders = { ...headers };
 
-      // Special handling for palce_order endpoint
-      const isPalceOrder = path === 'palce_order';
+      // Special handling for place_order_book endpoint
+      const isPalceOrder = path === 'place_order_book';
 
       // Attach Accept-Language from current i18n language (map ua -> uk for backend)
       const currentLng = (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0];
@@ -55,7 +55,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
           method,
           headers: finalHeaders,
           body: isFormData ? body : body ? JSON.stringify(body) : undefined,
-          redirect: isPalceOrder ? 'manual' : 'follow', // Manual redirect handling for palce_order
+          redirect: isPalceOrder ? 'manual' : 'follow', // Manual redirect handling for place_order_book
           mode: 'cors', // Ensure CORS mode
         });
       } catch (fetchError) {
@@ -79,10 +79,10 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
         throw fetchError;
       }
 
-      // Handle redirects manually for palce_order
+      // Handle redirects manually for place_order_book
       if (isPalceOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
-        // For palce_order, try to get the response anyway as it might still contain data
-        console.warn('palce_order endpoint redirected, but continuing...');
+        // For place_order_book, try to get the response anyway as it might still contain data
+        console.warn('place_order_book endpoint redirected, but continuing...');
 
         // If we can't get the response due to redirect, try a different approach
         if (res.type === 'opaqueredirect') {
@@ -221,7 +221,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
               try {
                 const res2 = await request(path, { auth });
                 if (res2?.data) return res2.data;
-              } catch (e2) {
+              } catch {
                 // try next
               }
             }
@@ -252,7 +252,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
                   raw: res2,
                 };
               }
-            } catch (e2) {
+            } catch {
               // try next
             }
           }
@@ -270,7 +270,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/a
             try {
               const userCourses = await request('user/courses', { auth: true });
               return userCourses?.data?.some(course => course.id === parseInt(courseId)) || false;
-            } catch (e2) {
+            } catch {
               return false;
             }
           }
