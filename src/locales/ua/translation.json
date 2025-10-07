@@ -620,6 +620,9 @@
     "all": "Всі",
     "books": "Книги",
     "courses": "Курси",
+    "pdf": "PDF",
+    "delivery": "Доставка",
+    "type": "Тип",
     "number": "#",
     "item": "Товар",
     "price": "Ціна",
@@ -631,7 +634,9 @@
       "cancelled": "Скасовано",
       "processing": "Обробка",
       "shipped": "Відправлено",
-      "delivered": "Доставлено"
+      "delivered": "Доставлено",
+      "paid": "Оплачено",
+      "payment": "Очікує оплати"
     }
   },
   "subscription": {

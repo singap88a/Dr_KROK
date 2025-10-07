@@ -621,6 +621,9 @@
     "all": "All",
     "books": "Books",
     "courses": "Courses",
+    "pdf": "PDF",
+    "delivery": "Delivery",
+    "type": "Type",
     "number": "#",
     "item": "Item",
     "price": "Price",
@@ -632,7 +635,9 @@
       "cancelled": "Cancelled",
       "processing": "Processing",
       "shipped": "Shipped",
-      "delivered": "Delivered"
+      "delivered": "Delivered",
+      "paid": "Paid",
+      "payment": "Payment Pending"
     }
   },
   "subscription": {

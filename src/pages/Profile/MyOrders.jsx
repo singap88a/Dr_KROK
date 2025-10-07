@@ -9,6 +9,7 @@ import {
   FaClock,
   FaTruck,
   FaBoxOpen,
+  FaFilePdf,
 } from "react-icons/fa";
 
 const normalizeOrders = (orders) => {
@@ -16,13 +17,22 @@ const normalizeOrders = (orders) => {
   return orders.map((o) => {
     // Handle API /api/orders shape
     if (o && typeof o === 'object' && 'order_id' in o) {
+      let type = 'book';
+      const lowerType = (o.type || '').toLowerCase();
+      if (lowerType === 'video_course') {
+        type = 'course';
+      } else if (lowerType === 'pdf' || lowerType === 'delivery') {
+        type = lowerType;
+      }
       return {
         id: o.order_id,
         item: o.title || 'Order item',
-        type: o.type === 'video_course' ? 'course' : 'book',
+        type,
         price: parseFloat(o.total_price) || 0,
         status: (o.status || '').toLowerCase(),
         date: o.created_at || new Date().toISOString(),
+        image: o.image,
+        file: o.file,
       };
     }
     // Backend order_books shape
@@ -71,6 +81,10 @@ const MyOrders = ({ orders }) => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'paid':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'payment':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -90,14 +104,23 @@ const MyOrders = ({ orders }) => {
         return <FaCheckCircle className="w-3 h-3" />;
       case 'cancelled':
         return <FaTimesCircle className="w-3 h-3" />;
+      case 'paid':
+        return <FaCheckCircle className="w-3 h-3" />;
+      case 'payment':
+        return <FaClock className="w-3 h-3" />;
       default:
         return <FaExclamationTriangle className="w-3 h-3" />;
     }
   };
 
   const filteredOrders = filterType === 'all' ? orders : orders.filter(order => {
-    const normalizedType = order.type === 'video_course' ? 'course' : order.type;
-    return normalizedType === filterType;
+    if (filterType === 'books') {
+      return order.type !== 'course';
+    }
+    if (filterType === 'courses') {
+      return order.type === 'course';
+    }
+    return true;
   });
 
   // Sort orders by order_id in descending order (newest first)
@@ -155,6 +178,9 @@ const MyOrders = ({ orders }) => {
                   {t('orders.item')}
                 </th>
                 <th className="px-6 py-4 text-sm font-semibold text-left text-text">
+                  {t('orders.type')}
+                </th>
+                <th className="px-6 py-4 text-sm font-semibold text-left text-text">
                   {t('orders.price')}
                 </th>
                 <th className="px-6 py-4 text-sm font-semibold text-left text-text">
@@ -177,11 +203,25 @@ const MyOrders = ({ orders }) => {
                       <div className="flex items-center gap-3">
                         {order.type === "course" ? (
                           <FaPlay className="text-primary" />
+                        ) : order.type === "pdf" ? (
+                          <FaFilePdf className="text-primary" />
+                        ) : order.type === "delivery" ? (
+                          <FaTruck className="text-primary" />
                         ) : (
                           <FaBook className="text-primary" />
                         )}
-                        <span className="text-sm">{order.item}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm">{order.item}</span>
+                          {(order.type === "pdf" || order.type === "delivery") && order.file && (
+                            <a href={order.file} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                              View PDF
+                            </a>
+                          )}
+                        </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {order.type === 'course' ? t('orders.courses') : order.type === 'book' ? t('orders.books') : t(`orders.${order.type}`) || order.type}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       ${Number(order.price).toFixed(2)}
