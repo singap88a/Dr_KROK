@@ -667,5 +667,14 @@
     "students": "Студенти",
     "courses": "Курси",
     "liveCourses": "Живі курси"
+  },
+  "myCourses": {
+    "title": "Мої курси",
+    "enrolledCount": "{{count}} курсів записано",
+    "continueLearning": "Продовжити навчання",
+    "continue": "Продовжити",
+    "progress": "Прогрес",
+    "noCourses": "Ще немає записаних курсів",
+    "browseCourses": "Перегляньте наші курси та розпочніть навчання сьогодні!"
   }
 }

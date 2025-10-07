@@ -1,9 +1,11 @@
 import React from "react";
 import { FaUser, FaClock, FaPlay, FaStar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const MyCourses = ({ enrolledCourses, renderStars }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleCourseClick = (courseId) => {
     navigate(`/courses/${courseId}/lessons`);
@@ -12,9 +14,9 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">My Courses</h2>
+        <h2 className="text-2xl font-bold">{t("myCourses.title")}</h2>
         <span className="text-sm text-text-secondary">
-          {enrolledCourses.length} courses enrolled
+          {t("myCourses.enrolledCount", { count: enrolledCourses.length })}
         </span>
       </div>
 
@@ -34,14 +36,14 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
               />
               <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 opacity-0 bg-black/20 hover:opacity-100">
                 <button
-                  className="px-4 py-2 font-medium transition-colors rounded-lg bg-white/90 text-text hover:bg-white"
+                  className="px-4 py-2 font-medium transition-colors rounded-lg bg-white/90 dark:bg-black/50 text-text dark:text-white hover:bg-white dark:hover:bg-black/70"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCourseClick(course.id);
                   }}
                 >
                   <FaPlay className="inline mr-2" />
-                  Continue Learning
+                  {t("myCourses.continueLearning")}
                 </button>
               </div>
             </div>
@@ -69,7 +71,7 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
               {course.progress !== undefined && (
                 <div className="mb-4">
                   <div className="flex justify-between mb-1 text-sm">
-                    <span>Progress</span>
+                    <span>{t("myCourses.progress")}</span>
                     <span>{course.progress}%</span>
                   </div>
                   <div className="w-full h-2 bg-gray-200 rounded-full">
@@ -97,7 +99,7 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
                     handleCourseClick(course.id);
                   }}
                 >
-                  Continue
+                  {t("myCourses.continue")}
                 </button>
               </div>
             </div>
@@ -108,8 +110,8 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
       {enrolledCourses.length === 0 && (
         <div className="py-12 text-center">
           <FaPlay className="mx-auto mb-4 text-4xl text-gray-400" />
-          <h3 className="mb-2 text-lg font-semibold text-text-secondary">No courses enrolled yet</h3>
-          <p className="text-text-secondary">Browse our courses and start learning today!</p>
+          <h3 className="mb-2 text-lg font-semibold text-text-secondary">{t("myCourses.noCourses")}</h3>
+          <p className="text-text-secondary">{t("myCourses.browseCourses")}</p>
         </div>
       )}
     </div>
