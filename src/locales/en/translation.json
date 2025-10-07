@@ -655,5 +655,13 @@
     "certificateDesc": "Get certified",
     "support": "24/7 Support",
     "supportDesc": "Always here to help"
+  },
+  "stats": {
+    "title": "Our Impact in Numbers",
+    "subtitle": "Discover how our platform is growing every single day.",
+    "instructors": "Instructors",
+    "students": "Students",
+    "courses": "Courses",
+    "liveCourses": "Live Courses"
   }
 }

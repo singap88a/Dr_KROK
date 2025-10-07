@@ -1,21 +1,51 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useApi } from "../../context/ApiContext";
 import {
   FaChalkboardTeacher,
   FaUserGraduate,
   FaBookOpen,
-  FaUniversity,
+  FaVideo,
 } from "react-icons/fa";
 
 // StatsSection.jsx
-export default function StatsSection({ stats } = { stats: null }) {
+export default function StatsSection() {
+  const { t } = useTranslation();
+  const { getSettings } = useApi();
+  const [apiStats, setApiStats] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const settings = await getSettings();
+        if (settings?.data) {
+          setApiStats({
+            instructors: Number(settings.data.total_instructors) || 0,
+            students: Number(settings.data.total_clients) || 0,
+            courses: (Number(settings.data.total_video_courses) || 0) + (Number(settings.data.total_live_courses) || 0),
+            liveCourses: Number(settings.data.total_live_courses) || 0,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      }
+    };
+    fetchStats();
+  }, [getSettings]);
+
   const defaultStats = [
-    { id: 1, label: "Instructors", value: 128, icon: <FaChalkboardTeacher /> },
-    { id: 2, label: "Students", value: 4920, icon: <FaUserGraduate /> },
-    { id: 3, label: "Courses", value: 86, icon: <FaBookOpen /> },
-    { id: 4, label: "Departments", value: 12, icon: <FaUniversity /> },
+    { id: 1, label: t("stats.instructors"), value: 128, icon: <FaChalkboardTeacher /> },
+    { id: 2, label: t("stats.students"), value: 4920, icon: <FaUserGraduate /> },
+    { id: 3, label: t("stats.courses"), value: 86, icon: <FaBookOpen /> },
+    { id: 4, label: t("stats.liveCourses"), value: 42, icon: <FaVideo /> },
   ];
 
-  const data = stats || defaultStats;
+  const data = apiStats ? [
+    { id: 1, label: t("stats.instructors"), value: apiStats.instructors, icon: <FaChalkboardTeacher /> },
+    { id: 2, label: t("stats.students"), value: apiStats.students, icon: <FaUserGraduate /> },
+    { id: 3, label: t("stats.courses"), value: apiStats.courses, icon: <FaBookOpen /> },
+    { id: 4, label: t("stats.liveCourses"), value: apiStats.liveCourses, icon: <FaVideo /> },
+  ] : defaultStats;
 
   const sectionRef = useRef(null);
   const [triggerCount, setTriggerCount] = useState(false);
@@ -48,10 +78,10 @@ export default function StatsSection({ stats } = { stats: null }) {
       <div className="px-4">
               <div className="py-6 mx-auto text-center max-w-7xl">
         <h2 className="text-3xl font-extrabold text-gray-900 md:text-4xl dark:text-white">
-          Our Impact in Numbers
+          {t("stats.title")}
         </h2>
         <p className="max-w-xl mx-auto mt-4 text-gray-600 dark:text-gray-300">
-          Discover how our platform is growing every single day.
+          {t("stats.subtitle")}
         </p>
 
         <div className="grid grid-cols-1 gap-8 mt-16 sm:grid-cols-2 lg:grid-cols-4">
