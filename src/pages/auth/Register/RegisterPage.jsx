@@ -252,7 +252,7 @@ export default function RegisterPage() {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.hudurly.com/api/auth/google/redirect?register=true'}
+                onClick={() => window.location.href = 'https://dr-krok.com/api/auth/google/redirect?register=true'}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <GoogleIcon className="w-5 h-5 mr-3" />
@@ -261,7 +261,7 @@ export default function RegisterPage() {
 
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.hudurly.com/api/auth/apple?register=true'}
+                onClick={() => window.location.href = 'https://dr-krok.com/api/auth/apple?register=true'}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <AppleIcon className="w-5 h-5 mr-3" />

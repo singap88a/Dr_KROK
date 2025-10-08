@@ -14,7 +14,7 @@ const GoogleCallback = () => {
       try {
         // هنا هنكلم API بتاع لارافيل اللي بيهندل الكولباك
         const response = await axios.get(
-          "https://dr-krok.hudurly.com/api/auth/google/callback",
+          "https://dr-krok.com/api/auth/google/callback",
           {
             withCredentials: true,
           }
