@@ -56,7 +56,7 @@ export default function Profile() {
   const location = useLocation();
   const { t } = useTranslation();
   const { updateUser, logout } = useUser();
-  const { getOrders, getMyCourses } = useApi();
+  const { getOrders, getMyCourses, getMyProfile } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,22 +71,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token") || localStorage.getItem("userToken");
-        if (!token) {
-          setError("Authentication required");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch("https://dr-krok.com/api/profile/get-my-profile", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await response.json();
+        const data = await getMyProfile();
 
         if (data.success) {
           const full = {
@@ -113,7 +98,7 @@ export default function Profile() {
     };
 
     fetchProfile();
-  }, []);
+  }, [getMyProfile]);
 
   // Fetch enrolled courses when courses tab is active
   useEffect(() => {

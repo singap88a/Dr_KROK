@@ -13,8 +13,8 @@ import { GoogleIcon, AppleIcon } from "../SocialIcons";
 export default function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { register } = useUser();
-  const { request } = useApi();
+  const { register: userRegister } = useUser();
+  const { register: apiRegister, request } = useApi();
 
   const [form, setForm] = useState({
     name: "",
@@ -78,25 +78,10 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      const res = await fetch("https://dr-krok.com/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          password_confirmation: form.confirm,
-          university: form.university,
-        }),
-      });
+      const data = await apiRegister(form.name, form.email, form.password, form.confirm, form.university);
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        register(data.data.token, data.data);
+      if (data.success) {
+        userRegister(data.data.token, data.data);
         toast.success("🎉 Account created successfully!", {
           position: "top-right",
         });

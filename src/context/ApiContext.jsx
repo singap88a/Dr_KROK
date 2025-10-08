@@ -150,6 +150,24 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
     return await request("setting");
   }, [request]);
 
+  const getMyProfile = useCallback(async () => {
+    return await request("profile/get-my-profile", { auth: true });
+  }, [request]);
+
+  const login = useCallback(async (email, password) => {
+    return await request("auth/login", {
+      method: "POST",
+      body: { email, password }
+    });
+  }, [request]);
+
+  const register = useCallback(async (name, email, password, password_confirmation, university) => {
+    return await request("auth/register", {
+      method: "POST",
+      body: { name, email, password, password_confirmation, university }
+    });
+  }, [request]);
+
   // Favorites API functions
   const getFavorites = useCallback(async () => {
     return await request("favorites", { auth: true });
@@ -186,6 +204,9 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       request,
       getAuthToken,
       getSettings,
+      getMyProfile,
+      login,
+      register,
       getFavorites,
       toggleFavorite,
       getInstructors,
@@ -461,6 +482,9 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       request,
       getAuthToken,
       getSettings,
+      getMyProfile,
+      login,
+      register,
       getFavorites,
       toggleFavorite,
       getInstructors,

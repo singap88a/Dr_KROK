@@ -3,6 +3,7 @@ import Lottie from "lottie-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext"; // ✅ Context
+import { useApi } from "../../../context/ApiContext";
 import loginAnimation from "../../../components/animations/Login_animation.json";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,7 +14,8 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { login } = useUser(); // ✅ Context login
+  const { login: userLogin } = useUser(); // ✅ Context login
+  const { login: apiLogin } = useApi();
 
   function validate() {
     const e = {};
@@ -34,24 +36,12 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("https://dr-krok.com/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
-      });
-
-      const data = await res.json();
+      const data = await apiLogin(form.email, form.password);
       console.log("Response:", data);
 
       if (data.success) {
         toast.success("✅ Login successful!", { position: "top-right" });
-        login(data.data.token, data.data);
+        userLogin(data.data.token, data.data);
         setTimeout(() => {
           window.location.href = "/";
         }, 1500);
@@ -169,7 +159,7 @@ export default function LoginPage() {
             <div className="mt-6 text-sm text-center">
               {t('auth.login.no_account')}{" "}
               <Link
-                to="/auth/register"
+                to="/register"
                 className="font-medium text-primary hover:underline"
               >
                 {t('auth.login.register')}

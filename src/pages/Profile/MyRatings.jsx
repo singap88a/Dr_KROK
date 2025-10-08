@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { FaStar, FaEye, FaCalendarAlt, FaUser, FaBook } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../../context/UserContext';
+import { useApi } from '../../context/ApiContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 const MyRatings = ({ user, onRatingsUpdate }) => {
   const { t } = useTranslation();
   const { isLoggedIn, userData } = useUser();
+  const { getMyProfile } = useApi();
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,27 +33,12 @@ const MyRatings = ({ user, onRatingsUpdate }) => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token") || localStorage.getItem("userToken");
-      if (!token) {
-        setError("Authentication required");
-        setLoading(false);
-        return;
-      }
+      const data = await getMyProfile();
 
-      const response = await fetch("https://dr-krok.com/api/profile/get-my-profile", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setRatings(data.data.ratings || []);
+      if (data) {
+        setRatings(data.ratings || []);
       } else {
-        setError(data.message || "Failed to load profile");
+        setError("Failed to load profile");
       }
     } catch (err) {
       console.error('Error fetching user profile:', err);
