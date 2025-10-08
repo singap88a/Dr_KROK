@@ -38,7 +38,7 @@ const MyRatings = ({ user, onRatingsUpdate }) => {
         return;
       }
 
-      const response = await fetch("https://dr-krok.hudurly.com/api/profile/get-my-profile", {
+      const response = await fetch("https://dr-krok.com/api/profile/get-my-profile", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,

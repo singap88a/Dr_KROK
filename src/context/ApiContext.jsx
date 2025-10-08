@@ -10,7 +10,7 @@ export const useApi = () => {
   return ctx;
 };
 
-export const ApiProvider = ({ children, baseUrl = "https://dr-krok.hudurly.com/api" }) => {
+export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) => {
   const getAuthToken = useCallback(() => {
     return localStorage.getItem("token") || localStorage.getItem("userToken");
   }, []);

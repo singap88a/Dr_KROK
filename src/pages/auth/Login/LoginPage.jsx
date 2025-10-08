@@ -34,7 +34,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("https://dr-krok.hudurly.com/api/auth/login", {
+      const res = await fetch("https://dr-krok.com/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

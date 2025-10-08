@@ -78,7 +78,7 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      const res = await fetch("https://dr-krok.hudurly.com/api/auth/register", {
+      const res = await fetch("https://dr-krok.com/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
