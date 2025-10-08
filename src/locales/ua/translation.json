@@ -474,8 +474,7 @@
     "readMore": "Читати далі",
     "instructorCard": "Автор вибраних статей",
     "selectInstructorInfo": "Оберіть викладача, щоб переглянути інформацію тут."
-  }
-  ,
+  },
   "courses": {
     "askInstructor": "Задати питання викладачу",
     "askInstructorDescription": "Маєте питання щодо цього курсу? Зв'яжіться з викладачем безпосередньо через WhatsApp для персональної допомоги.",
@@ -613,7 +612,10 @@
       "discount": "Знижка: {{percent}}%",
       "discount_label": "Знижка купона ({{percent}}%)",
       "required": "Будь ласка, введіть код купона"
-    }
+    },
+    "images": "Зображення",
+    "files": "Файли",
+    "additionalVideos": "Додаткові відео"
   },
   "video_courses": {
     "coupon": {
@@ -681,13 +683,13 @@
     "courses": "Курси",
     "liveCourses": "Живі курси"
   },
-  "myCourses": {
-    "title": "Мої курси",
-    "enrolledCount": "{{count}} курсів записано",
-    "continueLearning": "Продовжити навчання",
-    "continue": "Продовжити",
-    "progress": "Прогрес",
-    "noCourses": "Ще немає записаних курсів",
-    "browseCourses": "Перегляньте наші курси та розпочніть навчання сьогодні!"
-  }
+    "myCourses": {
+      "title": "Мої курси",
+      "enrolledCount": "{{count}} курсів записано",
+      "continueLearning": "Продовжити навчання",
+      "continue": "Продовжити",
+      "progress": "Прогрес",
+      "noCourses": "Ще немає записаних курсів",
+      "browseCourses": "Перегляньте наші курси та розпочніть навчання сьогодні!"
+    }
 }

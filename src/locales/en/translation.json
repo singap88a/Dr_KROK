@@ -682,13 +682,16 @@
     "courses": "Courses",
     "liveCourses": "Live Courses"
   },
-  "myCourses": {
-    "title": "My Courses",
-    "enrolledCount": "{{count}} courses enrolled",
-    "continueLearning": "Continue Learning",
-    "continue": "Continue",
-    "progress": "Progress",
-    "noCourses": "No courses enrolled yet",
-    "browseCourses": "Browse our courses and start learning today!"
-  }
+    "myCourses": {
+      "title": "My Courses",
+      "enrolledCount": "{{count}} courses enrolled",
+      "continueLearning": "Continue Learning",
+      "continue": "Continue",
+      "progress": "Progress",
+      "noCourses": "No courses enrolled yet",
+      "browseCourses": "Browse our courses and start learning today!"
+    },
+    "images": "Images",
+    "files": "Files",
+    "additionalVideos": "Additional Videos"
 }

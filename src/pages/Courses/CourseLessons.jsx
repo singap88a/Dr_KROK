@@ -14,6 +14,7 @@ import {
   FaArrowLeft,
   FaVideo,
   FaFileAlt,
+  FaImage,
   FaDownload,
   FaStar,
   FaShoppingCart,
@@ -31,6 +32,7 @@ import {
   FaYoutube,
   FaTelegram,
   FaWhatsapp,
+  FaTimes,
 } from "react-icons/fa";
 
 export default function CourseLessons() {
@@ -48,7 +50,109 @@ export default function CourseLessons() {
   const [currentLesson, setCurrentLesson] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [completedLessons, setCompletedLessons] = useState(new Set());
-  // Removed unused state variables for description toggle as title and description moved below video
+  const [showImagePopup, setShowImagePopup] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showFilesPopup, setShowFilesPopup] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showVideoPopup, setShowVideoPopup] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+
+  // Image Popup Modal
+  const ImagePopup = () => {
+    if (!showImagePopup || !selectedImage) return null;
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+        onClick={() => setShowImagePopup(false)}
+      >
+        <img
+          src={selectedImage}
+          alt="Selected lesson"
+          className="max-w-full max-h-full rounded-lg shadow-lg"
+          style={{ width: '600px', height: '400px', objectFit: 'contain' }}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <button
+          onClick={() => setShowImagePopup(false)}
+          className="absolute text-3xl font-bold text-white top-4 right-4"
+          aria-label="Close image popup"
+        >
+          &times;
+        </button>
+      </div>
+    );
+  };
+
+  // PDF Popup Modal
+  const PDFPopup = () => {
+    if (!showFilesPopup || !selectedFile) return null;
+    
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+        onClick={() => setShowFilesPopup(false)}
+      >
+        <div 
+          className="w-full max-w-4xl p-6 mx-4 rounded-lg dark:bg-gray-800 h-4/5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-4">
+            {/* <h3 className="text-lg font-semibold text-text">{t('courses.pdfViewer', 'PDF Viewer')}</h3> */}
+            <button
+              onClick={() => setShowFilesPopup(false)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              aria-label={t('common.close', 'Close')}
+            >
+              <FaTimes className="text-xl  text-teal-50" />
+            </button>
+          </div>
+          <div className="h-full border rounded-lg">
+            <iframe
+              src={selectedFile}
+              className="w-full h-full rounded-lg"
+              title="PDF Viewer"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Video Popup Modal
+  const VideoPopup = () => {
+    if (!showVideoPopup || !selectedVideo) return null;
+    
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+        onClick={() => setShowVideoPopup(false)}
+      >
+        <div 
+          className="w-full max-w-4xl p-4 mx-4 bg-white rounded-lg shadow-xl dark:bg-gray-800"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-text">{t('courses.additionalVideo', 'Additional Video')}</h3>
+            <button
+              onClick={() => setShowVideoPopup(false)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              aria-label={t('common.close', 'Close')}
+            >
+              <FaTimes className="text-xl" />
+            </button>
+          </div>
+          <div className="aspect-video">
+            <video
+              src={selectedVideo}
+              controls
+              className="w-full h-full rounded"
+              autoPlay
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -141,6 +245,16 @@ export default function CourseLessons() {
     setShowPurchaseModal(false);
   };
 
+  const handleFileClick = (file) => {
+    setSelectedFile(file);
+    setShowFilesPopup(true);
+  };
+
+  const handleVideoClick = (video) => {
+    setSelectedVideo(video);
+    setShowVideoPopup(true);
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -199,29 +313,6 @@ export default function CourseLessons() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
               <h1 className="mb-2 text-3xl font-bold">{course.title}</h1>
-
-              {/* Current Lesson Title and Description */}
-              {/* Removed from here as per user request */}
-              {/* {currentLesson && (
-                <div className="mb-4">
-                  <h2 className="mb-2 text-xl font-bold text-text">{currentLesson.title}</h2>
-                  {currentLesson.description && (
-                    <div className="text-sm text-text-secondary">
-                      <p className={`leading-relaxed ${!showFullDescription ? 'line-clamp-2' : ''}`}>
-                        {currentLesson.description}
-                      </p>
-                      {currentLesson.description.length > 100 && (
-                        <button
-                          onClick={() => setShowFullDescription(!showFullDescription)}
-                          className="mt-1 text-xs font-medium transition-colors text-primary hover:text-secondary"
-                        >
-                          {showFullDescription ? t('common.showLess', 'Show less') : t('common.showMore', 'Show more')}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )} */}
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
@@ -345,17 +436,18 @@ export default function CourseLessons() {
                             }`}>
                               {lesson.title}
                             </h4>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
-                              {lesson.video && <FaVideo />}
-                              {lesson.file && <FaFileAlt />}
-                              <span>{isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}</span>
-                              {lesson.duration && (
-                                <>
-                                  <span>•</span>
-                                  <span>{lesson.duration}min</span>
-                                </>
-                              )}
-                            </div>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
+                                {lesson.video && <FaVideo />}
+                                {lesson.images && lesson.images.length > 0 && <FaImage />}
+                                {lesson.files && lesson.files.length > 0 && <FaFileAlt />}
+                                <span>{isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}</span>
+                                {lesson.duration && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{lesson.duration}min</span>
+                                  </>
+                                )}
+                              </div>
                           </div>
 
                           {/* Lock Icon */}
@@ -404,20 +496,115 @@ export default function CourseLessons() {
                         </p>
                       </div>
                     )}
+                    
+                    {/* Lesson Attachments */}
+                    {(currentLesson.images && currentLesson.images.length > 0) || 
+                     (currentLesson.files && currentLesson.files.length > 0) || 
+                     (currentLesson.video_related && currentLesson.video_related.length > 0) ? (
+                      <div className="mt-4">
+                        <h4 className="mb-3 font-semibold text-md text-text">
+                          {t('courses.lessonAttachments', 'Lesson Attachments')}
+                        </h4>
+                        
+                        {/* Image Gallery */}
+                        {currentLesson.images && currentLesson.images.length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.images', 'Images')}</h5>
+                            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                              {currentLesson.images.map((img, idx) => (
+                                <img 
+                                  key={idx} 
+                                  src={img} 
+                                  alt={`Lesson image ${idx + 1}`} 
+                                  className="object-cover w-full h-32 rounded cursor-pointer" 
+                                  style={{ width: '100%', height: '128px', objectFit: 'cover' }}
+                                  onClick={() => { setSelectedImage(img); setShowImagePopup(true); }} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* File Gallery */}
+                        {currentLesson.files && currentLesson.files.length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.files', 'Files')}</h5>
+                            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                              {currentLesson.files.map((file, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleFileClick(file)}
+                                  className="flex flex-col items-center p-3 transition-colors border rounded hover:bg-accent"
+                                >
+                                  <FaFileAlt className="mb-2 text-2xl text-primary" />
+                                  <span className="text-xs text-center text-text">
+                                    {t('courses.file', 'File')} {idx + 1}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Additional Videos */}
+                        {currentLesson.video_related && currentLesson.video_related.length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.additionalVideos', 'Additional Videos')}</h5>
+                            <div className="grid grid-cols-1 gap-3">
+                              {currentLesson.video_related.map((video, idx) => (
+                                <div 
+                                  key={idx} 
+                                  className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
+                                  onClick={() => handleVideoClick(video)}
+                                >
+                                  <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden bg-gray-200 rounded-lg">
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
+                                      <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
+                                        <FaPlay className="text-gray-700 text-xs ml-0.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <FaVideo className="text-sm text-primary" />
+                                      <span className="text-sm font-medium text-text">
+                                        {t('courses.additionalVideo', 'Additional Video')} {idx + 1}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-text-muted">
+                                      {t('courses.clickToWatch', 'Click to watch this video')}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                    
+                    {/* Ask the Instructor */}
+                    {course.instructor && course.instructor.whatsapp && (
+                      <div className="p-3 mt-4 border rounded-lg bg-surface border-border">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full dark:bg-green-900">
+                            <FaWhatsapp className="text-lg text-green-600 dark:text-green-400" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-text">{t('courses.askInstructor', 'Ask the Instructor')}</h4>
+                            <a
+                              href={`https://wa.me/${course.instructor.whatsapp.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-green-600 hover:text-green-700"
+                            >
+                              {t('courses.contactInstructor', 'Contact Instructor')}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {currentLesson.file && (
-                    <div className="p-4 border-t border-border">
-                      <a
-                        href={currentLesson.file}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-lg text-primary bg-primary/10 hover:bg-primary/20"
-                      >
-                        <FaDownload />
-                        {t('courses.downloadMaterials', 'Download Materials')}
-                      </a>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-center bg-accent aspect-video">
@@ -471,31 +658,7 @@ export default function CourseLessons() {
               </div>
             )}
 
-            {/* Ask the Instructor Section */}
-            {course.instructor && course.instructor.whatsapp && (
-              <div className="p-6 border rounded-lg bg-surface border-border">
-                <div className="flex items-start gap-4">
-                  <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full dark:bg-green-900">
-                    <FaWhatsapp className="text-2xl text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="mb-2 text-lg font-semibold text-text">{t('courses.askInstructor', 'Ask the Instructor')}</h3>
-                    <p className="mb-4 text-sm text-text-muted">
-                      {t('courses.askInstructorDescription', 'Have a question about this course? Contact the instructor directly through WhatsApp for personal assistance.')}
-                    </p>
-                    <a
-                      href={`https://wa.me/${course.instructor.whatsapp.replace(/[^0-9]/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
-                    >
-                      <FaWhatsapp />
-                      {t('courses.contactInstructor', 'Contact Instructor')}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       </div>
@@ -532,6 +695,15 @@ export default function CourseLessons() {
           </div>
         </div>
       )}
+
+      {/* Image Popup */}
+      <ImagePopup />
+
+      {/* PDF Popup */}
+      <PDFPopup />
+
+      {/* Video Popup */}
+      <VideoPopup />
     </section>
   );
 }
