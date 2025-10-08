@@ -5,9 +5,11 @@ import { FaCcVisa, FaCcMastercard, FaCcPaypal } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
-import CitySelector from "../../components/CitySelector";
+// import CitySelector from "../../components/CitySelector";
 import CouponInput from "../../components/CouponInput";
 import he from "he";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 export default function BuyNowPage() {
   const navigate = useNavigate();
@@ -33,9 +35,14 @@ export default function BuyNowPage() {
     phone2: "",
     city: "",
     city_id: "",
+    region_id: "",
     book_id: "",
     quantity: 1
   });
+
+  // Regions data
+  const [regions, setRegions] = useState([]);
+  const [loadingRegions, setLoadingRegions] = useState(false);
 
   // Paint order data
   const [loadingPaintData, setLoadingPaintData] = useState(false);
@@ -75,6 +82,25 @@ export default function BuyNowPage() {
     }
   }, [userData, book]);
 
+  // Fetch regions
+  useEffect(() => {
+    const fetchRegions = async () => {
+      setLoadingRegions(true);
+      try {
+        const response = await request('regions');
+        if (response.data) {
+          setRegions(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching regions:', error);
+      } finally {
+        setLoadingRegions(false);
+      }
+    };
+
+    fetchRegions();
+  }, [request]);
+
   // Fetch terms and conditions when modal is opened
   useEffect(() => {
     if (showTerms) {
@@ -100,7 +126,7 @@ export default function BuyNowPage() {
     setLoadingPaintData(true);
     setError("");
     try {
-      const response = await request('paint_order_data'); // Adjust endpoint as needed
+      const response = await request('paint_order_data');
       if (response && response.data) {
         // Populate form with paint order data
         setFormData(prev => ({
@@ -108,7 +134,8 @@ export default function BuyNowPage() {
           client_name: response.data.client_name || prev.client_name,
           phone1: response.data.phone1 || prev.phone1,
           phone2: response.data.phone2 || prev.phone2,
-          city: response.data.city || prev.city
+          city: response.data.city || prev.city,
+          region_id: response.data.region_id || prev.region_id
         }));
       }
     } catch (err) {
@@ -158,6 +185,21 @@ export default function BuyNowPage() {
     }));
   };
 
+  const handlePhoneChange = (value, name) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleRegionChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      region_id: value
+    }));
+  };
+
   const handleDeliveryOrder = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -187,6 +229,7 @@ export default function BuyNowPage() {
       formDataToSend.append('book_id', formData.book_id);
       formDataToSend.append('quantity', formData.quantity.toString());
       formDataToSend.append('city_id', formData.city_id);
+      formDataToSend.append('region_id', formData.region_id);
       if (couponId) {
         formDataToSend.append('coupon_id', couponId.toString());
       }
@@ -198,7 +241,8 @@ export default function BuyNowPage() {
         city: formData.city,
         book_id: formData.book_id,
         quantity: formData.quantity,
-        city_id: formData.city_id
+        city_id: formData.city_id,
+        region_id: formData.region_id
       });
 
       // First try with normal CORS mode
@@ -240,6 +284,7 @@ export default function BuyNowPage() {
               book_id: formData.book_id,
               quantity: formData.quantity,
               city_id: formData.city_id,
+              region_id: formData.region_id,
               coupon_id: couponId
             });
 
@@ -429,6 +474,20 @@ export default function BuyNowPage() {
         newTotal: finalPrice - (finalPrice * (result.discount / 100))
       });
     }
+  };
+
+  // Custom styles for react-phone-input-2
+  const phoneInputStyle = {
+    width: '100%',
+    height: '48px',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    backgroundColor: 'var(--background)',
+    color: 'var(--text)'
+  };
+
+  const phoneInputContainerStyle = {
+    marginTop: '4px'
   };
 
   return (
@@ -631,14 +690,21 @@ export default function BuyNowPage() {
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
                     <FiPhone /> {t('books.phone_number')} *
                   </label>
-                  <input
-                    type="tel"
-                    name="phone1"
+                  <PhoneInput
+                    country={'eg'}
                     value={formData.phone1}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder={t('books.enter_phone_number')}
+                    onChange={(value) => handlePhoneChange(value, 'phone1')}
+                    inputStyle={phoneInputStyle}
+                    containerStyle={phoneInputContainerStyle}
+                    inputProps={{
+                      required: true,
+                      name: 'phone1',
+                    }}
+                    buttonStyle={{
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px 0 0 8px',
+                      backgroundColor: 'var(--surface)'
+                    }}
                   />
                 </div>
 
@@ -646,17 +712,44 @@ export default function BuyNowPage() {
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
                     <FiPhone /> {t('books.phone_number_2')} ({t('books.optional')})
                   </label>
-                  <input
-                    type="tel"
-                    name="phone2"
+                  <PhoneInput
+                    country={'eg'}
                     value={formData.phone2}
-                    onChange={handleInputChange}
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder={t('books.enter_phone_number_2')}
+                    onChange={(value) => handlePhoneChange(value, 'phone2')}
+                    inputStyle={phoneInputStyle}
+                    containerStyle={phoneInputContainerStyle}
+                    inputProps={{
+                      name: 'phone2',
+                    }}
+                    buttonStyle={{
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px 0 0 8px',
+                      backgroundColor: 'var(--surface)'
+                    }}
                   />
                 </div>
 
-                <CitySelector
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+                    <FiMapPin /> Region *
+                  </label>
+                  <select
+                    name="region_id"
+                    value={formData.region_id}
+                    onChange={handleRegionChange}
+                    required
+                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">Select Region</option>
+                    {regions.map((region) => (
+                      <option key={region.id} value={region.id}>
+                        {region.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* <CitySelector
                   value={formData.city}
                   onChange={(e) => {
                     setFormData(prev => ({
@@ -667,7 +760,7 @@ export default function BuyNowPage() {
                   }}
                   required
                   placeholder="Select City"
-                />
+                /> */}
 
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
