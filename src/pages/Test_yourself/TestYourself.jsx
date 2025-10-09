@@ -1,811 +1,893 @@
-import React, { useEffect, useReducer, createContext, useContext } from 'react';
-import sampleQuestions from './data/sampleQuestions.json';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-// Context for exam state management
-const ExamContext = createContext();
+const TestYourself = () => {
+  const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedTest, setSelectedTest] = useState(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [testStarted, setTestStarted] = useState(false);
+  const [testCompleted, setTestCompleted] = useState(false);
+  const [results, setResults] = useState(null);
+  const [courseType, setCourseType] = useState('all');
+  const [courseLevel, setCourseLevel] = useState('all');
+  const [courseYear, setCourseYear] = useState('all');
+  const [courseCategory, setCourseCategory] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [dragItem, setDragItem] = useState(null);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [darkMode, setDarkMode] = useState(false);
 
-// Initial state
-const initialState = {
-  phase: 'instructions', // 'instructions' | 'exam' | 'results'
-  questions: [],
-  currentQuestionIndex: 0,
-  answers: {},
-  markedForReview: new Set(),
-  timeRemaining: null,
-  startTime: null,
-  submitted: false,
-  results: null
-};
-
-// Action types
-const actions = {
-  LOAD_QUESTIONS: 'LOAD_QUESTIONS',
-  START_EXAM: 'START_EXAM',
-  ANSWER_QUESTION: 'ANSWER_QUESTION',
-  MARK_FOR_REVIEW: 'MARK_FOR_REVIEW',
-  NEXT_QUESTION: 'NEXT_QUESTION',
-  PREVIOUS_QUESTION: 'PREVIOUS_QUESTION',
-  JUMP_TO_QUESTION: 'JUMP_TO_QUESTION',
-  SUBMIT_EXAM: 'SUBMIT_EXAM',
-  RESET_EXAM: 'RESET_EXAM',
-  TICK_TIMER: 'TICK_TIMER'
-};
-
-// Reducer function
-function examReducer(state, action) {
-  switch (action.type) {
-    case actions.LOAD_QUESTIONS: {
-      return { ...state, questions: action.payload };
+  // Initialize dark mode
+  useEffect(() => {
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
     }
+  }, []);
 
-    case actions.START_EXAM: {
-      const totalTime = state.questions.reduce((sum, q) => sum + (q.timeLimit || 0), 0);
-      return {
-        ...state,
-        phase: 'exam',
-        timeRemaining: totalTime || 3600, // Default 1 hour if no time specified
-        startTime: Date.now()
-      };
-    }
-
-    case actions.ANSWER_QUESTION: {
-      return {
-        ...state,
-        answers: {
-          ...state.answers,
-          [action.payload.questionId]: action.payload.answer
-        }
-      };
-    }
-
-    case actions.MARK_FOR_REVIEW: {
-      const newMarked = new Set(state.markedForReview);
-      if (action.payload.marked) {
-        newMarked.add(action.payload.questionId);
-      } else {
-        newMarked.delete(action.payload.questionId);
-      }
-      return { ...state, markedForReview: newMarked };
-    }
-
-    case actions.NEXT_QUESTION: {
-      if (state.currentQuestionIndex < state.questions.length - 1) {
-        return { ...state, currentQuestionIndex: state.currentQuestionIndex + 1 };
-      }
-      return state;
-    }
-
-    case actions.PREVIOUS_QUESTION: {
-      if (state.currentQuestionIndex > 0) {
-        return { ...state, currentQuestionIndex: state.currentQuestionIndex - 1 };
-      }
-      return state;
-    }
-
-    case actions.JUMP_TO_QUESTION: {
-      return { ...state, currentQuestionIndex: action.payload };
-    }
-
-    case actions.SUBMIT_EXAM: {
-      return { ...state, phase: 'results', submitted: true, results: action.payload };
-    }
-
-    case actions.RESET_EXAM: {
-      return { ...initialState };
-    }
-
-    case actions.TICK_TIMER: {
-      return { ...state, timeRemaining: state.timeRemaining - 1 };
-    }
-
-    default:
-      return state;
-  }
-}
-
-// Provider component
-function ExamProvider({ children }) {
-  const [state, dispatch] = useReducer(examReducer, initialState);
-
-  const value = { state, dispatch, actions };
-  return <ExamContext.Provider value={value}>{children}</ExamContext.Provider>;
-}
-
-// Hook to use exam context
-function useExam() {
-  const context = useContext(ExamContext);
-  if (!context) {
-    throw new Error('useExam must be used within an ExamProvider');
-  }
-  return context;
-}
-
-// Scoring utility
-function calculateResults(state) {
-  const { questions, answers } = state;
-  let totalScore = 0;
-  let maxPossibleScore = 0;
-  const gradedQuestions = [];
-
-  questions.forEach(question => {
-    maxPossibleScore += question.maxScore;
-    const userAnswer = answers[question.id];
-
-    if (question.type === 'essay') {
-      // Essays are manually graded, so score is 0 until reviewed
-      gradedQuestions.push({
-        id: question.id,
-        isCorrect: false,
-        score: 0,
-        userAnswer: userAnswer || '',
-        correctAnswer: question.correctAnswer
-      });
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
     } else {
-      let isCorrect = false;
-      let score = 0;
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
-      if (question.type === 'mcq') {
-        isCorrect = userAnswer === question.correctAnswer;
-        score = isCorrect ? question.maxScore : 0;
-      } else if (question.type === 'multi') {
-        const correctAnswers = new Set(question.correctAnswer);
-        const userAnswers = new Set(userAnswer || []);
-        isCorrect = correctAnswers.size === userAnswers.size &&
-                   [...correctAnswers].every(ans => userAnswers.has(ans));
-        score = isCorrect ? question.maxScore : 0;
+  // Fetch data from APIs
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        
+        const [videoResponse, liveResponse] = await Promise.all([
+          axios.get('https://dr-krok.com/api/placementCourses/video'),
+          axios.get('https://dr-krok.com/api/placementCourses/live')
+        ]);
+
+        const videoCourses = videoResponse.data.data.map(course => ({
+          ...course,
+          type: 'video'
+        }));
+
+        const liveCourses = liveResponse.data.data.map(course => ({
+          ...course,
+          type: 'live'
+        }));
+
+        const allCourses = [...videoCourses, ...liveCourses];
+        setCourses(allCourses);
+        setFilteredCourses(allCourses);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setLoading(false);
       }
+    };
 
-      totalScore += score;
-      gradedQuestions.push({
-        id: question.id,
-        isCorrect,
-        score,
-        userAnswer,
-        correctAnswer: question.correctAnswer
-      });
+    fetchCourses();
+  }, []);
+
+  // Timer effect
+  useEffect(() => {
+    let timer;
+    if (testStarted && !testCompleted) {
+      timer = setInterval(() => {
+        setTimeSpent(prev => prev + 1);
+      }, 1000);
     }
-  });
+    return () => clearInterval(timer);
+  }, [testStarted, testCompleted]);
 
-  const percentage = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
+  // Get unique values for filters
+  const uniqueLevels = [...new Set(courses.map(course => course.level))];
+  const uniqueYears = [...new Set(courses.map(course => course.college_year))];
+  const uniqueCategories = [...new Set(courses.map(course => course.category))];
 
-  return {
-    totalScore,
-    maxPossibleScore,
-    gradedQuestions,
-    percentage
-  };
-}
+  // Apply filters
+  useEffect(() => {
+    let filtered = courses;
 
-// Component for displaying images
-function ImageViewer({ src, alt, caption }) {
-  return (
-    <div className="my-4">
-      <img src={src} alt={alt} className="h-auto max-w-full rounded-lg shadow-md" />
-      {caption && <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">{caption}</p>}
-    </div>
-  );
-}
-
-// Component for essay input
-function EssayInput({ value, onChange, minWords = 0, maxWords = 1000, placeholder }) {
-  const wordCount = value ? value.trim().split(/\s+/).length : 0;
-  const isValid = wordCount >= minWords && wordCount <= maxWords;
-
-  return (
-    <div className="space-y-2">
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-vertical focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-        rows={6}
-      />
-      <div className="flex justify-between text-sm">
-        <span className={isValid ? 'text-green-600' : 'text-red-600'}>
-          Words: {wordCount} (Min: {minWords}, Max: {maxWords})
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// Component for choice lists (MCQ and Multi-select)
-function ChoiceList({ options, selected, onChange, type = 'mcq', disabled = false }) {
-  const handleChange = (optionIndex) => {
-    if (disabled) return;
-
-    if (type === 'mcq') {
-      onChange(optionIndex);
-    } else if (type === 'multi') {
-      const currentSelected = Array.isArray(selected) ? selected : [];
-      const isSelected = currentSelected.includes(optionIndex);
-      const newSelected = isSelected
-        ? currentSelected.filter(idx => idx !== optionIndex)
-        : [...currentSelected, optionIndex];
-      onChange(newSelected);
+    if (courseType !== 'all') {
+      filtered = filtered.filter(course => course.type === courseType);
     }
-  };
 
-  return (
-    <div className="space-y-2 ">
-      {options.map((option, index) => {
-        const isSelected = type === 'mcq'
-          ? selected === index
-          : Array.isArray(selected) && selected.includes(index);
-
-        return (
-          <label
-            key={index}
-            className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-              isSelected
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-            } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
-          >
-            <input
-              type={type === 'mcq' ? 'radio' : 'checkbox'}
-              name="question-option"
-              checked={isSelected}
-              onChange={() => handleChange(index)}
-              disabled={disabled}
-              className="mr-3"
-            />
-            <span className="text-gray-900 dark:text-white">{option}</span>
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-// Component for question cards
-function QuestionCard({ question, answer, onAnswerChange, disabled = false, showScore = true }) {
-  const renderQuestionInput = () => {
-    switch (question.type) {
-      case 'mcq':
-      case 'image':
-        return (
-          <ChoiceList
-            options={question.options}
-            selected={answer}
-            onChange={onAnswerChange}
-            type="mcq"
-            disabled={disabled}
-          />
-        );
-      case 'multi':
-        return (
-          <ChoiceList
-            options={question.options}
-            selected={answer}
-            onChange={onAnswerChange}
-            type="multi"
-            disabled={disabled}
-          />
-        );
-      case 'essay':
-        return (
-          <EssayInput
-            value={answer || ''}
-            onChange={onAnswerChange}
-            minWords={question.minWords || 0}
-            maxWords={question.maxWords || 1000}
-            placeholder="Write your detailed answer here..."
-          />
-        );
-      default:
-        return <p className="text-red-600 dark:text-red-400">Unsupported question type</p>;
+    if (courseLevel !== 'all') {
+      filtered = filtered.filter(course => course.level === courseLevel);
     }
-  };
 
-  return (
-    <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
-      <div className="flex items-start justify-between mb-4">
-        <h3 className="flex-1 text-lg font-semibold text-gray-900 dark:text-white">
-          {question.prompt}
-        </h3>
-        {showScore && (
-          <span className="px-3 py-1 ml-4 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200">
-            {question.maxScore} points
-          </span>
-        )}
-      </div>
-
-      {question.image && (
-        <ImageViewer
-          src={question.image}
-          alt={`Question ${question.id} image`}
-          caption={question.imageCaption}
-        />
-      )}
-
-      <div className="mt-4">
-        {renderQuestionInput()}
-      </div>
-
-      {question.tags && question.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {question.tags.map((tag, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded dark:bg-gray-700 dark:text-gray-300"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Component for question navigator
-function QuestionNavigator({ questions = [], answers = {}, markedForReview = new Set(), currentIndex = 0, onQuestionClick, compact = false }) {
-  const getQuestionStatus = (question, index) => {
-    const questionId = question.id;
-    const hasAnswer = answers[questionId] !== undefined && answers[questionId] !== null && answers[questionId] !== '';
-    const isMarked = markedForReview.has(questionId);
-    const isCurrent = index === currentIndex;
-
-    if (isCurrent) return 'current';
-    if (isMarked) return 'marked';
-    if (hasAnswer) return 'answered';
-    return 'unanswered';
-  };
-
-  const getStatusClasses = (status) => {
-    const baseClasses = 'w-10 h-10 rounded-lg border-2 flex items-center justify-center text-sm font-medium transition-all duration-200 cursor-pointer hover:shadow-md';
-    switch (status) {
-      case 'current': return `${baseClasses} bg-blue-500 border-blue-500 text-white`;
-      case 'answered': return `${baseClasses} bg-green-500 border-green-500 text-white`;
-      case 'marked': return `${baseClasses} bg-yellow-500 border-yellow-500 text-white`;
-      case 'unanswered': return `${baseClasses} bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300`;
-      default: return baseClasses;
+    if (courseYear !== 'all') {
+      filtered = filtered.filter(course => course.college_year === courseYear);
     }
-  };
 
-  if (compact) {
-    return (
-      <div className="flex flex-wrap gap-2 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
-        {questions.map((question, index) => {
-          const status = getQuestionStatus(question, index);
-          return (
-            <button
-              key={question.id}
-              onClick={() => onQuestionClick(index)}
-              className={getStatusClasses(status)}
-              aria-label={`Question ${index + 1}`}
-            >
-              {index + 1}
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
+    if (courseCategory !== 'all') {
+      filtered = filtered.filter(course => course.category === courseCategory);
+    }
 
-  return (
-    <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Question Navigator</h3>
-      <div className="grid grid-cols-5 gap-3">
-        {questions.map((question, index) => {
-          const status = getQuestionStatus(question, index);
-          return (
-            <button
-              key={question.id}
-              onClick={() => onQuestionClick(index)}
-              className={getStatusClasses(status)}
-              aria-label={`Question ${index + 1}`}
-            >
-              {index + 1}
-            </button>
-          );
-        })}
-      </div>
-      <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-600">
-        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-          <div>Total Questions: {questions.length}</div>
-          <div>Answered: {Object.keys(answers).length}</div>
-          <div>Marked: {markedForReview.size}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+    setFilteredCourses(filtered);
+  }, [courseType, courseLevel, courseYear, courseCategory, courses]);
 
-// Component for top bar
-function TopBar({ currentQuestion = 0, totalQuestions = 0, timeRemaining = null, totalScore = 0, maxScore = 0, onSubmit, onMarkForReview, isMarked = false, canSubmit = false }) {
   const formatTime = (seconds) => {
-    if (seconds === null) return '--:--';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progressPercentage = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
-  const timeColor = timeRemaining !== null && timeRemaining < 300 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white';
+  const handleCourseSelect = (course) => {
+    setSelectedCourse(course);
+    setSelectedTest(null);
+    setTestStarted(false);
+    setTestCompleted(false);
+    setTimeSpent(0);
+  };
 
-  return (
-    <div className="px-6 py-10 bg-white border-b border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Question <span className="font-semibold text-gray-900 dark:text-white">{currentQuestion + 1}</span> of <span className="font-semibold text-gray-900 dark:text-white">{totalQuestions}</span>
-          </div>
-          <div className="flex-1 max-w-xs">
-            <div className="w-full h-2 bg-gray-200 rounded-full dark:bg-gray-700">
-              <div className="h-2 transition-all duration-300 bg-blue-500 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-center lg:justify-start">
-          <div className={`text-2xl font-mono font-bold ${timeColor}`}>
-            {formatTime(timeRemaining)}
-          </div>
-          {timeRemaining !== null && timeRemaining < 300 && (
-            <span className="ml-2 text-sm text-red-600 dark:text-red-400 animate-pulse">Time running out!</span>
-          )}
-        </div>
-        <div className="flex items-center space-x-3">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Score: <span className="font-semibold text-gray-900 dark:text-white">{totalScore}/{maxScore}</span>
-          </div>
-          <button onClick={onMarkForReview} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isMarked ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}>
-            {isMarked ? 'Marked' : 'Mark for Review'}
-          </button>
-          <button onClick={onSubmit} disabled={!canSubmit} className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${canSubmit ? 'bg-green-500 text-white hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2' : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'}`}>
-            Submit Exam
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+  const handleTestSelect = (test) => {
+    setSelectedTest(test);
+    setUserAnswers({});
+    setCurrentQuestionIndex(0);
+  };
 
-// Main TestYourself component
-export default function TestYourself() {
-  return (
-    <ExamProvider>
-      <TestYourselfContent />
-    </ExamProvider>
-  );
-}
+  const startTest = () => {
+    setTestStarted(true);
+    setTestCompleted(false);
+    setUserAnswers({});
+    setCurrentQuestionIndex(0);
+    setTimeSpent(0);
+  };
 
-// Inner component that uses the context
-function TestYourselfContent() {
-  const { state, dispatch, actions } = useExam();
-  const { phase, questions, currentQuestionIndex, answers, markedForReview, timeRemaining, results, submitted, startTime } = state;
+  const handleAnswerSelect = (questionId, answer) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }));
+  };
 
-  // Load questions on mount
-  useEffect(() => {
-    if (questions.length === 0) {
-      dispatch({ type: actions.LOAD_QUESTIONS, payload: sampleQuestions });
+  const handleDragStart = (e, questionId, answerKey) => {
+    setDragItem({ questionId, answerKey });
+    e.dataTransfer.setData('text/plain', `${questionId}-${answerKey}`);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, questionId) => {
+    e.preventDefault();
+    if (dragItem && dragItem.questionId === questionId) {
+      handleAnswerSelect(questionId, dragItem.answerKey);
     }
-  }, [questions.length, dispatch, actions]);
-
-  // Timer countdown
-  useEffect(() => {
-    if (phase === 'exam' && timeRemaining > 0) {
-      const timer = setInterval(() => {
-        dispatch({ type: actions.TICK_TIMER });
-      }, 1000);
-      return () => clearInterval(timer);
-    } else if (phase === 'exam' && timeRemaining === 0) {
-      handleSubmit();
-    }
-  }, [phase, timeRemaining, dispatch, actions]);
-
-  const handleStartExam = () => {
-    dispatch({ type: actions.START_EXAM });
+    setDragItem(null);
   };
 
-  const handleAnswerChange = (answer) => {
-    dispatch({ type: actions.ANSWER_QUESTION, payload: { questionId: questions[currentQuestionIndex].id, answer } });
-  };
-
-  const handleMarkForReview = () => {
-    const isMarked = markedForReview.has(questions[currentQuestionIndex].id);
-    dispatch({ type: actions.MARK_FOR_REVIEW, payload: { questionId: questions[currentQuestionIndex].id, marked: !isMarked } });
-  };
-
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      dispatch({ type: actions.NEXT_QUESTION });
+  const nextQuestion = () => {
+    if (currentQuestionIndex < selectedTest.quizzes.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      finishTest();
     }
   };
 
-  const handlePrevious = () => {
+  const prevQuestion = () => {
     if (currentQuestionIndex > 0) {
-      dispatch({ type: actions.PREVIOUS_QUESTION });
+      setCurrentQuestionIndex(prev => prev - 1);
     }
   };
 
-  const handleJumpToQuestion = (index) => {
-    dispatch({ type: actions.JUMP_TO_QUESTION, payload: index });
+  const finishTest = () => {
+    let totalScore = 0;
+    let earnedScore = 0;
+    
+    selectedTest.quizzes.forEach(question => {
+      totalScore += parseInt(question.question_score);
+      if (userAnswers[question.id] === question.correct_answer) {
+        earnedScore += parseInt(question.question_score);
+      }
+    });
+    
+    const percentage = totalScore > 0 ? (earnedScore / totalScore) * 100 : 0;
+    
+    setResults({
+      totalScore,
+      earnedScore,
+      percentage,
+      totalQuestions: selectedTest.quizzes.length,
+      correctAnswers: Object.keys(userAnswers).filter(qId => 
+        userAnswers[qId] === selectedTest.quizzes.find(q => q.id == qId)?.correct_answer
+      ).length,
+      timeSpent: formatTime(timeSpent)
+    });
+    
+    setTestCompleted(true);
+    setTestStarted(false);
   };
 
-  const handleSubmit = () => {
-    const results = calculateResults(state);
-    dispatch({ type: actions.SUBMIT_EXAM, payload: results });
+  const resetTest = () => {
+    setSelectedCourse(null);
+    setSelectedTest(null);
+    setTestStarted(false);
+    setTestCompleted(false);
+    setResults(null);
+    setUserAnswers({});
+    setCurrentQuestionIndex(0);
+    setTimeSpent(0);
   };
 
-  const handleRetakeExam = () => {
-    dispatch({ type: actions.RESET_EXAM });
+  const clearFilters = () => {
+    setCourseType('all');
+    setCourseLevel('all');
+    setCourseYear('all');
+    setCourseCategory('all');
   };
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') handleNext();
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') handlePrevious();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentQuestionIndex, questions.length]);
-
-  // Render different phases
-  if (phase === 'instructions') {
-    return <ExamInstructions questions={questions} onStartExam={handleStartExam} />;
-  }
-
-  if (phase === 'exam') {
-    return <ExamPage
-      questions={questions}
-      currentQuestionIndex={currentQuestionIndex}
-      answers={answers}
-      markedForReview={markedForReview}
-      timeRemaining={timeRemaining}
-      results={results}
-      submitted={submitted}
-      onAnswerChange={handleAnswerChange}
-      onMarkForReview={handleMarkForReview}
-      onNext={handleNext}
-      onPrevious={handlePrevious}
-      onJumpToQuestion={handleJumpToQuestion}
-      onSubmit={handleSubmit}
-    />;
-  }
-
-  if (phase === 'results') {
-    return <ExamResults
-      questions={questions}
-      answers={answers}
-      results={results}
-      startTime={startTime}
-      onRetakeExam={handleRetakeExam}
-    />;
-  }
-
-  return <div className="flex items-center justify-center min-h-screen text-gray-700 dark:text-gray-300">Loading...</div>;
-}
-
-// Exam Instructions Component
-function ExamInstructions({ questions, onStartExam }) {
-  const totalQuestions = questions.length;
-  const totalMarks = questions.reduce((sum, q) => sum + q.maxScore, 0);
-  const mcqCount = questions.filter(q => q.type === 'mcq').length;
-  const multiCount = questions.filter(q => q.type === 'multi').length;
-  const essayCount = questions.filter(q => q.type === 'essay').length;
-
-  return (
-    <div className="flex items-center justify-center min-h-screen p-4 py-10 bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700">
-        <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">Medical Self-Assessment Exam</h1>
-          <p className="mt-2 text-center text-gray-600 dark:text-gray-400">Test your knowledge and skills</p>
-        </div>
-        <div className="px-8 py-6">
-          <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2">
-            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-              <h3 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">Exam Details</h3>
-              <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-                <div>Total Questions: <span className="font-medium">{totalQuestions}</span></div>
-                <div>Total Marks: <span className="font-medium">{totalMarks}</span></div>
-              </div>
+  // Results Page
+  if (testCompleted && results) {
+    return (
+      <div className="min-h-screen px-4 py-8 transition-colors duration-300 bg-background">
+        <div className="max-w-4xl mx-auto">
+          <div className="overflow-hidden border shadow-xl bg-surface rounded-2xl border-border">
+            <div className="p-8 text-white bg-primary">
+              <h1 className="mb-2 text-3xl font-bold text-center">Test Results</h1>
+              <p className="text-center text-blue-100">You have completed {selectedTest.name}</p>
             </div>
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20">
-              <h3 className="mb-2 font-semibold text-green-900 dark:text-green-100">Question Types</h3>
-              <div className="space-y-1 text-sm text-green-800 dark:text-green-200">
-                {mcqCount > 0 && <div>Multiple Choice: <span className="font-medium">{mcqCount}</span></div>}
-                {multiCount > 0 && <div>Multi-Select: <span className="font-medium">{multiCount}</span></div>}
-                {essayCount > 0 && <div>Essay: <span className="font-medium">{essayCount}</span></div>}
-              </div>
-            </div>
-          </div>
-          <div className="mb-8">
-            <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Instructions</h3>
-            <div className="space-y-3 text-gray-700 dark:text-gray-300">
-              <div className="flex items-start space-x-3">
-                <span className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-sm font-medium text-white bg-blue-500 rounded-full">1</span>
-                <p>Read each question carefully and select the best answer for multiple choice questions.</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-sm font-medium text-white bg-blue-500 rounded-full">2</span>
-                <p>For multi-select questions, select all correct options.</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-sm font-medium text-white bg-blue-500 rounded-full">3</span>
-                <p>Essay questions will be manually graded after submission.</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-sm font-medium text-white bg-blue-500 rounded-full">4</span>
-                <p>Use the question navigator to jump between questions.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="px-8 py-6 border-t border-gray-200 rounded-b-lg dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="text-center">
-            <button onClick={onStartExam} className="px-8 py-3 font-semibold text-white transition-colors duration-200 bg-blue-500 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-              I Understand - Start Exam
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Exam Page Component
-function ExamPage({ questions, currentQuestionIndex, answers, markedForReview, timeRemaining, results, submitted, onAnswerChange, onMarkForReview, onNext, onPrevious, onJumpToQuestion, onSubmit }) {
-  const currentQuestion = questions[currentQuestionIndex];
-  const totalScore = results ? results.totalScore : 0;
-  const maxScore = results ? results.maxPossibleScore : questions.reduce((sum, q) => sum + q.maxScore, 0);
-
-  if (!currentQuestion) {
-    return <div className="flex items-center justify-center min-h-screen text-gray-700 dark:text-gray-300">Loading questions...</div>;
-  }
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-      <TopBar
-        currentQuestion={currentQuestionIndex}
-        totalQuestions={questions.length}
-        timeRemaining={timeRemaining}
-        totalScore={totalScore}
-        maxScore={maxScore}
-        onSubmit={onSubmit}
-        onMarkForReview={onMarkForReview}
-        isMarked={markedForReview.has(currentQuestion.id)}
-        canSubmit={questions.length > 0 && !submitted}
-      />
-      <main className="flex flex-col flex-1 w-full gap-4 p-4 mx-auto lg:flex-row max-w-7xl">
-        <aside className="hidden lg:block lg:w-64">
-          <QuestionNavigator
-            questions={questions}
-            answers={answers}
-            markedForReview={markedForReview}
-            currentIndex={currentQuestionIndex}
-            onQuestionClick={onJumpToQuestion}
-          />
-        </aside>
-        <section className="flex-1">
-          <QuestionCard
-            question={currentQuestion}
-            answer={answers[currentQuestion.id]}
-            onAnswerChange={onAnswerChange}
-            disabled={submitted}
-            showScore={!submitted}
-          />
-          <div className="flex justify-between mt-6">
-            <button onClick={onPrevious} disabled={currentQuestionIndex === 0} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${currentQuestionIndex === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}>
-              Previous
-            </button>
-            <button onClick={onNext} disabled={currentQuestionIndex === questions.length - 1} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${currentQuestionIndex === questions.length - 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}>
-              Next
-            </button>
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-}
-
-// Exam Results Component
-function ExamResults({ questions, results, startTime, onRetakeExam }) {
-  if (!results) {
-    return <div className="flex items-center justify-center min-h-screen text-gray-700 dark:text-gray-300">Loading results...</div>;
-  }
-
-  const { totalScore, maxPossibleScore, gradedQuestions, percentage } = results;
-  const endTime = Date.now();
-  const timeTaken = Math.floor((endTime - startTime) / 1000);
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s`;
-  };
-
-  const getPerformanceCategory = (percentage) => {
-    if (percentage >= 90) return { label: 'Excellent', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/20' };
-    if (percentage >= 80) return { label: 'Very Good', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/20' };
-    if (percentage >= 70) return { label: 'Good', color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/20' };
-    if (percentage >= 60) return { label: 'Satisfactory', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/20' };
-    return { label: 'Needs Improvement', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/20' };
-  };
-
-  const performance = getPerformanceCategory(percentage);
-
-  return (
-    <div className="min-h-screen py-8 bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl px-4 mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">Exam Results</h1>
-          <p className="text-gray-600 dark:text-gray-400">Your performance summary and detailed breakdown</p>
-        </div>
-        <div className="p-6 mb-8 bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="text-center">
-              <div className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">{totalScore}/{maxPossibleScore}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Score</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">{percentage}%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Percentage</div>
-            </div>
-            <div className="text-center">
-              <div className={`inline-block px-4 py-2 rounded-full text-lg font-semibold ${performance.bg} ${performance.color} mb-2`}>{performance.label}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Performance</div>
-            </div>
-          </div>
-          <div className="pt-6 mt-6 border-t border-gray-200 dark:border-gray-600">
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">Time Taken: {formatTime(timeTaken)}</div>
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">Completed on {new Date(endTime).toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-        <div className="p-6 mb-8 bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Question Breakdown</h2>
-          <div className="space-y-4">
-            {gradedQuestions.map((gradedQuestion, index) => {
-              const question = questions.find(q => q.id === gradedQuestion.id);
-              if (!question) return null;
-              const isCorrect = gradedQuestion.isCorrect;
-              const isEssay = question.type === 'essay';
-              return (
-                <div key={gradedQuestion.id} className={`p-4 rounded-lg border ${isCorrect ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : isEssay ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="flex-1 font-medium text-gray-900 dark:text-white">Question {index + 1}: {question.prompt}</h3>
-                    <div className="flex items-center ml-4 space-x-2">
-                      <span className={`px-2 py-1 rounded text-sm font-medium ${isCorrect ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' : isEssay ? 'bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200' : 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200'}`}>
-                        {isCorrect ? 'Correct' : isEssay ? 'Pending Review' : 'Incorrect'}
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{gradedQuestion.score}/{question.maxScore}</span>
+            
+            <div className="p-8">
+              <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
+                <div className="p-6 border bg-surface border-border rounded-xl">
+                  <h3 className="mb-4 text-xl font-semibold text-center text-text">Overall Score</h3>
+                  <div className="flex items-center justify-center">
+                    <div className="relative w-40 h-40">
+                      <svg className="w-full h-full" viewBox="0 0 36 36">
+                        <path
+                          d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="currentColor"
+                          className="text-accent"
+                          strokeWidth="3"
+                        />
+                        <path
+                          d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="currentColor"
+                          className="text-primary"
+                          strokeWidth="3"
+                          strokeDasharray={`${results.percentage}, 100`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-bold text-text">{results.percentage.toFixed(1)}%</span>
+                        <span className="mt-1 text-sm text-text-secondary">Score</span>
+                      </div>
                     </div>
                   </div>
-                  {!isCorrect && !isEssay && (
-                    <div className="mt-2 text-sm">
-                      <div className="text-gray-700 dark:text-gray-300">
-                        <strong>Your answer:</strong> {Array.isArray(gradedQuestion.userAnswer) ? gradedQuestion.userAnswer.map(idx => question.options[idx]).join(', ') : typeof gradedQuestion.userAnswer === 'number' ? question.options[gradedQuestion.userAnswer] : gradedQuestion.userAnswer || 'Not answered'}
-                      </div>
-                      <div className="mt-1 text-gray-700 dark:text-gray-300">
-                        <strong>Correct answer:</strong> {Array.isArray(gradedQuestion.correctAnswer) ? gradedQuestion.correctAnswer.map(idx => question.options[idx]).join(', ') : question.options[gradedQuestion.correctAnswer]}
-                      </div>
-                    </div>
-                  )}
-                  {isEssay && gradedQuestion.userAnswer && (
-                    <div className="mt-2 text-sm">
-                      <div className="text-gray-700 dark:text-gray-300">
-                        <strong>Your answer:</strong>
-                        <div className="p-2 mt-1 text-gray-900 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">
-                          {gradedQuestion.userAnswer}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
+                
+                <div className="p-6 border bg-surface border-border rounded-xl">
+                  <h3 className="mb-4 text-xl font-semibold text-text">Test Details</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <span className="text-text-secondary">Total Score:</span>
+                      <span className="font-semibold text-text">{results.totalScore}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <span className="text-text-secondary">Score Achieved:</span>
+                      <span className="font-semibold text-secondary">{results.earnedScore}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <span className="text-text-secondary">Total Questions:</span>
+                      <span className="font-semibold text-text">{results.totalQuestions}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <span className="text-text-secondary">Correct Answers:</span>
+                      <span className="font-semibold text-secondary">{results.correctAnswers}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <span className="text-text-secondary">Wrong Answers:</span>
+                      <span className="font-semibold text-red-500">{results.totalQuestions - results.correctAnswers}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-text-secondary">Time Spent:</span>
+                      <span className="font-semibold text-primary">{results.timeSpent}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <button 
+                  onClick={resetTest}
+                  className="px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105"
+                >
+                  Back to Courses
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="text-center">
-          <button onClick={onRetakeExam} className="px-6 py-3 font-semibold text-white transition-colors duration-200 bg-blue-500 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            Retake Exam
+      </div>
+    );
+  }
+
+  // Test Page
+  if (testStarted && selectedTest) {
+    const currentQuestion = selectedTest.quizzes[currentQuestionIndex];
+    const userAnswer = userAnswers[currentQuestion.id];
+    
+    return (
+      <div className="min-h-screen px-4 py-8 transition-colors duration-300 bg-background">
+        <div className="max-w-4xl mx-auto">
+          <div className="overflow-hidden border shadow-xl bg-surface rounded-2xl border-border">
+            <div className="p-6 text-white bg-primary">
+              <div className="flex flex-col items-center justify-between md:flex-row">
+                <h1 className="mb-4 text-2xl font-bold text-center md:mb-0 md:text-left">{selectedTest.name}</h1>
+                <div className="flex items-center space-x-4">
+                  <div className="text-blue-100">
+                    Question {currentQuestionIndex + 1} of {selectedTest.quizzes.length}
+                  </div>
+                  <div className="px-3 py-1 text-sm bg-blue-500 rounded-full">
+                    Time: {formatTime(timeSpent)}
+                  </div>
+                </div>
+              </div>
+              <div className="w-full h-2 mt-4 bg-blue-500 rounded-full">
+                <div 
+                  className="h-2 transition-all duration-300 bg-white rounded-full" 
+                  style={{ width: `${((currentQuestionIndex + 1) / selectedTest.quizzes.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div className="p-8">
+              <div 
+                className="p-6 mb-8 text-xl font-semibold border text-text bg-accent rounded-xl border-border"
+                dangerouslySetInnerHTML={{ __html: currentQuestion.title }}
+              />
+              
+              {currentQuestion.type === 'mcq' ? (
+                <div className="space-y-4">
+                  {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+                    const answerText = currentQuestion[answerKey];
+                    const answerImage = currentQuestion[`${answerKey}_image`];
+                    
+                    if (!answerText && !answerImage) return null;
+                    
+                    return (
+                      <div 
+                        key={answerKey}
+                        className={`p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                          userAnswer === answerKey 
+                            ? 'border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md transform scale-105' 
+                            : 'border-border hover:border-primary hover:bg-accent hover:shadow-sm'
+                        }`}
+                        onClick={() => handleAnswerSelect(currentQuestion.id, answerKey)}
+                      >
+                        <div className="flex items-start">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 mt-1 flex-shrink-0 ${
+                            userAnswer === answerKey ? 'border-primary bg-primary' : 'border-text-muted'
+                          }`}>
+                            {userAnswer === answerKey && (
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            {answerText && <div className="font-medium text-text">{answerText}</div>}
+                            {answerImage && (
+                              <img 
+                                src={answerImage} 
+                                alt="Answer" 
+                                className="mx-auto mt-3 rounded-lg shadow-sm max-h-48"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                // Drag & Drop Questions
+                <div className="space-y-6">
+                  <div className="p-6 border bg-accent rounded-xl border-border">
+                    <h3 className="mb-4 text-lg font-semibold text-text">Drag the correct answer to the target area</h3>
+                    
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-text-secondary">Available Answers:</h4>
+                        {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+                          const answerText = currentQuestion[answerKey];
+                          const answerImage = currentQuestion[`${answerKey}_image`];
+                          
+                          if (!answerText && !answerImage) return null;
+                          
+                          return (
+                            <div 
+                              key={answerKey}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
+                              className="p-4 transition-shadow duration-200 border-2 border-dashed shadow-sm bg-surface border-border rounded-xl cursor-grab hover:shadow-md hover:border-primary"
+                            >
+                              {answerText && <div className="font-medium text-center text-text">{answerText}</div>}
+                              {answerImage && (
+                                <img 
+                                  src={answerImage} 
+                                  alt="Answer" 
+                                  className="mx-auto mt-3 rounded-lg max-h-32"
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      <div 
+                        className={`border-2 rounded-xl p-6 min-h-64 flex flex-col items-center justify-center transition-all duration-300 ${
+                          userAnswer 
+                            ? 'border-secondary bg-green-50 dark:bg-green-900/20' 
+                            : 'border-dashed border-border bg-surface'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, currentQuestion.id)}
+                      >
+                        {userAnswer ? (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center mb-3 font-semibold text-secondary">
+                              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              Answer Selected
+                            </div>
+                            <div className="p-4 border rounded-lg shadow-sm bg-surface border-secondary">
+                              {currentQuestion[userAnswer] && (
+                                <div className="font-medium text-text">{currentQuestion[userAnswer]}</div>
+                              )}
+                              {currentQuestion[`${userAnswer}_image`] && (
+                                <img 
+                                  src={currentQuestion[`${userAnswer}_image`]} 
+                                  alt="Selected answer" 
+                                  className="mx-auto mt-3 rounded-lg max-h-32"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center text-text-muted">
+                            <svg className="w-12 h-12 mx-auto mb-3 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                            <p className="font-medium">Drag the correct answer here</p>
+                            <p className="mt-1 text-sm">Drop your selection in this area</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex flex-col items-center justify-between mt-12 space-y-4 sm:flex-row sm:space-y-0">
+                <button 
+                  onClick={prevQuestion}
+                  disabled={currentQuestionIndex === 0}
+                  className={`px-8 py-3 rounded-xl font-medium transition-all duration-200 flex items-center ${
+                    currentQuestionIndex === 0 
+                      ? 'bg-accent text-text-muted cursor-not-allowed' 
+                      : 'bg-accent text-text hover:bg-border hover:shadow-md transform hover:scale-105'
+                  }`}
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Previous
+                </button>
+                
+                <button 
+                  onClick={nextQuestion}
+                  className="flex items-center px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105"
+                >
+                  {currentQuestionIndex === selectedTest.quizzes.length - 1 ? (
+                    <>
+                      Finish Test
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </>
+                  ) : (
+                    <>
+                      Next Question
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Course Details Page
+  if (selectedCourse && !testStarted) {
+    return (
+      <div className="min-h-screen px-4 py-8 transition-colors duration-300 bg-background">
+        <div className="max-w-6xl mx-auto">
+          <button 
+            onClick={() => setSelectedCourse(null)}
+            className="flex items-center mb-8 font-medium transition-colors duration-200 text-primary hover:text-blue-700 group"
+          >
+            <svg className="w-5 h-5 mr-2 transition-transform duration-200 transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Courses
+          </button>
+          
+          <div className="mb-8 overflow-hidden border shadow-xl bg-surface rounded-2xl border-border">
+            <div className="md:flex">
+              <div className="md:flex-shrink-0 md:w-2/5">
+                <img 
+                  className="object-cover w-full h-64 md:h-full" 
+                  src={selectedCourse.image} 
+                  alt={selectedCourse.title}
+                />
+              </div>
+              <div className="p-8">
+                <div className="inline-block px-3 py-1 mb-4 text-sm font-semibold rounded-full bg-primary/10 text-primary">
+                  {selectedCourse.type === 'video' ? 'Video Course' : 'Live Course'}
+                </div>
+                <h1 className="mb-4 text-3xl font-bold text-text">
+                  {selectedCourse.title}
+                </h1>
+                <p className="mb-6 text-lg leading-relaxed text-text-secondary">
+                  {selectedCourse.description}
+                </p>
+                <div className="flex items-center mb-6">
+                  <img 
+                    className="object-cover w-12 h-12 rounded-full shadow-sm" 
+                    src={selectedCourse.instructor_image} 
+                    alt={selectedCourse.instructor}
+                  />
+                  <div className="ml-4">
+                    <p className="text-lg font-semibold text-text">{selectedCourse.instructor}</p>
+                    <p className="text-text-muted">Instructor</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <span className="px-4 py-2 text-sm font-medium border rounded-full bg-primary/10 text-primary border-primary/20">
+                    Level: {selectedCourse.level}
+                  </span>
+                  <span className="px-4 py-2 text-sm font-medium border rounded-full bg-secondary/10 text-secondary border-secondary/20">
+                    {selectedCourse.category}
+                  </span>
+                  <span className="px-4 py-2 text-sm font-medium text-purple-500 border rounded-full bg-purple-500/10 border-purple-500/20">
+                    Year: {selectedCourse.college_year}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="overflow-hidden border shadow-xl bg-surface rounded-2xl border-border">
+            <div className="p-6 border-b bg-accent border-border">
+              <h2 className="text-2xl font-bold text-text">Placement Tests</h2>
+              <p className="mt-2 text-text-secondary">Assess your current level with these placement tests</p>
+            </div>
+            
+            <div className="divide-y divide-border">
+              {selectedCourse.placement_tests.map(test => (
+                <div key={test.id} className="p-6 transition-colors duration-200 hover:bg-accent">
+                  <div className="flex flex-col items-start justify-between lg:flex-row lg:items-center">
+                    <div className="flex-1">
+                      <h3 className="mb-2 text-xl font-semibold text-text">{test.name}</h3>
+                      <p className="mb-3 text-text-secondary">{test.description}</p>
+                      <div className="flex flex-wrap gap-4">
+                        <span className="flex items-center text-sm text-text-muted">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          Questions: {test.number_student_questions}
+                        </span>
+                        <span className="flex items-center text-sm text-text-muted">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Created: {test.created_at}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => {
+                        handleTestSelect(test);
+                        startTest();
+                      }}
+                      className="px-6 py-3 mt-4 font-medium text-white transition-all duration-300 transform shadow-lg lg:mt-0 bg-primary hover:bg-blue-700 rounded-xl hover:scale-105"
+                    >
+                      Start Test
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main Courses Page
+  return (
+    <div className="min-h-screen px-4 py-8 transition-colors duration-300 bg-background">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="flex flex-col items-start justify-between mb-8 lg:flex-row lg:items-center">
+          <div className="mb-6 text-center lg:text-left lg:mb-0">
+            <h1 className="mb-4 text-4xl font-bold text-text">Placement Tests</h1>
+            <p className="max-w-2xl text-lg text-text-secondary">
+              Choose the right course and start your placement test to assess your current knowledge level
+            </p>
+          </div>
+          
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="self-center p-3 transition-all duration-300 border shadow-sm bg-surface border-border hover:bg-accent text-text rounded-xl hover:shadow-md lg:self-auto"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
           </button>
         </div>
+        
+        {/* Enhanced Filters */}
+        <div className="p-6 mb-8 border shadow-sm bg-surface rounded-2xl border-border">
+          <div className="flex flex-col items-start justify-between mb-6 lg:flex-row lg:items-center">
+            <h2 className="mb-4 text-xl font-semibold text-text lg:mb-0">Filter Courses</h2>
+            <button 
+              onClick={clearFilters}
+              className="flex items-center text-sm font-medium text-primary hover:text-blue-700"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Clear All Filters
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Course Type Filter */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-text">Course Type</label>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCourseType('all')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    courseType === 'all'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-accent text-text hover:bg-border'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setCourseType('video')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    courseType === 'video'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-accent text-text hover:bg-border'
+                  }`}
+                >
+                  Video
+                </button>
+                <button
+                  onClick={() => setCourseType('live')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    courseType === 'live'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-accent text-text hover:bg-border'
+                  }`}
+                >
+                  Live
+                </button>
+              </div>
+            </div>
+
+            {/* Level Filter */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-text">Level</label>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCourseLevel('all')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    courseLevel === 'all'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-accent text-text hover:bg-border'
+                  }`}
+                >
+                  All
+                </button>
+                {uniqueLevels.slice(0, 2).map(level => (
+                  <button
+                    key={level}
+                    onClick={() => setCourseLevel(level)}
+                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      courseLevel === level
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-accent text-text hover:bg-border'
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Year Filter */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-text">Year</label>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCourseYear('all')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    courseYear === 'all'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-accent text-text hover:bg-border'
+                  }`}
+                >
+                  All
+                </button>
+                {uniqueYears.slice(0, 2).map(year => (
+                  <button
+                    key={year}
+                    onClick={() => setCourseYear(year)}
+                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      courseYear === year
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-accent text-text hover:bg-border'
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-text">Category</label>
+              <select 
+                value={courseCategory}
+                onChange={(e) => setCourseCategory(e.target.value)}
+                className="w-full px-3 py-2 text-sm transition-colors duration-200 border rounded-lg border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              >
+                <option value="all">All Categories</option>
+                {uniqueCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="mt-4 text-sm text-text-muted">
+            Showing {filteredCourses.length} of {courses.length} courses
+          </div>
+        </div>
+        
+        {/* Courses Grid */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-16 h-16 border-t-2 border-b-2 rounded-full animate-spin border-primary"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {filteredCourses.map(course => (
+              <div 
+                key={course.id}
+                className="overflow-hidden transition-all duration-300 transform border shadow-lg cursor-pointer bg-surface rounded-2xl hover:shadow-xl hover:-translate-y-1 group border-border"
+                onClick={() => handleCourseSelect(course)}
+              >
+                <div className="relative overflow-hidden">
+                  <img 
+                    className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105" 
+                    src={course.image} 
+                    alt={course.title}
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      course.type === 'video' 
+                        ? 'bg-primary/20 text-primary backdrop-blur-sm' 
+                        : 'bg-secondary/20 text-secondary backdrop-blur-sm'
+                    }`}>
+                      {course.type === 'video' ? 'Video' : 'Live'}
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 transition-all duration-300 bg-black bg-opacity-0 group-hover:bg-opacity-10"></div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <img 
+                      className="object-cover w-10 h-10 mr-3 rounded-full shadow-sm" 
+                      src={course.instructor_image} 
+                      alt={course.instructor}
+                    />
+                    <span className="font-medium text-text-secondary">{course.instructor}</span>
+                  </div>
+                  
+                  <h3 className="mb-3 text-xl font-bold transition-colors duration-200 text-text line-clamp-2 group-hover:text-primary">
+                    {course.title}
+                  </h3>
+                  
+                  <p className="mb-4 text-sm text-text-secondary line-clamp-2">
+                    {course.description}
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-accent text-text">
+                      {course.level}
+                    </span>
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-accent text-text">
+                      {course.category}
+                    </span>
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-accent text-text">
+                      Year {course.college_year}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <span className="text-sm text-text-muted">
+                      {course.placement_tests?.length || 0} test(s)
+                    </span>
+                    <button className="flex items-center text-sm font-semibold transition-transform duration-200 text-primary hover:text-blue-700 group-hover:translate-x-1">
+                      View Details
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {filteredCourses.length === 0 && !loading && (
+          <div className="py-16 text-center">
+            <div className="max-w-md p-12 mx-auto border shadow-sm bg-surface rounded-2xl border-border">
+              <svg className="w-16 h-16 mx-auto mb-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="mb-2 text-xl font-semibold text-text">No courses found</h3>
+              <p className="text-text-muted">No courses match your current filter criteria.</p>
+              <button 
+                onClick={clearFilters}
+                className="mt-4 font-medium text-primary hover:text-blue-700"
+              >
+                Clear all filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default TestYourself;
