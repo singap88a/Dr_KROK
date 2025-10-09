@@ -320,6 +320,58 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
+      // Video course progress API
+      async getCourseProgress(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        const candidates = [
+          `courses/${courseId}/progress`,
+          `video_courses/${courseId}/progress`,
+          `video_course/${courseId}/progress`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        return { status: 'not_started', percentage: 0, course_id: Number(courseId) };
+      },
+      async startLessonProgress(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        const candidates = [
+          `courses/${courseId}/progress/${lessonId}/start`,
+          `video_courses/${courseId}/progress/${lessonId}/start`,
+          `video_course/${courseId}/progress/${lessonId}/start`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { method: 'POST', auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        throw new Error('Progress start endpoint not available');
+      },
+      async completeLessonProgress(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        const candidates = [
+          `courses/${courseId}/progress/${lessonId}/complete`,
+          `video_courses/${courseId}/progress/${lessonId}/complete`,
+          `video_course/${courseId}/progress/${lessonId}/complete`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { method: 'POST', auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        throw new Error('Progress complete endpoint not available');
+      },
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();

@@ -39,7 +39,7 @@ export default function CourseLessons() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getVideoCourseById, getCourseAccess } = useApi();
+  const { getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, completeLessonProgress } = useApi();
   const { isLoggedIn } = useUser();
 
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,11 @@ export default function CourseLessons() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showVideoPopup, setShowVideoPopup] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [courseProgress, setCourseProgress] = useState(null);
+  const [progressLoading, setProgressLoading] = useState(false);
+  // test state removed; navigation to dedicated test page
+
+  // No modal timer; tests open in dedicated page
 
   // Image Popup Modal
   const ImagePopup = () => {
@@ -103,7 +108,7 @@ export default function CourseLessons() {
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               aria-label={t('common.close', 'Close')}
             >
-              <FaTimes className="text-xl  text-teal-50" />
+              <FaTimes className="text-xl text-teal-50" />
             </button>
           </div>
           <div className="h-full border rounded-lg">
@@ -176,16 +181,41 @@ export default function CourseLessons() {
             // If access check fails, assume no access for paid content
             setHasAccess(courseData.price === 0 || courseData.price === "0");
           }
+          // Fetch course progress
+          try {
+            setProgressLoading(true);
+            const progress = await getCourseProgress(id);
+            setCourseProgress(progress);
+          } catch {
+            // ignore
+          } finally {
+            setProgressLoading(false);
+          }
         } else {
           // Not logged in, only free content accessible
           setHasAccess(false);
         }
+
+        // Load locally completed lessons
+        try {
+          const listKey = `course_${id}_completed_lessons`;
+          const raw = localStorage.getItem(listKey);
+          const arr = raw ? JSON.parse(raw) : [];
+          if (Array.isArray(arr)) setCompletedLessons(new Set(arr.map(Number)));
+        } catch { /* noop */ }
 
         // Set first free lesson as current if available
         if (courseData.lessons && courseData.lessons.length > 0) {
           const firstFreeLesson = courseData.lessons.find(lesson => lesson.type === "free" || lesson.type === "Free");
           if (firstFreeLesson) {
             setCurrentLesson(firstFreeLesson);
+            // Fire start progress when opening first free lesson for logged-in users
+            if (isLoggedIn) {
+              try {
+                const res = await startLessonProgress(id, firstFreeLesson.id);
+                if (res?.course_progress) setCourseProgress(res.course_progress);
+              } catch { /* noop */ }
+            }
           }
         }
       } catch (err) {
@@ -208,7 +238,7 @@ export default function CourseLessons() {
       mounted = false;
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [id, getVideoCourseById, getCourseAccess, isLoggedIn, i18n]);
+  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, isLoggedIn]);
 
   // Sort lessons: free first, then paid
   const sortedLessons = useMemo(() => {
@@ -221,7 +251,7 @@ export default function CourseLessons() {
     });
   }, [lessons]);
 
-  const handleLessonClick = (lesson) => {
+  const handleLessonClick = async (lesson) => {
     const isFree = lesson.type === "free" || lesson.type === "Free";
     if (!isFree) {
       // Show purchase modal for paid lessons
@@ -235,10 +265,43 @@ export default function CourseLessons() {
 
     // Set current lesson for sidebar video player
     setCurrentLesson(lesson);
+    if (isLoggedIn) {
+      try {
+        const res = await startLessonProgress(id, lesson.id);
+        if (res?.course_progress) setCourseProgress(res.course_progress);
+      } catch {
+        // ignore
+      }
+    }
   };
 
-  const handleLessonComplete = (lessonId) => {
+  const handleLessonComplete = async (lessonId) => {
+    // require lesson test pass before allowing manual completion
+    try {
+      const passedKey = `course_${id}_lesson_test_passed_${lessonId}`;
+      const passed = localStorage.getItem(passedKey) === '1';
+      if (!passed) {
+        alert(t('courses.passLessonTestFirst', 'Please pass the lesson test first.'));
+        return;
+      }
+    } catch { /* noop */ }
+
     setCompletedLessons(prev => new Set([...prev, lessonId]));
+    try {
+      const listKey = `course_${id}_completed_lessons`;
+      const raw = localStorage.getItem(listKey);
+      const set = new Set((raw ? JSON.parse(raw) : []).map(Number));
+      set.add(Number(lessonId));
+      localStorage.setItem(listKey, JSON.stringify(Array.from(set)));
+    } catch { /* noop */ }
+    if (isLoggedIn) {
+      try {
+        const res = await completeLessonProgress(id, lessonId);
+        if (res?.course_progress) setCourseProgress(res.course_progress);
+      } catch {
+        // ignore
+      }
+    }
   };
 
   const closePurchaseModal = () => {
@@ -323,6 +386,14 @@ export default function CourseLessons() {
                   <FaUsers className="text-primary" />
                   <span>{course.enrolled_count || 0} {t('courses.students', 'Students')}</span>
                 </div>
+              {isLoggedIn && (
+                <div className="flex items-center gap-2">
+                  <FaClock className="text-primary" />
+                  <span>
+                    {t('courses.progress', 'Progress')}: {progressLoading ? '...' : `${Math.round(courseProgress?.percentage || 0)}%`}
+                  </span>
+                </div>
+              )}
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     {renderStars(course.avg_rating || 0)}
@@ -347,6 +418,26 @@ export default function CourseLessons() {
                   </span>
                 )}
               </div>
+
+              {isLoggedIn && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1 text-xs">
+                    <span className="text-text-muted">{t('courses.overallProgress', 'Overall Progress')}</span>
+                    <span className="font-medium">{Math.round(courseProgress?.percentage || 0)}%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-accent">
+                    <div
+                      className={`h-2 rounded-full ${Math.round(courseProgress?.percentage || 0) === 100 ? 'bg-green-500' : 'bg-primary'}`}
+                      style={{ width: `${Math.min(100, Math.max(0, Math.round(courseProgress?.percentage || 0)))}%` }}
+                    />
+                  </div>
+                  {Math.round(courseProgress?.percentage || 0) === 100 && (
+                    <div className="inline-block px-2 py-1 mt-2 text-xs font-semibold text-green-700 bg-green-100 rounded">
+                      {t('courses.completed', 'Completed')}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Price & Enroll */}
@@ -455,17 +546,42 @@ export default function CourseLessons() {
                             <FaLock className="ml-2 text-text-muted" />
                           )}
                         </div>
+                        {isCompleted && (
+                          <div className="mt-2 text-xs font-medium text-green-600">
+                            {t('courses.lessonCompleted', 'Lesson Completed')}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 );
               })}
+
+              {/* Final Tests Under Course Content */}
+              {course.final_tests && course.final_tests.length > 0 && (
+                <div className="p-4 mt-4 border rounded-lg bg-surface border-border">
+                  <div className="mb-2 text-sm font-semibold text-text">
+                    {t('courses.finalTests', 'Final Tests')}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {course.final_tests.map((test, idx) => (
+                      <button
+                        key={test.id || idx}
+                        onClick={() => navigate(`/courses/${id}/test/final/${test.id}`, { state: { course, test } })}
+                        className="px-3 py-2 text-xs font-medium text-white rounded bg-primary hover:bg-secondary"
+                      >
+                        {test.name || `${t('courses.finalTest', 'Final Test')} ${idx + 1}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Video Player & Instructor */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Video Player */}
+          {/* Video Player */}
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
               {currentLesson ? (
                 <div>
@@ -476,7 +592,7 @@ export default function CourseLessons() {
                         controls
                         className="w-full h-full"
                         poster={currentLesson.image}
-                        onEnded={() => handleLessonComplete(currentLesson.id)}
+                      // removed auto-complete on video end; completion gated by test pass
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full bg-accent">
@@ -489,6 +605,16 @@ export default function CourseLessons() {
                   </div>
                   <div className="p-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-text">{currentLesson.title}</h3>
+                  {isLoggedIn && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => handleLessonComplete(currentLesson.id)}
+                        className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
+                      >
+                        {t('courses.markCompleted', 'Mark as Completed')}
+                      </button>
+                    </div>
+                  )}
                     {currentLesson.description && (
                       <div className="mt-2 text-sm text-text-secondary">
                         <p className="leading-relaxed line-clamp-2">
@@ -561,7 +687,7 @@ export default function CourseLessons() {
                                     className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
                                     onClick={() => handleVideoClick(video)}
                                   >
-                                    <div className="relative flex-shrink-0 overflow-hidden rounded-lg w-24 h-16">
+                                    <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden rounded-lg">
                                       {thumbnail ? (
                                         <img
                                           src={thumbnail}
@@ -597,6 +723,24 @@ export default function CourseLessons() {
                                   </div>
                                 );
                               })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Lesson-End Tests */}
+                        {currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0 && (
+                          <div className="mb-2">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.lessonTests', 'Lesson Tests')}</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {currentLesson.lesson_end_tests.map((test, idx) => (
+                                <button
+                                  key={test.id || idx}
+                                  onClick={() => navigate(`/courses/${id}/test/lesson/${test.id}`, { state: { course, test, lessonId: currentLesson.id } })}
+                                  className="px-3 py-2 text-xs font-medium border rounded bg-accent hover:border-primary border-border"
+                                >
+                                  {test.name || `${t('courses.test', 'Test')} ${idx + 1}`}
+                                </button>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -678,6 +822,24 @@ export default function CourseLessons() {
               </div>
             )}
 
+            {/* Final Tests Section */}
+            {course.final_tests && course.final_tests.length > 0 && (
+              <div className="p-6 border rounded-lg bg-surface border-border">
+                <h3 className="mb-3 text-lg font-semibold text-text">{t('courses.finalTests', 'Final Tests')}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {course.final_tests.map((test, idx) => (
+                    <button
+                      key={test.id || idx}
+                      onClick={() => navigate(`/courses/${id}/test/final/${test.id}`, { state: { course, test } })}
+                      className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
+                    >
+                      {test.name || `${t('courses.finalTest', 'Final Test')} ${idx + 1}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
           </div>
         </div>
@@ -724,6 +886,8 @@ export default function CourseLessons() {
 
       {/* Video Popup */}
       <VideoPopup />
+
+      {/* Test Modal removed in favor of dedicated page */}
     </section>
   );
 }

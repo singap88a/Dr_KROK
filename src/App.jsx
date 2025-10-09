@@ -17,6 +17,7 @@ import Courses from "./pages/Courses/Courses";
 import CourseDetails from "./pages/Courses/CourseDetails";
 import CourseLessons from "./pages/Courses/CourseLessons";
 import CourseSubscription from "./pages/Courses/CourseSubscription";
+import CourseTestRunner from "./pages/Courses/CourseTestRunner";
 
 import TrainerArticlesPage from "./pages/Articles/Articles";
 import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/courses/:id/lessons" element={<CourseLessons />} />
+          <Route path="/courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
           <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
 
  
