@@ -211,6 +211,28 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      // Placement Courses API
+      async getPlacementCourses(params = {}) {
+        const type = params.type || 'all';
+        if (type === 'video') {
+          const res = await request('placementCourses/video');
+          const list = Array.isArray(res?.data) ? res.data.map((c) => ({ ...c, type: 'video' })) : [];
+          return { data: list, raw: res };
+        }
+        if (type === 'live') {
+          const res = await request('placementCourses/live');
+          const list = Array.isArray(res?.data) ? res.data.map((c) => ({ ...c, type: 'live' })) : [];
+          return { data: list, raw: res };
+        }
+        // all
+        const [videoRes, liveRes] = await Promise.all([
+          request('placementCourses/video'),
+          request('placementCourses/live')
+        ]);
+        const video = Array.isArray(videoRes?.data) ? videoRes.data.map((c) => ({ ...c, type: 'video' })) : [];
+        const live = Array.isArray(liveRes?.data) ? liveRes.data.map((c) => ({ ...c, type: 'live' })) : [];
+        return { data: [...video, ...live], raw: { video: videoRes, live: liveRes } };
+      },
       // Video Courses API
       async getVideoCourses(params = {}) {
         const query = new URLSearchParams();

@@ -458,6 +458,63 @@
     }
   }
   ,
+  "testYourself": {
+    "main": {
+      "title": "Placement Tests",
+      "subtitle": "Choose the right course and start your placement test to assess your current knowledge level",
+      "viewDetails": "View Details"
+    },
+    "filters": {
+      "title": "Filter Courses",
+      "clear": "Clear Filters",
+      "type": "Course Type",
+      "all": "All",
+      "video": "Video",
+      "live": "Live",
+      "showing": "Showing",
+      "of": "of",
+      "courses": "courses"
+    },
+    "course": {
+      "back": "Back to Courses",
+      "testsTitle": "Placement Tests",
+      "testsSubtitle": "Assess your current level with these placement tests",
+      "questions": "Questions",
+      "created": "Created",
+      "startTest": "Start Test"
+    },
+    "test": {
+      "question": "Question",
+      "of": "of",
+      "time": "Time",
+      "dragInstruction": "Drag the correct answer to the target area",
+      "availableAnswers": "Available Answers",
+      "answerSelected": "Answer Selected",
+      "dragHere": "Drag the correct answer here",
+      "dropHere": "Drop your selection in this area",
+      "previous": "Previous",
+      "next": "Next Question",
+      "finish": "Finish Test"
+    },
+    "results": {
+      "title": "Test Results",
+      "completed": "You have completed",
+      "overallScore": "Overall Score",
+      "score": "Score",
+      "details": "Test Details",
+      "totalScore": "Total Score",
+      "scoreAchieved": "Score Achieved",
+      "totalQuestions": "Total Questions",
+      "correctAnswers": "Correct Answers",
+      "wrongAnswers": "Wrong Answers",
+      "timeSpent": "Time Spent",
+      "back": "Back to Courses"
+    },
+    "empty": {
+      "title": "No courses found",
+      "desc": "No courses match your current filter criteria."
+    }
+  },
   "articles": {
     "title": "Articles",
     "featured": "Featured Articles",
