@@ -551,32 +551,52 @@ export default function CourseLessons() {
                           <div className="mb-4">
                             <h5 className="mb-2 text-sm font-medium text-text">{t('courses.additionalVideos', 'Additional Videos')}</h5>
                             <div className="grid grid-cols-1 gap-3">
-                              {currentLesson.video_related.map((video, idx) => (
-                                <div 
-                                  key={idx} 
-                                  className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
-                                  onClick={() => handleVideoClick(video)}
-                                >
-                                  <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden bg-gray-200 rounded-lg">
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-                                      <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
-                                        <FaPlay className="text-gray-700 text-xs ml-0.5" />
+                              {currentLesson.video_related.map((video, idx) => {
+                                const isObj = typeof video === 'object' && video !== null;
+                                const videoUrl = isObj ? (video.url || video.src || video.video || '') : video;
+                                const thumbnail = isObj ? (video.thumbnail || video.poster || video.image || '') : '';
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
+                                    onClick={() => handleVideoClick(video)}
+                                  >
+                                    <div className="relative flex-shrink-0 overflow-hidden rounded-lg w-24 h-16">
+                                      {thumbnail ? (
+                                        <img
+                                          src={thumbnail}
+                                          alt={`Additional video ${idx + 1}`}
+                                          className="object-cover w-full h-full"
+                                        />
+                                      ) : (
+                                        <video
+                                          src={videoUrl}
+                                          className="object-cover w-full h-full"
+                                          muted
+                                          playsInline
+                                          preload="metadata"
+                                        />
+                                      )}
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                        <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
+                                          <FaPlay className="text-gray-700 text-xs ml-0.5" />
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <FaVideo className="text-sm text-primary" />
-                                      <span className="text-sm font-medium text-text">
-                                        {t('courses.additionalVideo', 'Additional Video')} {idx + 1}
-                                      </span>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <FaVideo className="text-sm text-primary" />
+                                        <span className="text-sm font-medium text-text">
+                                          {t('courses.additionalVideo', 'Additional Video')} {idx + 1}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-text-muted">
+                                        {t('courses.clickToWatch', 'Click to watch this video')}
+                                      </p>
                                     </div>
-                                    <p className="text-xs text-text-muted">
-                                      {t('courses.clickToWatch', 'Click to watch this video')}
-                                    </p>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         )}
