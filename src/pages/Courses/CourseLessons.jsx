@@ -40,7 +40,9 @@ export default function CourseLessons() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, completeLessonProgress } = useApi();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, userData } = useUser();
+
+  const userPrefix = isLoggedIn && userData ? `user_${userData.id}_` : 'guest_';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -198,7 +200,7 @@ export default function CourseLessons() {
 
         // Load locally completed lessons
         try {
-          const listKey = `course_${id}_completed_lessons`;
+          const listKey = `course_${id}_${userPrefix}completed_lessons`;
           const raw = localStorage.getItem(listKey);
           const arr = raw ? JSON.parse(raw) : [];
           if (Array.isArray(arr)) setCompletedLessons(new Set(arr.map(Number)));
@@ -276,19 +278,32 @@ export default function CourseLessons() {
   };
 
   const handleLessonComplete = async (lessonId) => {
-    // require lesson test pass before allowing manual completion
-    try {
-      const passedKey = `course_${id}_lesson_test_passed_${lessonId}`;
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (!lesson) return;
+
+    // Check if lesson has tests and if watched
+    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+    if (hasTests) {
+      // Check if watched
+      const watchedKey = `course_${id}_${userPrefix}lesson_watched_${lessonId}`;
+      const watched = localStorage.getItem(watchedKey) === '1';
+      if (!watched) {
+        alert(t('courses.watchLessonFirst', 'Please watch the lesson to the end first.'));
+        return;
+      }
+
+      // Check if test passed
+      const passedKey = `course_${id}_${userPrefix}lesson_test_passed_${lessonId}`;
       const passed = localStorage.getItem(passedKey) === '1';
       if (!passed) {
         alert(t('courses.passLessonTestFirst', 'Please pass the lesson test first.'));
         return;
       }
-    } catch { /* noop */ }
+    }
 
     setCompletedLessons(prev => new Set([...prev, lessonId]));
     try {
-      const listKey = `course_${id}_completed_lessons`;
+      const listKey = `course_${id}_${userPrefix}completed_lessons`;
       const raw = localStorage.getItem(listKey);
       const set = new Set((raw ? JSON.parse(raw) : []).map(Number));
       set.add(Number(lessonId));
@@ -592,7 +607,10 @@ export default function CourseLessons() {
                         controls
                         className="w-full h-full"
                         poster={currentLesson.image}
-                      // removed auto-complete on video end; completion gated by test pass
+                        onEnded={() => {
+                          const watchedKey = `course_${id}_${userPrefix}lesson_watched_${currentLesson.id}`;
+                          localStorage.setItem(watchedKey, '1');
+                        }}
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full bg-accent">
