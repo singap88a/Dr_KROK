@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
@@ -37,12 +37,11 @@ import {
 
 export default function CourseLessons() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, completeLessonProgress } = useApi();
-  const { isLoggedIn, userData } = useUser();
-
-  const userPrefix = isLoggedIn && userData ? `user_${userData.id}_` : 'guest_';
+  const { isLoggedIn } = useUser();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,7 +50,7 @@ export default function CourseLessons() {
   const [hasAccess, setHasAccess] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [completedLessons, setCompletedLessons] = useState(new Set());
+  const [lessonStatuses, setLessonStatuses] = useState({});
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showFilesPopup, setShowFilesPopup] = useState(false);
@@ -198,13 +197,7 @@ export default function CourseLessons() {
           setHasAccess(false);
         }
 
-        // Load locally completed lessons
-        try {
-          const listKey = `course_${id}_${userPrefix}completed_lessons`;
-          const raw = localStorage.getItem(listKey);
-          const arr = raw ? JSON.parse(raw) : [];
-          if (Array.isArray(arr)) setCompletedLessons(new Set(arr.map(Number)));
-        } catch { /* noop */ }
+        // Lesson statuses will be driven by API responses going forward
 
         // Set first free lesson as current if available
         if (courseData.lessons && courseData.lessons.length > 0) {
@@ -216,6 +209,9 @@ export default function CourseLessons() {
               try {
                 const res = await startLessonProgress(id, firstFreeLesson.id);
                 if (res?.course_progress) setCourseProgress(res.course_progress);
+                if (res?.lesson) {
+                  setLessonStatuses(prev => ({ ...prev, [firstFreeLesson.id]: res.lesson }));
+                }
               } catch { /* noop */ }
             }
           }
@@ -241,6 +237,19 @@ export default function CourseLessons() {
       i18n.off('languageChanged', handleLanguageChange);
     };
   }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, isLoggedIn]);
+
+  // When returning from quiz page, update the specific lesson status and overall progress
+  useEffect(() => {
+    const s = location.state || {};
+    if (s.lessonCompleted && s.lessonId && isLoggedIn) {
+      (async () => {
+        try {
+          const res = await getCourseProgress(id);
+          setCourseProgress(res);
+        } catch { /* noop */ }
+      })();
+    }
+  }, [location.state, id, isLoggedIn, getCourseProgress]);
 
   // Sort lessons: free first, then paid
   const sortedLessons = useMemo(() => {
@@ -281,38 +290,12 @@ export default function CourseLessons() {
     const lesson = lessons.find(l => l.id === lessonId);
     if (!lesson) return;
 
-    // Check if lesson has tests and if watched
-    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
-    if (hasTests) {
-      // Check if watched
-      const watchedKey = `course_${id}_${userPrefix}lesson_watched_${lessonId}`;
-      const watched = localStorage.getItem(watchedKey) === '1';
-      if (!watched) {
-        alert(t('courses.watchLessonFirst', 'Please watch the lesson to the end first.'));
-        return;
-      }
-
-      // Check if test passed
-      const passedKey = `course_${id}_${userPrefix}lesson_test_passed_${lessonId}`;
-      const passed = localStorage.getItem(passedKey) === '1';
-      if (!passed) {
-        alert(t('courses.passLessonTestFirst', 'Please pass the lesson test first.'));
-        return;
-      }
-    }
-
-    setCompletedLessons(prev => new Set([...prev, lessonId]));
-    try {
-      const listKey = `course_${id}_${userPrefix}completed_lessons`;
-      const raw = localStorage.getItem(listKey);
-      const set = new Set((raw ? JSON.parse(raw) : []).map(Number));
-      set.add(Number(lessonId));
-      localStorage.setItem(listKey, JSON.stringify(Array.from(set)));
-    } catch { /* noop */ }
     if (isLoggedIn) {
       try {
-        const res = await completeLessonProgress(id, lessonId);
+        // Mark lesson video as completed (50%)
+        const res = await completeLessonProgress(id, lessonId, 'lesson');
         if (res?.course_progress) setCourseProgress(res.course_progress);
+        if (res?.lesson) setLessonStatuses(prev => ({ ...prev, [lessonId]: res.lesson }));
       } catch {
         // ignore
       }
@@ -501,7 +484,11 @@ export default function CourseLessons() {
                 // If API returns "free" for a lesson, it means user has access to it
                 // If API returns "paid", it means user doesn't have access
                 const isAccessible = isFree;
-                const isCompleted = completedLessons.has(lesson.id);
+                const ls = lessonStatuses[lesson.id];
+                const lessonPerc = ls ? Number(ls.lesson_percentage || 0) : 0;
+                const quizPerc = ls ? Number(ls.quiz_percentage || 0) : 0;
+                const totalPerc = lessonPerc + quizPerc;
+                const isCompleted = totalPerc >= 100 || (ls?.status === 'completed');
                 const isActive = currentLesson?.id === lesson.id;
 
                 return (
@@ -561,11 +548,13 @@ export default function CourseLessons() {
                             <FaLock className="ml-2 text-text-muted" />
                           )}
                         </div>
-                        {isCompleted && (
-                          <div className="mt-2 text-xs font-medium text-green-600">
-                            {t('courses.lessonCompleted', 'Lesson Completed')}
-                          </div>
-                        )}
+                        <div className="mt-2 text-xs font-medium">
+                          {isCompleted ? (
+                            <span className="text-green-600">{t('courses.lessonCompleted', 'Lesson Completed')}</span>
+                          ) : (
+                            <span className="text-text-muted">{t('courses.progress', 'Progress')}: {Math.min(100, Math.max(0, Math.round(totalPerc)))}%</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -607,9 +596,14 @@ export default function CourseLessons() {
                         controls
                         className="w-full h-full"
                         poster={currentLesson.image}
-                        onEnded={() => {
-                          const watchedKey = `course_${id}_${userPrefix}lesson_watched_${currentLesson.id}`;
-                          localStorage.setItem(watchedKey, '1');
+                        onEnded={async () => {
+                          if (isLoggedIn) {
+                            try {
+                              const res = await completeLessonProgress(id, currentLesson.id, 'lesson');
+                              if (res?.course_progress) setCourseProgress(res.course_progress);
+                              if (res?.lesson) setLessonStatuses(prev => ({ ...prev, [currentLesson.id]: res.lesson }));
+                            } catch { /* noop */ }
+                          }
                         }}
                       />
                     ) : (

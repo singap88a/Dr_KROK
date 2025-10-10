@@ -92,17 +92,7 @@ export default function CourseTestRunner() {
 
   const markDoneAndBack = async () => {
     if (scope === 'lesson' && lessonId) {
-      try { await completeLessonProgress(id, lessonId); } catch {}
-      try {
-        // mark test passed and completion in local storage
-        const passedKey = `course_${id}_lesson_test_passed_${lessonId}`;
-        localStorage.setItem(passedKey, '1');
-        const listKey = `course_${id}_completed_lessons`;
-        const raw = localStorage.getItem(listKey);
-        const set = new Set((raw ? JSON.parse(raw) : []).map(Number));
-        set.add(Number(lessonId));
-        localStorage.setItem(listKey, JSON.stringify(Array.from(set)));
-      } catch {}
+      try { await completeLessonProgress(id, lessonId, 'quiz'); } catch {}
     }
     navigate(`/courses/${id}/lessons`, { replace: true, state: { lessonCompleted: true, lessonId } });
   };

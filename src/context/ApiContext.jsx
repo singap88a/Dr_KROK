@@ -355,8 +355,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         }
         throw new Error('Progress start endpoint not available');
       },
-      async completeLessonProgress(courseId, lessonId) {
+      async completeLessonProgress(courseId, lessonId, type) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        // Backend expects form-data field 'type' when present ('lesson' | 'quiz')
+        const useForm = typeof type === 'string' && type.length > 0;
+        const body = useForm ? (() => { const fd = new FormData(); fd.append('type', type); fd.append('course', String(courseId)); fd.append('lesson', String(lessonId)); return fd; })() : undefined;
         const candidates = [
           `courses/${courseId}/progress/${lessonId}/complete`,
           `video_courses/${courseId}/progress/${lessonId}/complete`,
@@ -364,7 +367,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         ];
         for (const path of candidates) {
           try {
-            const res = await request(path, { method: 'POST', auth: true });
+            const res = await request(path, { method: 'POST', auth: true, body, isFormData: useForm });
             return res?.data || null;
           } catch (e) {
             if (e?.status && e.status !== 404) throw e;
