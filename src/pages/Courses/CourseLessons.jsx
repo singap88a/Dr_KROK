@@ -342,6 +342,42 @@ export default function CourseLessons() {
     }
   };
 
+  // Small circular progress indicator for lesson items
+  const ProgressCircle = ({ percent = 0, size = 32, stroke = 4, completed = false, active = false }) => {
+    const radius = (size - stroke) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+    const offset = circumference * (1 - clamped / 100);
+    const trackColor = active ? '#22c55e33' : '#94a3b833';
+    const barColor = clamped === 100 ? '#22c55e' : (active ? '#22c55e' : '#0ea5e9');
+    return (
+      <svg width={size} height={size} className="shrink-0">
+        <circle cx={size/2} cy={size/2} r={radius} stroke={trackColor} strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size/2}
+          cy={size/2}
+          r={radius}
+          stroke={barColor}
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform={`rotate(-90 ${size/2} ${size/2})`}
+        />
+        {completed ? (
+          <g transform={`translate(${size/2 - 4} ${size/2 - 4})`}>
+            <FaCheck className="text-green-500" />
+          </g>
+        ) : (
+          <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="10" fill={active ? '#fff' : '#334155'}>
+            {clamped}%
+          </text>
+        )}
+      </svg>
+    );
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -504,16 +540,8 @@ export default function CourseLessons() {
                     <div className="flex items-start gap-3">
                       {/* Lesson Number & Status */}
                       <div className="flex flex-col items-center gap-1">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                          isActive
-                            ? 'bg-primary text-white'
-                            : isCompleted
-                            ? 'bg-green-500 text-white'
-                            : isAccessible
-                            ? 'bg-accent text-text'
-                            : 'bg-accent text-text-muted'
-                        }`}>
-                          {isCompleted ? <FaCheck className="text-xs" /> : index + 1}
+                        <div className={`rounded-full p-[2px] ${isActive ? 'bg-primary/20' : 'bg-accent'}`}>
+                          <ProgressCircle percent={totalPerc} completed={isCompleted} active={isActive} />
                         </div>
                         {index < sortedLessons.length - 1 && (
                           <div className="w-px h-6 bg-border"></div>
@@ -568,15 +596,19 @@ export default function CourseLessons() {
                     {t('courses.finalTests', 'Final Tests')}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {course.final_tests.map((test, idx) => (
-                      <button
-                        key={test.id || idx}
-                        onClick={() => navigate(`/courses/${id}/test/final/${test.id}`, { state: { course, test } })}
-                        className="px-3 py-2 text-xs font-medium text-white rounded bg-primary hover:bg-secondary"
-                      >
-                        {test.name || `${t('courses.finalTest', 'Final Test')} ${idx + 1}`}
-                      </button>
-                    ))}
+                    {course.final_tests.map((test, idx) => {
+                      const locked = Math.round(courseProgress?.percentage || 0) < 100;
+                      return (
+                        <button
+                          key={test.id || idx}
+                          onClick={() => !locked && navigate(`/courses/${id}/test/final/${test.id}`, { state: { course, test } })}
+                          disabled={locked}
+                          className={`px-3 py-2 text-xs font-medium rounded ${locked ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'text-white bg-primary hover:bg-secondary'}`}
+                        >
+                          {test.name || `${t('courses.finalTest', 'Final Test')} ${idx + 1}`} {locked && <FaLock className="inline ml-1" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -839,15 +871,19 @@ export default function CourseLessons() {
               <div className="p-6 border rounded-lg bg-surface border-border">
                 <h3 className="mb-3 text-lg font-semibold text-text">{t('courses.finalTests', 'Final Tests')}</h3>
                 <div className="flex flex-wrap gap-2">
-                  {course.final_tests.map((test, idx) => (
-                    <button
-                      key={test.id || idx}
-                      onClick={() => navigate(`/courses/${id}/test/final/${test.id}`, { state: { course, test } })}
-                      className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
-                    >
-                      {test.name || `${t('courses.finalTest', 'Final Test')} ${idx + 1}`}
-                    </button>
-                  ))}
+                  {course.final_tests.map((test, idx) => {
+                    const locked = Math.round(courseProgress?.percentage || 0) < 100;
+                    return (
+                      <button
+                        key={test.id || idx}
+                        onClick={() => !locked && navigate(`/courses/${id}/test/final/${test.id}`, { state: { course, test } })}
+                        disabled={locked}
+                        className={`px-4 py-2 text-sm font-medium rounded ${locked ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'text-white bg-primary hover:bg-secondary'}`}
+                      >
+                        {test.name || `${t('courses.finalTest', 'Final Test')} ${idx + 1}`} {locked && <FaLock className="inline ml-1" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
