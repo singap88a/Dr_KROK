@@ -40,7 +40,7 @@ export default function CourseLessons() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, completeLessonProgress } = useApi();
+  const { getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, completeLessonProgress, getLessonProgress } = useApi();
   const { isLoggedIn } = useUser();
 
   const [loading, setLoading] = useState(true);
@@ -59,9 +59,6 @@ export default function CourseLessons() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [courseProgress, setCourseProgress] = useState(null);
   const [progressLoading, setProgressLoading] = useState(false);
-  // test state removed; navigation to dedicated test page
-
-  // No modal timer; tests open in dedicated page
 
   // Image Popup Modal
   const ImagePopup = () => {
@@ -103,7 +100,6 @@ export default function CourseLessons() {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4">
-            {/* <h3 className="text-lg font-semibold text-text">{t('courses.pdfViewer', 'PDF Viewer')}</h3> */}
             <button
               onClick={() => setShowFilesPopup(false)}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -160,6 +156,54 @@ export default function CourseLessons() {
     );
   };
 
+  // دالة محسنة لحساب التقدم الكلي للدرس
+  const calculateTotalProgress = (lesson, lessonStatus) => {
+    if (!lessonStatus) return 0;
+    
+    const lessonPerc = Number(lessonStatus.lesson_percentage || 0);
+    const quizPerc = Number(lessonStatus.quiz_percentage || 0);
+    const hasTests = lesson.lesson_end_tests?.length > 0;
+    
+    // إذا كان status مباشرة completed نرجع 100%
+    if (lessonStatus.status === 'completed') {
+      return 100;
+    }
+    
+    // إذا الدرس ما عندوش اختبارات، نعتمد على lesson_percentage فقط
+    if (!hasTests) {
+      return lessonPerc;
+    } else {
+      // إذا عندو اختبارات، نجمع النسبتين
+      return Math.min(100, lessonPerc + quizPerc);
+    }
+  };
+
+  // دالة محسنة لتحديث حالة الدرس
+  const updateLessonStatus = async (lessonId) => {
+    if (!isLoggedIn) return;
+    
+    try {
+      const [updatedCourseProgress, updatedLessonProgress] = await Promise.all([
+        getCourseProgress(id),
+        getLessonProgress(id, lessonId)
+      ]);
+      
+      if (updatedCourseProgress) {
+        setCourseProgress(updatedCourseProgress);
+      }
+      
+      if (updatedLessonProgress?.lesson) {
+        setLessonStatuses(prev => ({ 
+          ...prev, 
+          [lessonId]: updatedLessonProgress.lesson 
+        }));
+        console.log(`Updated lesson ${lessonId} status:`, updatedLessonProgress.lesson);
+      }
+    } catch (error) {
+      console.error(`Error updating lesson ${lessonId} status:`, error);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
@@ -172,6 +216,43 @@ export default function CourseLessons() {
         if (!mounted) return;
         setCourse(courseData);
         setLessons(courseData.lessons || []);
+
+        // Load per-lesson progress to persist after refresh
+        if (isLoggedIn && courseData?.lessons?.length) {
+          try {
+            // First try to get course progress to see if any lessons are completed
+            const courseProgress = await getCourseProgress(id);
+            console.log('Course progress loaded:', courseProgress);
+            
+            const entries = await Promise.all(courseData.lessons.map(async (l) => {
+              try { 
+                const lp = await getLessonProgress(id, l.id); 
+                console.log(`Lesson ${l.id} progress:`, lp?.lesson);
+                return [l.id, lp?.lesson || null]; 
+              } catch (error) { 
+                console.log(`Failed to load progress for lesson ${l.id}:`, error);
+                // If getLessonProgress fails, check if this lesson is completed in course progress
+                if (courseProgress && courseProgress.lesson_id === l.id && courseProgress.status === 'completed') {
+                  console.log(`Using course progress for completed lesson ${l.id}`);
+                  return [l.id, {
+                    lesson_percentage: 100,
+                    quiz_percentage: 0,
+                    status: 'completed'
+                  }];
+                }
+                return [l.id, null]; 
+              }
+            }));
+            const map = entries.reduce((acc, [lid, val]) => { 
+              if (val) acc[lid] = val; 
+              return acc; 
+            }, {});
+            console.log('Loaded lesson statuses:', map);
+            setLessonStatuses(map);
+          } catch (error) {
+            console.log('Failed to load lesson progress:', error);
+          }
+        }
 
         // Check access if logged in
         if (isLoggedIn) {
@@ -196,8 +277,6 @@ export default function CourseLessons() {
           // Not logged in, only free content accessible
           setHasAccess(false);
         }
-
-        // Lesson statuses will be driven by API responses going forward
 
         // Set first free lesson as current if available
         if (courseData.lessons && courseData.lessons.length > 0) {
@@ -236,7 +315,7 @@ export default function CourseLessons() {
       mounted = false;
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, isLoggedIn]);
+  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, getLessonProgress, isLoggedIn]);
 
   // When returning from quiz page, update the specific lesson status and overall progress
   useEffect(() => {
@@ -244,12 +323,13 @@ export default function CourseLessons() {
     if (s.lessonCompleted && s.lessonId && isLoggedIn) {
       (async () => {
         try {
-          const res = await getCourseProgress(id);
-          setCourseProgress(res);
-        } catch { /* noop */ }
+          await updateLessonStatus(s.lessonId);
+        } catch (error) {
+          console.error('Error updating lesson status after quiz:', error);
+        }
       })();
     }
-  }, [location.state, id, isLoggedIn, getCourseProgress]);
+  }, [location.state, id, isLoggedIn]);
 
   // Sort lessons: free first, then paid
   const sortedLessons = useMemo(() => {
@@ -280,6 +360,9 @@ export default function CourseLessons() {
       try {
         const res = await startLessonProgress(id, lesson.id);
         if (res?.course_progress) setCourseProgress(res.course_progress);
+        if (res?.lesson) {
+          setLessonStatuses(prev => ({ ...prev, [lesson.id]: res.lesson }));
+        }
       } catch {
         // ignore
       }
@@ -292,12 +375,23 @@ export default function CourseLessons() {
 
     if (isLoggedIn) {
       try {
-        // Mark lesson video as completed (50%)
+        // Mark lesson video as completed
         const res = await completeLessonProgress(id, lessonId, 'lesson');
-        if (res?.course_progress) setCourseProgress(res.course_progress);
-        if (res?.lesson) setLessonStatuses(prev => ({ ...prev, [lessonId]: res.lesson }));
-      } catch {
-        // ignore
+        console.log('Lesson completion response:', res);
+        
+        // Update lesson status immediately from response
+        if (res?.course_progress) {
+          setCourseProgress(res.course_progress);
+        }
+        if (res?.lesson) {
+          setLessonStatuses(prev => ({ ...prev, [lessonId]: res.lesson }));
+        }
+        
+        // Then refresh from server to ensure consistency
+        await updateLessonStatus(lessonId);
+        
+      } catch (error) {
+        console.error('Error completing lesson:', error);
       }
     }
   };
@@ -349,7 +443,8 @@ export default function CourseLessons() {
     const clamped = Math.max(0, Math.min(100, Math.round(percent)));
     const offset = circumference * (1 - clamped / 100);
     const trackColor = active ? '#22c55e33' : '#94a3b833';
-    const barColor = clamped === 100 ? '#22c55e' : (active ? '#22c55e' : '#0ea5e9');
+    const barColor = completed ? '#22c55e' : (active ? '#22c55e' : '#0ea5e9');
+    
     return (
       <svg width={size} height={size} className="shrink-0">
         <circle cx={size/2} cy={size/2} r={radius} stroke={trackColor} strokeWidth={stroke} fill="none" />
@@ -366,11 +461,19 @@ export default function CourseLessons() {
           transform={`rotate(-90 ${size/2} ${size/2})`}
         />
         {completed ? (
-          <g transform={`translate(${size/2 - 4} ${size/2 - 4})`}>
-            <FaCheck className="text-green-500" />
+          <g transform={`translate(${size/2 - 6} ${size/2 - 6})`}>
+            <FaCheck className="text-xs text-green-500" />
           </g>
         ) : (
-          <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="10" fill={active ? '#fff' : '#334155'}>
+          <text 
+            x="50%" 
+            y="50%" 
+            dominantBaseline="middle" 
+            textAnchor="middle" 
+            fontSize="8" 
+            fill={active ? '#fff' : '#334155'}
+            fontWeight="bold"
+          >
             {clamped}%
           </text>
         )}
@@ -517,14 +620,22 @@ export default function CourseLessons() {
             <div className="space-y-2">
               {sortedLessons.map((lesson, index) => {
                 const isFree = lesson.type === "free" || lesson.type === "Free";
-                // If API returns "free" for a lesson, it means user has access to it
-                // If API returns "paid", it means user doesn't have access
                 const isAccessible = isFree;
                 const ls = lessonStatuses[lesson.id];
-                const lessonPerc = ls ? Number(ls.lesson_percentage || 0) : 0;
-                const quizPerc = ls ? Number(ls.quiz_percentage || 0) : 0;
-                const totalPerc = lessonPerc + quizPerc;
-                const isCompleted = totalPerc >= 100 || (ls?.status === 'completed');
+                const totalPerc = calculateTotalProgress(lesson, ls);
+                const isCompleted = ls?.status === 'completed' || totalPerc >= 100;
+                
+                // Debug logging
+                if (ls) {
+                  console.log(`Lesson ${lesson.id} (${lesson.title}):`, {
+                    lessonPerc: ls.lesson_percentage,
+                    quizPerc: ls.quiz_percentage,
+                    totalPerc,
+                    isCompleted,
+                    status: ls.status,
+                    hasTests: lesson.lesson_end_tests?.length > 0
+                  });
+                }
                 const isActive = currentLesson?.id === lesson.id;
 
                 return (
@@ -541,7 +652,11 @@ export default function CourseLessons() {
                       {/* Lesson Number & Status */}
                       <div className="flex flex-col items-center gap-1">
                         <div className={`rounded-full p-[2px] ${isActive ? 'bg-primary/20' : 'bg-accent'}`}>
-                          <ProgressCircle percent={totalPerc} completed={isCompleted} active={isActive} />
+                          <ProgressCircle 
+                            percent={totalPerc} 
+                            completed={isCompleted} 
+                            active={isActive} 
+                          />
                         </div>
                         {index < sortedLessons.length - 1 && (
                           <div className="w-px h-6 bg-border"></div>
@@ -633,8 +748,14 @@ export default function CourseLessons() {
                             try {
                               const res = await completeLessonProgress(id, currentLesson.id, 'lesson');
                               if (res?.course_progress) setCourseProgress(res.course_progress);
-                              if (res?.lesson) setLessonStatuses(prev => ({ ...prev, [currentLesson.id]: res.lesson }));
-                            } catch { /* noop */ }
+                              if (res?.lesson) {
+                                setLessonStatuses(prev => ({ ...prev, [currentLesson.id]: res.lesson }));
+                              }
+                              // Refresh from server to ensure persistence
+                              await updateLessonStatus(currentLesson.id);
+                            } catch (error) {
+                              console.error('Error on video end:', error);
+                            }
                           }
                         }}
                       />

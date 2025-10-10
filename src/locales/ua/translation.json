@@ -748,5 +748,24 @@
       "progress": "Прогрес",
       "noCourses": "Ще немає записаних курсів",
       "browseCourses": "Перегляньте наші курси та розпочніть навчання сьогодні!"
-    }
+    },
+    "courseContent": "Зміст курсу",
+    "overallProgress": "Загальний прогрес",
+    "completed": "Завершено",
+    "lessonCompleted": "Урок завершено",
+    "markCompleted": "Позначити як завершений",
+    "finalTests": "Фінальні тести",
+    "finalTest": "Фінальний тест",
+    "lessonTests": "Тести уроків",
+    "test": "Тест",
+    "additionalVideo": "Додаткове відео",
+    "clickToWatch": "Натисніть, щоб переглянути це відео",
+    "videoNotAvailable": "Відео недоступне",
+    "selectLesson": "Оберіть урок, щоб почати перегляд",
+    "lessonAttachments": "Додатки до уроку",
+    "file": "Файл",
+    "unlockPremium": "Розблокувати преміум контент",
+    "purchaseToAccess": "Придбайте цей курс, щоб отримати доступ до всіх преміум уроків та матеріалів",
+    "purchaseNow": "Купити зараз",
+    "enrollNow": "Записатися зараз"
 }

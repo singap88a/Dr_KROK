@@ -355,6 +355,23 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         }
         throw new Error('Progress start endpoint not available');
       },
+      async getLessonProgress(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        const candidates = [
+          `courses/${courseId}/progress/${lessonId}`,
+          `video_courses/${courseId}/progress/${lessonId}`,
+          `video_course/${courseId}/progress/${lessonId}`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        return null;
+      },
       async completeLessonProgress(courseId, lessonId, type) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         // Backend expects form-data field 'type' when present ('lesson' | 'quiz')
