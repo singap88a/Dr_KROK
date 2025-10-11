@@ -249,14 +249,12 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
-          const response = await request(`video_courses/${id}`, { auth });
+          const response = await request(`video_course/${id}`, { auth });
           return response?.data || null;
         } catch (err) {
           // Fallbacks for different backend routes
           if (err?.status === 404) {
             const candidates = [
-              `video_courses/show/${id}`,
-              `video_course/${id}`,
               `courses/video/${id}`,
               `courses/${id}`,
             ];
@@ -305,19 +303,12 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getCourseAccess(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
-          const response = await request(`video_courses/${courseId}/access`, { auth: true });
-          return response?.has_access || false;
+          const response = await request(`profile/get-my-courses`, { auth: true });
+          const myCourses = response.data || [];
+          return myCourses.some(course => course.id === parseInt(courseId));
         } catch (err) {
-          // Fallback
-          if (err?.status === 404) {
-            try {
-              const userCourses = await request('user/courses', { auth: true });
-              return userCourses?.data?.some(course => course.id === parseInt(courseId)) || false;
-            } catch {
-              return false;
-            }
-          }
-          throw err;
+          console.warn('Failed to get my courses for access check:', err);
+          return false;
         }
       },
       // Video course progress API

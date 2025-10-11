@@ -324,31 +324,10 @@ export default function CourseLessons() {
             const courseProgress = await getCourseProgress(id);
             console.log('Course progress loaded:', courseProgress);
             
-            // تحميل التقدم المفصل لكل درس
-            const entries = await Promise.all(courseData.lessons.map(async (l) => {
-              try { 
-                const lp = await getLessonProgress(id, l.id); 
-                console.log(`Lesson ${l.id} progress:`, lp?.lesson);
-                return [l.id, lp?.lesson || null]; 
-              } catch (error) { 
-                console.log(`Failed to load progress for lesson ${l.id}:`, error);
-                return [l.id, null]; 
-              }
-            }));
-            
-            const map = entries.reduce((acc, [lid, val]) => { 
-              if (val) acc[lid] = val; 
-              return acc; 
-            }, {});
-            console.log('Loaded detailed lesson statuses:', map);
-            
-            // دمج البيانات من API مع البيانات المفصلة
-            setLessonStatuses(prev => ({
-              ...prev,
-              ...map
-            }));
+            // Skip mass-fetching individual lesson progress on load to avoid unnecessary 404s
+            // Rely on initial data from course API; fetch per-lesson only when needed (e.g., on select/complete)
           } catch (error) {
-            console.log('Failed to load lesson progress:', error);
+            console.log('Failed to load course progress:', error);
           }
         }
 
