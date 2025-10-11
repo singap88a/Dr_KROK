@@ -156,7 +156,7 @@ export default function CourseLessons() {
     );
   };
 
-  // دالة محسنة لحساب التقدم الكلي للدرس
+  // دالة محسنة لحساب التقدم الكلي للدرس بناءً على النظام الجديد
   const calculateTotalProgress = (lesson, lessonStatus) => {
     if (!lessonStatus) return 0;
     
@@ -164,9 +164,33 @@ export default function CourseLessons() {
     if (lessonStatus.progress_status === 'completed') {
       return 100;
     }
+
+    // التحقق مما إذا كان الدرس يحتوي على فيديو و/أو اختبارات
+    const hasVideo = !!lesson.video;
+    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
     
-    // استخدام النسبة المئوية المباشرة من API
-    return Number(lessonStatus.percentage || 0);
+    let totalProgress = 0;
+    
+    if (hasVideo && hasTests) {
+      // إذا كان يحتوي على فيديو واختبارات: 50% للفيديو + 50% للاختبار
+      const videoCompleted = lessonStatus.lesson_percentage >= 100 || lessonStatus.progress_status === 'completed';
+      const quizCompleted = lessonStatus.quiz_percentage >= 100;
+      
+      totalProgress = (videoCompleted ? 50 : 0) + (quizCompleted ? 50 : 0);
+    } else if (hasVideo && !hasTests) {
+      // إذا كان يحتوي على فيديو فقط: 100% للفيديو
+      totalProgress = lessonStatus.lesson_percentage >= 100 || lessonStatus.progress_status === 'completed' ? 100 : lessonStatus.lesson_percentage || 0;
+    } else if (!hasVideo && hasTests) {
+      // إذا كان يحتوي على اختبارات فقط: 100% للاختبار
+      totalProgress = lessonStatus.quiz_percentage >= 100 ? 100 : lessonStatus.quiz_percentage || 0;
+    }
+    
+    // استخدام النسبة المئوية المباشرة من API إذا كانت متوفرة
+    if (lessonStatus.percentage !== undefined && lessonStatus.percentage !== null) {
+      totalProgress = Math.max(totalProgress, lessonStatus.percentage);
+    }
+    
+    return Math.min(100, totalProgress);
   };
 
   // دالة محسنة لتحديث حالة الدرس
@@ -195,6 +219,73 @@ export default function CourseLessons() {
     }
   };
 
+  // دالة محسنة لإكمال الدرس - تحديث فوري للواجهة
+  const handleLessonComplete = async (lessonId) => {
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (!lesson) return;
+
+    if (isLoggedIn) {
+      try {
+        const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+        const currentStatus = lessonStatuses[lessonId] || {};
+        
+        let newPercentage = 100;
+        
+        if (hasTests) {
+          // إذا كان هناك اختبارات، يكمل الفيديو فقط (50%)
+          const quizCompleted = currentStatus.quiz_percentage >= 100;
+          newPercentage = quizCompleted ? 100 : 50;
+        }
+        
+        // تحديث فوري للواجهة قبل الانتظار للاستجابة
+        setLessonStatuses(prev => ({ 
+          ...prev, 
+          [lessonId]: {
+            ...prev[lessonId],
+            lesson_percentage: 100,
+            percentage: newPercentage,
+            progress_status: newPercentage === 100 ? 'completed' : 'in_progress'
+          }
+        }));
+
+        // Mark lesson video as completed
+        const res = await completeLessonProgress(id, lessonId, 'lesson');
+        console.log('Lesson completion response:', res);
+        
+        // تحديث البيانات من الاستجابة إذا كانت متوفرة
+        if (res?.course_progress) {
+          setCourseProgress(res.course_progress);
+        }
+        if (res?.lesson) {
+          setLessonStatuses(prev => ({ 
+            ...prev, 
+            [lessonId]: {
+              ...prev[lessonId],
+              ...res.lesson
+            }
+          }));
+        }
+        
+        // Then refresh from server to ensure consistency
+        await updateLessonStatus(lessonId);
+        
+      } catch (error) {
+        console.error('Error completing lesson:', error);
+        // في حالة الخطأ، نرجع الحالة السابقة
+        setLessonStatuses(prev => ({ 
+          ...prev, 
+          [lessonId]: {
+            ...prev[lessonId],
+            lesson_percentage: prev[lessonId]?.lesson_percentage || 0,
+            quiz_percentage: prev[lessonId]?.quiz_percentage || 0,
+            percentage: prev[lessonId]?.percentage || 0,
+            progress_status: prev[lessonId]?.progress_status || 'not_started'
+          }
+        }));
+      }
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
@@ -215,7 +306,9 @@ export default function CourseLessons() {
             if (lesson.percentage !== undefined || lesson.progress_status) {
               initialStatuses[lesson.id] = {
                 percentage: lesson.percentage || 0,
-                progress_status: lesson.progress_status || 'not_started'
+                progress_status: lesson.progress_status || 'not_started',
+                lesson_percentage: lesson.lesson_percentage || 0,
+                quiz_percentage: lesson.quiz_percentage || 0
               };
             }
           });
@@ -381,39 +474,6 @@ export default function CourseLessons() {
         }
       } catch {
         // ignore
-      }
-    }
-  };
-
-  const handleLessonComplete = async (lessonId) => {
-    const lesson = lessons.find(l => l.id === lessonId);
-    if (!lesson) return;
-
-    if (isLoggedIn) {
-      try {
-        // Mark lesson video as completed
-        const res = await completeLessonProgress(id, lessonId, 'lesson');
-        console.log('Lesson completion response:', res);
-        
-        // Update lesson status immediately from response
-        if (res?.course_progress) {
-          setCourseProgress(res.course_progress);
-        }
-        if (res?.lesson) {
-          setLessonStatuses(prev => ({ 
-            ...prev, 
-            [lessonId]: {
-              ...prev[lessonId],
-              ...res.lesson
-            }
-          }));
-        }
-        
-        // Then refresh from server to ensure consistency
-        await updateLessonStatus(lessonId);
-        
-      } catch (error) {
-        console.error('Error completing lesson:', error);
       }
     }
   };
@@ -645,14 +705,31 @@ export default function CourseLessons() {
                 const isAccessible = isFree;
                 const ls = lessonStatuses[lesson.id];
                 const totalPerc = calculateTotalProgress(lesson, ls);
-                const isCompleted = ls?.progress_status === 'completed' || totalPerc >= 100;
+                const isCompleted = totalPerc >= 100;
+                
+                // التحقق من نوع المحتوى لتحديد التقدم الأولي
+                const hasVideo = !!lesson.video;
+                const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+                
+                // التحديث الهام: إذا كان الدرس جديداً ولم يتم البدء فيه بعد
+                let displayProgress = totalPerc;
+                if (!ls && isLoggedIn) {
+                  // إذا كان الدرس يحتوي على فيديو واختبارات، يبدأ بـ 0%
+                  // إذا كان يحتوي على فيديو فقط أو اختبارات فقط، يبدأ بـ 0%
+                  displayProgress = 0;
+                }
                 
                 // Debug logging
                 if (ls) {
                   console.log(`Lesson ${lesson.id} (${lesson.title}):`, {
+                    hasVideo,
+                    hasTests,
+                    lesson_percentage: ls.lesson_percentage,
+                    quiz_percentage: ls.quiz_percentage,
                     percentage: ls.percentage,
                     progress_status: ls.progress_status,
                     totalPerc,
+                    displayProgress,
                     isCompleted
                   });
                 }
@@ -673,7 +750,7 @@ export default function CourseLessons() {
                       <div className="flex flex-col items-center gap-1">
                         <div className={`rounded-full p-[2px] ${isActive ? 'bg-primary/20' : 'bg-accent'}`}>
                           <ProgressCircle 
-                            percent={totalPerc} 
+                            percent={displayProgress} 
                             completed={isCompleted} 
                             active={isActive} 
                           />
@@ -696,6 +773,7 @@ export default function CourseLessons() {
                                 {lesson.video && <FaVideo />}
                                 {lesson.images && lesson.images.length > 0 && <FaImage />}
                                 {lesson.files && lesson.files.length > 0 && <FaFileAlt />}
+                                {lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0 && <FaCheck />}
                                 <span>{isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}</span>
                                 {lesson.duration && (
                                   <>
@@ -715,7 +793,7 @@ export default function CourseLessons() {
                           {isCompleted ? (
                             <span className="text-green-600">{t('courses.lessonCompleted', 'Lesson Completed')}</span>
                           ) : (
-                            <span className="text-text-muted">{t('courses.progress', 'Progress')}: {Math.min(100, Math.max(0, Math.round(totalPerc)))}%</span>
+                            <span className="text-text-muted">{t('courses.progress', 'Progress')}: {Math.min(100, Math.max(0, Math.round(displayProgress)))}%</span>
                           )}
                         </div>
                       </div>
@@ -766,6 +844,28 @@ export default function CourseLessons() {
                         onEnded={async () => {
                           if (isLoggedIn) {
                             try {
+                              const currentStatus = lessonStatuses[currentLesson.id] || {};
+                              const hasTests = currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0;
+                              
+                              let newPercentage = 100;
+                              
+                              if (hasTests) {
+                                // إذا كان هناك اختبارات، يكمل الفيديو فقط (50%)
+                                const quizCompleted = currentStatus.quiz_percentage >= 100;
+                                newPercentage = quizCompleted ? 100 : 50;
+                              }
+                              
+                              // تحديث فوري للواجهة
+                              setLessonStatuses(prev => ({ 
+                                ...prev, 
+                                [currentLesson.id]: {
+                                  ...prev[currentLesson.id],
+                                  lesson_percentage: 100,
+                                  percentage: newPercentage,
+                                  progress_status: newPercentage === 100 ? 'completed' : 'in_progress'
+                                }
+                              }));
+
                               const res = await completeLessonProgress(id, currentLesson.id, 'lesson');
                               if (res?.course_progress) setCourseProgress(res.course_progress);
                               if (res?.lesson) {
@@ -796,7 +896,7 @@ export default function CourseLessons() {
                   </div>
                   <div className="p-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-text">{currentLesson.title}</h3>
-                  {isLoggedIn && (
+                  {isLoggedIn && currentLesson.video && (
                     <div className="mt-3">
                       <button
                         onClick={() => handleLessonComplete(currentLesson.id)}
