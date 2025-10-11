@@ -12,7 +12,6 @@ export default function CourseTestRunner() {
   const { getVideoCourseById, completeLessonProgress } = useApi();
 
   const passedState = location.state || {};
-  const [course, setCourse] = useState(passedState.course || null);
   const [test, setTest] = useState(passedState.test || null);
   const [lessonId, setLessonId] = useState(passedState.lessonId || null);
 
@@ -33,7 +32,6 @@ export default function CourseTestRunner() {
         setLoading(true);
         const data = await getVideoCourseById(id, true);
         if (!mounted) return;
-        setCourse(data);
         if (scope === 'final') {
           const found = (data.final_tests || []).find((t) => String(t.id) === String(testId));
           setTest(found || null);
@@ -88,6 +86,16 @@ export default function CourseTestRunner() {
     }
     const percentage = total > 0 ? (earned / total) * 100 : 0;
     setResults({ total, earned, percentage });
+
+    // If final test, navigate to results page
+    if (scope === 'final') {
+      setTimeout(() => {
+        navigate(`/courses/${id}/final-results`, {
+          replace: true,
+          state: { results: { total, earned, percentage, answers }, test }
+        });
+      }, 1000); // Brief delay to show results
+    }
   };
 
   const markDoneAndBack = async () => {
@@ -122,7 +130,7 @@ export default function CourseTestRunner() {
           </button>
         </div>
 
-        <div className="overflow-hidden border rounded-2xl shadow bg-surface border-border">
+        <div className="overflow-hidden border shadow rounded-2xl bg-surface border-border">
           <div className="p-6 text-white bg-primary">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
               <h1 className="text-2xl font-bold">{test.name || t('courses.test','Test')}</h1>
@@ -131,7 +139,7 @@ export default function CourseTestRunner() {
                 <span className="px-2 py-1 rounded bg-white/20">{formatTime(time)}</span>
               </div>
             </div>
-            <div className="w-full h-2 mt-4 bg-white/30 rounded-full">
+            <div className="w-full h-2 mt-4 rounded-full bg-white/30">
               <div className="h-2 bg-white rounded-full" style={{ width: `${((idx + 1) / (test.quizzes?.length || 1)) * 100}%` }} />
             </div>
           </div>
@@ -201,7 +209,7 @@ export default function CourseTestRunner() {
                   {scope === 'lesson' && (
                     <button onClick={markDoneAndBack} className="px-4 py-2 text-white rounded bg-secondary hover:opacity-90">{t('courses.markLessonDone','Mark lesson as done')}</button>
                   )}
-                  <button onClick={() => navigate(-1)} className="px-4 py-2 rounded border border-border hover:border-primary">{t('common.close','Close')}</button>
+                  <button onClick={() => navigate(-1)} className="px-4 py-2 border rounded border-border hover:border-primary">{t('common.close','Close')}</button>
                 </div>
               </div>
             )}
