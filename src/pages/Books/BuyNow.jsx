@@ -5,11 +5,11 @@ import { FaCcVisa, FaCcMastercard, FaCcPaypal } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
-// import CitySelector from "../../components/CitySelector";
+import CitySelector from "../../components/CitySelector";
 import CouponInput from "../../components/CouponInput";
-import he from "he";
 import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
+import he from "he";
+
 
 export default function BuyNowPage() {
   const navigate = useNavigate();
@@ -36,13 +36,11 @@ export default function BuyNowPage() {
     city: "",
     city_id: "",
     region_id: "",
-    book_id: "",
-    quantity: 1
+    book_id: ""
   });
 
   // Regions data
   const [regions, setRegions] = useState([]);
-  const [loadingRegions, setLoadingRegions] = useState(false);
 
   // Paint order data
   const [loadingPaintData, setLoadingPaintData] = useState(false);
@@ -85,7 +83,6 @@ export default function BuyNowPage() {
   // Fetch regions
   useEffect(() => {
     const fetchRegions = async () => {
-      setLoadingRegions(true);
       try {
         const response = await request('regions');
         if (response.data) {
@@ -93,8 +90,6 @@ export default function BuyNowPage() {
         }
       } catch (error) {
         console.error('Error fetching regions:', error);
-      } finally {
-        setLoadingRegions(false);
       }
     };
 
@@ -185,12 +180,7 @@ export default function BuyNowPage() {
     }));
   };
 
-  const handlePhoneChange = (value, name) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+
 
   const handleRegionChange = (e) => {
     const { value } = e.target;
@@ -227,7 +217,6 @@ export default function BuyNowPage() {
       formDataToSend.append('phone2', formData.phone2 || '');
       formDataToSend.append('city', formData.city);
       formDataToSend.append('book_id', formData.book_id);
-      formDataToSend.append('quantity', formData.quantity.toString());
       formDataToSend.append('city_id', formData.city_id);
       formDataToSend.append('region_id', formData.region_id);
       if (couponId) {
@@ -240,7 +229,6 @@ export default function BuyNowPage() {
         phone2: formData.phone2,
         city: formData.city,
         book_id: formData.book_id,
-        quantity: formData.quantity,
         city_id: formData.city_id,
         region_id: formData.region_id
       });
@@ -282,7 +270,6 @@ export default function BuyNowPage() {
               phone2: formData.phone2,
               city: formData.city,
               book_id: formData.book_id,
-              quantity: formData.quantity,
               city_id: formData.city_id,
               region_id: formData.region_id,
               coupon_id: couponId
@@ -693,7 +680,7 @@ export default function BuyNowPage() {
                   <PhoneInput
                     country={'eg'}
                     value={formData.phone1}
-                    onChange={(value) => handlePhoneChange(value, 'phone1')}
+                    onChange={(value) => setFormData(prev => ({ ...prev, phone1: value }))}
                     inputStyle={phoneInputStyle}
                     containerStyle={phoneInputContainerStyle}
                     inputProps={{
@@ -715,7 +702,7 @@ export default function BuyNowPage() {
                   <PhoneInput
                     country={'eg'}
                     value={formData.phone2}
-                    onChange={(value) => handlePhoneChange(value, 'phone2')}
+                    onChange={(value) => setFormData(prev => ({ ...prev, phone2: value }))}
                     inputStyle={phoneInputStyle}
                     containerStyle={phoneInputContainerStyle}
                     inputProps={{
@@ -749,7 +736,7 @@ export default function BuyNowPage() {
                   </select>
                 </div>
 
-                {/* <CitySelector
+                <CitySelector
                   value={formData.city}
                   onChange={(e) => {
                     setFormData(prev => ({
@@ -760,23 +747,9 @@ export default function BuyNowPage() {
                   }}
                   required
                   placeholder="Select City"
-                /> */}
+                />
 
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                    min="1"
-                    required
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter quantity"
-                  />
-                </div>
+
 
                 {/* Hidden client_id field */}
                 <input
