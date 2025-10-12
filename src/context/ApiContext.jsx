@@ -559,6 +559,14 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getMyCourses() {
         const response = await request("profile/get-my-courses", { auth: true });
         return response.data || [];
+      },
+      // Add student test results
+      async addStudentTest(testData) {
+        return await request("add_student_test", {
+          method: "POST",
+          body: testData,
+          auth: true
+        });
       }
     }),
     [

@@ -9,7 +9,7 @@ export default function CourseTestRunner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, completeLessonProgress } = useApi();
+  const { getVideoCourseById, completeLessonProgress, addStudentTest } = useApi();
 
   const passedState = location.state || {};
   const [test, setTest] = useState(passedState.test || null);
@@ -69,23 +69,54 @@ export default function CourseTestRunner() {
 
   const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
-  const finish = () => {
+  const finish = async () => {
     const quizzes = test?.quizzes || [];
     const total = quizzes.reduce((acc, q) => acc + parseInt(q.question_score || 1), 0);
     let earned = 0;
+    const questions = [];
     for (const q of quizzes) {
+      let isCorrect = false;
+      let studentAnswer = '';
       if (q.type === 'match') {
         let correct = 0;
         for (let n = 1; n <= 4; n++) {
           if (answers[`${q.id}_${n}`] && answers[`${q.id}_${n}`] === q[`match_${n}`]) correct++;
         }
-        if (correct === 4) earned += parseInt(q.question_score || 1);
+        isCorrect = correct === 4;
+        studentAnswer = Object.keys(answers).filter(k => k.startsWith(`${q.id}_`)).map(k => answers[k]).join(', ');
       } else {
-        if (answers[q.id] === q.correct_answer) earned += parseInt(q.question_score || 1);
+        studentAnswer = answers[q.id] || '';
+        isCorrect = answers[q.id] === q.correct_answer;
       }
+      if (isCorrect) earned += parseInt(q.question_score || 1);
+      questions.push({
+        question_id: q.id,
+        student_answer: studentAnswer,
+        correct_answer: q.correct_answer || '',
+        is_correct: isCorrect
+      });
     }
     const percentage = total > 0 ? (earned / total) * 100 : 0;
-    setResults({ total, earned, percentage });
+    const resultsData = { total_score: total, student_score: earned, total_questions: quizzes.length, questions };
+
+    // Submit to API for lesson tests
+    if (scope === 'lesson') {
+      try {
+        await addStudentTest({
+          test_id: test.id,
+          student_score: earned,
+          total_score: total,
+          result_status: 1, // Assuming 1 for completed
+          total_questions: quizzes.length,
+          questions
+        });
+      } catch (error) {
+        console.error('Failed to submit test results:', error);
+        // Continue anyway
+      }
+    }
+
+    setResults({ total, earned, percentage, questions });
 
     // If final test, navigate to results page
     if (scope === 'final') {
@@ -95,12 +126,24 @@ export default function CourseTestRunner() {
           state: { results: { total, earned, percentage, answers }, test }
         });
       }, 1000); // Brief delay to show results
+    } else if (scope === 'lesson') {
+      // Navigate to lesson test results page
+      setTimeout(() => {
+        navigate(`/courses/${id}/lesson-results`, {
+          replace: true,
+          state: { results: resultsData, test, lessonId }
+        });
+      }, 1000);
     }
   };
 
   const markDoneAndBack = async () => {
     if (scope === 'lesson' && lessonId) {
-      try { await completeLessonProgress(id, lessonId, 'quiz'); } catch {}
+      try {
+        await completeLessonProgress(id, lessonId, 'quiz');
+      } catch (e) {
+        console.warn('Failed to complete lesson progress:', e);
+      }
     }
     navigate(`/courses/${id}/lessons`, { replace: true, state: { lessonCompleted: true, lessonId } });
   };
