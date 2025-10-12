@@ -3,7 +3,7 @@ import { FiMapPin, FiChevronDown } from 'react-icons/fi';
 import { useApi } from '../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 
-const CitySelector = ({ value, onChange, required = false, placeholder = "Select City" }) => {
+const CitySelector = ({ value, onChange, required = false, placeholder = "Select City", onCitySelect }) => {
   const { request } = useApi();
   const { t } = useTranslation();
   const [cities, setCities] = useState([]);
@@ -39,6 +39,9 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
         city_id: city.id
       }
     });
+    if (onCitySelect) {
+      onCitySelect(city);
+    }
     setIsOpen(false);
   };
 

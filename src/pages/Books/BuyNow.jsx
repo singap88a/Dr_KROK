@@ -35,9 +35,13 @@ export default function BuyNowPage() {
     phone2: "",
     city: "",
     city_id: "",
-    region_id: "",
+    branch_id: "",
     book_id: ""
   });
+
+  // Branches data
+  const [branches, setBranches] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
 
   // Regions data
   const [regions, setRegions] = useState([]);
@@ -80,20 +84,27 @@ export default function BuyNowPage() {
     }
   }, [userData, book]);
 
-  // Fetch regions
-  useEffect(() => {
-    const fetchRegions = async () => {
-      try {
-        const response = await request('regions');
-        if (response.data) {
-          setRegions(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching regions:', error);
-      }
-    };
+  // Handle city selection and populate branches
+  const handleCitySelect = (city) => {
+    setSelectedCity(city);
+    setBranches(city.branches || []);
+    setFormData(prev => ({
+      ...prev,
+      branch_id: "" // Reset branch selection when city changes
+    }));
+  };
 
-    fetchRegions();
+  // Fetch regions on component mount
+  useEffect(() => {
+    request('regions')
+      .then((result) => {
+        if (result.data) {
+          setRegions(result.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching regions:', err);
+      });
   }, [request]);
 
   // Fetch terms and conditions when modal is opened
@@ -716,7 +727,7 @@ export default function BuyNowPage() {
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
                     <FiMapPin /> Region *
                   </label>
@@ -734,7 +745,7 @@ export default function BuyNowPage() {
                       </option>
                     ))}
                   </select>
-                </div>
+                </div> */}
 
                 <CitySelector
                   value={formData.city}
@@ -745,9 +756,32 @@ export default function BuyNowPage() {
                       city_id: e.target.city_id ? e.target.city_id.toString() : ""
                     }));
                   }}
+                  onCitySelect={handleCitySelect}
                   required
                   placeholder="Select City"
                 />
+
+                {selectedCity && branches.length > 0 && (
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+                      <FiHome /> Branch *
+                    </label>
+                    <select
+                      name="branch_id"
+                      value={formData.branch_id}
+                      onChange={(e) => setFormData(prev => ({ ...prev, branch_id: e.target.value }))}
+                      required
+                      className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="">Select Branch</option>
+                      {branches.map((branch) => (
+                        <option key={branch.id} value={branch.id}>
+                          {branch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
 
 
