@@ -19,6 +19,7 @@ const TestYourself = () => {
   const [loading, setLoading] = useState(true);
   const [dragItem, setDragItem] = useState(null);
   const [timeSpent, setTimeSpent] = useState(0);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(60);
   // Dark mode toggle removed (handled globally in navbar)
 
   // Fetch data from APIs
@@ -51,6 +52,39 @@ const TestYourself = () => {
     }
     return () => clearInterval(timer);
   }, [testStarted, testCompleted]);
+
+  // Question timer effect
+  useEffect(() => {
+    let questionTimer;
+    if (testStarted && !testCompleted && selectedTest) {
+      questionTimer = setInterval(() => {
+        setQuestionTimeLeft(prev => {
+          if (prev <= 1) {
+            // Time up, mark as wrong if no answer
+            const currentQuestion = selectedTest.quizzes[currentQuestionIndex];
+            if (!userAnswers[currentQuestion.id]) {
+              setUserAnswers(prevAnswers => ({
+                ...prevAnswers,
+                [currentQuestion.id]: null // Mark as no answer
+              }));
+            }
+            // Auto advance
+            setTimeout(() => {
+              if (currentQuestionIndex < selectedTest.quizzes.length - 1) {
+                setCurrentQuestionIndex(prev => prev + 1);
+                setQuestionTimeLeft(60);
+              } else {
+                finishTest();
+              }
+            }, 100);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(questionTimer);
+  }, [testStarted, testCompleted, currentQuestionIndex, selectedTest, userAnswers]);
 
   // Removed other filters per request
 
@@ -91,6 +125,7 @@ const TestYourself = () => {
     setUserAnswers({});
     setCurrentQuestionIndex(0);
     setTimeSpent(0);
+    setQuestionTimeLeft(60);
   };
 
   const handleAnswerSelect = (questionId, answer) => {
@@ -109,10 +144,16 @@ const TestYourself = () => {
     e.preventDefault();
   };
 
-  const handleDrop = (e, questionId) => {
+  const handleDrop = (e, questionId, textKey) => {
     e.preventDefault();
     if (dragItem && dragItem.questionId === questionId) {
-      handleAnswerSelect(questionId, dragItem.answerKey);
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          [textKey]: dragItem.answerKey
+        }
+      }));
     }
     setDragItem(null);
   };
@@ -134,27 +175,40 @@ const TestYourself = () => {
   const finishTest = () => {
     let totalScore = 0;
     let earnedScore = 0;
-    
+
     selectedTest.quizzes.forEach(question => {
       totalScore += parseInt(question.question_score);
-      if (userAnswers[question.id] === question.correct_answer) {
-        earnedScore += parseInt(question.question_score);
+      if (question.type === 'connect') {
+        // For connect type, assume all matches are correct (no correct_answer check)
+        const userAnswer = userAnswers[question.id];
+        if (userAnswer && Object.keys(userAnswer).length > 0) {
+          earnedScore += parseInt(question.question_score);
+        }
+      } else {
+        if (userAnswers[question.id] === question.correct_answer) {
+          earnedScore += parseInt(question.question_score);
+        }
       }
     });
-    
+
     const percentage = totalScore > 0 ? (earnedScore / totalScore) * 100 : 0;
-    
+
     setResults({
       totalScore,
       earnedScore,
       percentage,
       totalQuestions: selectedTest.quizzes.length,
-      correctAnswers: Object.keys(userAnswers).filter(qId => 
-        userAnswers[qId] === selectedTest.quizzes.find(q => q.id == qId)?.correct_answer
-      ).length,
+      correctAnswers: selectedTest.quizzes.filter(q => {
+        if (q.type === 'connect') {
+          const userAnswer = userAnswers[q.id];
+          return userAnswer && Object.keys(userAnswer).length > 0;
+        } else {
+          return userAnswers[q.id] === q.correct_answer;
+        }
+      }).length,
       timeSpent: formatTime(timeSpent)
     });
-    
+
     setTestCompleted(true);
     setTestStarted(false);
   };
@@ -285,6 +339,9 @@ const TestYourself = () => {
                   <div className="px-3 py-1 text-sm bg-blue-500 rounded-full">
                     {t('testYourself.test.time', 'Time')}: {formatTime(timeSpent)}
                   </div>
+                  <div className={`px-3 py-1 text-sm rounded-full ${questionTimeLeft <= 10 ? 'bg-red-500' : 'bg-green-500'}`}>
+                    Question Time: {questionTimeLeft}s
+                  </div>
                 </div>
               </div>
               <div className="w-full h-2 mt-4 bg-blue-500 rounded-full">
@@ -343,79 +400,102 @@ const TestYourself = () => {
                   })}
                 </div>
               ) : (
-                // Drag & Drop Questions
+                // Connect Questions: Drag images to matching texts
                 <div className="space-y-6">
-                  <div className="p-6 border bg-accent rounded-xl border-border">
-                    <h3 className="mb-4 text-lg font-semibold text-text">{t('testYourself.test.dragInstruction', 'Drag the correct answer to the target area')}</h3>
-                    
+                  <div className="p-6 border shadow-lg bg-accent rounded-xl border-border">
+                    <h3 className="mb-4 text-lg font-semibold text-text">{t('testYourself.test.connectInstruction', 'Drag the images to the matching texts below. You can remove or change connections by clicking on the image in the text box.')}</h3>
+
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                       <div className="space-y-4">
-                        <h4 className="font-medium text-text-secondary">{t('testYourself.test.availableAnswers', 'Available Answers')}:</h4>
+                        <h4 className="font-medium text-text-secondary">{t('testYourself.test.texts', 'Texts')}:</h4>
                         {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
                           const answerText = currentQuestion[answerKey];
-                          const answerImage = currentQuestion[`${answerKey}_image`];
-                          
-                          if (!answerText && !answerImage) return null;
-                          
+                          const isDropped = userAnswers[currentQuestion.id] && userAnswers[currentQuestion.id][answerKey];
+
+                          if (!answerText) return null;
+
                           return (
-                            <div 
+                            <div
                               key={answerKey}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
-                              className="p-4 transition-shadow duration-200 border-2 border-dashed shadow-sm bg-surface border-border rounded-xl cursor-grab hover:shadow-md hover:border-primary"
+                              className={`p-4 border-2 rounded-xl transition-all duration-300 relative ${
+                                isDropped
+                                  ? 'border-secondary bg-green-50 dark:bg-green-900/20 shadow-md'
+                                  : 'border-dashed border-border bg-surface hover:border-primary hover:shadow-sm'
+                              }`}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
                             >
-                              {answerText && <div className="font-medium text-center text-text">{answerText}</div>}
-                              {answerImage && (
-                                <img 
-                                  src={answerImage} 
-                                  alt="Answer" 
-                                  className="mx-auto mt-3 rounded-lg max-h-32"
-                                />
+                              <div className="mb-2 font-medium text-center text-text">{answerText}</div>
+                              {isDropped && (
+                                <div className="relative mt-3 text-center">
+                                  <img
+                                    src={currentQuestion[`${isDropped}_image`]}
+                                    alt="Dropped image"
+                                    className="mx-auto transition-opacity rounded-lg cursor-pointer max-h-24 hover:opacity-75"
+                                    onClick={() => {
+                                      setUserAnswers(prev => {
+                                        const newAnswers = { ...prev };
+                                        if (newAnswers[currentQuestion.id]) {
+                                          delete newAnswers[currentQuestion.id][answerKey];
+                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                                            delete newAnswers[currentQuestion.id];
+                                          }
+                                        }
+                                        return newAnswers;
+                                      });
+                                    }}
+                                  />
+                                  <button
+                                    className="absolute flex items-center justify-center w-6 h-6 text-xs text-white transition-colors bg-red-500 rounded-full top-1 right-1 hover:bg-red-600"
+                                    onClick={() => {
+                                      setUserAnswers(prev => {
+                                        const newAnswers = { ...prev };
+                                        if (newAnswers[currentQuestion.id]) {
+                                          delete newAnswers[currentQuestion.id][answerKey];
+                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                                            delete newAnswers[currentQuestion.id];
+                                          }
+                                        }
+                                        return newAnswers;
+                                      });
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
                               )}
                             </div>
                           );
                         })}
                       </div>
-                      
-                      <div 
-                        className={`border-2 rounded-xl p-6 min-h-64 flex flex-col items-center justify-center transition-all duration-300 ${
-                          userAnswer 
-                            ? 'border-secondary bg-green-50 dark:bg-green-900/20' 
-                            : 'border-dashed border-border bg-surface'
-                        }`}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, currentQuestion.id)}
-                      >
-                        {userAnswer ? (
-                          <div className="text-center">
-                            <div className="flex items-center justify-center mb-3 font-semibold text-secondary">
-                              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                              {t('testYourself.test.answerSelected', 'Answer Selected')}
+
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-text-secondary">{t('testYourself.test.images', 'Images')}:</h4>
+                        {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+                          const answerImage = currentQuestion[`${answerKey}_image`];
+                          const isUsed = userAnswers[currentQuestion.id] && Object.values(userAnswers[currentQuestion.id]).includes(answerKey);
+
+                          if (!answerImage) return null;
+
+                          return (
+                            <div
+                              key={answerKey}
+                              draggable={!isUsed}
+                              onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
+                              className={`p-4 border-2 rounded-xl transition-shadow duration-200 ${
+                                isUsed
+                                  ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
+                                  : 'border-dashed shadow-sm bg-surface border-border cursor-grab hover:shadow-md hover:border-primary active:cursor-grabbing'
+                              }`}
+                            >
+                              <img
+                                src={answerImage}
+                                alt="Draggable image"
+                                className="mx-auto rounded-lg max-h-32"
+                              />
                             </div>
-                            <div className="p-4 border rounded-lg shadow-sm bg-surface border-secondary">
-                              {currentQuestion[userAnswer] && (
-                                <div className="font-medium text-text">{currentQuestion[userAnswer]}</div>
-                              )}
-                              {currentQuestion[`${userAnswer}_image`] && (
-                                <img 
-                                  src={currentQuestion[`${userAnswer}_image`]} 
-                                  alt="Selected answer" 
-                                  className="mx-auto mt-3 rounded-lg max-h-32"
-                                />
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center text-text-muted">
-                            <svg className="w-12 h-12 mx-auto mb-3 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                            </svg>
-                            <p className="font-medium">{t('testYourself.test.dragHere', 'Drag the correct answer here')}</p>
-                            <p className="mt-1 text-sm">{t('testYourself.test.dropHere', 'Drop your selection in this area')}</p>
-                          </div>
-                        )}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>

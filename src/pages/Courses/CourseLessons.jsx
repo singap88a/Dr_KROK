@@ -111,7 +111,7 @@ export default function CourseLessons() {
           </div>
           <div className="h-full border rounded-lg">
             <iframe
-              src={selectedFile}
+              src={`${selectedFile}#toolbar=0`}
               className="w-full h-full rounded-lg"
               title="PDF Viewer"
             />
