@@ -722,8 +722,8 @@ const TestYourself = () => {
                   <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                       course.type === 'video' 
-                        ? 'bg-primary/20 text-primary backdrop-blur-sm' 
-                        : 'bg-secondary/20 text-secondary backdrop-blur-sm'
+                        ? 'bg-primary/20 text-white bg-[#000000a2]' 
+                        : 'bg-primary/20 text-white bg-[#000000a2]'
                     }`}>
                       {course.type === 'video' ? 'Video' : 'Live'}
                     </span>
