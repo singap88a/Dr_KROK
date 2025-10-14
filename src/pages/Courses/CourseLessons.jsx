@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
@@ -34,6 +34,11 @@ import {
   FaTelegram,
   FaWhatsapp,
   FaTimes,
+  FaChevronDown,
+  FaChevronRight,
+  FaFolder,
+  FaFolderOpen,
+  FaList,
 } from "react-icons/fa";
 
 export default function CourseLessons() {
@@ -48,8 +53,11 @@ export default function CourseLessons() {
   const [error, setError] = useState("");
   const [course, setCourse] = useState(null);
   const [lessons, setLessons] = useState([]);
+  const [sections, setSections] = useState([]);
   const [hasAccess, setHasAccess] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
+  const [currentSection, setCurrentSection] = useState(null);
+  const [expandedSections, setExpandedSections] = useState(new Set());
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [lessonStatuses, setLessonStatuses] = useState({});
   const [showImagePopup, setShowImagePopup] = useState(false);
@@ -195,7 +203,7 @@ export default function CourseLessons() {
   };
 
   // دالة محسنة لتحديث حالة الدرس
-  const updateLessonStatus = async (lessonId) => {
+  const updateLessonStatus = useCallback(async (lessonId) => {
     if (!isLoggedIn) return;
     
     try {
@@ -218,7 +226,7 @@ export default function CourseLessons() {
     } catch (error) {
       console.error(`Error updating lesson ${lessonId} status:`, error);
     }
-  };
+  }, [isLoggedIn, id, getCourseProgress, getLessonProgress]);
 
   // دالة محسنة لإكمال الدرس - تحديث فوري للواجهة
   const handleLessonComplete = async (lessonId) => {
@@ -299,6 +307,18 @@ export default function CourseLessons() {
         if (!mounted) return;
         setCourse(courseData);
         setLessons(courseData.lessons || []);
+        setSections(courseData.sections || []);
+        
+        // Initialize expanded sections with sections that have free lessons
+        const sectionsWithFreeLessons = new Set();
+        if (courseData.sections) {
+          courseData.sections.forEach(section => {
+            if (section.lessons && section.lessons.some(lesson => lesson.type === "free" || lesson.type === "Free")) {
+              sectionsWithFreeLessons.add(section.id);
+            }
+          });
+        }
+        setExpandedSections(sectionsWithFreeLessons);
 
         // تحميل حالة التقدم للدروس من البيانات التي تأتي مباشرة من API
         if (courseData?.lessons?.length) {
@@ -355,8 +375,60 @@ export default function CourseLessons() {
           setHasAccess(false);
         }
 
-        // Set first free lesson as current if available
-        if (courseData.lessons && courseData.lessons.length > 0) {
+        // Set first free content as current if available
+        if (courseData.sections && courseData.sections.length > 0) {
+          // Try to find a section with free lessons first
+          let firstFreeContent = null;
+          for (const section of courseData.sections) {
+            if (section.lessons && section.lessons.length > 0) {
+              const firstFreeLesson = section.lessons.find(lesson => lesson.type === "free" || lesson.type === "Free");
+              if (firstFreeLesson) {
+                firstFreeContent = { type: 'lesson', data: firstFreeLesson };
+                break;
+              }
+            }
+          }
+          
+          // If no free lessons found, try to find a section with free content
+          if (!firstFreeContent) {
+            const firstSectionWithFree = courseData.sections.find(section => 
+              section.lessons && section.lessons.some(lesson => lesson.type === "free" || lesson.type === "Free")
+            );
+            if (firstSectionWithFree) {
+              firstFreeContent = { type: 'section', data: firstSectionWithFree };
+            }
+          }
+          
+          // If still no free content, show the first section
+          if (!firstFreeContent && courseData.sections[0]) {
+            firstFreeContent = { type: 'section', data: courseData.sections[0] };
+          }
+          
+          if (firstFreeContent) {
+            if (firstFreeContent.type === 'lesson') {
+              setCurrentLesson(firstFreeContent.data);
+              // Fire start progress when opening first free lesson for logged-in users
+              if (isLoggedIn) {
+                try {
+                  const res = await startLessonProgress(id, firstFreeContent.data.id);
+                  if (res?.course_progress) setCourseProgress(res.course_progress);
+                  if (res?.lesson) {
+                    setLessonStatuses(prev => ({ 
+                      ...prev, 
+                      [firstFreeContent.data.id]: {
+                        ...prev[firstFreeContent.data.id],
+                        ...res.lesson
+                      }
+                    }));
+                  }
+                } catch { /* noop */ }
+              }
+            } else if (firstFreeContent.type === 'section') {
+              setCurrentSection(firstFreeContent.data);
+            }
+          }
+        } else if (courseData.lessons && courseData.lessons.length > 0) {
+          // Fallback to old behavior if no sections
           const firstFreeLesson = courseData.lessons.find(lesson => lesson.type === "free" || lesson.type === "Free");
           if (firstFreeLesson) {
             setCurrentLesson(firstFreeLesson);
@@ -398,7 +470,7 @@ export default function CourseLessons() {
       mounted = false;
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, getLessonProgress, isLoggedIn]);
+  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, getLessonProgress, isLoggedIn, updateLessonStatus]);
 
   // When returning from quiz page, update the specific lesson status and overall progress
   useEffect(() => {
@@ -421,10 +493,10 @@ export default function CourseLessons() {
         }
       })();
     }
-  }, [location.state, id, isLoggedIn, getCourseProgress]);
+  }, [location.state, id, isLoggedIn, getCourseProgress, updateLessonStatus]);
 
-  // Sort lessons: free first, then paid
-  const sortedLessons = useMemo(() => {
+  // Sort lessons: free first, then paid (kept for backward compatibility)
+  const _sortedLessons = useMemo(() => {
     return [...lessons].sort((a, b) => {
       const aFree = a.type === "free" || a.type === "Free";
       const bFree = b.type === "free" || b.type === "Free";
@@ -433,6 +505,55 @@ export default function CourseLessons() {
       return (a.id || 0) - (b.id || 0);
     });
   }, [lessons]);
+
+  // Sort sections by ID
+  const sortedSections = useMemo(() => {
+    return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
+  }, [sections]);
+
+  // Get lessons for a specific section
+  const getSectionLessons = useMemo(() => {
+    return (sectionId) => {
+      const section = sections.find(s => s.id === sectionId);
+      if (!section || !section.lessons) return [];
+      return [...section.lessons].sort((a, b) => {
+        const aFree = a.type === "free" || a.type === "Free";
+        const bFree = b.type === "free" || b.type === "Free";
+        if (aFree && !bFree) return -1;
+        if (!aFree && bFree) return 1;
+        return (a.id || 0) - (b.id || 0);
+      });
+    };
+  }, [sections]);
+
+  // Check if section has free lessons
+  const hasFreeLessons = useMemo(() => {
+    return (sectionId) => {
+      const section = sections.find(s => s.id === sectionId);
+      if (!section || !section.lessons) return false;
+      return section.lessons.some(lesson => lesson.type === "free" || lesson.type === "Free");
+    };
+  }, [sections]);
+
+  // Toggle section expansion
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
+
+  // Helper function to safely convert video_related to array
+  const getVideoRelatedArray = (videoRelated) => {
+    if (!videoRelated) return [];
+    if (Array.isArray(videoRelated)) return videoRelated;
+    return [videoRelated];
+  };
 
   const handleLessonClick = async (lesson) => {
     const isFree = lesson.type === "free" || lesson.type === "Free";
@@ -448,6 +569,7 @@ export default function CourseLessons() {
 
     // Set current lesson for sidebar video player
     setCurrentLesson(lesson);
+    setCurrentSection(null); // Clear section selection when lesson is selected
     if (isLoggedIn) {
       try {
         const res = await startLessonProgress(id, lesson.id);
@@ -465,6 +587,22 @@ export default function CourseLessons() {
         // ignore
       }
     }
+  };
+
+  const handleSectionClick = (section) => {
+    // Check if section has free lessons or user has access
+    const hasFree = hasFreeLessons(section.id);
+    if (!hasFree && !hasAccess) {
+      if (!isLoggedIn) {
+        navigate('/login');
+        return;
+      }
+      setShowPurchaseModal(true);
+      return;
+    }
+
+    setCurrentSection(section);
+    setCurrentLesson(null); // Clear lesson selection when section is selected
   };
 
   const closePurchaseModal = () => {
@@ -684,109 +822,170 @@ export default function CourseLessons() {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Lessons List */}
+          {/* Sections and Lessons List */}
           <div className="space-y-3 lg:col-span-1">
             <h3 className="text-lg font-semibold">{t('courses.courseContent', 'Course Content')}</h3>
 
             <div className="space-y-2">
-              {sortedLessons.map((lesson, index) => {
-                const isFree = lesson.type === "free" || lesson.type === "Free";
-                const isAccessible = isFree;
-                const ls = lessonStatuses[lesson.id];
-                const totalPerc = calculateTotalProgress(lesson, ls);
-                const isCompleted = totalPerc >= 100;
-                
-                // التحقق من نوع المحتوى لتحديد التقدم الأولي
-                const hasVideo = !!lesson.video;
-                const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
-                
-                // التحديث الهام: إذا كان الدرس جديداً ولم يتم البدء فيه بعد
-                let displayProgress = totalPerc;
-                if (!ls && isLoggedIn) {
-                  // إذا كان الدرس يحتوي على فيديو واختبارات، يبدأ بـ 0%
-                  // إذا كان يحتوي على فيديو فقط أو اختبارات فقط، يبدأ بـ 0%
-                  displayProgress = 0;
-                }
-                
-                // Debug logging
-                if (ls) {
-                  console.log(`Lesson ${lesson.id} (${lesson.title}):`, {
-                    hasVideo,
-                    hasTests,
-                    lesson_percentage: ls.lesson_percentage,
-                    quiz_percentage: ls.quiz_percentage,
-                    percentage: ls.percentage,
-                    progress_status: ls.progress_status,
-                    totalPerc,
-                    displayProgress,
-                    isCompleted
-                  });
-                }
-                const isActive = currentLesson?.id === lesson.id;
+              {/* Sections */}
+              {sortedSections.map((section) => {
+                const sectionLessons = getSectionLessons(section.id);
+                const hasFree = hasFreeLessons(section.id);
+                const isExpanded = expandedSections.has(section.id);
+                const isAccessible = hasFree || hasAccess;
+                const isActive = currentSection?.id === section.id;
 
                 return (
-                  <div
-                    key={lesson.id || index}
-                    onClick={() => handleLessonClick(lesson)}
-                    className={`relative p-4 transition-all border rounded-lg cursor-pointer group hover:shadow-md ${
-                      isActive
-                        ? 'bg-primary/5 border-primary shadow-sm'
-                        : 'bg-surface border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Lesson Number & Status */}
-                      <div className="flex flex-col items-center gap-1">
-                        <div className={`rounded-full p-[2px] ${isActive ? 'bg-primary/20' : 'bg-accent'}`}>
-                          <ProgressCircle 
-                            percent={displayProgress} 
-                            completed={isCompleted} 
-                            active={isActive} 
-                          />
+                  <div key={`section-${section.id}`} className="border rounded-lg bg-surface border-border">
+                    {/* Section Header */}
+                    <div
+                      onClick={() => handleSectionClick(section)}
+                      className={`p-4 transition-all cursor-pointer group hover:shadow-sm ${
+                        isActive ? 'bg-primary/5 border-b border-primary/20' : 'hover:bg-accent/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Section Icon */}
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          isActive ? 'bg-primary/20 text-primary' : 'bg-accent text-text-muted'
+                        }`}>
+                          {isExpanded ? <FaFolderOpen className="text-sm" /> : <FaFolder className="text-sm" />}
                         </div>
-                        {index < sortedLessons.length - 1 && (
-                          <div className="w-px h-6 bg-border"></div>
-                        )}
-                      </div>
 
-                      {/* Lesson Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className={`font-medium line-clamp-1 ${
-                              isActive ? 'text-primary' : 'text-text'
-                            }`}>
-                              {lesson.title}
-                            </h4>
+                        {/* Section Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h4 className={`font-medium line-clamp-1 ${
+                                isActive ? 'text-primary' : 'text-text'
+                              }`}>
+                                {section.title}
+                              </h4>
                               <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
-                                {lesson.video && <FaVideo />}
-                                {lesson.images && lesson.images.length > 0 && <FaImage />}
-                                {lesson.files && lesson.files.length > 0 && <FaFileAlt />}
-                                {lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0 && <FaCheck />}
-                                <span>{isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}</span>
-                                {lesson.duration && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{lesson.duration}min</span>
-                                  </>
-                                )}
+                                <span>{section.lessons_count || 0} {t('courses.lessons', 'Lessons')}</span>
+                                {section.video && <FaVideo />}
+                                {section.images && section.images.length > 0 && <FaImage />}
+                                {section.files && section.files.length > 0 && <FaFileAlt />}
+                                <span>{hasFree ? t('courses.hasFree', 'Has Free') : t('courses.premium', 'Premium')}</span>
                               </div>
-                          </div>
+                            </div>
 
-                          {/* Lock Icon */}
-                          {!isAccessible && (
-                            <FaLock className="ml-2 text-text-muted" />
-                          )}
-                        </div>
-                        <div className="mt-2 text-xs font-medium">
-                          {isCompleted ? (
-                            <span className="text-green-600">{t('courses.lessonCompleted', 'Lesson Completed')}</span>
-                          ) : (
-                            <span className="text-text-muted">{t('courses.progress', 'Progress')}: {Math.min(100, Math.max(0, Math.round(displayProgress)))}%</span>
-                          )}
+                            {/* Lock Icon or Expand Button */}
+                            <div className="flex items-center gap-2">
+                              {!isAccessible && (
+                                <FaLock className="text-text-muted" />
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleSection(section.id);
+                                }}
+                                className={`p-1 rounded transition-colors ${
+                                  isExpanded ? 'text-primary' : 'text-text-muted hover:text-text'
+                                }`}
+                              >
+                                {isExpanded ? <FaChevronDown className="text-xs" /> : <FaChevronRight className="text-xs" />}
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Section Lessons */}
+                    {isExpanded && sectionLessons.length > 0 && (
+                      <div className="border-t border-border">
+                        {sectionLessons.map((lesson, lessonIndex) => {
+                          const isFree = lesson.type === "free" || lesson.type === "Free";
+                          const isLessonAccessible = isFree;
+                          const ls = lessonStatuses[lesson.id];
+                          const totalPerc = calculateTotalProgress(lesson, ls);
+                          const isCompleted = totalPerc >= 100;
+                          
+                          // التحقق من نوع المحتوى لتحديد التقدم الأولي
+                          const _hasVideo = !!lesson.video;
+                          const _hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+                          
+                          // التحديث الهام: إذا كان الدرس جديداً ولم يتم البدء فيه بعد
+                          let displayProgress = totalPerc;
+                          if (!ls && isLoggedIn) {
+                            // إذا كان الدرس يحتوي على فيديو واختبارات، يبدأ بـ 0%
+                            // إذا كان يحتوي على فيديو فقط أو اختبارات فقط، يبدأ بـ 0%
+                            displayProgress = 0;
+                          }
+                          
+                          const isActive = currentLesson?.id === lesson.id;
+
+                          return (
+                            <div
+                              key={lesson.id || lessonIndex}
+                              onClick={() => handleLessonClick(lesson)}
+                              className={`relative p-4 pl-8 transition-all cursor-pointer group hover:shadow-sm border-l-2 ${
+                                isActive
+                                  ? 'bg-primary/5 border-l-primary'
+                                  : 'hover:bg-accent/30 border-l-border'
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                {/* Lesson Number & Status */}
+                                <div className="flex flex-col items-center gap-1">
+                                  <div className={`rounded-full p-[2px] ${isActive ? 'bg-primary/20' : 'bg-accent'}`}>
+                                    <ProgressCircle 
+                                      percent={displayProgress} 
+                                      completed={isCompleted} 
+                                      active={isActive} 
+                                      size={24}
+                                      stroke={3}
+                                    />
+                                  </div>
+                                  {lessonIndex < sectionLessons.length - 1 && (
+                                    <div className="w-px h-4 bg-border"></div>
+                                  )}
+                                </div>
+
+                                {/* Lesson Content */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <h5 className={`text-sm font-medium line-clamp-1 ${
+                                        isActive ? 'text-primary' : 'text-text'
+                                      }`}>
+                                        {lesson.title}
+                                      </h5>
+                                      <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
+                                        {lesson.video && <FaVideo />}
+                                        {lesson.images && lesson.images.length > 0 && <FaImage />}
+                                        {lesson.files && lesson.files.length > 0 && <FaFileAlt />}
+                                        {lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0 && <FaCheck />}
+                                        <span>{isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}</span>
+                                        {lesson.duration && (
+                                          <>
+                                            <span>•</span>
+                                            <span>{lesson.duration}min</span>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Lock Icon */}
+                                    {!isLessonAccessible && (
+                                      <FaLock className="ml-2 text-text-muted" />
+                                    )}
+                                  </div>
+                                  <div className="mt-1 text-xs font-medium">
+                                    {isCompleted ? (
+                                      <span className="text-green-600">{t('courses.lessonCompleted', 'Lesson Completed')}</span>
+                                    ) : (
+                                      <span className="text-text-muted">{t('courses.progress', 'Progress')}: {Math.min(100, Math.max(0, Math.round(displayProgress)))}%</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -839,7 +1038,7 @@ export default function CourseLessons() {
             </div>
           </div>
 
-          {/* Video Player & Instructor */}
+          {/* Video Player & Content */}
           <div className="space-y-6 lg:col-span-2">
           {/* Video Player */}
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
@@ -975,11 +1174,11 @@ export default function CourseLessons() {
                         )}
                         
                         {/* Additional Videos */}
-                        {currentLesson.video_related && currentLesson.video_related.length > 0 && (
+                        {currentLesson.video_related && (
                           <div className="mb-4">
                             <h5 className="mb-2 text-sm font-medium text-text">{t('courses.additionalVideos', 'Additional Videos')}</h5>
                             <div className="grid grid-cols-1 gap-3">
-                              {currentLesson.video_related.map((video, idx) => {
+                              {getVideoRelatedArray(currentLesson.video_related).map((video, idx) => {
                                 const isObj = typeof video === 'object' && video !== null;
                                 const videoUrl = isObj ? (video.url || video.src || video.video || '') : video;
                                 const thumbnail = isObj ? (video.thumbnail || video.poster || video.image || '') : '';
@@ -1072,11 +1271,170 @@ export default function CourseLessons() {
                     )}
                   </div>
                 </div>
+              ) : currentSection ? (
+                <div>
+                  <div className="aspect-video">
+                    {currentSection.video ? (
+                      <video
+                        src={currentSection.video}
+                        controls
+                        className="w-full h-full"
+                        poster={currentSection.images?.[0]}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full bg-accent">
+                        <div className="text-center">
+                          <FaVideo className="mx-auto mb-2 text-4xl text-text-muted" />
+                          <p className="text-text-muted">{t('courses.videoNotAvailable', 'Video not available')}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-text">{currentSection.title}</h3>
+                    {currentSection.description && (
+                      <div className="mt-2 text-sm text-text-secondary">
+                        <p className="leading-relaxed line-clamp-3">
+                          {currentSection.description}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Section Attachments */}
+                    {(currentSection.images && currentSection.images.length > 0) || 
+                     (currentSection.files && currentSection.files.length > 0) || 
+                     (currentSection.video_related && currentSection.video_related) ? (
+                      <div className="mt-4">
+                        <h4 className="mb-3 font-semibold text-md text-text">
+                          {t('courses.sectionAttachments', 'Section Attachments')}
+                        </h4>
+                        
+                        {/* Image Gallery */}
+                        {currentSection.images && currentSection.images.length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.images', 'Images')}</h5>
+                            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                              {currentSection.images.map((img, idx) => (
+                                <img 
+                                  key={idx} 
+                                  src={img} 
+                                  alt={`Section image ${idx + 1}`} 
+                                  className="object-cover w-full h-32 rounded cursor-pointer" 
+                                  style={{ width: '100%', height: '128px', objectFit: 'cover' }}
+                                  onClick={() => { setSelectedImage(img); setShowImagePopup(true); }} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* File Gallery */}
+                        {currentSection.files && currentSection.files.length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.files', 'Files')}</h5>
+                            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                              {currentSection.files.map((file, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleFileClick(file.url || file)}
+                                  className="flex flex-col items-center p-3 transition-colors border rounded hover:bg-accent"
+                                >
+                                  <FaFileAlt className="mb-2 text-2xl text-primary" />
+                                  <span className="text-xs text-center text-text">
+                                    {file.name || `${t('courses.file', 'File')} ${idx + 1}`}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Additional Videos */}
+                        {currentSection.video_related && (
+                          <div className="mb-4">
+                            <h5 className="mb-2 text-sm font-medium text-text">{t('courses.additionalVideos', 'Additional Videos')}</h5>
+                            <div className="grid grid-cols-1 gap-3">
+                              {getVideoRelatedArray(currentSection.video_related).map((video, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
+                                onClick={() => handleVideoClick(video)}
+                              >
+                                <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden rounded-lg">
+                                  <video
+                                    src={video}
+                                    className="object-cover w-full h-full"
+                                    muted
+                                    playsInline
+                                    preload="metadata"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                    <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
+                                      <FaPlay className="text-gray-700 text-xs ml-0.5" />
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <FaVideo className="text-sm text-primary" />
+                                    <span className="text-sm font-medium text-text">
+                                      {t('courses.additionalVideo', 'Additional Video')}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-text-muted">
+                                    {t('courses.clickToWatch', 'Click to watch this video')}
+                                  </p>
+                                </div>
+                              </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                    
+                    {/* Section Lessons Preview */}
+                    {currentSection.lessons && currentSection.lessons.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="mb-3 font-semibold text-md text-text">
+                          {t('courses.sectionLessons', 'Section Lessons')} ({currentSection.lessons.length})
+                        </h4>
+                        <div className="grid grid-cols-1 gap-2">
+                          {currentSection.lessons.slice(0, 3).map((lesson, idx) => {
+                            const isFree = lesson.type === "free" || lesson.type === "Free";
+                            return (
+                              <div
+                                key={lesson.id || idx}
+                                onClick={() => handleLessonClick(lesson)}
+                                className="flex items-center gap-3 p-3 transition-colors border rounded cursor-pointer hover:bg-accent"
+                              >
+                                <div className={`w-2 h-2 rounded-full ${isFree ? 'bg-green-500' : 'bg-primary'}`}></div>
+                                <span className="text-sm text-text">{lesson.title}</span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  isFree ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'
+                                }`}>
+                                  {isFree ? t('courses.free', 'Free') : t('courses.paid', 'Paid')}
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {currentSection.lessons.length > 3 && (
+                            <div className="text-center">
+                              <span className="text-xs text-text-muted">
+                                {t('courses.andMore', 'And')} {currentSection.lessons.length - 3} {t('courses.moreLessons', 'more lessons')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-center justify-center bg-accent aspect-video">
                   <div className="text-center">
-                    <FaPlay className="mx-auto mb-4 text-6xl text-text-muted" />
-                    <p className="text-text-muted">{t('courses.selectLesson', 'Select a lesson to start watching')}</p>
+                    <FaList className="mx-auto mb-4 text-6xl text-text-muted" />
+                    <p className="text-text-muted">{t('courses.selectContent', 'Select a lesson or section to start')}</p>
                   </div>
                 </div>
               )}
