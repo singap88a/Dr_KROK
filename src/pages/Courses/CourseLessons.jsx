@@ -1148,15 +1148,28 @@ export default function CourseLessons() {
 
                             {/* Section Title + Details */}
                             <div className="flex-1 min-w-0">
-                              <h4
-                                className={`font-semibold text-base tracking-wide ${
-                                  isActive ? "text-primary" : "text-text"
-                                }`}
-                              >
-                                {/* ✅ عرض أول 4 كلمات فقط من العنوان وبعدها ... */}
-                                {section.title.split(" ").slice(0, 4).join(" ")}
-                                {section.title.split(" ").length > 4 && "..."}
-                              </h4>
+                              <div className="flex items-center justify-between">
+                                <h4
+                                  className={`font-semibold text-base tracking-wide ${
+                                    isActive ? "text-primary" : "text-text"
+                                  }`}
+                                >
+                                  {/* ✅ عرض أول 4 كلمات فقط من العنوان وبعدها ... */}
+                                  {section.title
+                                    .split(" ")
+                                    .slice(0, 4)
+                                    .join(" ")}
+                                  {section.title.split(" ").length > 4 && "..."}
+                                </h4>
+
+                                {/* 🔒 أيقونة القفل (ما تشالش) */}
+                                {!isAccessible && (
+                                  <FaLock
+                                    className="text-text-muted text-sm ml-2"
+                                    title="Premium"
+                                  />
+                                )}
+                              </div>
 
                               <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
                                 <span>
@@ -1203,6 +1216,7 @@ export default function CourseLessons() {
                               ) : (
                                 <FaChevronRight className="text-lg transition-transform duration-300" />
                               )}
+                              {/* تأثير نبض خفيف لما تكون مفتوحة */}
                               {isExpanded && (
                                 <span className="absolute inset-0 rounded-full border-2 border-primary/40 animate-ping"></span>
                               )}
