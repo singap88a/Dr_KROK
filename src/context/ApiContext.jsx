@@ -363,26 +363,35 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         }
         return null;
       },
-      async completeLessonProgress(courseId, lessonId, type) {
-        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-        // Backend expects form-data field 'type' when present ('lesson' | 'quiz')
-        const useForm = typeof type === 'string' && type.length > 0;
-        const body = useForm ? (() => { const fd = new FormData(); fd.append('type', type); fd.append('course', String(courseId)); fd.append('lesson', String(lessonId)); return fd; })() : undefined;
-        const candidates = [
-          `courses/${courseId}/progress/${lessonId}/complete`,
-          `video_courses/${courseId}/progress/${lessonId}/complete`,
-          `video_course/${courseId}/progress/${lessonId}/complete`
-        ];
-        for (const path of candidates) {
-          try {
-            const res = await request(path, { method: 'POST', auth: true, body, isFormData: useForm });
-            return res?.data || null;
-          } catch (e) {
-            if (e?.status && e.status !== 404) throw e;
-          }
-        }
-        throw new Error('Progress complete endpoint not available');
-      },
+async completeLessonProgress(courseId, lessonId, type) {
+  if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+  
+  const formData = new FormData();
+  formData.append('course', String(courseId));
+  formData.append('lesson', String(lessonId));
+  formData.append('type', type || 'lesson'); // Default to 'lesson' if not provided
+  
+  const candidates = [
+    `courses/${courseId}/progress/${lessonId}/complete`,
+    `video_courses/${courseId}/progress/${lessonId}/complete`,
+    `video_course/${courseId}/progress/${lessonId}/complete`
+  ];
+  
+  for (const path of candidates) {
+    try {
+      const res = await request(path, { 
+        method: 'POST', 
+        auth: true, 
+        body: formData, 
+        isFormData: true 
+      });
+      return res?.data || null;
+    } catch (e) {
+      if (e?.status && e.status !== 404) throw e;
+    }
+  }
+  throw new Error('Progress complete endpoint not available');
+},
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();
