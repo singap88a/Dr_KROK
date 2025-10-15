@@ -55,7 +55,6 @@ export default function CourseLessons() {
     getLessonProgress,
     getCourseProgressDetails,
     markLessonAsCompleted,
-    updateLessonProgress,
   } = useApi();
   const { isLoggedIn } = useUser();
 
@@ -77,7 +76,7 @@ export default function CourseLessons() {
   const [showVideoPopup, setShowVideoPopup] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [courseProgress, setCourseProgress] = useState(null);
-  const [progressLoading, setProgressLoading] = useState(false);
+  const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
 
   // Image Popup Modal
@@ -205,27 +204,16 @@ export default function CourseLessons() {
 
     let totalProgress = 0;
 
-    if (hasVideo && hasTests) {
-      // إذا كان يحتوي على فيديو واختبارات: 50% للفيديو + 50% للاختبار
-      const videoCompleted =
-        lessonStatus.lesson_percentage >= 100 ||
-        lessonStatus.status === "completed";
-      const quizCompleted = lessonStatus.quiz_percentage >= 100;
-
-      totalProgress = (videoCompleted ? 50 : 0) + (quizCompleted ? 50 : 0);
-    } else if (hasVideo && !hasTests) {
+    if (hasTests) {
+      // إذا كان يحتوي على اختبارات، التقدم بناءً على نتيجة الاختبار
+      totalProgress = lessonStatus.quiz_percentage || 0;
+    } else if (hasVideo) {
       // إذا كان يحتوي على فيديو فقط: 100% للفيديو
       totalProgress =
         lessonStatus.lesson_percentage >= 100 ||
         lessonStatus.status === "completed"
           ? 100
           : lessonStatus.lesson_percentage || 0;
-    } else if (!hasVideo && hasTests) {
-      // إذا كان يحتوي على اختبارات فقط: 100% للاختبار
-      totalProgress =
-        lessonStatus.quiz_percentage >= 100
-          ? 100
-          : lessonStatus.quiz_percentage || 0;
     }
 
     return Math.min(100, totalProgress);
