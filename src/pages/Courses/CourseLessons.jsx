@@ -46,7 +46,17 @@ export default function CourseLessons() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, completeLessonProgress, getLessonProgress } = useApi();
+  const { 
+    getVideoCourseById, 
+    getCourseAccess, 
+    getCourseProgress, 
+    startLessonProgress, 
+    completeLessonProgress, 
+    getLessonProgress,
+    getCourseProgressDetails,
+    markLessonAsCompleted,
+    updateLessonProgress
+  } = useApi();
   const { isLoggedIn } = useUser();
 
   const [loading, setLoading] = useState(true);
@@ -68,6 +78,7 @@ export default function CourseLessons() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [courseProgress, setCourseProgress] = useState(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [sectionProgress, setSectionProgress] = useState({});
 
   // Image Popup Modal
   const ImagePopup = () => {
@@ -166,12 +177,17 @@ export default function CourseLessons() {
   };
 
   // دالة محسنة لحساب التقدم الكلي للدرس بناءً على النظام الجديد
-  const calculateTotalProgress = (lesson, lessonStatus) => {
+  const calculateTotalProgress = useCallback((lesson, lessonStatus) => {
     if (!lessonStatus) return 0;
     
     // إذا كان status مباشرة completed نرجع 100%
     if (lessonStatus.status === 'completed' || lessonStatus.progress_status === 'completed') {
       return 100;
+    }
+
+    // استخدام النسبة المئوية المباشرة من API إذا كانت متوفرة
+    if (lessonStatus.percentage !== undefined && lessonStatus.percentage !== null) {
+      return Math.min(100, Math.max(0, lessonStatus.percentage));
     }
 
     // التحقق مما إذا كان الدرس يحتوي على فيديو و/أو اختبارات
@@ -194,13 +210,8 @@ export default function CourseLessons() {
       totalProgress = lessonStatus.quiz_percentage >= 100 ? 100 : lessonStatus.quiz_percentage || 0;
     }
     
-    // استخدام النسبة المئوية المباشرة من API إذا كانت متوفرة
-    if (lessonStatus.percentage !== undefined && lessonStatus.percentage !== null) {
-      totalProgress = Math.max(totalProgress, lessonStatus.percentage);
-    }
-    
     return Math.min(100, totalProgress);
-  };
+  }, []);
 
   // دالة محسنة لتحديث حالة الدرس
   const updateLessonStatus = useCallback(async (lessonId) => {
@@ -208,12 +219,21 @@ export default function CourseLessons() {
     
     try {
       const [updatedCourseProgress, updatedLessonProgress] = await Promise.all([
-        getCourseProgress(id),
+        getCourseProgressDetails(id),
         getLessonProgress(id, lessonId)
       ]);
       
       if (updatedCourseProgress) {
         setCourseProgress(updatedCourseProgress);
+        
+        // تحديث تقدم الأقسام
+        if (updatedCourseProgress.sections_progress) {
+          const sectionProgressData = {};
+          updatedCourseProgress.sections_progress.forEach(section => {
+            sectionProgressData[section.section_id] = section.progress;
+          });
+          setSectionProgress(sectionProgressData);
+        }
       }
       
       if (updatedLessonProgress?.lesson) {
@@ -226,76 +246,118 @@ export default function CourseLessons() {
     } catch (error) {
       console.error(`Error updating lesson ${lessonId} status:`, error);
     }
-  }, [isLoggedIn, id, getCourseProgress, getLessonProgress]);
+  }, [isLoggedIn, id, getCourseProgressDetails, getLessonProgress]);
 
   // دالة محسنة لإكمال الدرس - تحديث فوري للواجهة
-const handleLessonComplete = async (lessonId) => {
-  console.log('handleLessonComplete called with lessonId:', lessonId);
+  const handleLessonComplete = async (lessonId) => {
+    console.log('handleLessonComplete called with lessonId:', lessonId);
 
-  // البحث في جميع الدروس من جميع الأقسام
-  let lesson = null;
+    // البحث في جميع الدروس من جميع الأقسام
+    let lesson = null;
 
-  // البحث في lessons array المباشر
-  lesson = lessons.find(l => l.id === lessonId);
+    // البحث في lessons array المباشر
+    lesson = lessons.find(l => l.id === lessonId);
 
-  // إذا لم يجده، البحث في sections
-  if (!lesson && sections.length > 0) {
-    for (const section of sections) {
-      if (section.lessons) {
-        lesson = section.lessons.find(l => l.id === lessonId);
-        if (lesson) break;
+    // إذا لم يجده، البحث في sections
+    if (!lesson && sections.length > 0) {
+      for (const section of sections) {
+        if (section.lessons) {
+          lesson = section.lessons.find(l => l.id === lessonId);
+          if (lesson) break;
+        }
       }
     }
-  }
 
-  // إذا لم يجده بعد، استخدام currentLesson كحل أخير
-  if (!lesson && currentLesson && currentLesson.id === lessonId) {
-    lesson = currentLesson;
-  }
-
-  if (!lesson) {
-    console.log('Lesson not found in any source');
-    console.log('Available lessons:', lessons);
-    console.log('Available sections:', sections);
-    console.log('Current lesson:', currentLesson);
-    return;
-  }
-
-  console.log('Found lesson:', lesson);
-
-  // تحديث فوري للواجهة
-  setLessonStatuses(prev => ({
-    ...prev,
-    [lessonId]: {
-      ...prev[lessonId],
-      percentage: 100,
-      status: 'completed',
-      lesson_percentage: 100,
-      quiz_percentage: 100
+    // إذا لم يجده بعد، استخدام currentLesson كحل أخير
+    if (!lesson && currentLesson && currentLesson.id === lessonId) {
+      lesson = currentLesson;
     }
-  }));
 
-  try {
-    // استدعاء API لإكمال الدرس
-    const res = await completeLessonProgress(id, lessonId, 'lesson');
-    if (res?.course_progress) setCourseProgress(res.course_progress);
-    if (res?.lesson) {
-      setLessonStatuses(prev => ({
-        ...prev,
-        [lessonId]: {
-          ...prev[lessonId],
-          ...res.lesson
+    if (!lesson) {
+      console.log('Lesson not found in any source');
+      return;
+    }
+
+    console.log('Found lesson:', lesson);
+
+    // تحديد النسبة المئوية بناءً على محتوى الدرس
+    const hasVideo = !!lesson.video;
+    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+    let newPercentage = 100;
+
+    if (hasVideo && hasTests) {
+      // إذا كان يحتوي على فيديو واختبارات، يكمل الفيديو فقط (50%)
+      const currentStatus = lessonStatuses[lessonId] || {};
+      const quizCompleted = currentStatus.quiz_percentage >= 100;
+      newPercentage = quizCompleted ? 100 : 50;
+    }
+
+    // تحديث فوري للواجهة
+    setLessonStatuses(prev => ({
+      ...prev,
+      [lessonId]: {
+        ...prev[lessonId],
+        percentage: newPercentage,
+        status: newPercentage === 100 ? 'completed' : 'in_progress',
+        lesson_percentage: hasVideo ? 100 : (prev[lessonId]?.lesson_percentage || 0),
+        quiz_percentage: hasTests && newPercentage === 100 ? 100 : (prev[lessonId]?.quiz_percentage || 0)
+      }
+    }));
+
+    try {
+      // استدعاء API لإكمال الدرس
+      const res = await markLessonAsCompleted(id, lessonId);
+      if (res) {
+        console.log('Lesson marked as completed successfully:', res);
+        
+        // تحديث التقدم العام للدورة
+        const updatedProgress = await getCourseProgressDetails(id);
+        if (updatedProgress) {
+          setCourseProgress(updatedProgress);
+          
+          // تحديث تقدم الأقسام
+          if (updatedProgress.sections_progress) {
+            const sectionProgressData = {};
+            updatedProgress.sections_progress.forEach(section => {
+              sectionProgressData[section.section_id] = section.progress;
+            });
+            setSectionProgress(sectionProgressData);
+          }
         }
-      }));
+      }
+    } catch (error) {
+      console.error('Error completing lesson:', error);
+      // في حالة الخطأ، إعادة التحديث من الخادم
+      await updateLessonStatus(lessonId);
     }
-    // تحديث من الخادم للتأكد من الاستمرارية
-    await updateLessonStatus(lessonId);
-  } catch (error) {
-    console.error('Error completing lesson:', error);
-    // في حالة الخطأ، إعادة التحديث من الخادم
-    await updateLessonStatus(lessonId);
-  }
-};
+  };
+
+  // دالة لحساب تقدم القسم
+  const calculateSectionProgress = useCallback((sectionId) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section || !section.lessons || section.lessons.length === 0) {
+      return 0;
+    }
+
+    let totalProgress = 0;
+    let completedLessons = 0;
+
+    section.lessons.forEach(lesson => {
+      const lessonStatus = lessonStatuses[lesson.id];
+      const progress = calculateTotalProgress(lesson, lessonStatus);
+      totalProgress += progress;
+      if (progress === 100) {
+        completedLessons++;
+      }
+    });
+
+    const averageProgress = totalProgress / section.lessons.length;
+    return {
+      percentage: Math.round(averageProgress),
+      completedLessons,
+      totalLessons: section.lessons.length
+    };
+  }, [sections, lessonStatuses, calculateTotalProgress]);
 
   useEffect(() => {
     let mounted = true;
@@ -340,32 +402,50 @@ const handleLessonComplete = async (lessonId) => {
         }
 
         // تحميل التقدم الإضافي إذا كان المستخدم مسجل الدخول
-        if (isLoggedIn && courseData?.lessons?.length) {
+        if (isLoggedIn) {
           try {
-            // First try to get course progress to see if any lessons are completed
-            const courseProgress = await getCourseProgress(id);
-            console.log('Course progress loaded:', courseProgress);
+            // استخدام الدالة الجديدة للحصول على تفاصيل التقدم
+            const courseProgressDetails = await getCourseProgressDetails(id);
+            console.log('Course progress details loaded:', courseProgressDetails);
             
-            if (courseProgress?.sections_progress) {
+            if (courseProgressDetails) {
+              setCourseProgress(courseProgressDetails);
+              
               // تحديث حالة الدروس من بيانات تقدم الأقسام
               const updatedStatuses = { ...lessonStatuses };
-              courseProgress.sections_progress.forEach(section => {
-                if (section.lessons) {
-                  section.lessons.forEach(lesson => {
-                    if (lesson.lesson_id) {
-                      updatedStatuses[lesson.lesson_id] = {
-                        ...updatedStatuses[lesson.lesson_id],
-                        percentage: lesson.percentage || 0,
-                        status: lesson.status || 'not_started'
-                      };
-                    }
-                  });
-                }
-              });
+              if (courseProgressDetails.sections_progress) {
+                courseProgressDetails.sections_progress.forEach(section => {
+                  if (section.lessons) {
+                    section.lessons.forEach(lesson => {
+                      if (lesson.lesson_id) {
+                        updatedStatuses[lesson.lesson_id] = {
+                          ...updatedStatuses[lesson.lesson_id],
+                          percentage: lesson.percentage || 0,
+                          status: lesson.status || 'not_started'
+                        };
+                      }
+                    });
+                  }
+                });
+                
+                // تحديث تقدم الأقسام
+                const sectionProgressData = {};
+                courseProgressDetails.sections_progress.forEach(section => {
+                  sectionProgressData[section.section_id] = section.progress;
+                });
+                setSectionProgress(sectionProgressData);
+              }
               setLessonStatuses(updatedStatuses);
             }
           } catch (error) {
-            console.log('Failed to load course progress:', error);
+            console.log('Failed to load course progress details:', error);
+            // Fallback to old method
+            try {
+              const oldProgress = await getCourseProgress(id);
+              setCourseProgress(oldProgress);
+            } catch {
+              // ignore
+            }
           }
         }
 
@@ -377,16 +457,6 @@ const handleLessonComplete = async (lessonId) => {
           } catch {
             // If access check fails, assume no access for paid content
             setHasAccess(courseData.price === 0 || courseData.price === "0");
-          }
-          // Fetch course progress
-          try {
-            setProgressLoading(true);
-            const progress = await getCourseProgress(id);
-            setCourseProgress(progress);
-          } catch {
-            // ignore
-          } finally {
-            setProgressLoading(false);
           }
         } else {
           // Not logged in, only free content accessible
@@ -488,7 +558,7 @@ const handleLessonComplete = async (lessonId) => {
       mounted = false;
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, startLessonProgress, getLessonProgress, isLoggedIn, updateLessonStatus]);
+  }, [id, getVideoCourseById, getCourseAccess, getCourseProgress, getCourseProgressDetails, startLessonProgress, getLessonProgress, isLoggedIn, updateLessonStatus]);
 
   // When returning from quiz page, update the specific lesson status and overall progress
   useEffect(() => {
@@ -504,14 +574,14 @@ const handleLessonComplete = async (lessonId) => {
     } else if (s.courseCompleted && isLoggedIn) {
       (async () => {
         try {
-          const updatedProgress = await getCourseProgress(id);
+          const updatedProgress = await getCourseProgressDetails(id);
           setCourseProgress(updatedProgress);
         } catch (error) {
           console.error('Error updating course progress:', error);
         }
       })();
     }
-  }, [location.state, id, isLoggedIn, getCourseProgress, updateLessonStatus]);
+  }, [location.state, id, isLoggedIn, getCourseProgressDetails, updateLessonStatus]);
 
   // Sort lessons: free first, then paid (kept for backward compatibility)
   const _sortedLessons = useMemo(() => {
@@ -708,6 +778,40 @@ const handleLessonComplete = async (lessonId) => {
     );
   };
 
+  // Section Progress Bar Component
+  const SectionProgressBar = ({ sectionId }) => {
+    const progress = calculateSectionProgress(sectionId);
+    const sectionProgressData = sectionProgress[sectionId];
+    
+    // استخدام بيانات التقدم من API إذا كانت متوفرة
+    const displayPercentage = sectionProgressData?.percentage || progress.percentage;
+    const displayCompleted = sectionProgressData?.completed_lessons || progress.completedLessons;
+    const displayTotal = sectionProgressData?.total_lessons || progress.totalLessons;
+
+    return (
+      <div className="mt-2">
+        <div className="flex items-center justify-between mb-1 text-xs">
+          <span className="text-text-muted">{t('courses.sectionProgress', 'Section Progress')}</span>
+          <span className="font-medium">{displayPercentage}%</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full bg-accent">
+          <div
+            className={`h-1.5 rounded-full ${
+              displayPercentage === 100 ? 'bg-green-500' : 'bg-primary'
+            }`}
+            style={{ width: `${Math.min(100, Math.max(0, displayPercentage))}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-1 text-xs text-text-muted">
+          <span>{displayCompleted} of {displayTotal} {t('courses.lessons', 'lessons')} completed</span>
+          {displayPercentage === 100 && (
+            <span className="font-semibold text-green-600">{t('courses.completed', 'Completed')}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -724,7 +828,6 @@ const handleLessonComplete = async (lessonId) => {
   }
 
   return (
-
     <section className="min-h-screen py-10 bg-background text-text dark:bg-background dark:text-text">
       <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Header */}
@@ -886,6 +989,11 @@ const handleLessonComplete = async (lessonId) => {
                                 {section.files && section.files.length > 0 && <FaFileAlt />}
                                 <span>{hasFree ? t('courses.hasFree', 'Has Free') : t('courses.premium', 'Premium')}</span>
                               </div>
+                              
+                              {/* Section Progress Bar */}
+                              {isLoggedIn && section.lessons && section.lessons.length > 0 && (
+                                <SectionProgressBar sectionId={section.id} />
+                              )}
                             </div>
 
                             {/* Lock Icon or Expand Button */}
@@ -1069,50 +1177,50 @@ const handleLessonComplete = async (lessonId) => {
                         controls
                         className="w-full h-full"
                         poster={currentLesson.image}
-           onEnded={async () => {
-  if (isLoggedIn) {
-    try {
-      const currentStatus = lessonStatuses[currentLesson.id] || {};
-      const hasTests = currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0;
-      
-      let newPercentage = 100;
-      
-      if (hasTests) {
-        // إذا كان هناك اختبارات، يكمل الفيديو فقط (50%)
-        const quizCompleted = currentStatus.quiz_percentage >= 100;
-        newPercentage = quizCompleted ? 100 : 50;
-      }
-      
-      // تحديث فوري للواجهة
-      setLessonStatuses(prev => ({ 
-        ...prev, 
-        [currentLesson.id]: {
-          ...prev[currentLesson.id],
-          lesson_percentage: 100,
-          percentage: newPercentage,
-          status: newPercentage === 100 ? 'completed' : 'in_progress'
-        }
-      }));
+                        onEnded={async () => {
+                          if (isLoggedIn) {
+                            try {
+                              const currentStatus = lessonStatuses[currentLesson.id] || {};
+                              const hasTests = currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0;
+                              
+                              let newPercentage = 100;
+                              
+                              if (hasTests) {
+                                // إذا كان هناك اختبارات، يكمل الفيديو فقط (50%)
+                                const quizCompleted = currentStatus.quiz_percentage >= 100;
+                                newPercentage = quizCompleted ? 100 : 50;
+                              }
+                              
+                              // تحديث فوري للواجهة
+                              setLessonStatuses(prev => ({ 
+                                ...prev, 
+                                [currentLesson.id]: {
+                                  ...prev[currentLesson.id],
+                                  lesson_percentage: 100,
+                                  percentage: newPercentage,
+                                  status: newPercentage === 100 ? 'completed' : 'in_progress'
+                                }
+                              }));
 
-      // استخدام النوع الصحيح 'lesson'
-      const res = await completeLessonProgress(id, currentLesson.id, 'lesson');
-      if (res?.course_progress) setCourseProgress(res.course_progress);
-      if (res?.lesson) {
-        setLessonStatuses(prev => ({ 
-          ...prev, 
-          [currentLesson.id]: {
-            ...prev[currentLesson.id],
-            ...res.lesson
-          }
-        }));
-      }
-      // Refresh from server to ensure persistence
-      await updateLessonStatus(currentLesson.id);
-    } catch (error) {
-      console.error('Error on video end:', error);
-    }
-  }
-}}
+                              // استخدام النوع الصحيح 'lesson'
+                              const res = await completeLessonProgress(id, currentLesson.id, 'lesson');
+                              if (res?.course_progress) setCourseProgress(res.course_progress);
+                              if (res?.lesson) {
+                                setLessonStatuses(prev => ({ 
+                                  ...prev, 
+                                  [currentLesson.id]: {
+                                    ...prev[currentLesson.id],
+                                    ...res.lesson
+                                  }
+                                }));
+                              }
+                              // Refresh from server to ensure persistence
+                              await updateLessonStatus(currentLesson.id);
+                            } catch (error) {
+                              console.error('Error on video end:', error);
+                            }
+                          }
+                        }}
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full bg-accent">
@@ -1125,21 +1233,21 @@ const handleLessonComplete = async (lessonId) => {
                   </div>
                   <div className="p-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-text">{currentLesson.title}</h3>
-{isLoggedIn && currentLesson.video && (
-  <div className="mt-3">
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Button clicked');
-        handleLessonComplete(currentLesson.id);
-      }}
-      className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
-    >
-      {t('courses.markCompleted', 'Mark as Completed')}
-    </button>
-  </div>
-)}
+                    {isLoggedIn && currentLesson.video && (
+                      <div className="mt-3">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Button clicked');
+                            handleLessonComplete(currentLesson.id);
+                          }}
+                          className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
+                        >
+                          {t('courses.markCompleted', 'Mark as Completed')}
+                        </button>
+                      </div>
+                    )}
                     {currentLesson.description && (
                       <div className="mt-2 text-sm text-text-secondary">
                         <p className="leading-relaxed line-clamp-2">

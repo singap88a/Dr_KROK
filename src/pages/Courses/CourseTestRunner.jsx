@@ -110,8 +110,11 @@ export default function CourseTestRunner() {
           total_questions: quizzes.length,
           questions
         });
+
+        // Automatically mark lesson as completed when quiz is finished
+        await completeLessonProgress(id, lessonId, 'quiz');
       } catch (error) {
-        console.error('Failed to submit test results:', error);
+        console.error('Failed to submit test results or complete lesson:', error);
         // Continue anyway
       }
     }

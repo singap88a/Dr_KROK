@@ -346,23 +346,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         }
         throw new Error('Progress start endpoint not available');
       },
-      async getLessonProgress(courseId, lessonId) {
-        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-        const candidates = [
-          `courses/${courseId}/progress/${lessonId}`,
-          `video_courses/${courseId}/progress/${lessonId}`,
-          `video_course/${courseId}/progress/${lessonId}`
-        ];
-        for (const path of candidates) {
-          try {
-            const res = await request(path, { auth: true });
-            return res?.data || null;
-          } catch (e) {
-            if (e?.status && e.status !== 404) throw e;
-          }
-        }
-        return null;
-      },
+
 async completeLessonProgress(courseId, lessonId, type) {
   if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
   
@@ -392,6 +376,91 @@ async completeLessonProgress(courseId, lessonId, type) {
   }
   throw new Error('Progress complete endpoint not available');
 },
+      // Course Progress API functions
+      async getCourseProgressDetails(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        const candidates = [
+          `courses/${courseId}/progress`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        return null;
+      },
+      async markLessonAsCompleted(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+
+        const formData = new FormData();
+        formData.append('course', String(courseId));
+        formData.append('lesson', String(lessonId));
+        formData.append('type', 'lesson');
+
+        const candidates = [
+          `courses/${courseId}/progress/${lessonId}/complete`
+        ];
+
+        for (const path of candidates) {
+          try {
+            const res = await request(path, {
+              method: 'POST',
+              auth: true,
+              body: formData,
+              isFormData: true
+            });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) {
+              console.warn(`Failed with endpoint ${path}:`, e.message);
+              // Continue to next endpoint instead of throwing immediately
+              continue;
+            }
+          }
+        }
+        throw new Error('Lesson complete endpoint not available');
+      },
+      async updateLessonProgress(courseId, lessonId, progressData) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+
+        const formData = new FormData();
+        formData.append('course_id', String(courseId));
+        formData.append('lesson_id', String(lessonId));
+        formData.append('percentage', String(progressData.percentage));
+        formData.append('status', progressData.status);
+
+        if (progressData.lesson_percentage !== undefined) {
+          formData.append('lesson_percentage', String(progressData.lesson_percentage));
+        }
+        if (progressData.quiz_percentage !== undefined) {
+          formData.append('quiz_percentage', String(progressData.quiz_percentage));
+        }
+
+        const candidates = [
+          `courses/${courseId}/progress/${lessonId}/progress`
+        ];
+
+        for (const path of candidates) {
+          try {
+            const res = await request(path, {
+              method: 'POST',
+              auth: true,
+              body: formData,
+              isFormData: true
+            });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) {
+              console.warn(`Failed with endpoint ${path}:`, e.message);
+              continue;
+            }
+          }
+        }
+        throw new Error('Lesson progress endpoint not available');
+      },
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();
