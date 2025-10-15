@@ -402,103 +402,148 @@ const TestYourself = () => {
               ) : (
                 // Connect Questions: Drag images to matching texts
                 <div className="space-y-6">
-                  <div className="p-6 border shadow-lg bg-accent rounded-xl border-border">
-                    <h3 className="mb-4 text-lg font-semibold text-text">{t('testYourself.test.connectInstruction', 'Drag the images to the matching texts below. You can remove or change connections by clicking on the image in the text box.')}</h3>
+<div className="p-4 bg-gradient-to-br from-surface to-accent border border-border shadow-md rounded-2xl max-w-5xl mx-auto">
+  <h3 className="mb-4 text-lg font-bold text-center text-text">
+    {t('testYourself.test.connectInstruction', 'Match each image with its correct text by dragging.')}
+  </h3>
 
-                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-text-secondary">{t('testYourself.test.texts', 'Texts')}:</h4>
-                        {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
-                          const answerText = currentQuestion[answerKey];
-                          const isDropped = userAnswers[currentQuestion.id] && userAnswers[currentQuestion.id][answerKey];
+  {/* Layout: Texts (Left) + Images (Right) */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start justify-center">
+    {/* Left Column — Text Cards */}
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-primary border-b border-primary/40 pb-1">
+        {t('testYourself.test.texts', 'Texts')}
+      </h4>
 
-                          if (!answerText) return null;
+      {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+        const answerText = currentQuestion[answerKey];
+        const isDropped = userAnswers[currentQuestion.id] && userAnswers[currentQuestion.id][answerKey];
+        if (!answerText) return null;
 
-                          return (
-                            <div
-                              key={answerKey}
-                              className={`p-4 border-2 rounded-xl transition-all duration-300 relative ${
-                                isDropped
-                                  ? 'border-secondary bg-green-50 dark:bg-green-900/20 shadow-md'
-                                  : 'border-dashed border-border bg-surface hover:border-primary hover:shadow-sm'
-                              }`}
-                              onDragOver={handleDragOver}
-                              onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
-                            >
-                              <div className="mb-2 font-medium text-center text-text">{answerText}</div>
-                              {isDropped && (
-                                <div className="relative mt-3 text-center">
-                                  <img
-                                    src={currentQuestion[`${isDropped}_image`]}
-                                    alt="Dropped image"
-                                    className="mx-auto transition-opacity rounded-lg cursor-pointer max-h-24 hover:opacity-75"
-                                    onClick={() => {
-                                      setUserAnswers(prev => {
-                                        const newAnswers = { ...prev };
-                                        if (newAnswers[currentQuestion.id]) {
-                                          delete newAnswers[currentQuestion.id][answerKey];
-                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
-                                            delete newAnswers[currentQuestion.id];
-                                          }
-                                        }
-                                        return newAnswers;
-                                      });
-                                    }}
-                                  />
-                                  <button
-                                    className="absolute flex items-center justify-center w-6 h-6 text-xs text-white transition-colors bg-red-500 rounded-full top-1 right-1 hover:bg-red-600"
-                                    onClick={() => {
-                                      setUserAnswers(prev => {
-                                        const newAnswers = { ...prev };
-                                        if (newAnswers[currentQuestion.id]) {
-                                          delete newAnswers[currentQuestion.id][answerKey];
-                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
-                                            delete newAnswers[currentQuestion.id];
-                                          }
-                                        }
-                                        return newAnswers;
-                                      });
-                                    }}
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+        return (
+          <div
+            key={answerKey}
+            className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
+          >
+            {/* Text Content */}
+            <div className="flex flex-col items-center justify-center text-center p-3  ">
+              <p className="  text-text text-[15px] leading-snug  font-bold">{answerText}</p>
+            </div>
 
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-text-secondary">{t('testYourself.test.images', 'Images')}:</h4>
-                        {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
-                          const answerImage = currentQuestion[`${answerKey}_image`];
-                          const isUsed = userAnswers[currentQuestion.id] && Object.values(userAnswers[currentQuestion.id]).includes(answerKey);
+            {/* Drop Zone */}
+            <div
+              className={`p-2 border-t rounded-b-lg transition-all duration-300 flex items-center justify-center min-h-[60px]
+                ${
+                  isDropped
+                    ? 'border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner'
+                    : 'border-dashed border-border bg-surface hover:border-primary hover:bg-accent'
+                }`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
+            >
+              {isDropped ? (
+                <div className="relative group w-full h-full flex justify-center items-center">
+                  <img
+                    src={currentQuestion[`${isDropped}_image`]}
+                    alt="Dropped image"
+                    className="w-full h-20 object-cover rounded-md cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                    onClick={() => {
+                      setUserAnswers((prev) => {
+                        const newAnswers = { ...prev };
+                        if (newAnswers[currentQuestion.id]) {
+                          delete newAnswers[currentQuestion.id][answerKey];
+                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                            delete newAnswers[currentQuestion.id];
+                          }
+                        }
+                        return newAnswers;
+                      });
+                    }}
+                  />
+                  <button
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
+                    onClick={() => {
+                      setUserAnswers((prev) => {
+                        const newAnswers = { ...prev };
+                        if (newAnswers[currentQuestion.id]) {
+                          delete newAnswers[currentQuestion.id][answerKey];
+                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                            delete newAnswers[currentQuestion.id];
+                          }
+                        }
+                        return newAnswers;
+                      });
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center text-text-muted">
+                  <svg
+                    className="w-4 h-4 mx-auto mb-1 opacity-40"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                  <p className="text-[11px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
 
-                          if (!answerImage) return null;
+    {/* Right Column — Image Cards */}
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-primary border-b border-primary/40 pb-1">
+        {t('testYourself.test.images', 'Images')}
+      </h4>
 
-                          return (
-                            <div
-                              key={answerKey}
-                              draggable={!isUsed}
-                              onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
-                              className={`p-4 border-2 rounded-xl transition-shadow duration-200 ${
-                                isUsed
-                                  ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
-                                  : 'border-dashed shadow-sm bg-surface border-border cursor-grab hover:shadow-md hover:border-primary active:cursor-grabbing'
-                              }`}
-                            >
-                              <img
-                                src={answerImage}
-                                alt="Draggable image"
-                                className="mx-auto rounded-lg max-h-32"
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+      {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+        const answerImage = currentQuestion[`${answerKey}_image`];
+        const isUsed =
+          userAnswers[currentQuestion.id] &&
+          Object.values(userAnswers[currentQuestion.id]).includes(answerKey);
+        if (!answerImage) return null;
+
+        return (
+          <div
+            key={answerKey}
+            draggable={!isUsed}
+            onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
+            className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
+              ${
+                isUsed
+                  ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
+                  : 'border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing'
+              }`}
+          >
+            <div className="w-full h-[100px] rounded-lg overflow-hidden">
+              <img
+                src={answerImage}
+                alt="Draggable image"
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
+
+
+
                 </div>
               )}
               
