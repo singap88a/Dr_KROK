@@ -15,12 +15,12 @@ import Profile from "./pages/Profile/Profile";
 import CTA from "./components/Home/CTA";
 import Courses from "./pages/Courses/Courses";
 import CourseDetails from "./pages/Courses/CourseDetails";
-import CourseLessons from "./pages/Courses/CourseLessons";
+import CourseLessons from "./pages/Courses/course-lessons/CourseLessons";
 import CourseSubscription from "./pages/Courses/CourseSubscription";
 import CourseTestRunner from "./pages/Courses/CourseTestRunner";
 import CourseCertificate from "./pages/Courses/CourseCertificate";
 import CourseFinalTestResults from "./pages/Courses/CourseFinalTestResults";
-import LessonTestResults from "./pages/Courses/CourseLessons/LessonTestResults";
+import LessonTestResults from "./pages/Courses/course-lessons/LessonTestResults";
 
 import TrainerArticlesPage from "./pages/Articles/Articles";
 import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
