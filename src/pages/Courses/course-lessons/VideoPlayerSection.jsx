@@ -20,13 +20,14 @@ const VideoPlayerSection = ({
   course,
   courseProgress,
   isLoggedIn,
-  lessonStatuses,
+  hasAccess,
   onLessonComplete,
   onFileClick,
   onVideoClick,
   onImageClick,
   updateLessonStatus,
-  navigate
+  navigate,
+  onLessonClick
 }) => {
   const { t } = useTranslation();
 
@@ -152,7 +153,7 @@ const VideoPlayerSection = ({
           </div>
         )}
 
-        {isLesson && content.lesson_end_tests && content.lesson_end_tests.length > 0 && (
+        {isLesson && content.lesson_end_tests && content.lesson_end_tests.length > 0 && hasAccess && (
           <div className="mb-2">
             <h5 className="mb-2 text-sm font-medium text-text">
               {t("courses.lessonTests", "Lesson Tests")}
@@ -254,20 +255,20 @@ const VideoPlayerSection = ({
               <button
                 key={test.id || idx}
                 onClick={() =>
-                  !locked &&
+                  !locked && hasAccess &&
                   navigate(`/courses/${course.id}/test/final/${test.id}`, {
                     state: { course, test },
                   })
                 }
-                disabled={locked}
+                disabled={locked || !hasAccess}
                 className={`px-4 py-2 text-sm font-medium rounded ${
-                  locked
+                  locked || !hasAccess
                     ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                     : "text-white bg-primary hover:bg-secondary"
                 }`}
               >
                 {test.name || `${t("courses.finalTest", "Final Test")} ${idx + 1}`}{" "}
-                {locked && <FaLock className="inline ml-1" />}
+                {(locked || !hasAccess) && <FaLock className="inline ml-1" />}
               </button>
             );
           })}
@@ -290,27 +291,9 @@ const VideoPlayerSection = ({
                 onEnded={async () => {
                   if (isLoggedIn) {
                     try {
-                      const currentStatus = lessonStatuses[currentLesson.id] || {};
-                      const hasTests =
-                        currentLesson.lesson_end_tests &&
-                        currentLesson.lesson_end_tests.length > 0;
-
-                      let newPercentage = 100;
-
-                      if (hasTests) {
-                        const quizCompleted = currentStatus.quiz_percentage >= 100;
-                        newPercentage = quizCompleted ? 100 : 50;
-                      }
-
                       // تحديث فوري للواجهة
                       // سيتم التعامل مع هذا في المكون الرئيسي عبر onLessonComplete
-                      
-                      const res = await completeLessonProgress(
-                        course.id,
-                        currentLesson.id,
-                        "lesson"
-                      );
-                      
+
                       // Refresh from server
                       await updateLessonStatus(currentLesson.id);
                     } catch (error) {
@@ -497,12 +480,6 @@ const VideoPlayerSection = ({
       {renderFinalTests()}
     </div>
   );
-};
-
-// نضيف هذه الدالة مؤقتاً حتى لا يحدث خطأ
-const completeLessonProgress = async (courseId, lessonId, type) => {
-  // سيتم استدعاء API الحقيقي من خلال context
-  return Promise.resolve();
 };
 
 export default VideoPlayerSection;
