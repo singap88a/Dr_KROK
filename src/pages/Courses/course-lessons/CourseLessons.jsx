@@ -23,6 +23,7 @@ export default function CourseLessons() {
     getCourseAccess,
     getCourseProgress,
     startLessonProgress,
+    completeLessonProgress,
     getLessonProgress,
     getCourseProgressDetails,
     markLessonAsCompleted,
@@ -90,7 +91,7 @@ export default function CourseLessons() {
   // دالة محسنة لتحديث حالة الدرس
   const updateLessonStatus = useCallback(
     async (lessonId) => {
-      if (!isLoggedIn || !id) return;
+      if (!isLoggedIn) return;
 
       try {
         const [updatedCourseProgress, updatedLessonProgress] =
@@ -228,44 +229,7 @@ export default function CourseLessons() {
         setLoading(true);
         setError("");
 
-        // Check if course data is passed via navigation state (from CourseDetails)
-        const cachedCourse = location.state?.course;
-        let courseData;
-
-        if (cachedCourse && cachedCourse.id === parseInt(id)) {
-          // Use cached data from navigation state
-          courseData = cachedCourse;
-          // Also cache it in localStorage for future use
-          const cacheData = { ...courseData, _cacheTime: Date.now() };
-          localStorage.setItem(`course_${id}`, JSON.stringify(cacheData));
-        } else {
-          // Check localStorage cache first
-          const cachedKey = `course_${id}`;
-          const cachedData = localStorage.getItem(cachedKey);
-
-          if (cachedData) {
-            try {
-              const parsed = JSON.parse(cachedData);
-              // Check if cache is still valid (less than 1 hour old)
-              const cacheTime = parsed._cacheTime || 0;
-              const now = Date.now();
-              if (now - cacheTime < 60 * 60 * 1000) { // 1 hour
-                courseData = parsed;
-              }
-            } catch {
-              // Invalid cache, ignore
-            }
-          }
-
-          if (!courseData) {
-            // Fetch fresh data from API
-            courseData = await getVideoCourseById(id, isLoggedIn);
-            // Cache the data
-            const cacheData = { ...courseData, _cacheTime: Date.now() };
-            localStorage.setItem(cachedKey, JSON.stringify(cacheData));
-          }
-        }
-
+        const courseData = await getVideoCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(courseData);
         setLessons(courseData.lessons || []);
@@ -646,7 +610,6 @@ export default function CourseLessons() {
             course={course}
             courseProgress={courseProgress}
             isLoggedIn={isLoggedIn}
-            hasAccess={hasAccess}
             lessonStatuses={lessonStatuses}
             onLessonComplete={handleLessonComplete}
             onFileClick={handleFileClick}
@@ -657,7 +620,6 @@ export default function CourseLessons() {
             }}
             updateLessonStatus={updateLessonStatus}
             navigate={navigate}
-            onLessonClick={handleLessonClick}
           />
         </div>
       </div>

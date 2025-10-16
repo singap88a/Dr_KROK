@@ -58,37 +58,11 @@ export default function CourseDetails() {
       try {
         setLoading(true);
         setError("");
-
-        // Check for cached course data first
-        const cachedKey = `course_${id}`;
-        const cachedData = localStorage.getItem(cachedKey);
-        let data;
-
-        if (cachedData) {
-          try {
-            const parsed = JSON.parse(cachedData);
-            // Check if cache is still valid (less than 1 hour old)
-            const cacheTime = parsed._cacheTime || 0;
-            const now = Date.now();
-            if (now - cacheTime < 60 * 60 * 1000) { // 1 hour
-              data = parsed;
-            }
-            } catch {
-              // Invalid cache, ignore
-            }
-        }
-
-        if (!data) {
-          // Fetch from API
-          data = await getVideoCourseById(id, isLoggedIn);
-          // Cache the data
-          const cacheData = { ...data, _cacheTime: Date.now() };
-          localStorage.setItem(cachedKey, JSON.stringify(cacheData));
-        }
-
+        
+        const data = await getVideoCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(data);
-
+        
         // Set reviews from course data
         if (data.ratings && Array.isArray(data.ratings)) {
           setReviews(data.ratings);
@@ -115,7 +89,7 @@ export default function CourseDetails() {
     };
 
     loadData();
-
+    
     return () => {
       mounted = false;
     };
@@ -346,7 +320,7 @@ export default function CourseDetails() {
           <div className="flex gap-3">
             {userHasAccess ? (
               <button
-                onClick={() => navigate(`/courses/${id}/lessons`, { state: { course } })}
+                onClick={() => navigate(`/courses/${id}/lessons`)}
                 className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
               >
                 {t("courses.startCourse", "Start Course")}
@@ -360,7 +334,7 @@ export default function CourseDetails() {
               </button>
             )}
             <button
-              onClick={() => navigate(`/courses/${id}/lessons`, { state: { course } })}
+              onClick={() => navigate(`/courses/${id}/lessons`)}
               className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
             >
               {t("courses.previewCourse", "Preview Course")}
