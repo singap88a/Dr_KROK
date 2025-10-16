@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {
@@ -11,7 +11,12 @@ import {
   FaStar as FaStarSolid,
   FaGraduationCap,
   FaList,
-  FaLock
+  FaLock,
+  FaTimes,
+  FaExclamationTriangle,
+  FaChartLine,
+  FaClock,
+  FaUnlock
 } from "react-icons/fa";
 
 const VideoPlayerSection = ({
@@ -26,9 +31,17 @@ const VideoPlayerSection = ({
   onVideoClick,
   onImageClick,
   updateLessonStatus,
-  navigate
+  navigate,
+  onLessonClick
 }) => {
   const { t } = useTranslation();
+  const [testModal, setTestModal] = useState({
+    isOpen: false,
+    message: "",
+    progress: 0,
+    required: 80,
+    testName: ""
+  });
 
   const getVideoRelatedArray = (videoRelated) => {
     if (!videoRelated) return [];
@@ -36,56 +49,174 @@ const VideoPlayerSection = ({
     return [videoRelated];
   };
 
+  // Handle test attempts
+  const handleTestClick = (test, content, testType = 'lesson') => {
+    const lessonProgress = lessonStatuses[content.id] || {};
+    const progressPercentage = lessonProgress.percentage || lessonProgress.lesson_percentage || 0;
+    const canTakeTest = progressPercentage >= 50;
+
+    if (!canTakeTest) {
+      setTestModal({
+        isOpen: true,
+        message: t("courses.watchVideoToUnlockTest", "You need to watch at least 50% of the video to unlock this test"),
+        progress: progressPercentage,
+        required: 50,
+        testName: test.name || `${t("courses.test", "Test")}`
+      });
+      return;
+    }
+
+    // Navigate to test if allowed
+    if (testType === 'lesson') {
+      navigate(`/courses/${course.id}/test/lesson/${test.id}`, {
+        state: {
+          course,
+          test,
+          lessonId: content.id,
+        },
+      });
+    } else {
+      navigate(`/courses/${course.id}/test/final/${test.id}`, {
+        state: { course, test },
+      });
+    }
+  };
+
+  // Professional modal popup
+  const TestLockModal = () => {
+    if (!testModal.isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="w-full max-w-md mx-4 overflow-hidden transition-all transform shadow-xl bg-surface rounded-2xl">
+          {/* Header */}
+          <div className="p-6 text-white bg-primary to-primary/80">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-full bg-opacity-20">
+                  <FaLock className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">
+                    {t("courses.testLocked", "Test Locked")}
+                  </h3>
+                  <p className="text-sm text-white text-opacity-90">
+                    {testModal.testName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setTestModal({ ...testModal, isOpen: false })}
+                className="p-2 transition-colors rounded-full hover:bg-white hover:bg-opacity-20"
+              >
+                <FaTimes />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 bg-surface">
+            <div className="flex items-center gap-4 p-4 mb-4 border rounded-lg bg-background border-border">
+              <div className="flex-shrink-0">
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <FaExclamationTriangle className="text-2xl text-primary" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-text">
+                  {testModal.message}
+                </p>
+              </div>
+            </div>
+
+
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setTestModal({ ...testModal, isOpen: false })}
+                className="flex-1 px-4 py-3 font-medium transition-colors rounded-lg text-text bg-accent hover:bg-accent/80"
+              >
+                {t("common.cancel", "Cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  setTestModal({ ...testModal, isOpen: false });
+                }}
+                className="flex-1 px-4 py-3 font-medium text-white transition-all transform rounded-lg bg-primary hover:bg-primary/90 hover:scale-105"
+              >
+                {t("courses.continueWatching", "Continue Watching")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderContentAttachments = (content, type) => {
     const isLesson = type === 'lesson';
     
     return (
-      <div className="mt-4">
-        <h4 className="mb-3 font-semibold text-md text-text">
+      <div className="mt-6">
+        <h4 className="pb-2 mb-4 text-lg font-bold border-b text-text">
           {t(isLesson ? "courses.lessonAttachments" : "courses.sectionAttachments", 
-             isLesson ? "Lesson Attachments" : "Section Attachments")}
+             isLesson ? "📚 Lesson Materials" : "📁 Section Materials")}
         </h4>
 
         {content.images && content.images.length > 0 && (
-          <div className="mb-4">
-            <h5 className="mb-2 text-sm font-medium text-text">
-              {t("courses.images", "Images")}
+          <div className="mb-6">
+            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text">
+              <FaImage className="text-primary" />
+              {t("courses.images", "Gallery")}
             </h5>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
               {content.images.map((img, idx) => (
-                <img
+                <div
                   key={idx}
-                  src={img}
-                  alt={`${type} image ${idx + 1}`}
-                  className="object-cover w-full h-32 rounded cursor-pointer"
-                  style={{
-                    width: "100%",
-                    height: "128px",
-                    objectFit: "cover",
-                  }}
+                  className="relative overflow-hidden transition-transform duration-200 transform rounded-lg cursor-pointer group hover:scale-105"
                   onClick={() => onImageClick(img)}
-                />
+                >
+                  <img
+                    src={img}
+                    alt={`${type} image ${idx + 1}`}
+                    className="object-cover w-full rounded-lg h-28"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center transition-all duration-200 bg-black bg-opacity-0 group-hover:bg-opacity-30">
+                    <div className="transition-all duration-200 transform translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0">
+                      <FaImage className="text-xl text-white" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
 
         {content.files && content.files.length > 0 && (
-          <div className="mb-4">
-            <h5 className="mb-2 text-sm font-medium text-text">
-              {t("courses.files", "Files")}
+          <div className="mb-6">
+            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text">
+              <FaFileAlt className="text-primary" />
+              {t("courses.files", "Study Materials")}
             </h5>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {content.files.map((file, idx) => (
                 <button
                   key={idx}
                   onClick={() => onFileClick(file.url || file)}
-                  className="flex flex-col items-center p-3 transition-colors border rounded hover:bg-accent"
+                  className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 hover:shadow-md group"
                 >
-                  <FaFileAlt className="mb-2 text-2xl text-primary" />
-                  <span className="text-xs text-center text-text">
-                    {file.name || `${t("courses.file", "File")} ${idx + 1}`}
-                  </span>
+                  <div className="flex-shrink-0 p-3 transition-colors rounded-lg bg-primary/10 group-hover:bg-primary/20">
+                    <FaFileAlt className="text-xl text-primary" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className="block text-sm font-medium text-text">
+                      {file.name || `${t("courses.file", "File")} ${idx + 1}`}
+                    </span>
+                    <span className="block mt-1 text-xs text-text-muted">
+                      {t("courses.clickToDownload", "Click to download")}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -93,11 +224,12 @@ const VideoPlayerSection = ({
         )}
 
         {content.video_related && (
-          <div className="mb-4">
-            <h5 className="mb-2 text-sm font-medium text-text">
+          <div className="mb-6">
+            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text">
+              <FaVideo className="text-primary" />
               {t("courses.additionalVideos", "Additional Videos")}
             </h5>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-4">
               {getVideoRelatedArray(content.video_related).map((video, idx) => {
                 const isObj = typeof video === "object" && video !== null;
                 const videoUrl = isObj
@@ -109,7 +241,7 @@ const VideoPlayerSection = ({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
+                    className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 cursor-pointer rounded-xl hover:border-primary hover:bg-primary/5 hover:shadow-md group"
                     onClick={() => onVideoClick(video)}
                   >
                     <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden rounded-lg">
@@ -117,7 +249,7 @@ const VideoPlayerSection = ({
                         <img
                           src={thumbnail}
                           alt={`Additional video ${idx + 1}`}
-                          className="object-cover w-full h-full"
+                          className="object-cover w-full h-full transition-transform group-hover:scale-110"
                         />
                       ) : (
                         <video
@@ -128,16 +260,15 @@ const VideoPlayerSection = ({
                           preload="metadata"
                         />
                       )}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
+                      <div className="absolute inset-0 flex items-center justify-center transition-all bg-black/0 group-hover:bg-black/20">
+                        <div className="flex items-center justify-center w-8 h-8 transition-transform transform bg-white rounded-full bg-opacity-90 group-hover:scale-110">
                           <FaPlay className="text-gray-700 text-xs ml-0.5" />
                         </div>
                       </div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <FaVideo className="text-sm text-primary" />
-                        <span className="text-sm font-medium text-text">
+                        <span className="text-sm font-semibold text-text">
                           {t("courses.additionalVideo", "Additional Video")} {idx + 1}
                         </span>
                       </div>
@@ -153,28 +284,90 @@ const VideoPlayerSection = ({
         )}
 
         {isLesson && content.lesson_end_tests && content.lesson_end_tests.length > 0 && (
-          <div className="mb-2">
-            <h5 className="mb-2 text-sm font-medium text-text">
-              {t("courses.lessonTests", "Lesson Tests")}
-            </h5>
-            <div className="flex flex-wrap gap-2">
-              {content.lesson_end_tests.map((test, idx) => (
-                <button
-                  key={test.id || idx}
-                  onClick={() =>
-                    navigate(`/courses/${course.id}/test/lesson/${test.id}`, {
-                      state: {
-                        course,
-                        test,
-                        lessonId: content.id,
-                      },
-                    })
-                  }
-                  className="px-3 py-2 text-xs font-medium border rounded bg-accent hover:border-primary border-border"
-                >
-                  {test.name || `${t("courses.test", "Test")} ${idx + 1}`}
-                </button>
-              ))}
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary">
+                <FaChartLine className="text-lg text-white" />
+              </div>
+              <div>
+                <h5 className="text-lg font-bold text-text">
+                  {t("courses.lessonTests", "Lesson Assessment")}
+                </h5>
+                <p className="text-sm text-text-muted">
+                  {t("courses.testYourKnowledge", "Test your understanding of this lesson")}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {content.lesson_end_tests.map((test, idx) => {
+                const lessonProgress = lessonStatuses[content.id] || {};
+                const progressPercentage = lessonProgress.percentage || lessonProgress.lesson_percentage || 0;
+                const canTakeTest = progressPercentage >= 50;
+
+                return (
+                  <div
+                    key={test.id || idx}
+                    className={`p-5 border-2 rounded-xl transition-all transform hover:scale-105 cursor-pointer ${
+                      canTakeTest
+                        ? "border-primary/20 bg-primary/5 hover:border-primary hover:shadow-lg"
+                        : "border-border bg-accent hover:border-border/80"
+                    }`}
+                    onClick={() => handleTestClick(test, content, 'lesson')}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          canTakeTest
+                            ? "bg-primary text-white"
+                            : "bg-text-muted text-background"
+                        }`}>
+                          {canTakeTest ? <FaUnlock /> : <FaLock />}
+                        </div>
+                        <div>
+                          <h6 className="font-semibold text-text">
+                            {test.name || `${t("courses.test", "Test")} ${idx + 1}`}
+                          </h6>
+                        </div>
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        canTakeTest
+                          ? "bg-primary/10 text-primary"
+                          : "bg-accent text-text-muted"
+                      }`}>
+                        {canTakeTest ? t("courses.available", "Available") : t("courses.locked", "Locked")}
+                      </div>
+                    </div>
+
+                    {/* Progress indicator for the test - only show when available */}
+                    {canTakeTest && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-text-muted">
+                            {t("courses.lessonProgress", "Lesson Progress")}
+                          </span>
+                          <span className="text-xs font-bold text-text">
+                            {Math.round(progressPercentage)}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-accent">
+                          <div
+                            className="h-2 transition-all duration-500 rounded-full bg-primary"
+                            style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {!canTakeTest && (
+                      <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
+                        <FaLock className="text-xs" />
+                        {t("courses.watchVideoToUnlockTest", "Watch 50% of the lesson to unlock")}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -228,7 +421,7 @@ const VideoPlayerSection = ({
 
             <Link
               to={`/instructors/${course.instructor.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+              className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
             >
               {t("instructors.viewDetails", "View Details")}
             </Link>
@@ -253,17 +446,12 @@ const VideoPlayerSection = ({
             return (
               <button
                 key={test.id || idx}
-                onClick={() =>
-                  !locked &&
-                  navigate(`/courses/${course.id}/test/final/${test.id}`, {
-                    state: { course, test },
-                  })
-                }
+                onClick={() => handleTestClick(test, course, 'final')}
                 disabled={locked}
                 className={`px-4 py-2 text-sm font-medium rounded ${
                   locked
                     ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : "text-white bg-primary hover:bg-secondary"
+                    : "text-white bg-primary hover:bg-primary/90"
                 }`}
               >
                 {test.name || `${t("courses.finalTest", "Final Test")} ${idx + 1}`}{" "}
@@ -290,28 +478,6 @@ const VideoPlayerSection = ({
                 onEnded={async () => {
                   if (isLoggedIn) {
                     try {
-                      const currentStatus = lessonStatuses[currentLesson.id] || {};
-                      const hasTests =
-                        currentLesson.lesson_end_tests &&
-                        currentLesson.lesson_end_tests.length > 0;
-
-                      let newPercentage = 100;
-
-                      if (hasTests) {
-                        const quizCompleted = currentStatus.quiz_percentage >= 100;
-                        newPercentage = quizCompleted ? 100 : 50;
-                      }
-
-                      // تحديث فوري للواجهة
-                      // سيتم التعامل مع هذا في المكون الرئيسي عبر onLessonComplete
-                      
-                      const res = await completeLessonProgress(
-                        course.id,
-                        currentLesson.id,
-                        "lesson"
-                      );
-                      
-                      // Refresh from server
                       await updateLessonStatus(currentLesson.id);
                     } catch (error) {
                       console.error("Error on video end:", error);
@@ -342,7 +508,7 @@ const VideoPlayerSection = ({
                     e.stopPropagation();
                     onLessonComplete(currentLesson.id);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
+                  className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-primary/90"
                 >
                   {t("courses.markCompleted", "Mark as Completed")}
                 </button>
@@ -488,21 +654,20 @@ const VideoPlayerSection = ({
   };
 
   return (
-    <div className="space-y-6 lg:col-span-2">
-      <div className="overflow-hidden border rounded-lg bg-surface border-border">
-        {renderVideoPlayer()}
+    <>
+      <div className="space-y-6 lg:col-span-2">
+        <div className="overflow-hidden border rounded-lg bg-surface border-border">
+          {renderVideoPlayer()}
+        </div>
+        
+        {renderInstructorCard()}
+        {renderFinalTests()}
       </div>
-      
-      {renderInstructorCard()}
-      {renderFinalTests()}
-    </div>
-  );
-};
 
-// نضيف هذه الدالة مؤقتاً حتى لا يحدث خطأ
-const completeLessonProgress = async (courseId, lessonId, type) => {
-  // سيتم استدعاء API الحقيقي من خلال context
-  return Promise.resolve();
+      {/* Test Lock Modal */}
+      <TestLockModal />
+    </>
+  );
 };
 
 export default VideoPlayerSection;

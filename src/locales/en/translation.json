@@ -752,6 +752,52 @@
       "noCourses": "No courses enrolled yet",
       "browseCourses": "Browse our courses and start learning today!"
     },
+  
+  "courses": {
+    "watchVideoToUnlockTest": "You need to complete the lesson first to unlock this test",
+    "testLocked": "Test Locked",
+    "yourProgress": "Your Progress",
+    "currentProgress": "Current Progress",
+    "requiredToUnlock": "Required: 80%",
+    "continueWatching": "Continue Watching",
+    "lessonAttachments": "📚 Lesson Materials",
+    "sectionAttachments": "📁 Section Materials",
+    "images": "Gallery",
+    "files": "Study Materials",
+    "file": "File",
+    "clickToDownload": "Click to download",
+    "additionalVideos": "Additional Videos",
+    "additionalVideo": "Additional Video",
+    "clickToWatch": "Click to watch this video",
+    "lessonTests": "Lesson Assessment",
+    "testYourKnowledge": "Test your understanding of this lesson",
+    "test": "Test",
+    "minutes": "minutes",
+    "available": "Available",
+    "locked": "Locked",
+    "lessonProgress": "Lesson Progress",
+    "instructor": "Instructor",
+    "yearsExp": "years experience",
+    "finalTests": "Final Tests",
+    "finalTest": "Final Test",
+    "videoNotAvailable": "Video not available",
+    "markCompleted": "Mark as Completed",
+    "askInstructor": "Ask the Instructor",
+    "contactInstructor": "Contact Instructor",
+    "sectionLessons": "Section Lessons",
+    "free": "Free",
+    "paid": "Paid",
+    "andMore": "And",
+    "moreLessons": "more lessons",
+    "selectContent": "Select a lesson or section to start"
+  },
+  "common": {
+    "cancel": "Cancel"
+  },
+  "instructors": {
+    "viewDetails": "View Details"
+  },
+ 
     "images": "Images",
     "files": "Files",
     "additionalVideos": "Additional Videos",

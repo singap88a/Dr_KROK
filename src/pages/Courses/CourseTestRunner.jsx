@@ -20,6 +20,29 @@ export default function CourseTestRunner() {
   const [time, setTime] = useState(0);
   const [results, setResults] = useState(null);
   const [dragItem, setDragItem] = useState(null);
+
+  const handleDragStart = (e, questionId, answerKey) => {
+    setDragItem({ questionId, answerKey });
+    e.dataTransfer.setData('text/plain', `${questionId}-${answerKey}`);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, questionId, textKey) => {
+    e.preventDefault();
+    if (dragItem && dragItem.questionId === questionId) {
+      setAnswers(prev => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          [textKey]: dragItem.answerKey
+        }
+      }));
+    }
+    setDragItem(null);
+  };
   const [loading, setLoading] = useState(!test);
   const [error, setError] = useState("");
 
@@ -84,6 +107,11 @@ export default function CourseTestRunner() {
         }
         isCorrect = correct === 4;
         studentAnswer = Object.keys(answers).filter(k => k.startsWith(`${q.id}_`)).map(k => answers[k]).join(', ');
+      } else if (q.type === 'connect') {
+        // For connect type, assume all matches are correct (no correct_answer check)
+        const userAnswer = answers[q.id];
+        isCorrect = userAnswer && Object.keys(userAnswer).length > 0;
+        studentAnswer = userAnswer ? Object.entries(userAnswer).map(([k,v]) => `${k}:${v}`).join(', ') : '';
       } else {
         studentAnswer = answers[q.id] || '';
         isCorrect = answers[q.id] === q.correct_answer;
@@ -110,11 +138,16 @@ export default function CourseTestRunner() {
           total_questions: quizzes.length,
           questions
         });
+      } catch (error) {
+        console.error('Failed to submit test results:', error);
+        // Continue anyway
+      }
 
-        // Automatically mark lesson as completed when quiz is finished
+      // Automatically mark lesson as completed when quiz is finished
+      try {
         await completeLessonProgress(id, lessonId, 'quiz');
       } catch (error) {
-        console.error('Failed to submit test results or complete lesson:', error);
+        console.error('Failed to complete lesson progress:', error);
         // Continue anyway
       }
     }
@@ -222,18 +255,185 @@ export default function CourseTestRunner() {
                   })}
                 </div>
               </div>
+            ) : currentQuestion?.type === 'connect' ? (
+              // Connect Questions: Drag images to matching texts
+              <div className="space-y-6">
+                <div className="max-w-5xl p-4 mx-auto border shadow-md bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
+                  <h3 className="mb-4 text-lg font-bold text-center text-text">
+                    {t('testYourself.test.connectInstruction', 'Match each image with its correct text by dragging.')}
+                  </h3>
+
+                  {/* Layout: Texts (Left) + Images (Right) */}
+                  <div className="grid items-start justify-center grid-cols-1 gap-4 lg:grid-cols-2">
+                    {/* Left Column — Text Cards */}
+                    <div className="space-y-3">
+                      <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
+                        {t('testYourself.test.texts', 'Texts')}
+                      </h4>
+
+                      {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+                        const answerText = currentQuestion[answerKey];
+                        const isDropped = answers[currentQuestion.id] && answers[currentQuestion.id][answerKey];
+                        if (!answerText) return null;
+
+                        return (
+                          <div
+                            key={answerKey}
+                            className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
+                          >
+                            {/* Text Content */}
+                            <div className="flex flex-col items-center justify-center p-3 text-center ">
+                              <p className="  text-text text-[15px] leading-snug  font-bold">{answerText}</p>
+                            </div>
+
+                            {/* Drop Zone */}
+                            <div
+                              className={`p-2 border-t rounded-b-lg transition-all duration-300 flex items-center justify-center min-h-[60px]
+                                ${
+                                  isDropped
+                                    ? 'border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner'
+                                    : 'border-dashed border-border bg-surface hover:border-primary hover:bg-accent'
+                                }`}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
+                            >
+                              {isDropped ? (
+                                <div className="relative flex items-center justify-center w-full h-full group">
+                                  <img
+                                    src={currentQuestion[`${isDropped}_image`]}
+                                    alt="Dropped image"
+                                    className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
+                                    onClick={() => {
+                                      setAnswers((prev) => {
+                                        const newAnswers = { ...prev };
+                                        if (newAnswers[currentQuestion.id]) {
+                                          delete newAnswers[currentQuestion.id][answerKey];
+                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                                            delete newAnswers[currentQuestion.id];
+                                          }
+                                        }
+                                        return newAnswers;
+                                      });
+                                    }}
+                                  />
+                                  <button
+                                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
+                                    onClick={() => {
+                                      setAnswers((prev) => {
+                                        const newAnswers = { ...prev };
+                                        if (newAnswers[currentQuestion.id]) {
+                                          delete newAnswers[currentQuestion.id][answerKey];
+                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                                            delete newAnswers[currentQuestion.id];
+                                          }
+                                        }
+                                        return newAnswers;
+                                      });
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="text-center text-text-muted">
+                                  <svg
+                                    className="w-4 h-4 mx-auto mb-1 opacity-40"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                    />
+                                  </svg>
+                                  <p className="text-[11px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Right Column — Image Cards */}
+                    <div className="space-y-3">
+                      <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
+                        {t('testYourself.test.images', 'Images')}
+                      </h4>
+
+                      {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+                        const answerImage = currentQuestion[`${answerKey}_image`];
+                        const isUsed =
+                          answers[currentQuestion.id] &&
+                          Object.values(answers[currentQuestion.id]).includes(answerKey);
+                        if (!answerImage) return null;
+
+                        return (
+                          <div
+                            key={answerKey}
+                            draggable={!isUsed}
+                            onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
+                            className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
+                              ${
+                                isUsed
+                                  ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
+                                  : 'border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing'
+                              }`}
+                          >
+                            <div className="w-full h-[100px] rounded-lg overflow-hidden">
+                              <img
+                                src={answerImage}
+                                alt="Draggable image"
+                                className="object-cover w-full h-full rounded-lg"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {['answer_1','answer_2','answer_3','answer_4'].map((key) => {
                   const text = currentQuestion[key];
                   const img = currentQuestion[`${key}_image`];
                   if (!text && !img) return null;
                   const selected = answers[currentQuestion.id] === key;
                   return (
-                    <button key={key} onClick={() => setAnswers(s => ({ ...s, [currentQuestion.id]: key }))} className={`w-full text-left p-3 border rounded ${selected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary'}`}>
-                      {text && <div className="text-text">{text}</div>}
-                      {img && <img src={img} alt="answer" className="mt-2 rounded max-h-40" />}
-                    </button>
+                    <div
+                      key={key}
+                      className={`p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        selected
+                          ? 'border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md transform scale-105'
+                          : 'border-border hover:border-primary hover:bg-accent hover:shadow-sm'
+                      }`}
+                      onClick={() => setAnswers(s => ({ ...s, [currentQuestion.id]: key }))}
+                    >
+                      <div className="flex items-start">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 mt-1 flex-shrink-0 ${
+                          selected ? 'border-primary bg-primary' : 'border-text-muted'
+                        }`}>
+                          {selected && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          {text && <div className="font-medium text-text">{text}</div>}
+                          {img && (
+                            <img
+                              src={img}
+                              alt="Answer"
+                              className="mx-auto mt-3 rounded-lg shadow-sm max-h-48"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
