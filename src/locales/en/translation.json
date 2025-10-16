@@ -140,7 +140,7 @@
     "cta": {
       "getStarted": "Get Started",
       "goToCourses": "Go to Courses",
-      "startTest": "Start Test"
+      "startTest": "Start Level Tests Now"
     },
     "expert": {
       "name": "Alex Albert",
@@ -488,10 +488,13 @@
       "of": "of",
       "time": "Time",
       "dragInstruction": "Drag the correct answer to the target area",
+      "connectInstruction": "Match each image with its correct text by dragging.",
       "availableAnswers": "Available Answers",
       "answerSelected": "Answer Selected",
       "dragHere": "Drag the correct answer here",
       "dropHere": "Drop your selection in this area",
+      "texts": "Texts",
+      "images": "Images",
       "previous": "Previous",
       "next": "Next Question",
       "finish": "Finish Test"
@@ -508,7 +511,8 @@
       "correctAnswers": "Correct Answers",
       "wrongAnswers": "Wrong Answers",
       "timeSpent": "Time Spent",
-      "back": "Back to Courses"
+      "back": "Back to Courses",
+      "enrollInCourse": "Enroll in Course"
     },
     "empty": {
       "title": "No courses found",

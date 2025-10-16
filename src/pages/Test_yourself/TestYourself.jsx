@@ -18,8 +18,8 @@ const TestYourself = () => {
   // Removed extra filters: level, year, category
   const [loading, setLoading] = useState(true);
   const [dragItem, setDragItem] = useState(null);
-  const [timeSpent, setTimeSpent] = useState(0);
-  const [questionTimeLeft, setQuestionTimeLeft] = useState(60);
+
+
   // Dark mode toggle removed (handled globally in navbar)
 
   // Fetch data from APIs
@@ -42,50 +42,6 @@ const TestYourself = () => {
     fetchCourses();
   }, [getPlacementCourses]);
 
-  // Timer effect
-  useEffect(() => {
-    let timer;
-    if (testStarted && !testCompleted) {
-      timer = setInterval(() => {
-        setTimeSpent(prev => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [testStarted, testCompleted]);
-
-  // Question timer effect
-  useEffect(() => {
-    let questionTimer;
-    if (testStarted && !testCompleted && selectedTest) {
-      questionTimer = setInterval(() => {
-        setQuestionTimeLeft(prev => {
-          if (prev <= 1) {
-            // Time up, mark as wrong if no answer
-            const currentQuestion = selectedTest.quizzes[currentQuestionIndex];
-            if (!userAnswers[currentQuestion.id]) {
-              setUserAnswers(prevAnswers => ({
-                ...prevAnswers,
-                [currentQuestion.id]: null // Mark as no answer
-              }));
-            }
-            // Auto advance
-            setTimeout(() => {
-              if (currentQuestionIndex < selectedTest.quizzes.length - 1) {
-                setCurrentQuestionIndex(prev => prev + 1);
-                setQuestionTimeLeft(60);
-              } else {
-                finishTest();
-              }
-            }, 100);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(questionTimer);
-  }, [testStarted, testCompleted, currentQuestionIndex, selectedTest, userAnswers]);
-
   // Removed other filters per request
 
   // Apply filters (type only)
@@ -99,18 +55,11 @@ const TestYourself = () => {
     setFilteredCourses(filtered);
   }, [courseType, courses]);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const handleCourseSelect = (course) => {
     setSelectedCourse(course);
     setSelectedTest(null);
     setTestStarted(false);
     setTestCompleted(false);
-    setTimeSpent(0);
   };
 
   const handleTestSelect = (test) => {
@@ -124,8 +73,6 @@ const TestYourself = () => {
     setTestCompleted(false);
     setUserAnswers({});
     setCurrentQuestionIndex(0);
-    setTimeSpent(0);
-    setQuestionTimeLeft(60);
   };
 
   const handleAnswerSelect = (questionId, answer) => {
@@ -205,8 +152,7 @@ const TestYourself = () => {
         } else {
           return userAnswers[q.id] === q.correct_answer;
         }
-      }).length,
-      timeSpent: formatTime(timeSpent)
+      }).length
     });
 
     setTestCompleted(true);
@@ -221,7 +167,6 @@ const TestYourself = () => {
     setResults(null);
     setUserAnswers({});
     setCurrentQuestionIndex(0);
-    setTimeSpent(0);
   };
 
   const clearFilters = () => {
@@ -293,24 +238,32 @@ const TestYourself = () => {
                       <span className="text-text-secondary">{t('testYourself.results.correctAnswers', 'Correct Answers')}:</span>
                       <span className="font-semibold text-secondary">{results.correctAnswers}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2 border-b border-border">
+                    <div className="flex items-center justify-between py-2">
                       <span className="text-text-secondary">{t('testYourself.results.wrongAnswers', 'Wrong Answers')}:</span>
                       <span className="font-semibold text-red-500">{results.totalQuestions - results.correctAnswers}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-text-secondary">{t('testYourself.results.timeSpent', 'Time Spent')}:</span>
-                      <span className="font-semibold text-primary">{results.timeSpent}</span>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="text-center">
-                <button 
+              <div className="flex justify-center space-x-4">
+                <button
                   onClick={resetTest}
                   className="px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105"
                 >
                   {t('testYourself.results.back', 'Back to Courses')}
+                </button>
+                <button
+                  onClick={() => {
+                    // Navigate to course lessons page
+                    window.location.href = `/courses/${selectedCourse.id}/lessons`;
+                  }}
+                  className="flex items-center px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105"
+                >
+                  {t('testYourself.results.enrollInCourse', 'Enroll in Course')}
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -336,12 +289,7 @@ const TestYourself = () => {
                   <div className="text-blue-100">
                     {t('testYourself.test.question', 'Question')} {currentQuestionIndex + 1} {t('testYourself.test.of', 'of')} {selectedTest.quizzes.length}
                   </div>
-                  <div className="px-3 py-1 text-sm bg-blue-500 rounded-full">
-                    {t('testYourself.test.time', 'Time')}: {formatTime(timeSpent)}
-                  </div>
-                  <div className={`px-3 py-1 text-sm rounded-full ${questionTimeLeft <= 10 ? 'bg-red-500' : 'bg-green-500'}`}>
-                    Question Time: {questionTimeLeft}s
-                  </div>
+
                 </div>
               </div>
               <div className="w-full h-2 mt-4 bg-blue-500 rounded-full">
@@ -402,16 +350,16 @@ const TestYourself = () => {
               ) : (
                 // Connect Questions: Drag images to matching texts
                 <div className="space-y-6">
-<div className="p-4 bg-gradient-to-br from-surface to-accent border border-border shadow-md rounded-2xl max-w-5xl mx-auto">
+<div className="max-w-5xl p-4 mx-auto border shadow-md bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
   <h3 className="mb-4 text-lg font-bold text-center text-text">
     {t('testYourself.test.connectInstruction', 'Match each image with its correct text by dragging.')}
   </h3>
 
   {/* Layout: Texts (Left) + Images (Right) */}
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start justify-center">
+  <div className="grid items-start justify-center grid-cols-1 gap-4 lg:grid-cols-2">
     {/* Left Column — Text Cards */}
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-primary border-b border-primary/40 pb-1">
+      <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
         {t('testYourself.test.texts', 'Texts')}
       </h4>
 
@@ -426,7 +374,7 @@ const TestYourself = () => {
             className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
           >
             {/* Text Content */}
-            <div className="flex flex-col items-center justify-center text-center p-3  ">
+            <div className="flex flex-col items-center justify-center p-3 text-center ">
               <p className="  text-text text-[15px] leading-snug  font-bold">{answerText}</p>
             </div>
 
@@ -442,11 +390,11 @@ const TestYourself = () => {
               onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
             >
               {isDropped ? (
-                <div className="relative group w-full h-full flex justify-center items-center">
+                <div className="relative flex items-center justify-center w-full h-full group">
                   <img
                     src={currentQuestion[`${isDropped}_image`]}
                     alt="Dropped image"
-                    className="w-full h-20 object-cover rounded-md cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
                     onClick={() => {
                       setUserAnswers((prev) => {
                         const newAnswers = { ...prev };
@@ -504,7 +452,7 @@ const TestYourself = () => {
 
     {/* Right Column — Image Cards */}
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-primary border-b border-primary/40 pb-1">
+      <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
         {t('testYourself.test.images', 'Images')}
       </h4>
 
@@ -531,7 +479,7 @@ const TestYourself = () => {
               <img
                 src={answerImage}
                 alt="Draggable image"
-                className="w-full h-full object-cover rounded-lg"
+                className="object-cover w-full h-full rounded-lg"
               />
             </div>
           </div>
