@@ -222,7 +222,7 @@ export default function BuyNowPage() {
       formDataToSend.append('city', formData.city);
       formDataToSend.append('book_id', formData.book_id);
       formDataToSend.append('city_id', formData.city_id);
-      formDataToSend.append('region_id', formData.region_id);
+      formDataToSend.append('region_id', formData.branch_id);
       if (couponId) {
         formDataToSend.append('coupon_id', couponId.toString());
       }
