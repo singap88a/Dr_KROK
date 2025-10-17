@@ -43,9 +43,6 @@ export default function BuyNowPage() {
   const [branches, setBranches] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
 
-  // Regions data
-  const [regions, setRegions] = useState([]);
-
   // Paint order data
   const [loadingPaintData, setLoadingPaintData] = useState(false);
 
@@ -85,27 +82,29 @@ export default function BuyNowPage() {
   }, [userData, book]);
 
   // Handle city selection and populate branches
-  const handleCitySelect = (city) => {
+  const handleCitySelect = async (city) => {
     setSelectedCity(city);
-    setBranches(city.branches || []);
     setFormData(prev => ({
       ...prev,
+      city_id: city.id.toString(),
       branch_id: "" // Reset branch selection when city changes
     }));
+
+    // Fetch branches for the selected city
+    try {
+      const response = await request(`cities/${city.id}/branches`);
+      if (response && response.data) {
+        setBranches(response.data);
+      } else {
+        setBranches([]);
+      }
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      setBranches([]);
+    }
   };
 
-  // Fetch regions on component mount
-  useEffect(() => {
-    request('regions')
-      .then((result) => {
-        if (result.data) {
-          setRegions(result.data);
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching regions:', err);
-      });
-  }, [request]);
+
 
   // Fetch terms and conditions when modal is opened
   useEffect(() => {
@@ -193,13 +192,7 @@ export default function BuyNowPage() {
 
 
 
-  const handleRegionChange = (e) => {
-    const { value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      region_id: value
-    }));
-  };
+
 
   const handleDeliveryOrder = async (e) => {
     e.preventDefault();

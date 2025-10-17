@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiMapPin, FiChevronDown } from 'react-icons/fi';
+import React, { useState, useRef } from 'react';
+import { FiMapPin, FiChevronDown, FiSearch } from 'react-icons/fi';
 import { useApi } from '../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 
@@ -10,16 +10,24 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debounceTimer, setDebounceTimer] = useState(null);
+  const inputRef = useRef(null);
 
-  useEffect(() => {
-    fetchCities();
-  }, []);
-
-  const fetchCities = async () => {
+  const fetchCities = async (query = '') => {
     setLoading(true);
     setError('');
     try {
-      const response = await request('cities');
+      let response;
+      if (query.length >= 3) {
+        response = await request(`cities/search?query=${encodeURIComponent(query)}`);
+      } else {
+        // If no query or less than 3 chars, show empty
+        setCities([]);
+        setLoading(false);
+        return;
+      }
+
       if (response && response.data) {
         setCities(response.data);
       }
@@ -29,6 +37,23 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    // Clear previous timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    // Set new timer for debounced search
+    const timer = setTimeout(() => {
+      fetchCities(query);
+    }, 300); // 300ms debounce
+
+    setDebounceTimer(timer);
   };
 
   const handleSelect = (city) => {
@@ -65,32 +90,59 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 overflow-y-auto border rounded-lg shadow-lg bg-surface border-border max-h-60">
-            {error ? (
-              <div className="p-3 text-sm text-red-500">
-                {error}
-                <button
-                  onClick={fetchCities}
-                  className="block mt-2 text-primary hover:underline"
-                >
-                  Retry
-                </button>
+          <div className="absolute z-50 w-full mt-1 border rounded-lg shadow-lg bg-surface border-border">
+            {/* Search Input */}
+            <div className="p-3 border-b border-border">
+              <div className="relative">
+                <FiSearch className="absolute transform -translate-y-1/2 left-3 top-1/2 text-text-secondary" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search cities (3+ characters)..."
+                  className="w-full py-2 pl-10 pr-3 text-sm border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+                  autoFocus
+                />
               </div>
-            ) : cities.length > 0 ? (
-              cities.map((city) => (
-                <button
-                  key={city.id}
-                  onClick={() => handleSelect(city)}
-                  className="w-full p-3 text-left hover:bg-background/50 focus:bg-background/50 focus:outline-none"
-                >
-                  {city.name}
-                </button>
-              ))
-            ) : (
-              <div className="p-3 text-sm text-text-secondary">
-                No cities found
-              </div>
-            )}
+            </div>
+
+            {/* Results */}
+            <div className="overflow-y-auto max-h-60">
+              {error ? (
+                <div className="p-3 text-sm text-red-500">
+                  {error}
+                  <button
+                    onClick={() => fetchCities(searchQuery)}
+                    className="block mt-2 text-primary hover:underline"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : loading ? (
+                <div className="p-3 text-sm text-text-secondary">
+                  Searching...
+                </div>
+              ) : cities.length > 0 ? (
+                cities.map((city) => (
+                  <button
+                    key={city.id}
+                    onClick={() => handleSelect(city)}
+                    className="w-full p-3 text-left hover:bg-background/50 focus:bg-background/50 focus:outline-none"
+                  >
+                    {city.name}
+                  </button>
+                ))
+              ) : searchQuery.length >= 3 ? (
+                <div className="p-3 text-sm text-text-secondary">
+                  No cities found for "{searchQuery}"
+                </div>
+              ) : (
+                <div className="p-3 text-sm text-text-secondary">
+                  Type at least 3 characters to search
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
