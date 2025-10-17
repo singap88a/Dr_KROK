@@ -154,10 +154,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
     return await request("profile/get-my-profile", { auth: true });
   }, [request]);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, type = null) => {
+    const body = type === "google" ? { type: "google" } : { email, password };
     return await request("auth/login", {
       method: "POST",
-      body: { email, password }
+      body
     });
   }, [request]);
 

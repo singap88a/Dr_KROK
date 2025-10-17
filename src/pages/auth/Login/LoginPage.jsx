@@ -138,7 +138,24 @@ export default function LoginPage() {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.com/api/auth/google/redirect'}
+                onClick={async () => {
+                  try {
+                    const data = await apiLogin(null, null, "google");
+                    console.log("Google login response:", data);
+                    if (data.success) {
+                      toast.success("✅ Login successful!", { position: "top-right" });
+                      userLogin(data.data.token, data.data);
+                      setTimeout(() => {
+                        window.location.href = "/";
+                      }, 1500);
+                    } else {
+                      toast.error("❌ Login failed: " + data.message, { position: "top-right" });
+                    }
+                  } catch (err) {
+                    console.error("Google login error:", err);
+                    toast.error("⚠️ Server connection error!", { position: "top-right" });
+                  }
+                }}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <GoogleIcon className="w-5 h-5 mr-3" />
