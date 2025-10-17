@@ -12,6 +12,27 @@ import {
   FaFilePdf,
 } from "react-icons/fa";
 
+// Custom Tooltip Component
+const CustomTooltip = ({ text, children }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {children}
+      {isVisible && (
+        <div className="absolute z-10 px-3 py-2 mb-2 text-sm text-white transform -translate-x-1/2 bg-gray-800 rounded-lg shadow-lg bottom-full left-1/2 whitespace-nowrap">
+          {text}
+          <div className="absolute w-0 h-0 transform -translate-x-1/2 border-t-4 border-l-4 border-r-4 border-transparent top-full left-1/2 border-t-gray-800"></div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const normalizeOrders = (orders) => {
   if (!Array.isArray(orders)) return [];
   return orders.map((o) => {
@@ -80,6 +101,42 @@ const MyOrders = ({ orders }) => {
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
+  };
+
+  const getStatusTooltip = (status, order) => {
+    let tooltip = '';
+    switch (status) {
+      case "pending":
+        tooltip =   'Your order has been received and is waiting for processing.';
+        break;
+      case "processing":
+        tooltip =   'Your order is being prepared for shipment.';
+        break;
+      case "shipped":
+        tooltip =   'Your order has been shipped and is on its way.';
+        break;
+      case "delivered":
+      case "completed":
+        tooltip =   'Your order has been successfully delivered.';
+        break;
+      case "paid":
+        tooltip =   'Payment has been successfully processed.';
+        break;
+      case "cancelled":
+        tooltip =  'Your order has been cancelled.';
+        break;
+      case "payment":
+        tooltip =   'Payment is being processed.';
+        break;
+      default:
+        tooltip =   'Status information not available.';
+    }
+
+    if (order.type === 'delivery' && order.city && order.branch) {
+      tooltip += ` ${t('orders.tooltips.delivery_info') || 'Being delivered to'} ${order.city} ${t('orders.tooltips.at_branch') || 'at'} ${order.branch}.`;
+    }
+
+    return tooltip;
   };
 
   const getStatusIcon = (status) => {
@@ -237,14 +294,16 @@ const MyOrders = ({ orders }) => {
                       ${Number(order.price).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
-                      <div
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                          normalizedStatus
-                        )}`}
-                      >
-                        {getStatusIcon(normalizedStatus)}
-                        <span className="capitalize">{translatedStatus}</span>
-                      </div>
+                      <CustomTooltip text={getStatusTooltip(normalizedStatus, order)}>
+                        <div
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border transition-all hover:scale-105 cursor-pointer ${getStatusColor(
+                            normalizedStatus
+                          )}`}
+                        >
+                          {getStatusIcon(normalizedStatus)}
+                          <span className="capitalize">{translatedStatus}</span>
+                        </div>
+                      </CustomTooltip>
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {new Date(order.date).toLocaleDateString()}
@@ -275,14 +334,16 @@ const MyOrders = ({ orders }) => {
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   #{order.rowNumber}
                 </span>
-                <div
-                  className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs border ${getStatusColor(
-                    normalizedStatus
-                  )}`}
-                >
-                  {getStatusIcon(normalizedStatus)}
-                  <span>{translatedStatus}</span>
-                </div>
+                <CustomTooltip text={getStatusTooltip(normalizedStatus, order)}>
+                  <div
+                    className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs border transition-all hover:scale-105 cursor-pointer ${getStatusColor(
+                      normalizedStatus
+                    )}`}
+                  >
+                    {getStatusIcon(normalizedStatus)}
+                    <span>{translatedStatus}</span>
+                  </div>
+                </CustomTooltip>
               </div>
 
               <div className="flex items-center gap-3 mb-3">
@@ -324,6 +385,12 @@ const MyOrders = ({ orders }) => {
                   <span className="font-medium">{t("orders.date")}:</span>{" "}
                   {new Date(order.date).toLocaleDateString()}
                 </p>
+                {order.type === 'delivery' && order.city && order.branch && (
+                  <p>
+                    <span className="font-medium">{t("orders.delivery_info") || "Delivery to"}:</span>{" "}
+                    {order.city} - {order.branch}
+                  </p>
+                )}
               </div>
             </div>
           );
