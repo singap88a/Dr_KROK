@@ -87,8 +87,8 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed z-50 w-full px-4 border-b shadow-md bg-background border-border">
-      <div className="container flex items-center justify-between py-4 mx-auto max-w-7xl">
+    <nav className="fixed z-50 w-full border-b shadow-md bg-background border-border">
+      <div className="container flex items-center justify-between px-4 py-4 mx-auto md:px-0 max-w-7xl">
         {/* Logo */}
         <div className="relative group">
           {settingsLoading ? (
@@ -232,41 +232,54 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="py-4 space-y-4 border-t md:hidden bg-background border-border">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="block transition text-textSecondary hover:text-primary"
-            >
-              {t(item.label)}
-            </Link>
-          ))}
-
-          {isLoggedIn ? (
-            <>
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden top-20 "
+            onClick={() => setMenuOpen(false)}
+          ></div>
+          <div className="relative z-50 px-4 py-4 space-y-4 border-t md:hidden bg-background border-border">
+            {navItems.map((item) => (
               <Link
-                to="/profile"
+                key={item.path}
+                to={item.path}
+                onClick={() => setMenuOpen(false)}
+                className="block font-bold transition text-textSecondary hover:text-primary"
+              >
+                {t(item.label)}
+              </Link>
+            ))}
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
+                >
+                  {t('navbar.profile')}
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full px-4 py-2 text-center text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  {t('navbar.logout')}
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
               >
-                {t('navbar.profile')}
+                {t('navbar.signUp')}
               </Link>
-              <button
-                onClick={handleLogout}
-                className="block w-full px-4 py-2 text-center text-white transition bg-red-600 rounded-lg hover:bg-red-700"
-              >
-                {t('navbar.logout')}
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/register"
-              className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
-            >
-              {t('navbar.signUp')}
-            </Link>
-          )}
-        </div>
+            )}
+          </div>
+        </>
       )}
 
       <LogoutConfirmModal

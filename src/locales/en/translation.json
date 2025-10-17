@@ -427,6 +427,10 @@
     "error": "Error loading instructors",
     "noInstructors": "No instructors available",
     "viewAll": "View All Instructors",
+    "instructor": "Instructor",
+    "searchPlaceholder": "Search instructors...",
+    "noResults": "No results found",
+    "tryAgain": "Try Again",
     "socialLinks": "Social Links",
     "contact": "Contact",
     "email": "Email",
@@ -792,11 +796,5 @@
     "progress": "Progress",
     "noCourses": "No courses enrolled yet",
     "browseCourses": "Browse our courses and start learning today!"
-  },
-  "common": {
-    "cancel": "Cancel"
-  },
-  "instructors": {
-    "viewDetails": "View Details"
   }
 }

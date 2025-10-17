@@ -401,6 +401,10 @@
     "error": "Помилка завантаження викладачів",
     "noInstructors": "Викладачі відсутні",
     "viewAll": "Переглянути всіх викладачів",
+    "instructor": "Викладач",
+    "searchPlaceholder": "Пошук викладачів...",
+    "noResults": "Нічого не знайдено",
+    "tryAgain": "Спробувати знову",
     "socialLinks": "Соціальні мережі",
     "contact": "Контакт",
     "email": "Електронна пошта",
@@ -414,6 +418,7 @@
     "details": {
       "title": "Профіль викладача",
       "bio": "Біографія",
+      "noBio": "Біографія відсутня",
       "yearsOfExperience": "Років досвіду",
       "expertise": "Експертиза",
       "phone": "Телефон",
@@ -814,19 +819,13 @@
     "courses": "Курси",
     "liveCourses": "Живі курси"
   },
-    "myCourses": {
-      "title": "Мої курси",
-      "enrolledCount": "{{count}} курсів записано",
-      "continueLearning": "Продовжити навчання",
-      "continue": "Продовжити",
-      "progress": "Прогрес",
-      "noCourses": "Ще немає записаних курсів",
-      "browseCourses": "Перегляньте наші курси та розпочніть навчання сьогодні!"
-    },
-    "common": {
-      "cancel": "Скасувати"
-    },
-  "instructors": {
-    "viewDetails": "Переглянути деталі"
+  "myCourses": {
+    "title": "Мої курси",
+    "enrolledCount": "{{count}} курсів записано",
+    "continueLearning": "Продовжити навчання",
+    "continue": "Продовжити",
+    "progress": "Прогрес",
+    "noCourses": "Ще немає записаних курсів",
+    "browseCourses": "Перегляньте наші курси та розпочніть навчання сьогодні!"
   }
 }
