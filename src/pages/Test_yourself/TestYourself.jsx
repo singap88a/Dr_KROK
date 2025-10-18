@@ -31,34 +31,56 @@ const TestYourself = () => {
     return shuffled;
   };
 
+  // دالة لاستخراج جميع أزواج النصوص والصور المتاحة من السؤال
+  const extractAnswerPairs = (question) => {
+    const pairs = [];
+    let index = 1;
+    
+    // البحث عن جميع أزواج الإجابات المتاحة (نص وصورة)
+    while (question[`answer_${index}`] || question[`answer_${index}_image`]) {
+      const text = question[`answer_${index}`];
+      const image = question[`answer_${index}_image`];
+      
+      if (text && image) {
+        pairs.push({
+          key: `answer_${index}`,
+          text: text,
+          image: image
+        });
+      }
+      index++;
+    }
+    
+    return pairs;
+  };
+
   // دالة لتحضير أسئلة التوصل بشكل عشوائي
   const prepareConnectQuestion = (question) => {
     if (question.type !== 'connect') return question;
 
-    const pairs = [];
-
-    // جمع الأزواج المتاحة (نص وصورة)
-    ['answer_1', 'answer_2', 'answer_3', 'answer_4'].forEach(key => {
-      if (question[key] && question[`${key}_image`]) {
-        pairs.push({
-          key,
-          text: question[key],
-          image: question[`${key}_image`]
-        });
-      }
-    });
+    const pairs = extractAnswerPairs(question);
+    
+    if (pairs.length === 0) return question;
 
     // خلط الأزواج عشوائياً
     const shuffledPairs = shuffleArray(pairs);
 
-    // إنشاء shuffledTexts و shuffledImages
-    const shuffledTexts = shuffledPairs.map(pair => ({ key: pair.key, text: pair.text }));
-    const shuffledImages = shuffleArray(shuffledPairs.map(pair => ({ key: pair.key, image: pair.image })));
+    // إنشاء shuffledTexts و shuffledImages بشكل منفصل ومستقل
+    const shuffledTexts = shuffleArray(shuffledPairs.map(pair => ({ 
+      key: pair.key, 
+      text: pair.text 
+    })));
+    
+    const shuffledImages = shuffleArray(shuffledPairs.map(pair => ({ 
+      key: pair.key, 
+      image: pair.image 
+    })));
 
     return {
       ...question,
       shuffledTexts,
-      shuffledImages
+      shuffledImages,
+      totalPairs: pairs.length // إضافة خاصية لتخزين عدد الأزواج الكلي
     };
   };
 
@@ -249,6 +271,40 @@ const TestYourself = () => {
     }
   };
 
+  // دالة لحساب النقاط لأسئلة التوصل بناءً على عدد التوصيلات الصحيحة
+  const calculateConnectScore = (question, userAnswer) => {
+    if (!userAnswer || Object.keys(userAnswer).length === 0) {
+      return 0;
+    }
+
+    const totalPairs = extractAnswerPairs(question).length;
+    if (totalPairs === 0) return 0;
+
+    let correctConnections = 0;
+
+    // حساب عدد التوصيلات الصحيحة
+    Object.keys(userAnswer).forEach(textKey => {
+      // التوصيل صحيح إذا كان النص مربوط بالصورة المناسبة له (نفس الـ key)
+      if (userAnswer[textKey] === textKey) {
+        correctConnections++;
+      }
+    });
+
+    // حساب النقاط: (عدد التوصيلات الصحيحة / إجمالي الأزواج) × درجة السؤال
+    const questionScore = parseInt(question.question_score) || 0;
+    const earnedScore = (correctConnections / totalPairs) * questionScore;
+
+    console.log(`Connect Question ${question.id}:`, {
+      totalScore: questionScore,
+      totalPairs,
+      correctConnections,
+      earnedScore: earnedScore.toFixed(2),
+      userAnswer
+    });
+
+    return earnedScore;
+  };
+
   const finishTest = () => {
     let totalScore = 0;
     let earnedScore = 0;
@@ -266,17 +322,12 @@ const TestYourself = () => {
     let mcqAnswered = 0;
 
     selectedTest.quizzes.forEach(question => {
-      totalScore += parseInt(question.question_score);
+      totalScore += parseInt(question.question_score) || 0;
       totalQuestionsCount += 1;
 
       if (question.type === 'connect') {
         connectQuestionsCount += 1;
         
-        // حساب عدد الأزواج المتاحة في السؤال
-        const availablePairs = ['answer_1', 'answer_2', 'answer_3', 'answer_4'].filter(
-          key => question[key] && question[`${key}_image`]
-        ).length;
-
         const userAnswer = userAnswers[question.id];
         const isAnswered = userAnswer && Object.keys(userAnswer).length > 0;
 
@@ -284,33 +335,30 @@ const TestYourself = () => {
           connectAnswered += 1;
           answeredQuestions += 1;
 
-          // حساب عدد التوصيلات الصحيحة
-          let correctConnections = 0;
-          Object.keys(userAnswer).forEach(textKey => {
-            // التوصيل صحيح إذا كان النص مربوط بالصورة المناسبة له (نفس الـ key)
-            if (userAnswer[textKey] === textKey) {
-              correctConnections++;
-            }
-          });
+          // حساب النقاط باستخدام الدالة الجديدة
+          const questionEarnedScore = calculateConnectScore(question, userAnswer);
+          earnedScore += questionEarnedScore;
 
-          // حساب النقاط: إذا كانت جميع التوصيلات صحيحة يحصل على كامل النقاط، وإلا يحصل على صفر
-          // (يمكن تعديل هذا المنطق إذا أردت منح نقاط جزئية)
-          if (correctConnections === availablePairs) {
-            earnedScore += parseInt(question.question_score);
-            correctAnswersCount += 1; // سؤال واحد صحيح
+          // حساب عدد التوصيلات الصحيحة للإحصائيات
+          const totalPairs = extractAnswerPairs(question).length;
+          let correctConnections = 0;
+          
+          if (userAnswer) {
+            Object.keys(userAnswer).forEach(textKey => {
+              if (userAnswer[textKey] === textKey) {
+                correctConnections++;
+              }
+            });
+          }
+
+          // اعتبار السؤال "صحيح" إذا كانت جميع التوصيلات صحيحة
+          if (correctConnections === totalPairs && totalPairs > 0) {
+            correctAnswersCount += 1;
             connectCorrect += 1;
           } else {
             connectWrong += 1;
           }
 
-          console.log(`Connect Question ${question.id}:`, {
-            totalScore: question.question_score,
-            availablePairs,
-            correctConnections,
-            isFullyCorrect: correctConnections === availablePairs,
-            earnedScore: correctConnections === availablePairs ? question.question_score : 0,
-            userAnswer
-          });
         } else {
           connectWrong += 1; // لم يجب على السؤال
         }
@@ -322,7 +370,7 @@ const TestYourself = () => {
           mcqAnswered += 1;
           answeredQuestions += 1;
           if (userAnswers[question.id] === correctAnswerKey) {
-            earnedScore += parseInt(question.question_score);
+            earnedScore += parseInt(question.question_score) || 0;
             correctAnswersCount += 1;
             mcqCorrect += 1;
           } else {
@@ -454,56 +502,6 @@ const TestYourself = () => {
                 </div>
               </div>
               
-              {/* Detailed Breakdown */}
-              {/* <div className="p-6 mb-8 border bg-surface border-border rounded-xl">
-                <h3 className="mb-4 text-xl font-semibold text-text">{t('testYourself.results.breakdown', 'Questions Breakdown')}</h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                   <div className="p-4 border rounded-lg border-border">
-                    <h4 className="mb-3 font-semibold text-text">أسئلة التوصيل</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">الإجمالي:</span>
-                        <span>{results.connectQuestions}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-green-600">الصحيحة:</span>
-                        <span>{results.connectCorrect}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-red-500">الخاطئة:</span>
-                        <span>{results.connectWrong}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">المُجابة:</span>
-                        <span>{results.connectAnswered}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                   <div className="p-4 border rounded-lg border-border">
-                    <h4 className="mb-3 font-semibold text-text">أسئلة الاختيار</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">الإجمالي:</span>
-                        <span>{results.mcqQuestions}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-green-600">الصحيحة:</span>
-                        <span>{results.mcqCorrect}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-red-500">الخاطئة:</span>
-                        <span>{results.mcqWrong}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">المُجابة:</span>
-                        <span>{results.mcqAnswered}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
-              
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={resetTest}
@@ -542,9 +540,20 @@ const TestYourself = () => {
       ? shuffledQuestions[currentQuestion.id] || currentQuestion
       : currentQuestion;
 
+    // حساب الحد الأدنى للإجابة لأسئلة التوصل
+    const getMinimumAnswersRequired = () => {
+      if (currentQuestion.type !== 'connect') return 1;
+      
+      const pairs = extractAnswerPairs(currentQuestion);
+      // يتطلب توصيل زوجين على الأقل أو جميع الأزواج المتاحة
+      return Math.min(2, pairs.length);
+    };
+
+    const minimumAnswersRequired = getMinimumAnswersRequired();
+
     return (
       <div className="min-h-screen px-4 py-8 transition-colors duration-300 bg-background">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="overflow-hidden border shadow-xl bg-surface rounded-2xl border-border">
             <div className="p-6 text-white bg-primary">
               <div className="flex flex-col items-center justify-between md:flex-row">
@@ -624,16 +633,27 @@ const TestYourself = () => {
               ) : (
                 // Connect Questions: Drag images to matching texts (مع التوزيع العشوائي)
                 <div className="space-y-6">
-                  <div className="max-w-5xl p-4 mx-auto border shadow-md bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
-                    <h3 className="mb-4 text-lg font-bold text-center text-text">
+                  <div className="max-w-6xl p-6 mx-auto border shadow-lg bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
+                    <h3 className="mb-2 text-xl font-bold text-center text-text">
                       {t('testYourself.test.connectInstruction', 'Match each image with its correct text by dragging.')}
                     </h3>
+                    
+                    {currentQuestion.title && (
+                      <div 
+                        className="p-4 mb-6 text-lg font-semibold text-center border text-text bg-surface rounded-xl border-border"
+                        dangerouslySetInnerHTML={{ __html: currentQuestion.title }}
+                      />
+                    )}
+                    
+                    <div className="mb-4 text-sm text-center text-text-secondary">
+                      {t('testYourself.test.minimumPairs', 'Minimum pairs to connect:')} {minimumAnswersRequired}
+                    </div>
 
                     {/* Layout: Texts (Left) + Images (Right) */}
-                    <div className="grid items-start justify-center grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div className="grid items-start justify-center grid-cols-1 gap-6 lg:grid-cols-2">
                       {/* Left Column — Text Cards (مخلوطة عشوائياً) */}
-                      <div className="space-y-3">
-                        <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
+                      <div className="space-y-4">
+                        <h4 className="pb-2 text-lg font-semibold border-b text-primary border-primary/40">
                           {t('testYourself.test.texts', 'Texts')}
                         </h4>
 
@@ -644,16 +664,16 @@ const TestYourself = () => {
                             return (
                               <div
                                 key={key}
-                                className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
+                                className="relative flex flex-col justify-between w-full max-w-[280px] mx-auto bg-white dark:bg-gray-900 border-2 border-border rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
                               >
                                 {/* Text Content */}
-                                <div className="flex flex-col items-center justify-center p-3 text-center">
-                                  <p className="text-text text-[15px] leading-snug font-bold">{text}</p>
+                                <div className="flex flex-col items-center justify-center p-4 text-center min-h-[80px]">
+                                  <p className="text-text text-[16px] leading-snug font-bold">{text}</p>
                                 </div>
 
                                 {/* Drop Zone */}
                                 <div
-                                  className={`p-2 border-t rounded-b-lg transition-all duration-300 flex items-center justify-center min-h-[60px]
+                                  className={`p-3 border-t rounded-b-xl transition-all duration-300 flex items-center justify-center min-h-[70px]
                                     ${
                                       isDropped
                                         ? 'border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner'
@@ -667,7 +687,7 @@ const TestYourself = () => {
                                       <img
                                         src={currentQuestion[`${isDropped}_image`]}
                                         alt="Dropped image"
-                                        className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
+                                        className="object-cover w-full h-24 transition-transform duration-300 rounded-lg cursor-pointer group-hover:scale-105"
                                         onClick={() => {
                                           setUserAnswers((prev) => {
                                             const newAnswers = { ...prev };
@@ -682,7 +702,7 @@ const TestYourself = () => {
                                         }}
                                       />
                                       <button
-                                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
+                                        className="absolute flex items-center justify-center w-6 h-6 text-xs text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
                                         onClick={() => {
                                           setUserAnswers((prev) => {
                                             const newAnswers = { ...prev };
@@ -702,7 +722,7 @@ const TestYourself = () => {
                                   ) : (
                                     <div className="text-center text-text-muted">
                                       <svg
-                                        className="w-4 h-4 mx-auto mb-1 opacity-40"
+                                        className="w-6 h-6 mx-auto mb-2 opacity-40"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -714,7 +734,7 @@ const TestYourself = () => {
                                           d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                                         />
                                       </svg>
-                                      <p className="text-[11px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
+                                      <p className="text-[12px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
                                     </div>
                                   )}
                                 </div>
@@ -722,98 +742,99 @@ const TestYourself = () => {
                             );
                           })
                         ) : (
-                          // Fallback if not shuffled
-                          ['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
-                            const answerText = currentQuestion[answerKey];
-                            const isDropped = userAnswers[currentQuestion.id] && userAnswers[currentQuestion.id][answerKey];
-                            if (!answerText) return null;
-
-                            return (
-                              <div
-                                key={answerKey}
-                                className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
-                              >
-                                {/* Text Content */}
-                                <div className="flex flex-col items-center justify-center p-3 text-center">
-                                  <p className="text-text text-[15px] leading-snug font-bold">{answerText}</p>
-                                </div>
-
-                                {/* Drop Zone */}
+                          // Fallback if not shuffled - عرض جميع الإجابات المتاحة ديناميكياً
+                          (() => {
+                            const pairs = extractAnswerPairs(currentQuestion);
+                            return pairs.map(({ key, text }) => {
+                              const isDropped = userAnswers[currentQuestion.id] && userAnswers[currentQuestion.id][key];
+                              
+                              return (
                                 <div
-                                  className={`p-2 border-t rounded-b-lg transition-all duration-300 flex items-center justify-center min-h-[60px]
-                                    ${
-                                      isDropped
-                                        ? 'border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner'
-                                        : 'border-dashed border-border bg-surface hover:border-primary hover:bg-accent'
-                                    }`}
-                                  onDragOver={handleDragOver}
-                                  onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
+                                  key={key}
+                                  className="relative flex flex-col justify-between w-full max-w-[280px] mx-auto bg-white dark:bg-gray-900 border-2 border-border rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
                                 >
-                                  {isDropped ? (
-                                    <div className="relative flex items-center justify-center w-full h-full group">
-                                      <img
-                                        src={currentQuestion[`${isDropped}_image`]}
-                                        alt="Dropped image"
-                                        className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
-                                        onClick={() => {
-                                          setUserAnswers((prev) => {
-                                            const newAnswers = { ...prev };
-                                            if (newAnswers[currentQuestion.id]) {
-                                              delete newAnswers[currentQuestion.id][answerKey];
-                                              if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
-                                                delete newAnswers[currentQuestion.id];
+                                  {/* Text Content */}
+                                  <div className="flex flex-col items-center justify-center p-4 text-center min-h-[80px]">
+                                    <p className="text-text text-[16px] leading-snug font-bold">{text}</p>
+                                  </div>
+
+                                  {/* Drop Zone */}
+                                  <div
+                                    className={`p-3 border-t rounded-b-xl transition-all duration-300 flex items-center justify-center min-h-[70px]
+                                      ${
+                                        isDropped
+                                          ? 'border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner'
+                                          : 'border-dashed border-border bg-surface hover:border-primary hover:bg-accent'
+                                      }`}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, currentQuestion.id, key)}
+                                  >
+                                    {isDropped ? (
+                                      <div className="relative flex items-center justify-center w-full h-full group">
+                                        <img
+                                          src={currentQuestion[`${isDropped}_image`]}
+                                          alt="Dropped image"
+                                          className="object-cover w-full h-24 transition-transform duration-300 rounded-lg cursor-pointer group-hover:scale-105"
+                                          onClick={() => {
+                                            setUserAnswers((prev) => {
+                                              const newAnswers = { ...prev };
+                                              if (newAnswers[currentQuestion.id]) {
+                                                delete newAnswers[currentQuestion.id][key];
+                                                if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                                                  delete newAnswers[currentQuestion.id];
+                                                }
                                               }
-                                            }
-                                            return newAnswers;
-                                          });
-                                        }}
-                                      />
-                                      <button
-                                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
-                                        onClick={() => {
-                                          setUserAnswers((prev) => {
-                                            const newAnswers = { ...prev };
-                                            if (newAnswers[currentQuestion.id]) {
-                                              delete newAnswers[currentQuestion.id][answerKey];
-                                              if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
-                                                delete newAnswers[currentQuestion.id];
-                                              }
-                                            }
-                                            return newAnswers;
-                                          });
-                                        }}
-                                      >
-                                        ×
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <div className="text-center text-text-muted">
-                                      <svg
-                                        className="w-4 h-4 mx-auto mb-1 opacity-40"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                              return newAnswers;
+                                            });
+                                          }}
                                         />
-                                      </svg>
-                                      <p className="text-[11px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
-                                    </div>
-                                  )}
+                                        <button
+                                          className="absolute flex items-center justify-center w-6 h-6 text-xs text-white transition-colors bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600"
+                                          onClick={() => {
+                                            setUserAnswers((prev) => {
+                                              const newAnswers = { ...prev };
+                                              if (newAnswers[currentQuestion.id]) {
+                                                delete newAnswers[currentQuestion.id][key];
+                                                if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
+                                                  delete newAnswers[currentQuestion.id];
+                                                }
+                                              }
+                                              return newAnswers;
+                                            });
+                                          }}
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="text-center text-text-muted">
+                                        <svg
+                                          className="w-6 h-6 mx-auto mb-2 opacity-40"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                          />
+                                        </svg>
+                                        <p className="text-[12px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })
+                              );
+                            });
+                          })()
                         )}
                       </div>
 
                       {/* Right Column — Image Cards (مخلوطة عشوائياً) */}
-                      <div className="space-y-3">
-                        <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
+                      <div className="space-y-4">
+                        <h4 className="pb-2 text-lg font-semibold border-b text-primary border-primary/40">
                           {t('testYourself.test.images', 'Images')}
                         </h4>
 
@@ -828,57 +849,79 @@ const TestYourself = () => {
                                 key={key}
                                 draggable={!isUsed}
                                 onDragStart={(e) => handleDragStart(e, currentQuestion.id, key)}
-                                className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
+                                className={`w-full max-w-[280px] mx-auto bg-white dark:bg-gray-900 border-2 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]
                                   ${
                                     isUsed
-                                      ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
+                                      ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
                                       : 'border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing'
                                   }`}
                               >
-                                <div className="w-full h-[100px] rounded-lg overflow-hidden">
+                                <div className="w-full h-[120px] rounded-lg overflow-hidden">
                                   <img
                                     src={image}
                                     alt="Draggable image"
                                     className="object-cover w-full h-full rounded-lg"
                                   />
                                 </div>
+                                {!isUsed && (
+                                  <div className="p-2 text-xs text-center rounded-b-lg text-text-muted bg-accent">
+                                    {t('testYourself.test.dragMe', 'Drag me')}
+                                  </div>
+                                )}
                               </div>
                             );
                           })
                         ) : (
-                          // Fallback if not shuffled
-                          ['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
-                            const answerImage = currentQuestion[`${answerKey}_image`];
-                            const isUsed =
-                              userAnswers[currentQuestion.id] &&
-                              Object.values(userAnswers[currentQuestion.id]).includes(answerKey);
-                            if (!answerImage) return null;
+                          // Fallback if not shuffled - عرض جميع الصور المتاحة ديناميكياً
+                          (() => {
+                            const pairs = extractAnswerPairs(currentQuestion);
+                            return pairs.map(({ key, image }) => {
+                              const isUsed =
+                                userAnswers[currentQuestion.id] &&
+                                Object.values(userAnswers[currentQuestion.id]).includes(key);
 
-                            return (
-                              <div
-                                key={answerKey}
-                                draggable={!isUsed}
-                                onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
-                                className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
-                                  ${
-                                    isUsed
-                                      ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
-                                      : 'border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing'
-                                  }`}
-                              >
-                                <div className="w-full h-[100px] rounded-lg overflow-hidden">
-                                  <img
-                                    src={answerImage}
-                                    alt="Draggable image"
-                                    className="object-cover w-full h-full rounded-lg"
-                                  />
+                              return (
+                                <div
+                                  key={key}
+                                  draggable={!isUsed}
+                                  onDragStart={(e) => handleDragStart(e, currentQuestion.id, key)}
+                                  className={`w-full max-w-[280px] mx-auto bg-white dark:bg-gray-900 border-2 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]
+                                    ${
+                                      isUsed
+                                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
+                                        : 'border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing'
+                                    }`}
+                                >
+                                  <div className="w-full h-[120px] rounded-lg overflow-hidden">
+                                    <img
+                                      src={image}
+                                      alt="Draggable image"
+                                      className="object-cover w-full h-full rounded-lg"
+                                    />
+                                  </div>
+                                  {!isUsed && (
+                                    <div className="p-2 text-xs text-center rounded-b-lg text-text-muted bg-accent">
+                                      {t('testYourself.test.dragMe', 'Drag me')}
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            );
-                          })
+                              );
+                            });
+                          })()
                         )}
                       </div>
                     </div>
+                    
+                    {/* Progress Indicator */}
+                    {currentQuestion.type === 'connect' && (
+                      <div className="mt-6 text-center">
+                        <div className="inline-flex items-center px-4 py-2 rounded-full bg-accent text-text">
+                          <span className="text-sm font-medium">
+                            {t('testYourself.test.connectedPairs', 'Connected pairs:')} {Object.keys(userAnswers[currentQuestion.id] || {}).length} / {extractAnswerPairs(currentQuestion).length}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -903,12 +946,12 @@ const TestYourself = () => {
                   onClick={nextQuestion}
                   disabled={
                     currentQuestion.type === 'connect'
-                      ? Object.keys(userAnswers[currentQuestion.id] || {}).length < 2
+                      ? Object.keys(userAnswers[currentQuestion.id] || {}).length < minimumAnswersRequired
                       : !userAnswers[currentQuestion.id]
                   }
                   className={`flex items-center px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105 ${
                     (currentQuestion.type === 'connect'
-                      ? Object.keys(userAnswers[currentQuestion.id] || {}).length < 2
+                      ? Object.keys(userAnswers[currentQuestion.id] || {}).length < minimumAnswersRequired
                       : !userAnswers[currentQuestion.id]
                     ) ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
