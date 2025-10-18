@@ -271,55 +271,48 @@ const TestYourself = () => {
 
       if (question.type === 'connect') {
         connectQuestionsCount += 1;
-        // For connect type questions, partial scoring based on correct connections
-        const userAnswer = userAnswers[question.id];
-
-        // Count number of answers available for this question
-        const answerCount = ['answer_1', 'answer_2', 'answer_3', 'answer_4'].filter(
+        
+        // حساب عدد الأزواج المتاحة في السؤال
+        const availablePairs = ['answer_1', 'answer_2', 'answer_3', 'answer_4'].filter(
           key => question[key] && question[`${key}_image`]
         ).length;
 
-        if (answerCount > 0) {
-          // Calculate score per correct connection
-          const scorePerConnection = parseInt(question.question_score) / answerCount;
+        const userAnswer = userAnswers[question.id];
+        const isAnswered = userAnswer && Object.keys(userAnswer).length > 0;
 
-          // Count correct connections (text key matches image key)
+        if (isAnswered) {
+          connectAnswered += 1;
+          answeredQuestions += 1;
+
+          // حساب عدد التوصيلات الصحيحة
           let correctConnections = 0;
-
-          if (userAnswer && Object.keys(userAnswer).length > 0) {
-            connectAnswered += 1;
-            answeredQuestions += 1;
-            Object.keys(userAnswer).forEach(textKey => {
-              // في أسئلة التوصل، الإجابة الصحيحة هي عندما يكون textKey و answerKey متماثلين
-              // لأن كل نص يجب أن يتطابق مع صورته الأصلية
-              if (userAnswer[textKey] === textKey) {
-                correctConnections++;
-              }
-            });
-          }
-
-          // Add score for each correct connection
-          const questionEarnedScore = correctConnections * scorePerConnection;
-          earnedScore += questionEarnedScore;
-          correctAnswersCount += correctConnections;
-
-          // For connect, count as correct if all connections are correct, else wrong (only if answered)
-          if (userAnswer && Object.keys(userAnswer).length > 0) {
-            if (correctConnections === answerCount) {
-              connectCorrect += 1;
-            } else {
-              connectWrong += 1;
+          Object.keys(userAnswer).forEach(textKey => {
+            // التوصيل صحيح إذا كان النص مربوط بالصورة المناسبة له (نفس الـ key)
+            if (userAnswer[textKey] === textKey) {
+              correctConnections++;
             }
+          });
+
+          // حساب النقاط: إذا كانت جميع التوصيلات صحيحة يحصل على كامل النقاط، وإلا يحصل على صفر
+          // (يمكن تعديل هذا المنطق إذا أردت منح نقاط جزئية)
+          if (correctConnections === availablePairs) {
+            earnedScore += parseInt(question.question_score);
+            correctAnswersCount += 1; // سؤال واحد صحيح
+            connectCorrect += 1;
+          } else {
+            connectWrong += 1;
           }
 
           console.log(`Connect Question ${question.id}:`, {
             totalScore: question.question_score,
-            answerCount,
-            scorePerConnection,
+            availablePairs,
             correctConnections,
-            earnedScore: questionEarnedScore,
+            isFullyCorrect: correctConnections === availablePairs,
+            earnedScore: correctConnections === availablePairs ? question.question_score : 0,
             userAnswer
           });
+        } else {
+          connectWrong += 1; // لم يجب على السؤال
         }
       } else {
         mcqQuestionsCount += 1;
@@ -327,6 +320,7 @@ const TestYourself = () => {
         const correctAnswerKey = `answer_${parseInt(question.correct_answer_index) + 1}`;
         if (userAnswers[question.id]) {
           mcqAnswered += 1;
+          answeredQuestions += 1;
           if (userAnswers[question.id] === correctAnswerKey) {
             earnedScore += parseInt(question.question_score);
             correctAnswersCount += 1;
@@ -334,6 +328,8 @@ const TestYourself = () => {
           } else {
             mcqWrong += 1;
           }
+        } else {
+          mcqWrong += 1; // لم يجب على السؤال
         }
       }
     });
@@ -457,6 +453,56 @@ const TestYourself = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Detailed Breakdown */}
+              {/* <div className="p-6 mb-8 border bg-surface border-border rounded-xl">
+                <h3 className="mb-4 text-xl font-semibold text-text">{t('testYourself.results.breakdown', 'Questions Breakdown')}</h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                   <div className="p-4 border rounded-lg border-border">
+                    <h4 className="mb-3 font-semibold text-text">أسئلة التوصيل</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">الإجمالي:</span>
+                        <span>{results.connectQuestions}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-600">الصحيحة:</span>
+                        <span>{results.connectCorrect}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-red-500">الخاطئة:</span>
+                        <span>{results.connectWrong}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">المُجابة:</span>
+                        <span>{results.connectAnswered}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                   <div className="p-4 border rounded-lg border-border">
+                    <h4 className="mb-3 font-semibold text-text">أسئلة الاختيار</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">الإجمالي:</span>
+                        <span>{results.mcqQuestions}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-600">الصحيحة:</span>
+                        <span>{results.mcqCorrect}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-red-500">الخاطئة:</span>
+                        <span>{results.mcqWrong}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">المُجابة:</span>
+                        <span>{results.mcqAnswered}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div> */}
               
               <div className="flex justify-center space-x-4">
                 <button
