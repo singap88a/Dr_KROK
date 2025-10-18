@@ -115,6 +115,18 @@ const TestYourself = () => {
     };
   }, [testStarted, selectedTest, timeLeft]);
 
+  // Set timer for current question
+  useEffect(() => {
+    if (testStarted && selectedTest && currentQuestionIndex >= 0) {
+      const question = selectedTest.quizzes[currentQuestionIndex];
+      if (question && question.answer_duration) {
+        setTimeLeft(parseInt(question.answer_duration));
+      } else {
+        setTimeLeft(null);
+      }
+    }
+  }, [currentQuestionIndex, selectedTest, testStarted]);
+
   const handleTimeUp = () => {
     nextQuestion();
   };
@@ -241,39 +253,87 @@ const TestYourself = () => {
     let totalScore = 0;
     let earnedScore = 0;
     let correctAnswersCount = 0;
+    let totalQuestionsCount = 0;
+    let answeredQuestions = 0;
+
+    let connectQuestionsCount = 0;
+    let connectCorrect = 0;
+    let connectWrong = 0;
+    let connectAnswered = 0;
+    let mcqQuestionsCount = 0;
+    let mcqCorrect = 0;
+    let mcqWrong = 0;
+    let mcqAnswered = 0;
 
     selectedTest.quizzes.forEach(question => {
       totalScore += parseInt(question.question_score);
-      
-      if (question.type === 'connect') {
-        // For connect type questions, calculate score based on correct matches
-        const userAnswer = userAnswers[question.id];
-        if (userAnswer) {
-          // Count number of answers available for this question
-          const answerCount = ['answer_1', 'answer_2', 'answer_3', 'answer_4'].filter(
-            key => question[key] && question[`${key}_image`]
-          ).length;
+      totalQuestionsCount += 1;
 
+      if (question.type === 'connect') {
+        connectQuestionsCount += 1;
+        // For connect type questions, partial scoring based on correct connections
+        const userAnswer = userAnswers[question.id];
+
+        // Count number of answers available for this question
+        const answerCount = ['answer_1', 'answer_2', 'answer_3', 'answer_4'].filter(
+          key => question[key] && question[`${key}_image`]
+        ).length;
+
+        if (answerCount > 0) {
           // Calculate score per correct connection
           const scorePerConnection = parseInt(question.question_score) / answerCount;
 
-          // Count correct connections (assuming correct is text key matches image key)
+          // Count correct connections (text key matches image key)
           let correctConnections = 0;
-          Object.keys(userAnswer).forEach(textKey => {
-            if (userAnswer[textKey] === textKey) {
-              correctConnections++;
-            }
-          });
+
+          if (userAnswer && Object.keys(userAnswer).length > 0) {
+            connectAnswered += 1;
+            answeredQuestions += 1;
+            Object.keys(userAnswer).forEach(textKey => {
+              // في أسئلة التوصل، الإجابة الصحيحة هي عندما يكون textKey و answerKey متماثلين
+              // لأن كل نص يجب أن يتطابق مع صورته الأصلية
+              if (userAnswer[textKey] === textKey) {
+                correctConnections++;
+              }
+            });
+          }
 
           // Add score for each correct connection
-          earnedScore += correctConnections * scorePerConnection;
+          const questionEarnedScore = correctConnections * scorePerConnection;
+          earnedScore += questionEarnedScore;
           correctAnswersCount += correctConnections;
+
+          // For connect, count as correct if all connections are correct, else wrong (only if answered)
+          if (userAnswer && Object.keys(userAnswer).length > 0) {
+            if (correctConnections === answerCount) {
+              connectCorrect += 1;
+            } else {
+              connectWrong += 1;
+            }
+          }
+
+          console.log(`Connect Question ${question.id}:`, {
+            totalScore: question.question_score,
+            answerCount,
+            scorePerConnection,
+            correctConnections,
+            earnedScore: questionEarnedScore,
+            userAnswer
+          });
         }
       } else {
-        // For MCQ questions
-        if (userAnswers[question.id] === question.correct_answer) {
-          earnedScore += parseInt(question.question_score);
-          correctAnswersCount += 1;
+        mcqQuestionsCount += 1;
+        // For MCQ questions, use correct_answer_index
+        const correctAnswerKey = `answer_${parseInt(question.correct_answer_index) + 1}`;
+        if (userAnswers[question.id]) {
+          mcqAnswered += 1;
+          if (userAnswers[question.id] === correctAnswerKey) {
+            earnedScore += parseInt(question.question_score);
+            correctAnswersCount += 1;
+            mcqCorrect += 1;
+          } else {
+            mcqWrong += 1;
+          }
         }
       }
     });
@@ -284,8 +344,20 @@ const TestYourself = () => {
       totalScore,
       earnedScore,
       percentage,
-      totalQuestions: selectedTest.quizzes.length,
-      correctAnswers: correctAnswersCount
+      totalQuestions: totalQuestionsCount,
+      correctAnswers: correctAnswersCount,
+      answeredQuestions,
+      notAnsweredQuestions: totalQuestionsCount - answeredQuestions,
+      connectQuestions: connectQuestionsCount,
+      connectCorrect,
+      connectWrong,
+      connectAnswered,
+      connectNotAnswered: connectQuestionsCount - connectAnswered,
+      mcqQuestions: mcqQuestionsCount,
+      mcqCorrect,
+      mcqWrong,
+      mcqAnswered,
+      mcqNotAnswered: mcqQuestionsCount - mcqAnswered
     });
 
     setTestCompleted(true);
@@ -368,7 +440,7 @@ const TestYourself = () => {
                     </div>
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-text-secondary">{t('testYourself.results.scoreAchieved', 'Score Achieved')}:</span>
-                      <span className="font-semibold text-secondary">{results.earnedScore}</span>
+                      <span className="font-semibold text-secondary">{results.earnedScore.toFixed(1)}</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-text-secondary">{t('testYourself.results.totalQuestions', 'Total Questions')}:</span>
