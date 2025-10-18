@@ -527,10 +527,12 @@ const TestYourself = () => {
             </div>
             
             <div className="p-8">
-              <div 
-                className="p-6 mb-8 text-xl font-semibold border text-text bg-accent rounded-xl border-border"
-                dangerouslySetInnerHTML={{ __html: currentQuestion.title }}
-              />
+              {currentQuestion.type !== 'connect' && (
+                <div
+                  className="p-6 mb-8 text-xl font-semibold border text-text bg-accent rounded-xl border-border"
+                  dangerouslySetInnerHTML={{ __html: currentQuestion.title }}
+                />
+              )}
               
               {currentQuestion.type === 'mcq' ? (
                 <div className="space-y-4">
@@ -851,9 +853,19 @@ const TestYourself = () => {
                   {t('testYourself.test.previous', 'Previous')}
                 </button>
                 
-                <button 
+                <button
                   onClick={nextQuestion}
-                  className="flex items-center px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105"
+                  disabled={
+                    currentQuestion.type === 'connect'
+                      ? Object.keys(userAnswers[currentQuestion.id] || {}).length < 2
+                      : !userAnswers[currentQuestion.id]
+                  }
+                  className={`flex items-center px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105 ${
+                    (currentQuestion.type === 'connect'
+                      ? Object.keys(userAnswers[currentQuestion.id] || {}).length < 2
+                      : !userAnswers[currentQuestion.id]
+                    ) ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   {currentQuestionIndex === selectedTest.quizzes.length - 1 ? (
                     <>
