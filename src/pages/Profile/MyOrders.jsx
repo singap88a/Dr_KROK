@@ -42,7 +42,7 @@ const normalizeOrders = (orders) => {
       if (lowerType === "video_course") {
         type = "course";
       } else if (lowerType === "pdf" || lowerType === "delivery") {
-        type = lowerType;
+        type = "book";
       }
       return {
         id: o.order_id,
@@ -81,6 +81,9 @@ const mapBackendStatus = (status) => status || "";
 const MyOrders = ({ orders }) => {
   const { t } = useTranslation();
   const [filterType, setFilterType] = useState("all");
+
+  // Normalize orders first
+  const normalizedOrders = normalizeOrders(orders);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -160,16 +163,16 @@ const MyOrders = ({ orders }) => {
 
   const filteredOrders =
     filterType === "all"
-      ? orders
-      : orders.filter((order) => {
+      ? normalizedOrders
+      : normalizedOrders.filter((order) => {
           if (filterType === "book") return order.type === "book";
           if (filterType === "course") return order.type === "course";
           return true;
         });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {
-    const aId = parseInt(a.order_id || a.id) || 0;
-    const bId = parseInt(b.order_id || b.id) || 0;
+    const aId = parseInt(a.id) || 0;
+    const bId = parseInt(b.id) || 0;
     return bId - aId;
   });
 
@@ -177,7 +180,6 @@ const MyOrders = ({ orders }) => {
     ...order,
     rowNumber: index + 1,
   }));
-
   return (
     <div className="pt-4 space-y-6 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -7,7 +7,7 @@ import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import CitySelector from "../../components/CitySelector";
 import CouponInput from "../../components/CouponInput";
-import PhoneInput from 'react-phone-input-2';
+
 import he from "he";
 
 
@@ -467,19 +467,7 @@ export default function BuyNowPage() {
     }
   };
 
-  // Custom styles for react-phone-input-2
-  const phoneInputStyle = {
-    width: '100%',
-    height: '48px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    backgroundColor: 'var(--background)',
-    color: 'var(--text)'
-  };
 
-  const phoneInputContainerStyle = {
-    marginTop: '4px'
-  };
 
   return (
     <section className="min-h-screen px-4 py-10 bg-background text-text md:px-8">
@@ -681,21 +669,14 @@ export default function BuyNowPage() {
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
                     <FiPhone /> {t('books.phone_number')} *
                   </label>
-                  <PhoneInput
-                    country={'eg'}
+                  <input
+                    type="tel"
+                    name="phone1"
                     value={formData.phone1}
-                    onChange={(value) => setFormData(prev => ({ ...prev, phone1: value }))}
-                    inputStyle={phoneInputStyle}
-                    containerStyle={phoneInputContainerStyle}
-                    inputProps={{
-                      required: true,
-                      name: 'phone1',
-                    }}
-                    buttonStyle={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px 0 0 8px',
-                      backgroundColor: 'var(--surface)'
-                    }}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder={t('books.enter_phone_number')}
                   />
                 </div>
 
@@ -703,20 +684,13 @@ export default function BuyNowPage() {
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
                     <FiPhone /> {t('books.phone_number_2')} ({t('books.optional')})
                   </label>
-                  <PhoneInput
-                    country={'eg'}
+                  <input
+                    type="tel"
+                    name="phone2"
                     value={formData.phone2}
-                    onChange={(value) => setFormData(prev => ({ ...prev, phone2: value }))}
-                    inputStyle={phoneInputStyle}
-                    containerStyle={phoneInputContainerStyle}
-                    inputProps={{
-                      name: 'phone2',
-                    }}
-                    buttonStyle={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px 0 0 8px',
-                      backgroundColor: 'var(--surface)'
-                    }}
+                    onChange={handleInputChange}
+                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder={t('books.enter_phone_number_2')}
                   />
                 </div>
 
