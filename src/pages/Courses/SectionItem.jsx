@@ -8,7 +8,11 @@ import {
   FaFileAlt, 
   FaChevronDown, 
   FaChevronRight,
-  FaLock 
+  FaLock,
+  FaPaperclip,
+  FaClipboardList,
+  FaUnlock,
+  FaCheckCircle
 } from "react-icons/fa";
 import LessonItem from "./LessonItem";
 import SectionProgressBar from "./Progress/SectionProgressBar";
@@ -28,9 +32,162 @@ const SectionItem = ({
   onSectionClick,
   onLessonClick,
   onToggleSection,
-  isLoggedIn
+  isLoggedIn,
+  navigate,
+  course
 }) => {
   const { t } = useTranslation();
+
+  // حساب نسبة إكمال السيكشن
+  const calculateSectionCompletion = () => {
+    if (!isLoggedIn || !lessons || lessons.length === 0) return 0;
+    
+    const completedLessons = lessons.filter(lesson => {
+      const status = lessonStatuses[lesson.id];
+      return status && (status.progress_status === 'completed' || status.percentage >= 100);
+    });
+    
+    return (completedLessons.length / lessons.length) * 100;
+  };
+
+  const sectionCompletionPercentage = calculateSectionCompletion();
+  const isSectionCompleted = sectionCompletionPercentage >= 100;
+
+  // عرض ملحقات السيكشن
+  const renderSectionAttachments = () => {
+    if (!section.images && !section.files && !section.video_related) return null;
+
+    return (
+      <div className="p-4 border-t border-border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+        <button
+          onClick={() => onSectionClick(section)}
+          className="flex items-center justify-center w-full gap-3 p-4 transition-all duration-300 transform border-2 border-dashed border-primary/30 rounded-xl hover:border-primary hover:bg-primary/5 hover:scale-105 group"
+        >
+          <div className="flex-shrink-0 p-3 transition-all duration-300 bg-primary/10 rounded-full group-hover:bg-primary/20 group-hover:scale-110">
+            <FaPaperclip className="text-lg text-primary group-hover:text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <h4 className="font-semibold text-primary group-hover:text-primary">
+              {t("courses.sectionAttachments", "ملحقات السيكشن")}
+            </h4>
+            <p className="text-sm text-text-muted group-hover:text-text">
+              {t("courses.viewSectionMaterials", "عرض مواد السيكشن")}
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              {section.images && section.images.length > 0 && <FaImage />}
+              {section.files && section.files.length > 0 && <FaFileAlt />}
+              {section.video_related && <FaVideo />}
+            </div>
+          </div>
+        </button>
+      </div>
+    );
+  };
+
+  // عرض اختبارات السيكشن
+  const renderSectionTests = () => {
+    if (!section.section_tests || section.section_tests.length === 0) return null;
+
+    return (
+      <div className="p-4 border-t border-border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-800">
+              <FaClipboardList className="text-lg text-green-600 dark:text-green-400" />
+            </div>
+            <h4 className="font-semibold text-text">
+              {t("courses.sectionTests", "اختبارات السيكشن")}
+            </h4>
+          </div>
+          <p className="text-sm text-text-muted">
+            {t("courses.completeSectionToUnlock", "أكمل السيكشن بنسبة 100% لفتح الاختبارات")}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3">
+          {section.section_tests.map((test, idx) => (
+            <div
+              key={test.id || idx}
+              className={`p-4 border-2 rounded-xl transition-all duration-300 ${
+                isSectionCompleted
+                  ? "border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700 hover:border-green-300 hover:shadow-md cursor-pointer"
+                  : "border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-600 cursor-not-allowed opacity-60"
+              }`}
+              onClick={() => {
+                if (isSectionCompleted) {
+                  navigate(`/courses/${course.id}/test/section/${test.id}`, {
+                    state: { course, test, section }
+                  });
+                }
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    isSectionCompleted
+                      ? "bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-400"
+                      : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                  }`}>
+                    {isSectionCompleted ? <FaUnlock /> : <FaLock />}
+                  </div>
+                  <div>
+                    <h5 className={`font-semibold ${
+                      isSectionCompleted ? "text-green-800 dark:text-green-200" : "text-gray-600 dark:text-gray-400"
+                    }`}>
+                      {test.name || `${t("courses.sectionTest", "اختبار السيكشن")} ${idx + 1}`}
+                    </h5>
+                    <p className="text-xs text-text-muted">
+                      {test.number_student_questions} {t("courses.questions", "أسئلة")}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {isSectionCompleted ? (
+                    <>
+                      <FaCheckCircle className="text-green-500" />
+                      <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                        {t("courses.available", "متاح")}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <FaLock className="text-gray-400" />
+                      <span className="text-xs font-medium text-gray-500">
+                        {t("courses.locked", "مقفل")}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* مؤشر التقدم للسيكشن */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-text-muted">
+                    {t("courses.sectionProgress", "تقدم السيكشن")}
+                  </span>
+                  <span className="text-xs font-bold text-text">
+                    {Math.round(sectionCompletionPercentage)}%
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className={`h-2 transition-all duration-500 rounded-full ${
+                      isSectionCompleted ? "bg-green-500" : "bg-primary"
+                    }`}
+                    style={{ width: `${Math.min(sectionCompletionPercentage, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="border rounded-lg bg-surface border-border">
@@ -146,6 +303,10 @@ const SectionItem = ({
               calculateTotalProgress={calculateTotalProgress}
             />
           ))}
+          
+          {/* عرض ملحقات السيكشن واختباراته تحت آخر درس */}
+          {renderSectionAttachments()}
+          {renderSectionTests()}
         </div>
       )}
     </div>

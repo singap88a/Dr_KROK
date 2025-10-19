@@ -690,7 +690,18 @@
     "unlockPremium": "Розблокувати преміум контент",
     "purchaseToAccess": "Придбайте цей курс, щоб отримати доступ до всіх преміум уроків та матеріалів",
     "purchaseNow": "Купити зараз",
-    "enrollNow": "Записатися зараз"
+    "enrollNow": "Записатися зараз",
+    "markLessonDone": "Позначити урок як завершений",
+    "markSectionDone": "Позначити розділ як завершений",
+    "sectionTests": "Тести розділу",
+    "completeSectionToUnlock": "Завершіть розділ на 100%, щоб розблокувати тести",
+    "sectionTest": "Тест розділу",
+    "questions": "Питання",
+    "sectionProgress": "Прогрес розділу",
+    "sectionTestResults": "Результати тесту розділу",
+    "sectionTestPassed": "Тест розділу пройдено!",
+    "continueToNextSection": "Перейти до наступного розділу",
+    "questionResults": "Результати питань"
   },
   "video_courses": {
     "coupon": {

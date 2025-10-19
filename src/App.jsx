@@ -21,6 +21,7 @@ import CourseTestRunner from "./pages/Courses/CourseTestRunner";
 import CourseCertificate from "./pages/Courses/CourseCertificate";
 import CourseFinalTestResults from "./pages/Courses/CourseFinalTestResults";
 import LessonTestResults from "./pages/Courses/course-lessons/LessonTestResults";
+import CourseSectionTestResults from "./pages/Courses/CourseSectionTestResults";
 
 import TrainerArticlesPage from "./pages/Articles/Articles";
 import GeminiSingap from "./pages/GeminiSingap/GeminiSingap";
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/courses/:id/certificate" element={<CourseCertificate />} />
           <Route path="/courses/:id/final-results" element={<CourseFinalTestResults />} />
           <Route path="/courses/:id/lesson-results" element={<LessonTestResults />} />
+          <Route path="/courses/:id/section-results" element={<CourseSectionTestResults />} />
           <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
 
  

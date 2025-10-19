@@ -14,6 +14,7 @@ export default function CourseTestRunner() {
   const passedState = location.state || {};
   const [test, setTest] = useState(passedState.test || null);
   const [lessonId, setLessonId] = useState(passedState.lessonId || null);
+  const [sectionId, setSectionId] = useState(passedState.sectionId || null);
 
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -58,6 +59,17 @@ export default function CourseTestRunner() {
         if (scope === 'final') {
           const found = (data.final_tests || []).find((t) => String(t.id) === String(testId));
           setTest(found || null);
+        } else if (scope === 'section') {
+          // find inside sections
+          let foundSectionId = null;
+          let foundTest = null;
+          for (const section of data.sections || []) {
+            const arr = section.section_tests || [];
+            const hit = arr.find((t) => String(t.id) === String(testId));
+            if (hit) { foundSectionId = section.id; foundTest = hit; break; }
+          }
+          setSectionId(foundSectionId);
+          setTest(foundTest);
         } else {
           // find inside lessons
           let foundLessonId = null;
@@ -150,6 +162,21 @@ export default function CourseTestRunner() {
         console.error('Failed to complete lesson progress:', error);
         // Continue anyway
       }
+    } else if (scope === 'section') {
+      // Submit to API for section tests
+      try {
+        await addStudentTest({
+          test_id: test.id,
+          student_score: earned,
+          total_score: total,
+          result_status: 1, // Assuming 1 for completed
+          total_questions: quizzes.length,
+          questions
+        });
+      } catch (error) {
+        console.error('Failed to submit section test results:', error);
+        // Continue anyway
+      }
     }
 
     setResults({ total, earned, percentage, questions });
@@ -170,6 +197,14 @@ export default function CourseTestRunner() {
           state: { results: resultsData, test, lessonId }
         });
       }, 1000);
+    } else if (scope === 'section') {
+      // Navigate to section test results page
+      setTimeout(() => {
+        navigate(`/courses/${id}/section-results`, {
+          replace: true,
+          state: { results: resultsData, test, sectionId }
+        });
+      }, 1000);
     }
   };
 
@@ -181,7 +216,13 @@ export default function CourseTestRunner() {
         console.warn('Failed to complete lesson progress:', e);
       }
     }
-    navigate(`/courses/${id}/lessons`, { replace: true, state: { lessonCompleted: true, lessonId } });
+    
+    // Navigate back based on test scope
+    if (scope === 'section') {
+      navigate(`/courses/${id}/lessons`, { replace: true, state: { sectionTestCompleted: true, sectionId } });
+    } else {
+      navigate(`/courses/${id}/lessons`, { replace: true, state: { lessonCompleted: true, lessonId } });
+    }
   };
 
   if (loading) {
@@ -452,8 +493,10 @@ export default function CourseTestRunner() {
               <div className="p-4 mt-6 border rounded bg-accent border-border">
                 <div className="mb-1 text-text">{t('courses.score','Score')}: {Math.round(results.percentage)}%</div>
                 <div className="flex gap-2 mt-3">
-                  {scope === 'lesson' && (
-                    <button onClick={markDoneAndBack} className="px-4 py-2 text-white rounded bg-secondary hover:opacity-90">{t('courses.markLessonDone','Mark lesson as done')}</button>
+                  {(scope === 'lesson' || scope === 'section') && (
+                    <button onClick={markDoneAndBack} className="px-4 py-2 text-white rounded bg-secondary hover:opacity-90">
+                      {scope === 'lesson' ? t('courses.markLessonDone','Mark lesson as done') : t('courses.markSectionDone','Mark section as done')}
+                    </button>
                   )}
                   <button onClick={() => navigate(-1)} className="px-4 py-2 border rounded border-border hover:border-primary">{t('common.close','Close')}</button>
                 </div>

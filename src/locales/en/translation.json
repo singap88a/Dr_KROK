@@ -720,7 +720,18 @@
     "unlockPremium": "Unlock Premium Content",
     "purchaseToAccess": "Purchase this course to access all premium lessons and materials",
     "purchaseNow": "Purchase Now",
-    "enrollNow": "Enroll Now"
+    "enrollNow": "Enroll Now",
+    "markLessonDone": "Mark lesson as done",
+    "markSectionDone": "Mark section as done",
+    "sectionTests": "Section Tests",
+    "completeSectionToUnlock": "Complete the section 100% to unlock tests",
+    "sectionTest": "Section Test",
+    "questions": "Questions",
+    "sectionProgress": "Section Progress",
+    "sectionTestResults": "Section Test Results",
+    "sectionTestPassed": "Section Test Passed!",
+    "continueToNextSection": "Continue to Next Section",
+    "questionResults": "Question Results"
   },
   "video_courses": {
     "coupon": {
