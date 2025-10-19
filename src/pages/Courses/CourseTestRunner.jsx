@@ -18,7 +18,6 @@ export default function CourseTestRunner() {
 
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [time, setTime] = useState(0);
   const [results, setResults] = useState(null);
   const [dragItem, setDragItem] = useState(null);
 
@@ -93,16 +92,7 @@ export default function CourseTestRunner() {
     return () => { mounted = false; };
   }, [id, scope, testId, test, getVideoCourseById]);
 
-  // timer
-  useEffect(() => {
-    if (results) return;
-    const timer = setInterval(() => setTime((s) => s + 1), 1000);
-    return () => clearInterval(timer);
-  }, [results]);
-
   const currentQuestion = useMemo(() => (test?.quizzes || [])[idx], [test, idx]);
-
-  const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
   const finish = async () => {
     const quizzes = test?.quizzes || [];
@@ -256,7 +246,6 @@ export default function CourseTestRunner() {
               <h1 className="text-2xl font-bold">{test.name || t('courses.test','Test')}</h1>
               <div className="flex items-center gap-3 text-sm">
                 <span>{t('courses.question','Question')} {idx + 1} {t('courses.of','of')} {test.quizzes?.length || 0}</span>
-                <span className="px-2 py-1 rounded bg-white/20">{formatTime(time)}</span>
               </div>
             </div>
             <div className="w-full h-2 mt-4 rounded-full bg-white/30">

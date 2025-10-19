@@ -874,32 +874,33 @@ const VideoPlayerSection = ({
     if (!course.final_tests || course.final_tests.length === 0) return null;
 
     return (
-      <div className="p-6 border rounded-lg bg-surface border-border">
-        <h3 className="mb-3 text-lg font-semibold text-text">
-          {t("courses.finalTests", "Final Tests")}
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {course.final_tests.map((test, idx) => {
-            const locked =
-              Math.round(courseProgress?.overall?.percentage || 0) < 100;
-            return (
-              <button
-                key={test.id || idx}
-                onClick={() => handleTestClick(test, course, 'final')}
-                disabled={locked}
-                className={`px-4 py-2 text-sm font-medium rounded ${
-                  locked
-                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : "text-white bg-primary hover:bg-primary/90"
-                }`}
-              >
-                {test.name || `${t("courses.finalTest", "Final Test")} ${idx + 1}`}{" "}
-                {locked && <FaLock className="inline ml-1" />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      // <div className="p-6 border rounded-lg bg-surface border-border">
+      //   <h3 className="mb-3 text-lg font-semibold text-text">
+      //     {t("courses.finalTests", "Final Tests")}
+      //   </h3>
+      //   <div className="flex flex-wrap gap-2">
+      //     {course.final_tests.map((test, idx) => {
+      //       const locked =
+      //         Math.round(courseProgress?.overall?.percentage || 0) < 100;
+      //       return (
+      //         <button
+      //           key={test.id || idx}
+      //           onClick={() => handleTestClick(test, course, 'final')}
+      //           disabled={locked}
+      //           className={`px-4 py-2 text-sm font-medium rounded ${
+      //             locked
+      //               ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      //               : "text-white bg-primary hover:bg-primary/90"
+      //           }`}
+      //         >
+      //           {test.name || `${t("courses.finalTest", "Final Test")} ${idx + 1}`}{" "}
+      //           {locked && <FaLock className="inline ml-1" />}
+      //         </button>
+      //       );
+      //     })}
+      //   </div>
+      // </div>
+      <div className=""></div>
     );
   };
 
@@ -1021,7 +1022,7 @@ const VideoPlayerSection = ({
 
             {renderContentAttachments(currentSection, 'section')}
 
-            {currentSection.lessons && currentSection.lessons.length > 0 && (
+            {/* {currentSection.lessons && currentSection.lessons.length > 0 && (
               <div className="mt-4">
                 <h4 className="mb-3 font-semibold text-md text-text">
                   {t("courses.sectionLessons", "Section Lessons")} (
@@ -1068,7 +1069,7 @@ const VideoPlayerSection = ({
                   )}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       );
