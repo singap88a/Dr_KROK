@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
+import he from 'he';
 
 const TestYourself = () => {
   const { getPlacementCourses } = useApi();
@@ -92,8 +93,22 @@ const TestYourself = () => {
         
         const res = await getPlacementCourses({ type: 'all' });
         const allCourses = Array.isArray(res?.data) ? res.data : [];
-        setCourses(allCourses);
-        setFilteredCourses(allCourses);
+        
+        // تصفية البيانات - إزالة بيانات المدرب من الكورسات اللايف
+        const filteredCourses = allCourses.map(course => {
+          if (course.type === 'live') {
+            return {
+              ...course,
+              instructor: '', // إزالة اسم المدرب
+              instructor_image: '', // إزالة صورة المدرب
+              description: course.description ? course.description.replace(/<[^>]*>/g, '') : '' // إزالة التاج من الوصف
+            };
+          }
+          return course;
+        });
+        
+        setCourses(filteredCourses);
+        setFilteredCourses(filteredCourses);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching courses:', error);
@@ -583,10 +598,7 @@ const TestYourself = () => {
             
             <div className="p-8">
               {currentQuestion.type !== 'connect' && (
-                <div
-                  className="p-6 mb-8 text-xl font-semibold border text-text bg-accent rounded-xl border-border"
-                  dangerouslySetInnerHTML={{ __html: currentQuestion.title }}
-                />
+                <div dangerouslySetInnerHTML={{ __html: currentQuestion.title }} />
               )}
               
               {currentQuestion.type === 'mcq' ? (
@@ -639,9 +651,9 @@ const TestYourself = () => {
                     </h3>
                     
                     {currentQuestion.title && (
-                      <div 
+                      <div
                         className="p-4 mb-6 text-lg font-semibold text-center border text-text bg-surface rounded-xl border-border"
-                        dangerouslySetInnerHTML={{ __html: currentQuestion.title }}
+                        dangerouslySetInnerHTML={{ __html: he.decode(currentQuestion.title.replace(/<[^>]*>/g, '')) }}
                       />
                     )}
                     
@@ -1014,17 +1026,22 @@ const TestYourself = () => {
                 <p className="mb-6 text-lg leading-relaxed text-text-secondary">
                   {selectedCourse.description}
                 </p>
-                <div className="flex items-center mb-6">
-                  <img 
-                    className="object-cover w-12 h-12 rounded-full shadow-sm" 
-                    src={selectedCourse.instructor_image} 
-                    alt={selectedCourse.instructor}
-                  />
-                  <div className="ml-4">
-                    <p className="text-lg font-semibold text-text">{selectedCourse.instructor}</p>
-                    <p className="text-text-muted">Instructor</p>
+                
+                {/* عرض بيانات المدرب فقط للكورسات الفيديو */}
+                {selectedCourse.type === 'video' && selectedCourse.instructor && (
+                  <div className="flex items-center mb-6">
+                    <img 
+                      className="object-cover w-12 h-12 rounded-full shadow-sm" 
+                      src={selectedCourse.instructor_image} 
+                      alt={selectedCourse.instructor}
+                    />
+                    <div className="ml-4">
+                      <p className="text-lg font-semibold text-text">{selectedCourse.instructor}</p>
+                      <p className="text-text-muted">Instructor</p>
+                    </div>
                   </div>
-                </div>
+                )}
+                
                 <div className="flex flex-wrap gap-3">
                   <span className="px-4 py-2 text-sm font-medium border rounded-full bg-primary/10 text-primary border-primary/20">
                     Level: {selectedCourse.level}
@@ -1166,14 +1183,17 @@ const TestYourself = () => {
                 </div>
                 
                 <div className="p-6">
-                  <div className="flex items-center mb-4">
-                    <img 
-                      className="object-cover w-10 h-10 mr-3 rounded-full shadow-sm" 
-                      src={course.instructor_image} 
-                      alt={course.instructor}
-                    />
-                    <span className="font-medium text-text-secondary">{course.instructor}</span>
-                  </div>
+                  {/* عرض بيانات المدرب فقط للكورسات الفيديو */}
+                  {course.type === 'video' && course.instructor && (
+                    <div className="flex items-center mb-4">
+                      <img 
+                        className="object-cover w-10 h-10 mr-3 rounded-full shadow-sm" 
+                        src={course.instructor_image} 
+                        alt={course.instructor}
+                      />
+                      <span className="font-medium text-text-secondary">{course.instructor}</span>
+                    </div>
+                  )}
                   
                   <h3 className="mb-3 text-xl font-bold transition-colors duration-200 text-text line-clamp-2 group-hover:text-primary">
                     {course.title}

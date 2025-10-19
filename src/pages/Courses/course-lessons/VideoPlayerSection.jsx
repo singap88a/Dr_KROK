@@ -38,6 +38,8 @@ const VideoPlayerSection = ({
 }) => {
   const { t } = useTranslation();
   const videoRef = useRef(null);
+  const videoContainerRef = useRef(null);
+  
   const [testModal, setTestModal] = useState({
     isOpen: false,
     message: "",
@@ -264,9 +266,9 @@ const VideoPlayerSection = ({
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-        <div className="w-full max-w-md mx-4 overflow-hidden transition-all transform shadow-xl bg-surface rounded-2xl">
+        <div className="w-full max-w-md mx-4 overflow-hidden transition-all transform shadow-xl bg-surface dark:bg-surface-dark rounded-2xl">
           {/* Header */}
-          <div className="p-6 text-white bg-primary to-primary/80">
+          <div className="p-6 text-white bg-primary dark:bg-primary-dark">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-full bg-opacity-20">
@@ -291,15 +293,15 @@ const VideoPlayerSection = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 bg-surface">
-            <div className="flex items-center gap-4 p-4 mb-4 border rounded-lg bg-background border-border">
+          <div className="p-6 bg-surface dark:bg-surface-dark">
+            <div className="flex items-center gap-4 p-4 mb-4 border rounded-lg bg-background dark:bg-background-dark border-border dark:border-border-dark">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <FaExclamationTriangle className="text-2xl text-primary" />
+                <div className="p-3 bg-orange-100 rounded-full dark:bg-orange-900">
+                  <FaExclamationTriangle className="text-2xl text-primary dark:text-primary-dark" />
                 </div>
               </div>
               <div className="flex-1">
-                <p className="font-medium text-text">
+                <p className="font-medium text-text dark:text-text-dark">
                   {testModal.message}
                 </p>
               </div>
@@ -309,7 +311,7 @@ const VideoPlayerSection = ({
             <div className="flex gap-3">
               <button
                 onClick={() => setTestModal({ ...testModal, isOpen: false })}
-                className="flex-1 px-4 py-3 font-medium transition-colors rounded-lg text-text bg-accent hover:bg-accent/80"
+                className="flex-1 px-4 py-3 font-medium transition-colors rounded-lg text-text dark:text-text-dark bg-accent dark:bg-accent-dark hover:bg-accent/80 dark:hover:bg-accent-dark/80"
               >
                 {t("common.cancel", "Cancel")}
               </button>
@@ -317,7 +319,7 @@ const VideoPlayerSection = ({
                 onClick={() => {
                   setTestModal({ ...testModal, isOpen: false });
                 }}
-                className="flex-1 px-4 py-3 font-medium text-white transition-all transform rounded-lg bg-primary hover:bg-primary/90 hover:scale-105"
+                className="flex-1 px-4 py-3 font-medium text-white transition-all transform rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90 hover:scale-105"
               >
                 {t("courses.continueWatching", "Continue Watching")}
               </button>
@@ -328,95 +330,97 @@ const VideoPlayerSection = ({
     );
   };
 
-  // Quiz Modal for periodic quizzes
+  // Quiz Modal for periodic quizzes - positioned exactly over video
   const QuizModal = () => {
     if (!quizModal.isOpen || !quizModal.currentQuiz) return null;
 
     const { currentQuiz, currentQuestionIndex } = quizModal;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-        <div className="w-full max-w-lg mx-4 overflow-hidden transition-all transform shadow-xl bg-surface rounded-2xl">
-          {/* Header */}
-          <div className="p-4 text-white bg-gradient-to-r from-primary to-primary/80">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-full bg-opacity-20">
-                  <FaChartLine className="text-sm" />
+      <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]  ">
+        <div className="flex items-center justify-center w-full h-full p-4">
+          <div className="w-full max-w-lg overflow-hidden transition-all transform shadow-xl bg-surface dark:bg-surface-dark rounded-2xl">
+            {/* Header */}
+            <div className="p-4 text-white bg-primary dark:from-primary-dark dark:to-primary-dark/80">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-full bg-opacity-20">
+                    <FaChartLine className="text-sm" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">
+                      {t("courses.quickQuiz", "Quick Quiz")}
+                    </h3>
+                    <p className="text-xs text-white text-opacity-90">
+                      {t("courses.atTime", "At")} {currentQuiz.show_at_time}s
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold">
-                    {t("courses.quickQuiz", "Quick Quiz")}
-                  </h3>
-                  <p className="text-xs text-white text-opacity-90">
-                    {t("courses.atTime", "At")} {currentQuiz.show_at_time}s
-                  </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs bg-white rounded-full bg-opacity-20">
+                    {currentQuestionIndex + 1}
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-1 text-xs bg-white rounded-full bg-opacity-20">
-                  {currentQuestionIndex + 1}
-                </span>
               </div>
             </div>
-          </div>
 
-          {/* Content */}
-          <div className="p-4 bg-surface">
-            {/* Question */}
-            <div className="mb-4">
-              <h4 className="mb-3 text-sm font-semibold leading-relaxed text-text">
-                <div 
-                  dangerouslySetInnerHTML={{ 
-                    __html: currentQuiz.title || t("courses.question", "Question") 
-                  }} 
-                />
-              </h4>
-              
-              {/* Answers */}
-              <div className="space-y-2">
-                {[1, 2, 3, 4].map((index) => {
-                  const answer = currentQuiz[`answer_${index}`];
-                  if (!answer) return null;
-                  
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleQuizSubmit(index - 1)}
-                      className="w-full p-3 text-sm text-left transition-all bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 hover:shadow-sm"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-medium text-gray-500 border border-gray-300 rounded-full">
-                          {String.fromCharCode(64 + index)}
+            {/* Content */}
+            <div className="p-4 bg-surface dark:bg-surface-dark">
+              {/* Question */}
+              <div className="mb-4">
+                <h4 className="mb-3 text-sm font-semibold leading-relaxed text-text dark:text-text-dark">
+                  <div 
+                    dangerouslySetInnerHTML={{ 
+                      __html: currentQuiz.title || t("courses.question", "Question") 
+                    }} 
+                  />
+                </h4>
+                
+                {/* Answers */}
+                <div className="space-y-2">
+                  {[1, 2, 3, 4].map((index) => {
+                    const answer = currentQuiz[`answer_${index}`];
+                    if (!answer) return null;
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleQuizSubmit(index - 1)}
+                        className="w-full p-3 text-sm text-left transition-all border rounded-lg cursor-pointer bg-surface border-border dark:bg-surface-dark dark:border-border-dark hover:border-primary dark:hover:border-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 hover:shadow-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-medium text-gray-500 border border-gray-300 rounded-full dark:text-gray-400 dark:border-gray-500">
+                            {String.fromCharCode(64 + index)}
+                          </div>
+                          <span className="text-sm font-medium text-text dark:text-text-dark">{answer}</span>
                         </div>
-                        <span className="text-sm font-medium text-text">{answer}</span>
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setQuizModal({
-                    isOpen: false,
-                    currentQuiz: null,
-                    currentTest: null,
-                    currentQuestionIndex: 0,
-                    userAnswers: [],
-                    showResult: false
-                  });
-                  if (videoRef.current) {
-                    videoRef.current.play();
-                  }
-                }}
-                className="flex-1 px-3 py-2 text-xs font-medium transition-colors rounded-lg text-text bg-accent hover:bg-accent/80"
-              >
-                {t("common.skip", "Skip")}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setQuizModal({
+                      isOpen: false,
+                      currentQuiz: null,
+                      currentTest: null,
+                      currentQuestionIndex: 0,
+                      userAnswers: [],
+                      showResult: false
+                    });
+                    if (videoRef.current) {
+                      videoRef.current.play();
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 text-xs font-medium transition-colors rounded-lg text-text dark:text-text-dark bg-accent dark:bg-accent-dark hover:bg-accent/80 dark:hover:bg-accent-dark/80"
+                >
+                  {t("common.skip", "Skip")}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -424,7 +428,7 @@ const VideoPlayerSection = ({
     );
   };
 
-  // Results Modal for showing final quiz results
+  // Results Modal for showing final quiz results - positioned exactly over video
   const ResultsModal = () => {
     if (!resultsModal.isOpen) return null;
 
@@ -436,30 +440,30 @@ const VideoPlayerSection = ({
     const getPerformanceMessage = () => {
       if (isExcellent) return { 
         message: t("courses.excellentMessage", "Outstanding! You've mastered this lesson completely."),
-        color: "text-green-600",
-        bgColor: "bg-green-50",
-        borderColor: "border-green-200",
+        color: "text-green-600 dark:text-green-400",
+        bgColor: "bg-green-50 dark:bg-green-900",
+        borderColor: "border-green-200 dark:border-green-800",
         icon: "🏆"
       };
       if (isGood) return { 
         message: t("courses.goodMessage", "Great job! You have a solid understanding of the material."),
-        color: "text-blue-600",
-        bgColor: "bg-blue-50",
-        borderColor: "border-blue-200",
+        color: "text-blue-600 dark:text-blue-400",
+        bgColor: "bg-blue-50 dark:bg-blue-900",
+        borderColor: "border-blue-200 dark:border-blue-800",
         icon: "⭐"
       };
       if (isAverage) return { 
         message: t("courses.averageMessage", "Good effort! You understand the main concepts."),
-        color: "text-yellow-600",
-        bgColor: "bg-yellow-50",
-        borderColor: "border-yellow-200",
+        color: "text-yellow-600 dark:text-yellow-400",
+        bgColor: "bg-yellow-50 dark:bg-yellow-900",
+        borderColor: "border-yellow-200 dark:border-yellow-800",
         icon: "📚"
       };
       return { 
         message: t("courses.poorMessage", "Keep practicing! Review the material and try again."),
-        color: "text-orange-600",
-        bgColor: "bg-orange-50",
-        borderColor: "border-orange-200",
+        color: "text-orange-600 dark:text-orange-400",
+        bgColor: "bg-orange-50 dark:bg-orange-900",
+        borderColor: "border-orange-200 dark:border-orange-800",
         icon: "💪"
       };
     };
@@ -467,95 +471,97 @@ const VideoPlayerSection = ({
     const performance = getPerformanceMessage();
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-        <div className="w-full max-w-sm mx-4 overflow-hidden transition-all transform shadow-xl bg-surface rounded-2xl">
-          {/* Header */}
-          <div className="p-4 text-white bg-primary ">
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <div className="p-2 bg-white rounded-full bg-opacity-20">
-                  <FaTrophy className="text-lg" />
-                </div>
+<div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]">
+  <div className="flex items-center justify-center w-full h-full p-4">
+    <div className="w-full max-w-xs overflow-hidden transition-all transform shadow-xl bg-surface dark:bg-surface-dark rounded-xl">
+      {/* Header */}
+      <div className="p-3 text-white bg-primary dark:bg-primary-dark">
+        <div className="text-center">
+          <div className="flex justify-center mb-1">
+            <div className="p-1 bg-white rounded-full bg-opacity-20">
+              <FaTrophy className="text-sm" />
+            </div>
+          </div>
+          <h3 className="text-sm font-bold">
+            {t("courses.quizCompleted", "Quiz Completed!")}
+          </h3>
+          <p className="mt-0.5 text-[10px] text-white text-opacity-90">
+            {t("courses.videoCompleted", "Video Completed")}
+          </p>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-3 bg-surface dark:bg-surface-dark">
+        {/* Score Circle */}
+        <div className="flex justify-center mb-3">
+          <div className="relative">
+            <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center ${
+              isExcellent ? "border-green-500 dark:border-green-400" :
+              isGood ? "border-blue-500 dark:border-blue-400" :
+              isAverage ? "border-yellow-500 dark:border-yellow-400" : "border-orange-500 dark:border-orange-400"
+            }`}>
+              <div className="text-center">
+                <div className="text-lg font-bold text-text dark:text-text-dark">{score}%</div>
+                <div className="text-[9px] text-text-muted dark:text-text-muted-dark">{t("courses.score", "Score")}</div>
               </div>
-              <h3 className="text-lg font-bold">
-                {t("courses.quizCompleted", "Quiz Completed!")}
-              </h3>
-              <p className="mt-1 text-xs text-white text-opacity-90">
-                {t("courses.videoCompleted", "Video Completed")}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="p-2 text-center border rounded-lg bg-background dark:bg-background-dark border-border dark:border-border-dark">
+            <div className="text-base font-bold text-green-600 dark:text-green-400">{correctAnswers}</div>
+            <div className="text-[10px] text-text-muted dark:text-text-muted-dark">{t("courses.correct", "Correct")}</div>
+          </div>
+          <div className="p-2 text-center border rounded-lg bg-background dark:bg-background-dark border-border dark:border-border-dark">
+            <div className="text-base font-bold text-red-600 dark:text-red-400">{totalQuestions - correctAnswers}</div>
+            <div className="text-[10px] text-text-muted dark:text-text-muted-dark">{t("courses.incorrect", "Incorrect")}</div>
+          </div>
+        </div>
+
+        {/* Performance Message */}
+        <div className={`p-2 mb-3 rounded-lg ${performance.bgColor} ${performance.borderColor} border`}>
+          <div className="flex items-center gap-1">
+            <span className="text-base">{performance.icon}</span>
+            <div>
+              <p className={`text-[11px] font-medium ${performance.color} leading-tight`}>
+                {performance.message}
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-4 bg-surface">
-            {/* Score Circle */}
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center ${
-                  isExcellent ? "border-green-500" :
-                  isGood ? "border-blue-500" :
-                  isAverage ? "border-yellow-500" : "border-orange-500"
-                }`}>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-text">{score}%</div>
-                    <div className="text-[10px] text-text-muted">{t("courses.score", "Score")}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 text-center border rounded-lg bg-background border-border">
-                <div className="text-lg font-bold text-green-600">{correctAnswers}</div>
-                <div className="text-xs text-text-muted">{t("courses.correct", "Correct")}</div>
-              </div>
-              <div className="p-3 text-center border rounded-lg bg-background border-border">
-                <div className="text-lg font-bold text-red-600">{totalQuestions - correctAnswers}</div>
-                <div className="text-xs text-text-muted">{t("courses.incorrect", "Incorrect")}</div>
-              </div>
-            </div>
-
-            {/* Performance Message */}
-            <div className={`p-3 mb-4 rounded-lg ${performance.bgColor} ${performance.borderColor} border`}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{performance.icon}</span>
-                <div>
-                  <p className={`text-xs font-medium ${performance.color}`}>
-                    {performance.message}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-text-muted">{t("courses.progress", "Progress")}</span>
-                <span className="text-xs font-bold text-text">{correctAnswers}/{totalQuestions}</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-accent">
-                <div
-                  className={`h-2 transition-all duration-500 rounded-full ${
-                    isExcellent ? "bg-green-500" :
-                    isGood ? "bg-blue-500" :
-                    isAverage ? "bg-yellow-500" : "bg-orange-500"
-                  }`}
-                  style={{ width: `${(correctAnswers / totalQuestions) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Action Button */}
-            <button
-              onClick={() => setResultsModal({ ...resultsModal, isOpen: false })}
-              className="w-full px-4 py-2 text-sm font-medium text-white transition-all transform rounded-lg bg-primary hover:bg-primary/90 hover:scale-105"
-            >
-              {t("common.continue", "Continue")}
-            </button>
+        {/* Progress Bar */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-text-muted dark:text-text-muted-dark">{t("courses.progress", "Progress")}</span>
+            <span className="text-[10px] font-bold text-text dark:text-text-dark">{correctAnswers}/{totalQuestions}</span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-accent dark:bg-accent-dark">
+            <div
+              className={`h-1.5 transition-all duration-500 rounded-full ${
+                isExcellent ? "bg-green-500 dark:bg-green-400" :
+                isGood ? "bg-blue-500 dark:bg-blue-400" :
+                isAverage ? "bg-yellow-500 dark:bg-yellow-400" : "bg-orange-500 dark:bg-orange-400"
+              }`}
+              style={{ width: `${(correctAnswers / totalQuestions) * 100}%` }}
+            ></div>
           </div>
         </div>
+
+        {/* Action Button */}
+        <button
+          onClick={() => setResultsModal({ ...resultsModal, isOpen: false })}
+          className="w-full px-3 py-2 text-xs font-medium text-white transition-all transform rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90 hover:scale-105 active:scale-95"
+        >
+          {t("common.continue", "Continue")}
+        </button>
       </div>
+    </div>
+  </div>
+</div>
     );
   };
 
@@ -573,15 +579,15 @@ const VideoPlayerSection = ({
 
     return (
       <div className="mt-6">
-        <h4 className="pb-2 mb-4 text-lg font-bold border-b text-text">
+        <h4 className="pb-2 mb-4 text-lg font-bold border-b text-text dark:text-text-dark border-border dark:border-border-dark">
           {t(isLesson ? "courses.lessonAttachments" : "courses.sectionAttachments", 
              isLesson ? "📚 Lesson Materials" : "📁 Section Materials")}
         </h4>
 
         {content.images && content.images.length > 0 && (
           <div className="mb-6">
-            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text">
-              <FaImage className="text-primary" />
+            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text dark:text-text-dark">
+              <FaImage className="text-primary dark:text-primary-dark" />
               {t("courses.images", "Gallery")}
             </h5>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -609,8 +615,8 @@ const VideoPlayerSection = ({
 
         {content.files && content.files.length > 0 && (
           <div className="mb-6">
-            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text">
-              <FaFileAlt className="text-primary" />
+            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text dark:text-text-dark">
+              <FaFileAlt className="text-primary dark:text-primary-dark" />
               {t("courses.files", "Study Materials")}
             </h5>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -618,16 +624,16 @@ const VideoPlayerSection = ({
                 <button
                   key={idx}
                   onClick={() => onFileClick(file.url || file)}
-                  className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 hover:shadow-md group"
+                  className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-primary dark:hover:border-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 hover:shadow-md group dark:border-gray-600"
                 >
-                  <div className="flex-shrink-0 p-3 transition-colors rounded-lg bg-primary/10 group-hover:bg-primary/20">
-                    <FaFileAlt className="text-xl text-primary" />
+                  <div className="flex-shrink-0 p-3 transition-colors rounded-lg bg-primary/10 group-hover:bg-primary/20 dark:bg-primary-dark/10">
+                    <FaFileAlt className="text-xl text-primary dark:text-primary-dark" />
                   </div>
                   <div className="flex-1 text-left">
-                    <span className="block text-sm font-medium text-text">
+                    <span className="block text-sm font-medium text-text dark:text-text-dark">
                       {file.name || `${t("courses.file", "File")} ${idx + 1}`}
                     </span>
-                    <span className="block mt-1 text-xs text-text-muted">
+                    <span className="block mt-1 text-xs text-text-muted dark:text-text-muted-dark">
                       {t("courses.clickToDownload", "Click to download")}
                     </span>
                   </div>
@@ -639,8 +645,8 @@ const VideoPlayerSection = ({
 
         {content.video_related && (
           <div className="mb-6">
-            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text">
-              <FaVideo className="text-primary" />
+            <h5 className="flex items-center gap-2 mb-3 text-lg font-semibold text-text dark:text-text-dark">
+              <FaVideo className="text-primary dark:text-primary-dark" />
               {t("courses.additionalVideos", "Additional Videos")}
             </h5>
             <div className="grid grid-cols-1 gap-4">
@@ -655,7 +661,7 @@ const VideoPlayerSection = ({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 cursor-pointer rounded-xl hover:border-primary hover:bg-primary/5 hover:shadow-md group"
+                    className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 cursor-pointer rounded-xl hover:border-primary dark:hover:border-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 hover:shadow-md group dark:border-gray-600"
                     onClick={() => onVideoClick(video)}
                   >
                     <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden rounded-lg">
@@ -682,11 +688,11 @@ const VideoPlayerSection = ({
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-text">
+                        <span className="text-sm font-semibold text-text dark:text-text-dark">
                           {t("courses.additionalVideo", "Additional Video")} {idx + 1}
                         </span>
                       </div>
-                      <p className="text-xs text-text-muted">
+                      <p className="text-xs text-text-muted dark:text-text-muted-dark">
                         {t("courses.clickToWatch", "Click to watch this video")}
                       </p>
                     </div>
@@ -697,42 +703,18 @@ const VideoPlayerSection = ({
           </div>
         )}
 
-        {/* Periodic Quizzes Info */}
-        {/* {isLesson && periodicQuizzes.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-500 rounded-lg">
-                <FaClock className="text-lg text-white" />
-              </div>
-              <div>
-                <h5 className="text-lg font-bold text-text">
-                  {t("courses.periodicQuizzes", "Interactive Quizzes")}
-                </h5>
-                <p className="text-sm text-text-muted">
-                  {t("courses.quizzesDuringVideo", "Quizzes will appear during the video at specific times")}
-                </p>
-              </div>
-            </div>
-            <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-              <p className="text-sm text-blue-800">
-                {t("courses.quizzesInfo", "During this video, quizzes will automatically appear at specific timestamps. The video will pause until you complete each quiz. Results will be shown at the end of the video.")}
-              </p>
-            </div>
-          </div>
-        )} */}
-
         {/* Lesson End Tests */}
         {isLesson && lessonEndTests.length > 0 && (
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary">
+              <div className="p-2 rounded-lg bg-primary dark:bg-primary-dark">
                 <FaChartLine className="text-lg text-white" />
               </div>
               <div>
-                <h5 className="text-lg font-bold text-text">
+                <h5 className="text-lg font-bold text-text dark:text-text-dark">
                   {t("courses.lessonTests", "Lesson Assessment")}
                 </h5>
-                <p className="text-sm text-text-muted">
+                <p className="text-sm text-text-muted dark:text-text-muted-dark">
                   {t("courses.testYourKnowledge", "Test your understanding of this lesson")}
                 </p>
               </div>
@@ -749,8 +731,8 @@ const VideoPlayerSection = ({
                     key={test.id || idx}
                     className={`p-5 border-2 rounded-xl transition-all transform hover:scale-105 cursor-pointer ${
                       canTakeTest
-                        ? "border-primary/20 bg-primary/5 hover:border-primary hover:shadow-lg"
-                        : "border-border bg-accent hover:border-border/80"
+                        ? "border-primary/20 bg-primary/5 hover:border-primary dark:hover:border-primary-dark hover:shadow-lg dark:border-primary-dark/20 dark:bg-primary-dark/5"
+                        : "border-border bg-accent hover:border-border/80 dark:border-border-dark dark:bg-accent-dark"
                     }`}
                     onClick={() => handleTestClick(test, content, 'lesson')}
                   >
@@ -758,21 +740,21 @@ const VideoPlayerSection = ({
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${
                           canTakeTest
-                            ? "bg-primary text-white"
-                            : "bg-text-muted text-background"
+                            ? "bg-primary text-white dark:bg-primary-dark"
+                            : "bg-text-muted text-background dark:bg-text-muted-dark dark:text-background-dark"
                         }`}>
                           {canTakeTest ? <FaUnlock /> : <FaLock />}
                         </div>
                         <div>
-                          <h6 className="font-semibold text-text">
+                          <h6 className="font-semibold text-text dark:text-text-dark">
                             {test.name || `${t("courses.test", "Test")} ${idx + 1}`}
                           </h6>
                         </div>
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         canTakeTest
-                          ? "bg-primary/10 text-primary"
-                          : "bg-accent text-text-muted"
+                          ? "bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark"
+                          : "bg-accent text-text-muted dark:bg-accent-dark dark:text-text-muted-dark"
                       }`}>
                         {canTakeTest ? t("courses.available", "Available") : t("courses.locked", "Locked")}
                       </div>
@@ -782,16 +764,16 @@ const VideoPlayerSection = ({
                     {canTakeTest && (
                       <div className="mt-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-text-muted">
+                          <span className="text-xs text-text-muted dark:text-text-muted-dark">
                             {t("courses.lessonProgress", "Lesson Progress")}
                           </span>
-                          <span className="text-xs font-bold text-text">
+                          <span className="text-xs font-bold text-text dark:text-text-dark">
                             {Math.round(progressPercentage)}%
                           </span>
                         </div>
-                        <div className="w-full h-2 rounded-full bg-accent">
+                        <div className="w-full h-2 rounded-full bg-accent dark:bg-accent-dark">
                           <div
-                            className="h-2 transition-all duration-500 rounded-full bg-primary"
+                            className="h-2 transition-all duration-500 rounded-full bg-primary dark:bg-primary-dark"
                             style={{ width: `${Math.min(progressPercentage, 100)}%` }}
                           ></div>
                         </div>
@@ -799,7 +781,7 @@ const VideoPlayerSection = ({
                     )}
 
                     {!canTakeTest && (
-                      <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
+                      <p className="flex items-center gap-1 mt-2 text-xs text-red-500 dark:text-red-400">
                         <FaLock className="text-xs" />
                         {t("courses.watchVideoToUnlockTest", "Watch 50% of the lesson to unlock")}
                       </p>
@@ -818,8 +800,8 @@ const VideoPlayerSection = ({
     if (!course.instructor) return null;
 
     return (
-      <div className="p-6 border rounded-lg bg-surface border-border">
-        <h3 className="mb-4 text-lg font-semibold text-text">
+      <div className="p-6 border rounded-lg bg-surface dark:bg-surface-dark border-border dark:border-border-dark">
+        <h3 className="mb-4 text-lg font-semibold text-text dark:text-text-dark">
           {t("courses.instructor", "Instructor")}
         </h3>
 
@@ -827,18 +809,18 @@ const VideoPlayerSection = ({
           <img
             src={course.instructor.image || "/placeholder-instructor.jpg"}
             alt={course.instructor.name}
-            className="object-cover w-16 h-16 border-2 rounded-full border-primary"
+            className="object-cover w-16 h-16 border-2 rounded-full border-primary dark:border-primary-dark"
           />
 
           <div className="flex-1">
-            <h4 className="text-lg font-semibold text-text">
+            <h4 className="text-lg font-semibold text-text dark:text-text-dark">
               {course.instructor.name}
             </h4>
-            <p className="mb-2 font-medium text-primary">
+            <p className="mb-2 font-medium text-primary dark:text-primary-dark">
               {course.instructor.job_title}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 mb-3 text-sm text-text-muted">
+            <div className="flex flex-wrap items-center gap-4 mb-3 text-sm text-text-muted dark:text-text-muted-dark">
               <div className="flex items-center gap-1">
                 <FaGraduationCap />
                 <span>
@@ -854,13 +836,13 @@ const VideoPlayerSection = ({
               </div>
             </div>
 
-            <p className="mb-4 text-sm leading-relaxed text-text line-clamp-3">
+            <p className="mb-4 text-sm leading-relaxed text-text dark:text-text-dark line-clamp-3">
               {course.instructor.bio}
             </p>
 
             <Link
               to={`/instructors/${course.instructor.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
+              className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
             >
               {t("instructors.viewDetails", "View Details")}
             </Link>
@@ -874,32 +856,6 @@ const VideoPlayerSection = ({
     if (!course.final_tests || course.final_tests.length === 0) return null;
 
     return (
-      // <div className="p-6 border rounded-lg bg-surface border-border">
-      //   <h3 className="mb-3 text-lg font-semibold text-text">
-      //     {t("courses.finalTests", "Final Tests")}
-      //   </h3>
-      //   <div className="flex flex-wrap gap-2">
-      //     {course.final_tests.map((test, idx) => {
-      //       const locked =
-      //         Math.round(courseProgress?.overall?.percentage || 0) < 100;
-      //       return (
-      //         <button
-      //           key={test.id || idx}
-      //           onClick={() => handleTestClick(test, course, 'final')}
-      //           disabled={locked}
-      //           className={`px-4 py-2 text-sm font-medium rounded ${
-      //             locked
-      //               ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-      //               : "text-white bg-primary hover:bg-primary/90"
-      //           }`}
-      //         >
-      //           {test.name || `${t("courses.finalTest", "Final Test")} ${idx + 1}`}{" "}
-      //           {locked && <FaLock className="inline ml-1" />}
-      //         </button>
-      //       );
-      //     })}
-      //   </div>
-      // </div>
       <div className=""></div>
     );
   };
@@ -907,8 +863,8 @@ const VideoPlayerSection = ({
   const renderVideoPlayer = () => {
     if (currentLesson) {
       return (
-        <div>
-          <div className="aspect-video">
+        <div className="relative" ref={videoContainerRef}>
+          <div className="relative aspect-video">
             {currentLesson.video ? (
               <video
                 ref={videoRef}
@@ -920,18 +876,25 @@ const VideoPlayerSection = ({
                 onEnded={handleVideoEnd}
               />
             ) : (
-              <div className="flex items-center justify-center h-full bg-accent">
+              <div className="flex items-center justify-center h-full bg-accent dark:bg-accent-dark">
                 <div className="text-center">
-                  <FaVideo className="mx-auto mb-2 text-4xl text-text-muted" />
-                  <p className="text-text-muted">
+                  <FaVideo className="mx-auto mb-2 text-4xl text-text-muted dark:text-text-muted-dark" />
+                  <p className="text-text-muted dark:text-text-muted-dark">
                     {t("courses.videoNotAvailable", "Video not available")}
                   </p>
                 </div>
               </div>
             )}
+            
+            {/* Quiz Modal positioned exactly over video */}
+            {quizModal.isOpen && <QuizModal />}
+            
+            {/* Results Modal positioned exactly over video */}
+            {resultsModal.isOpen && <ResultsModal />}
           </div>
-          <div className="p-4 border-t border-border">
-            <h3 className="text-lg font-semibold text-text">
+          
+          <div className="p-4 border-t border-border dark:border-border-dark">
+            <h3 className="text-lg font-semibold text-text dark:text-text-dark">
               {currentLesson.title}
             </h3>
             {isLoggedIn && currentLesson.video && (
@@ -942,14 +905,14 @@ const VideoPlayerSection = ({
                     e.stopPropagation();
                     onLessonComplete(currentLesson.id);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-primary/90"
+                  className="px-4 py-2 text-sm font-medium text-white rounded bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
                 >
                   {t("courses.markCompleted", "Mark as Completed")}
                 </button>
               </div>
             )}
             {currentLesson.description && (
-              <div className="mt-2 text-sm text-text-secondary">
+              <div className="mt-2 text-sm text-text-secondary dark:text-text-secondary-dark">
                 <p className="leading-relaxed line-clamp-2">
                   {currentLesson.description}
                 </p>
@@ -959,13 +922,13 @@ const VideoPlayerSection = ({
             {renderContentAttachments(currentLesson, 'lesson')}
 
             {course.instructor && course.instructor.whatsapp && (
-              <div className="p-3 mt-4 border rounded-lg bg-surface border-border">
+              <div className="p-3 mt-4 border rounded-lg bg-surface dark:bg-surface-dark border-border dark:border-border-dark">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full dark:bg-green-900">
                     <FaWhatsapp className="text-lg text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-text">
+                    <h4 className="text-sm font-semibold text-text dark:text-text-dark">
                       {t("courses.askInstructor", "Ask the Instructor")}
                     </h4>
                     <a
@@ -975,7 +938,7 @@ const VideoPlayerSection = ({
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-green-600 hover:text-green-700"
+                      className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                     >
                       {t("courses.contactInstructor", "Contact Instructor")}
                     </a>
@@ -988,8 +951,8 @@ const VideoPlayerSection = ({
       );
     } else if (currentSection) {
       return (
-        <div>
-          <div className="aspect-video">
+        <div className="relative" ref={videoContainerRef}>
+          <div className="relative aspect-video">
             {currentSection.video ? (
               <video
                 src={currentSection.video}
@@ -998,22 +961,29 @@ const VideoPlayerSection = ({
                 poster={currentSection.images?.[0]}
               />
             ) : (
-              <div className="flex items-center justify-center h-full bg-accent">
+              <div className="flex items-center justify-center h-full bg-accent dark:bg-accent-dark">
                 <div className="text-center">
-                  <FaVideo className="mx-auto mb-2 text-4xl text-text-muted" />
-                  <p className="text-text-muted">
+                  <FaVideo className="mx-auto mb-2 text-4xl text-text-muted dark:text-text-muted-dark" />
+                  <p className="text-text-muted dark:text-text-muted-dark">
                     {t("courses.videoNotAvailable", "Video not available")}
                   </p>
                 </div>
               </div>
             )}
+            
+            {/* Quiz Modal positioned exactly over video */}
+            {quizModal.isOpen && <QuizModal />}
+            
+            {/* Results Modal positioned exactly over video */}
+            {resultsModal.isOpen && <ResultsModal />}
           </div>
-          <div className="p-4 border-t border-border">
-            <h3 className="text-lg font-semibold text-text">
+          
+          <div className="p-4 border-t border-border dark:border-border-dark">
+            <h3 className="text-lg font-semibold text-text dark:text-text-dark">
               {currentSection.title}
             </h3>
             {currentSection.description && (
-              <div className="mt-2 text-sm text-text-secondary">
+              <div className="mt-2 text-sm text-text-secondary dark:text-text-secondary-dark">
                 <p className="leading-relaxed line-clamp-3">
                   {currentSection.description}
                 </p>
@@ -1021,64 +991,15 @@ const VideoPlayerSection = ({
             )}
 
             {renderContentAttachments(currentSection, 'section')}
-
-            {/* {currentSection.lessons && currentSection.lessons.length > 0 && (
-              <div className="mt-4">
-                <h4 className="mb-3 font-semibold text-md text-text">
-                  {t("courses.sectionLessons", "Section Lessons")} (
-                  {currentSection.lessons.length})
-                </h4>
-                <div className="grid grid-cols-1 gap-2">
-                  {currentSection.lessons.slice(0, 3).map((lesson, idx) => {
-                    const isFree = lesson.type === "free" || lesson.type === "Free";
-                    return (
-                      <div
-                        key={lesson.id || idx}
-                        onClick={() => onLessonClick(lesson)}
-                        className="flex items-center gap-3 p-3 transition-colors border rounded cursor-pointer hover:bg-accent"
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            isFree ? "bg-green-500" : "bg-primary"
-                          }`}
-                        ></div>
-                        <span className="text-sm text-text">
-                          {lesson.title}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            isFree
-                              ? "bg-green-100 text-green-700"
-                              : "bg-primary/10 text-primary"
-                          }`}
-                        >
-                          {isFree
-                            ? t("courses.free", "Free")
-                            : t("courses.paid", "Paid")}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {currentSection.lessons.length > 3 && (
-                    <div className="text-center">
-                      <span className="text-xs text-text-muted">
-                        {t("courses.andMore", "And")} {currentSection.lessons.length - 3}{" "}
-                        {t("courses.moreLessons", "more lessons")}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )} */}
           </div>
         </div>
       );
     } else {
       return (
-        <div className="flex items-center justify-center bg-accent aspect-video">
+        <div className="relative flex items-center justify-center bg-accent dark:bg-accent-dark aspect-video" ref={videoContainerRef}>
           <div className="text-center">
-            <FaList className="mx-auto mb-4 text-6xl text-text-muted" />
-            <p className="text-text-muted">
+            <FaList className="mx-auto mb-4 text-6xl text-text-muted dark:text-text-muted-dark" />
+            <p className="text-text-muted dark:text-text-muted-dark">
               {t("courses.selectContent", "Select a lesson or section to start")}
             </p>
           </div>
@@ -1090,7 +1011,7 @@ const VideoPlayerSection = ({
   return (
     <>
       <div className="space-y-6 lg:col-span-2">
-        <div className="overflow-hidden border rounded-lg bg-surface border-border">
+        <div className="overflow-hidden border rounded-lg bg-surface dark:bg-surface-dark border-border dark:border-border-dark">
           {renderVideoPlayer()}
         </div>
         
@@ -1098,14 +1019,8 @@ const VideoPlayerSection = ({
         {renderFinalTests()}
       </div>
 
-      {/* Test Lock Modal */}
+      {/* Test Lock Modal - This one stays full screen */}
       <TestLockModal />
-
-      {/* Quiz Modal for periodic quizzes */}
-      <QuizModal />
-
-      {/* Results Modal for showing final quiz results */}
-      <ResultsModal />
     </>
   );
 };
