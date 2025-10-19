@@ -62,7 +62,7 @@ export default function CourseSectionTestResults() {
   const percentage = results.percentage || 0;
   const passed = percentage >= 65;
 
-  // العثور على السيكشن
+  // Find the section
   const section = course.sections?.find(s => s.id === sectionId);
 
   return (

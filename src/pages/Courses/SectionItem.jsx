@@ -68,10 +68,10 @@ const SectionItem = ({
           </div>
           <div className="flex-1 text-left">
             <h4 className="font-semibold text-primary group-hover:text-primary">
-              {t("courses.sectionAttachments", "ملحقات السيكشن")}
+              {t("courses.sectionAttachments", "Section Resources")}
             </h4>
             <p className="text-sm text-text-muted group-hover:text-text">
-              {t("courses.viewSectionMaterials", "عرض مواد السيكشن")}
+              {t("courses.viewSectionMaterials", "View section resources")}
             </p>
           </div>
           <div className="flex-shrink-0">
@@ -98,11 +98,11 @@ const SectionItem = ({
               <FaClipboardList className="text-lg text-green-600 dark:text-green-400" />
             </div>
             <h4 className="font-semibold text-text">
-              {t("courses.sectionTests", "اختبارات السيكشن")}
+              {t("courses.sectionTests", "Section Tests")}
             </h4>
           </div>
           <p className="text-sm text-text-muted">
-            {t("courses.completeSectionToUnlock", "أكمل السيكشن بنسبة 100% لفتح الاختبارات")}
+            {t("courses.completeSectionToUnlock", "Complete the section 100% to unlock tests")}
           </p>
         </div>
 
@@ -136,10 +136,10 @@ const SectionItem = ({
                     <h5 className={`font-semibold ${
                       isSectionCompleted ? "text-green-800 dark:text-green-200" : "text-gray-600 dark:text-gray-400"
                     }`}>
-                      {test.name || `${t("courses.sectionTest", "اختبار السيكشن")} ${idx + 1}`}
+                      {test.name || `${t("courses.sectionTest", "Section Test")} ${idx + 1}`}
                     </h5>
                     <p className="text-xs text-text-muted">
-                      {test.number_student_questions} {t("courses.questions", "أسئلة")}
+                      {test.number_student_questions} {t("courses.questions", "Questions")}
                     </p>
                   </div>
                 </div>
@@ -149,39 +149,20 @@ const SectionItem = ({
                     <>
                       <FaCheckCircle className="text-green-500" />
                       <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                        {t("courses.available", "متاح")}
+                        {t("courses.available", "Available")}
                       </span>
                     </>
                   ) : (
                     <>
                       <FaLock className="text-gray-400" />
                       <span className="text-xs font-medium text-gray-500">
-                        {t("courses.locked", "مقفل")}
+                        {t("courses.locked", "Locked")}
                       </span>
                     </>
                   )}
                 </div>
               </div>
 
-              {/* مؤشر التقدم للسيكشن */}
-              <div className="mt-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-text-muted">
-                    {t("courses.sectionProgress", "تقدم السيكشن")}
-                  </span>
-                  <span className="text-xs font-bold text-text">
-                    {Math.round(sectionCompletionPercentage)}%
-                  </span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className={`h-2 transition-all duration-500 rounded-full ${
-                      isSectionCompleted ? "bg-green-500" : "bg-primary"
-                    }`}
-                    style={{ width: `${Math.min(sectionCompletionPercentage, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
             </div>
           ))}
         </div>
@@ -192,11 +173,10 @@ const SectionItem = ({
   return (
     <div className="border rounded-lg bg-surface border-border">
       <div
-        onClick={() => onSectionClick(section)}
-        className={`p-4 transition-all cursor-pointer group hover:shadow-sm ${
+        className={`p-4 transition-all group ${
           isActive
             ? "bg-primary/5 border-b border-primary/20"
-            : "hover:bg-accent/50"
+            : ""
         }`}
       >
         <div className="flex flex-col">
