@@ -22,6 +22,65 @@ export default function CourseTestRunner() {
   const [results, setResults] = useState(null);
   const [dragItem, setDragItem] = useState(null);
 
+  // دالة لخلط العناصر عشوائياً
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // دالة لاستخراج جميع أزواج النصوص والصور المتاحة من السؤال
+  const extractAnswerPairs = (question) => {
+    const pairs = [];
+    let index = 1;
+
+    while (question[`answer_${index}`] || question[`answer_${index}_image`]) {
+      const text = question[`answer_${index}`];
+      const image = question[`answer_${index}_image`];
+
+      if (text && image) {
+        pairs.push({
+          key: `answer_${index}`,
+          text: text,
+          image: image
+        });
+      }
+      index++;
+    }
+
+    return pairs;
+  };
+
+  // دالة لتحضير أسئلة التوصل بشكل عشوائي
+  const prepareConnectQuestion = (question) => {
+    if (question.type !== 'connect') return question;
+
+    const pairs = extractAnswerPairs(question);
+
+    if (pairs.length === 0) return question;
+
+    // إنشاء shuffledTexts و shuffledImages بشكل منفصل ومستقل
+    const shuffledTexts = shuffleArray(pairs.map(pair => ({
+      key: pair.key,
+      text: pair.text
+    })));
+
+    const shuffledImages = shuffleArray(pairs.map(pair => ({
+      key: pair.key,
+      image: pair.image
+    })));
+
+    return {
+      ...question,
+      shuffledTexts,
+      shuffledImages,
+      totalPairs: pairs.length
+    };
+  };
+
   const handleDragStart = (e, questionId, answerKey) => {
     setDragItem({ questionId, answerKey });
     e.dataTransfer.setData("text/plain", `${questionId}-${answerKey}`);
@@ -44,6 +103,7 @@ export default function CourseTestRunner() {
     }
     setDragItem(null);
   };
+
   const [loading, setLoading] = useState(!test);
   const [error, setError] = useState("");
 
@@ -105,10 +165,17 @@ export default function CourseTestRunner() {
     };
   }, [id, scope, testId, test, getVideoCourseById]);
 
-  const currentQuestion = useMemo(
-    () => (test?.quizzes || [])[idx],
-    [test, idx]
-  );
+  // تحضير السؤال الحالي مع الخلط العشوائي لأسئلة التوصيل
+  const currentQuestion = useMemo(() => {
+    const question = (test?.quizzes || [])[idx];
+    if (!question) return null;
+    
+    if (question.type === 'connect') {
+      return prepareConnectQuestion(question);
+    }
+    
+    return question;
+  }, [test, idx]);
 
   const finish = async () => {
     const quizzes = test?.quizzes || [];
@@ -136,9 +203,24 @@ export default function CourseTestRunner() {
           .map((k) => answers[k])
           .join(", ");
       } else if (q.type === "connect") {
-        // For connect type, assume all matches are correct (no correct_answer check)
+        // حساب النقاط لأسئلة التوصيل
         const userAnswer = answers[q.id];
-        isCorrect = userAnswer && Object.keys(userAnswer).length > 0;
+        const pairs = extractAnswerPairs(q);
+        const totalPairs = pairs.length;
+        
+        let correctConnections = 0;
+        if (userAnswer) {
+          Object.keys(userAnswer).forEach(textKey => {
+            if (userAnswer[textKey] === textKey) {
+              correctConnections++;
+            }
+          });
+        }
+        
+        isCorrect = correctConnections === totalPairs && totalPairs > 0;
+        const questionScore = parseInt(q.question_score || 1);
+        earned += (correctConnections / totalPairs) * questionScore;
+        
         studentAnswer = userAnswer
           ? Object.entries(userAnswer)
               .map(([k, v]) => `${k}:${v}`)
@@ -157,9 +239,9 @@ export default function CourseTestRunner() {
 
         // المقارنة تكون بين المفتاح المختار والمفتاح الصحيح
         isCorrect = answers[q.id] === correctAnswerKey;
+        if (isCorrect) earned += parseInt(q.question_score || 1);
       }
 
-      if (isCorrect) earned += parseInt(q.question_score || 1);
       questions.push({
         question_id: q.id,
         student_answer: studentAnswer,
@@ -266,6 +348,30 @@ export default function CourseTestRunner() {
       });
     }
   };
+
+  // دالة لإزالة التوصيل في أسئلة التوصيل
+  const removeConnection = (questionId, textKey) => {
+    setAnswers((prev) => {
+      const newAnswers = { ...prev };
+      if (newAnswers[questionId]) {
+        delete newAnswers[questionId][textKey];
+        if (Object.keys(newAnswers[questionId]).length === 0) {
+          delete newAnswers[questionId];
+        }
+      }
+      return newAnswers;
+    });
+  };
+
+  // الحصول على الحد الأدنى للإجابات المطلوبة لأسئلة التوصيل
+  const getMinimumAnswersRequired = () => {
+    if (currentQuestion?.type !== 'connect') return 1;
+    
+    const pairs = extractAnswerPairs(currentQuestion);
+    return Math.min(2, pairs.length);
+  };
+
+  const minimumAnswersRequired = getMinimumAnswersRequired();
 
   if (loading) {
     return (
@@ -432,7 +538,7 @@ export default function CourseTestRunner() {
                 </div>
               </div>
             ) : currentQuestion?.type === "connect" ? (
-              // Connect Questions: Drag images to matching texts
+              // Connect Questions: Drag images to matching texts (مع الخلط العشوائي)
               <div className="space-y-6">
                 <div className="max-w-5xl p-4 mx-auto border shadow-md bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
                   <h3 className="mb-4 text-lg font-bold text-center text-text">
@@ -450,23 +556,21 @@ export default function CourseTestRunner() {
                         {t("testYourself.test.texts", "Texts")}
                       </h4>
 
-                      {["answer_0", "answer_1", "answer_2", "answer_3"].map(
-                        (answerKey) => {
-                          const answerText = currentQuestion[answerKey];
+                      {currentQuestion.shuffledTexts ? (
+                        currentQuestion.shuffledTexts.map(({ key, text }) => {
                           const isDropped =
                             answers[currentQuestion.id] &&
-                            answers[currentQuestion.id][answerKey];
-                          if (!answerText) return null;
-
+                            answers[currentQuestion.id][key];
+                          
                           return (
                             <div
-                              key={answerKey}
+                              key={key}
                               className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
                             >
                               {/* Text Content */}
-                              <div className="flex flex-col items-center justify-center p-3 text-center ">
-                                <p className="  text-text text-[15px] leading-snug  font-bold">
-                                  {answerText}
+                              <div className="flex flex-col items-center justify-center p-3 text-center">
+                                <p className="text-text text-[15px] leading-snug font-bold">
+                                  {text}
                                 </p>
                               </div>
 
@@ -480,7 +584,7 @@ export default function CourseTestRunner() {
                                 }`}
                                 onDragOver={handleDragOver}
                                 onDrop={(e) =>
-                                  handleDrop(e, currentQuestion.id, answerKey)
+                                  handleDrop(e, currentQuestion.id, key)
                                 }
                               >
                                 {isDropped ? (
@@ -491,49 +595,11 @@ export default function CourseTestRunner() {
                                       }
                                       alt="Dropped image"
                                       className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
-                                      onClick={() => {
-                                        setAnswers((prev) => {
-                                          const newAnswers = { ...prev };
-                                          if (newAnswers[currentQuestion.id]) {
-                                            delete newAnswers[
-                                              currentQuestion.id
-                                            ][answerKey];
-                                            if (
-                                              Object.keys(
-                                                newAnswers[currentQuestion.id]
-                                              ).length === 0
-                                            ) {
-                                              delete newAnswers[
-                                                currentQuestion.id
-                                              ];
-                                            }
-                                          }
-                                          return newAnswers;
-                                        });
-                                      }}
+                                      onClick={() => removeConnection(currentQuestion.id, key)}
                                     />
                                     <button
                                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
-                                      onClick={() => {
-                                        setAnswers((prev) => {
-                                          const newAnswers = { ...prev };
-                                          if (newAnswers[currentQuestion.id]) {
-                                            delete newAnswers[
-                                              currentQuestion.id
-                                            ][answerKey];
-                                            if (
-                                              Object.keys(
-                                                newAnswers[currentQuestion.id]
-                                              ).length === 0
-                                            ) {
-                                              delete newAnswers[
-                                                currentQuestion.id
-                                              ];
-                                            }
-                                          }
-                                          return newAnswers;
-                                        });
-                                      }}
+                                      onClick={() => removeConnection(currentQuestion.id, key)}
                                     >
                                       ×
                                     </button>
@@ -564,7 +630,9 @@ export default function CourseTestRunner() {
                               </div>
                             </div>
                           );
-                        }
+                        })
+                      ) : (
+                        <p className="text-center text-text-muted">No texts available</p>
                       )}
                     </div>
 
@@ -574,26 +642,23 @@ export default function CourseTestRunner() {
                         {t("testYourself.test.images", "Images")}
                       </h4>
 
-                      {["answer_0", "answer_1", "answer_2", "answer_3"].map(
-                        (answerKey) => {
-                          const answerImage =
-                            currentQuestion[`${answerKey}_image`];
+                      {currentQuestion.shuffledImages ? (
+                        currentQuestion.shuffledImages.map(({ key, image }) => {
                           const isUsed =
                             answers[currentQuestion.id] &&
                             Object.values(answers[currentQuestion.id]).includes(
-                              answerKey
+                              key
                             );
-                          if (!answerImage) return null;
 
                           return (
                             <div
-                              key={answerKey}
+                              key={key}
                               draggable={!isUsed}
                               onDragStart={(e) =>
                                 handleDragStart(
                                   e,
                                   currentQuestion.id,
-                                  answerKey
+                                  key
                                 )
                               }
                               className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
@@ -605,15 +670,29 @@ export default function CourseTestRunner() {
                             >
                               <div className="w-full h-[100px] rounded-lg overflow-hidden">
                                 <img
-                                  src={answerImage}
+                                  src={image}
                                   alt="Draggable image"
                                   className="object-cover w-full h-full rounded-lg"
                                 />
                               </div>
                             </div>
                           );
-                        }
+                        })
+                      ) : (
+                        <p className="text-center text-text-muted">No images available</p>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Progress Indicator */}
+                  <div className="mt-6 text-center">
+                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-accent text-text">
+                      <span className="text-sm font-medium">
+                        {t('testYourself.test.connectedPairs', 'Connected pairs:')} {Object.keys(answers[currentQuestion.id] || {}).length} / {currentQuestion.totalPairs || 0}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-text-muted">
+                      {t('testYourself.test.minimumPairs', 'Minimum pairs to connect:')} {minimumAnswersRequired}
                     </div>
                   </div>
                 </div>
@@ -683,14 +762,28 @@ export default function CourseTestRunner() {
               {idx === (test.quizzes?.length || 1) - 1 ? (
                 <button
                   onClick={finish}
-                  className="px-4 py-2 text-white rounded bg-primary hover:bg-secondary"
+                  disabled={currentQuestion?.type === "connect" && 
+                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired}
+                  className={`px-4 py-2 text-white rounded ${
+                    currentQuestion?.type === "connect" && 
+                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-primary hover:bg-secondary"
+                  }`}
                 >
                   {t("courses.finishTest", "Finish Test")}
                 </button>
               ) : (
                 <button
                   onClick={() => setIdx((v) => v + 1)}
-                  className="px-4 py-2 text-white rounded bg-primary hover:bg-secondary"
+                  disabled={currentQuestion?.type === "connect" && 
+                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired}
+                  className={`px-4 py-2 text-white rounded ${
+                    currentQuestion?.type === "connect" && 
+                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-primary hover:bg-secondary"
+                  }`}
                 >
                   {t("courses.next", "Next")}
                 </button>
