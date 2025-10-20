@@ -9,7 +9,8 @@ export default function CourseTestRunner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, completeLessonProgress, addStudentTest } = useApi();
+  const { getVideoCourseById, completeLessonProgress, addStudentTest } =
+    useApi();
 
   const passedState = location.state || {};
   const [test, setTest] = useState(passedState.test || null);
@@ -23,7 +24,7 @@ export default function CourseTestRunner() {
 
   const handleDragStart = (e, questionId, answerKey) => {
     setDragItem({ questionId, answerKey });
-    e.dataTransfer.setData('text/plain', `${questionId}-${answerKey}`);
+    e.dataTransfer.setData("text/plain", `${questionId}-${answerKey}`);
   };
 
   const handleDragOver = (e) => {
@@ -33,12 +34,12 @@ export default function CourseTestRunner() {
   const handleDrop = (e, questionId, textKey) => {
     e.preventDefault();
     if (dragItem && dragItem.questionId === questionId) {
-      setAnswers(prev => ({
+      setAnswers((prev) => ({
         ...prev,
         [questionId]: {
           ...prev[questionId],
-          [textKey]: dragItem.answerKey
-        }
+          [textKey]: dragItem.answerKey,
+        },
       }));
     }
     setDragItem(null);
@@ -55,17 +56,23 @@ export default function CourseTestRunner() {
         setLoading(true);
         const data = await getVideoCourseById(id, true);
         if (!mounted) return;
-        if (scope === 'final') {
-          const found = (data.final_tests || []).find((t) => String(t.id) === String(testId));
+        if (scope === "final") {
+          const found = (data.final_tests || []).find(
+            (t) => String(t.id) === String(testId)
+          );
           setTest(found || null);
-        } else if (scope === 'section') {
+        } else if (scope === "section") {
           // find inside sections
           let foundSectionId = null;
           let foundTest = null;
           for (const section of data.sections || []) {
             const arr = section.section_tests || [];
             const hit = arr.find((t) => String(t.id) === String(testId));
-            if (hit) { foundSectionId = section.id; foundTest = hit; break; }
+            if (hit) {
+              foundSectionId = section.id;
+              foundTest = hit;
+              break;
+            }
           }
           setSectionId(foundSectionId);
           setTest(foundTest);
@@ -76,61 +83,100 @@ export default function CourseTestRunner() {
           for (const l of data.lessons || []) {
             const arr = l.lesson_end_tests || [];
             const hit = arr.find((t) => String(t.id) === String(testId));
-            if (hit) { foundLessonId = l.id; foundTest = hit; break; }
+            if (hit) {
+              foundLessonId = l.id;
+              foundTest = hit;
+              break;
+            }
           }
           setLessonId(foundLessonId);
           setTest(foundTest);
         }
       } catch (e) {
         if (!mounted) return;
-        setError(e?.message || 'Failed to load test');
+        setError(e?.message || "Failed to load test");
       } finally {
         if (mounted) setLoading(false);
       }
     };
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id, scope, testId, test, getVideoCourseById]);
 
-  const currentQuestion = useMemo(() => (test?.quizzes || [])[idx], [test, idx]);
+  const currentQuestion = useMemo(
+    () => (test?.quizzes || [])[idx],
+    [test, idx]
+  );
 
   const finish = async () => {
     const quizzes = test?.quizzes || [];
-    const total = quizzes.reduce((acc, q) => acc + parseInt(q.question_score || 1), 0);
+    const total = quizzes.reduce(
+      (acc, q) => acc + parseInt(q.question_score || 1),
+      0
+    );
     let earned = 0;
     const questions = [];
     for (const q of quizzes) {
       let isCorrect = false;
-      let studentAnswer = '';
-      if (q.type === 'match') {
+      let studentAnswer = "";
+      if (q.type === "match") {
         let correct = 0;
         for (let n = 1; n <= 4; n++) {
-          if (answers[`${q.id}_${n}`] && answers[`${q.id}_${n}`] === q[`match_${n}`]) correct++;
+          if (
+            answers[`${q.id}_${n}`] &&
+            answers[`${q.id}_${n}`] === q[`match_${n}`]
+          )
+            correct++;
         }
         isCorrect = correct === 4;
-        studentAnswer = Object.keys(answers).filter(k => k.startsWith(`${q.id}_`)).map(k => answers[k]).join(', ');
-      } else if (q.type === 'connect') {
+        studentAnswer = Object.keys(answers)
+          .filter((k) => k.startsWith(`${q.id}_`))
+          .map((k) => answers[k])
+          .join(", ");
+      } else if (q.type === "connect") {
         // For connect type, assume all matches are correct (no correct_answer check)
         const userAnswer = answers[q.id];
         isCorrect = userAnswer && Object.keys(userAnswer).length > 0;
-        studentAnswer = userAnswer ? Object.entries(userAnswer).map(([k,v]) => `${k}:${v}`).join(', ') : '';
+        studentAnswer = userAnswer
+          ? Object.entries(userAnswer)
+              .map(([k, v]) => `${k}:${v}`)
+              .join(", ")
+          : "";
       } else {
-        studentAnswer = answers[q.id] || '';
-        isCorrect = answers[q.id] === q.correct_answer;
+        studentAnswer = answers[q.id] || "";
+
+        // احسب المفتاح الصحيح بناءً على index يبدأ من 0
+        const correctAnswerKey = [
+          "answer_1",
+          "answer_2",
+          "answer_3",
+          "answer_4",
+        ][q.correct_answer_index];
+
+        // المقارنة تكون بين المفتاح المختار والمفتاح الصحيح
+        isCorrect = answers[q.id] === correctAnswerKey;
       }
+
       if (isCorrect) earned += parseInt(q.question_score || 1);
       questions.push({
         question_id: q.id,
         student_answer: studentAnswer,
-        correct_answer: q.correct_answer || '',
-        is_correct: isCorrect
+        correct_answer: q.correct_answer || "",
+        is_correct: isCorrect,
       });
     }
     const percentage = total > 0 ? (earned / total) * 100 : 0;
-    const resultsData = { total_score: total, student_score: earned, total_questions: quizzes.length, questions };
+    const resultsData = {
+      total_score: total,
+      student_score: earned,
+      total_questions: quizzes.length,
+      questions,
+    };
 
     // Submit to API for lesson tests
-    if (scope === 'lesson') {
+    if (scope === "lesson") {
       try {
         await addStudentTest({
           test_id: test.id,
@@ -138,21 +184,21 @@ export default function CourseTestRunner() {
           total_score: total,
           result_status: 1, // Assuming 1 for completed
           total_questions: quizzes.length,
-          questions
+          questions,
         });
       } catch (error) {
-        console.error('Failed to submit test results:', error);
+        console.error("Failed to submit test results:", error);
         // Continue anyway
       }
 
       // Automatically mark lesson as completed when quiz is finished
       try {
-        await completeLessonProgress(id, lessonId, 'quiz');
+        await completeLessonProgress(id, lessonId, "quiz");
       } catch (error) {
-        console.error('Failed to complete lesson progress:', error);
+        console.error("Failed to complete lesson progress:", error);
         // Continue anyway
       }
-    } else if (scope === 'section') {
+    } else if (scope === "section") {
       // Submit to API for section tests
       try {
         await addStudentTest({
@@ -161,10 +207,10 @@ export default function CourseTestRunner() {
           total_score: total,
           result_status: 1, // Assuming 1 for completed
           total_questions: quizzes.length,
-          questions
+          questions,
         });
       } catch (error) {
-        console.error('Failed to submit section test results:', error);
+        console.error("Failed to submit section test results:", error);
         // Continue anyway
       }
     }
@@ -172,46 +218,52 @@ export default function CourseTestRunner() {
     setResults({ total, earned, percentage, questions });
 
     // If final test, navigate to results page
-    if (scope === 'final') {
+    if (scope === "final") {
       setTimeout(() => {
         navigate(`/courses/${id}/final-results`, {
           replace: true,
-          state: { results: { total, earned, percentage, answers }, test }
+          state: { results: { total, earned, percentage, answers }, test },
         });
       }, 1000); // Brief delay to show results
-    } else if (scope === 'lesson') {
+    } else if (scope === "lesson") {
       // Navigate to lesson test results page
       setTimeout(() => {
         navigate(`/courses/${id}/lesson-results`, {
           replace: true,
-          state: { results: resultsData, test, lessonId }
+          state: { results: resultsData, test, lessonId },
         });
       }, 1000);
-    } else if (scope === 'section') {
+    } else if (scope === "section") {
       // Navigate to section test results page
       setTimeout(() => {
         navigate(`/courses/${id}/section-results`, {
           replace: true,
-          state: { results: resultsData, test, sectionId }
+          state: { results: resultsData, test, sectionId },
         });
       }, 1000);
     }
   };
 
   const markDoneAndBack = async () => {
-    if (scope === 'lesson' && lessonId) {
+    if (scope === "lesson" && lessonId) {
       try {
-        await completeLessonProgress(id, lessonId, 'quiz');
+        await completeLessonProgress(id, lessonId, "quiz");
       } catch (e) {
-        console.warn('Failed to complete lesson progress:', e);
+        console.warn("Failed to complete lesson progress:", e);
       }
     }
-    
+
     // Navigate back based on test scope
-    if (scope === 'section') {
-      navigate(`/courses/${id}/lessons`, { replace: true, state: { sectionTestCompleted: true, sectionId } });
+    if (scope === "section") {
+      navigate(`/courses/${id}/lessons`, {
+        replace: true,
+        state: { sectionTestCompleted: true, sectionId },
+      });
     } else {
-      navigate(`/courses/${id}/lessons`, { replace: true, state: { lessonCompleted: true, lessonId } });
+      navigate(`/courses/${id}/lessons`, {
+        replace: true,
+        state: { lessonCompleted: true, lessonId },
+      });
     }
   };
 
@@ -225,8 +277,16 @@ export default function CourseTestRunner() {
   if (error || !test) {
     return (
       <section className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-text">
-        <div className="text-red-600">{t('common.error','Error')}: {error || t('courses.testNotFound','Test not found')}</div>
-        <button onClick={() => navigate(-1)} className="px-4 py-2 text-white rounded bg-primary">{t('common.back','Back')}</button>
+        <div className="text-red-600">
+          {t("common.error", "Error")}:{" "}
+          {error || t("courses.testNotFound", "Test not found")}
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 text-white rounded bg-primary"
+        >
+          {t("common.back", "Back")}
+        </button>
       </section>
     );
   }
@@ -235,62 +295,151 @@ export default function CourseTestRunner() {
     <section className="min-h-screen px-4 py-8 bg-background text-text">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 mb-6">
-          <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-primary hover:text-secondary">
-            <FaArrowLeft /> {t('common.back','Back')}
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-primary hover:text-secondary"
+          >
+            <FaArrowLeft /> {t("common.back", "Back")}
           </button>
         </div>
 
         <div className="overflow-hidden border shadow rounded-2xl bg-surface border-border">
           <div className="p-6 text-white bg-primary">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-              <h1 className="text-2xl font-bold">{test.name || t('courses.test','Test')}</h1>
+              <h1 className="text-2xl font-bold">
+                {test.name || t("courses.test", "Test")}
+              </h1>
               <div className="flex items-center gap-3 text-sm">
-                <span>{t('courses.question','Question')} {idx + 1} {t('courses.of','of')} {test.quizzes?.length || 0}</span>
+                <span>
+                  {t("courses.question", "Question")} {idx + 1}{" "}
+                  {t("courses.of", "of")} {test.quizzes?.length || 0}
+                </span>
               </div>
             </div>
             <div className="w-full h-2 mt-4 rounded-full bg-white/30">
-              <div className="h-2 bg-white rounded-full" style={{ width: `${((idx + 1) / (test.quizzes?.length || 1)) * 100}%` }} />
+              <div
+                className="h-2 bg-white rounded-full"
+                style={{
+                  width: `${((idx + 1) / (test.quizzes?.length || 1)) * 100}%`,
+                }}
+              />
             </div>
           </div>
 
           <div className="p-6">
-            <div className="p-4 mb-4 border rounded bg-accent border-border" dangerouslySetInnerHTML={{ __html: currentQuestion?.title || '' }} />
+            <div
+              className="p-4 mb-4 border rounded bg-accent border-border"
+              dangerouslySetInnerHTML={{ __html: currentQuestion?.title || "" }}
+            />
 
             {/* Body */}
-            {currentQuestion?.type === 'match' ? (
+            {currentQuestion?.type === "match" ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-3">
-                  {['answer_1','answer_2','answer_3','answer_4'].map((key) => {
-                    const text = currentQuestion[key];
-                    const img = currentQuestion[`${key}_image`];
-                    if (!text && !img) return null;
-                    return (
-                      <div key={key} draggable onDragStart={() => setDragItem(key)} className="p-3 border-2 border-dashed rounded cursor-grab bg-surface border-border hover:border-primary">
-                        {text && <div className="text-text">{text}</div>}
-                        {img && <img src={img} alt="answer" className="mt-2 rounded max-h-32" />}
-                      </div>
-                    );
-                  })}
+                  {["answer_1", "answer_2", "answer_3", "answer_4"].map(
+                    (key, index) => {
+                      const text = currentQuestion[key];
+                      const img = currentQuestion[`${key}_image`];
+                      if (!text && !img) return null;
+                      const selected = answers[currentQuestion.id] === key;
+                      return (
+                        <div
+                          key={key}
+                          className={`p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                            selected
+                              ? "border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md transform scale-105"
+                              : "border-border hover:border-primary hover:bg-accent hover:shadow-sm"
+                          }`}
+                          onClick={() =>
+                            setAnswers((s) => ({
+                              ...s,
+                              [currentQuestion.id]: key,
+                            }))
+                          }
+                        >
+                          <div className="flex items-start">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 mt-1 flex-shrink-0 ${
+                                selected
+                                  ? "border-primary bg-primary"
+                                  : "border-text-muted"
+                              }`}
+                            >
+                              {selected && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              {/* رقم الإجابة */}
+                              <div className="mb-1 font-semibold text-primary">
+                                {index + 1}.
+                              </div>
+                              {/* نص أو صورة الإجابة */}
+                              {text && (
+                                <div className="font-medium text-text">
+                                  {text}
+                                </div>
+                              )}
+                              {img && (
+                                <img
+                                  src={img}
+                                  alt={`Answer ${index + 1}`}
+                                  className="mx-auto mt-3 rounded-lg shadow-sm max-h-48"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
                 <div className="space-y-3">
-                  {[1,2,3,4].map((n) => {
+                  {[0, 1, 2, 3].map((n) => {
                     const targetKey = `target_${n}`;
                     const current = answers[`${currentQuestion.id}_${n}`];
                     return (
-                      <div key={targetKey} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (dragItem) { setAnswers(s => ({ ...s, [`${currentQuestion.id}_${n}`]: dragItem })); setDragItem(null); } }} className={`p-3 border-2 rounded min-h-[64px] flex items-center justify-between ${current ? 'border-secondary bg-secondary/10' : 'border-dashed border-border bg-surface'}`}>
-                        <span className="text-sm text-text-muted">{currentQuestion[targetKey] || t('courses.dropHere','Drop here')}</span>
-                        {current && <span className="px-2 py-1 text-xs text-white rounded bg-secondary">{current.replace('answer_','A')}</span>}
+                      <div
+                        key={targetKey}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => {
+                          if (dragItem) {
+                            setAnswers((s) => ({
+                              ...s,
+                              [`${currentQuestion.id}_${n}`]: dragItem,
+                            }));
+                            setDragItem(null);
+                          }
+                        }}
+                        className={`p-3 border-2 rounded min-h-[64px] flex items-center justify-between ${
+                          current
+                            ? "border-secondary bg-secondary/10"
+                            : "border-dashed border-border bg-surface"
+                        }`}
+                      >
+                        <span className="text-sm text-text-muted">
+                          {currentQuestion[targetKey] ||
+                            t("courses.dropHere", "Drop here")}
+                        </span>
+                        {current && (
+                          <span className="px-2 py-1 text-xs text-white rounded bg-secondary">
+                            {current.replace("answer_", "A")}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
-            ) : currentQuestion?.type === 'connect' ? (
+            ) : currentQuestion?.type === "connect" ? (
               // Connect Questions: Drag images to matching texts
               <div className="space-y-6">
                 <div className="max-w-5xl p-4 mx-auto border shadow-md bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
                   <h3 className="mb-4 text-lg font-bold text-center text-text">
-                    {t('testYourself.test.connectInstruction', 'Match each image with its correct text by dragging.')}
+                    {t(
+                      "testYourself.test.connectInstruction",
+                      "Match each image with its correct text by dragging."
+                    )}
                   </h3>
 
                   {/* Layout: Texts (Left) + Images (Right) */}
@@ -298,138 +447,180 @@ export default function CourseTestRunner() {
                     {/* Left Column — Text Cards */}
                     <div className="space-y-3">
                       <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
-                        {t('testYourself.test.texts', 'Texts')}
+                        {t("testYourself.test.texts", "Texts")}
                       </h4>
 
-                      {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
-                        const answerText = currentQuestion[answerKey];
-                        const isDropped = answers[currentQuestion.id] && answers[currentQuestion.id][answerKey];
-                        if (!answerText) return null;
+                      {["answer_0", "answer_1", "answer_2", "answer_3"].map(
+                        (answerKey) => {
+                          const answerText = currentQuestion[answerKey];
+                          const isDropped =
+                            answers[currentQuestion.id] &&
+                            answers[currentQuestion.id][answerKey];
+                          if (!answerText) return null;
 
-                        return (
-                          <div
-                            key={answerKey}
-                            className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
-                          >
-                            {/* Text Content */}
-                            <div className="flex flex-col items-center justify-center p-3 text-center ">
-                              <p className="  text-text text-[15px] leading-snug  font-bold">{answerText}</p>
-                            </div>
-
-                            {/* Drop Zone */}
+                          return (
                             <div
-                              className={`p-2 border-t rounded-b-lg transition-all duration-300 flex items-center justify-center min-h-[60px]
+                              key={answerKey}
+                              className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
+                            >
+                              {/* Text Content */}
+                              <div className="flex flex-col items-center justify-center p-3 text-center ">
+                                <p className="  text-text text-[15px] leading-snug  font-bold">
+                                  {answerText}
+                                </p>
+                              </div>
+
+                              {/* Drop Zone */}
+                              <div
+                                className={`p-2 border-t rounded-b-lg transition-all duration-300 flex items-center justify-center min-h-[60px]
                                 ${
                                   isDropped
-                                    ? 'border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner'
-                                    : 'border-dashed border-border bg-surface hover:border-primary hover:bg-accent'
+                                    ? "border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner"
+                                    : "border-dashed border-border bg-surface hover:border-primary hover:bg-accent"
                                 }`}
-                              onDragOver={handleDragOver}
-                              onDrop={(e) => handleDrop(e, currentQuestion.id, answerKey)}
-                            >
-                              {isDropped ? (
-                                <div className="relative flex items-center justify-center w-full h-full group">
-                                  <img
-                                    src={currentQuestion[`${isDropped}_image`]}
-                                    alt="Dropped image"
-                                    className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
-                                    onClick={() => {
-                                      setAnswers((prev) => {
-                                        const newAnswers = { ...prev };
-                                        if (newAnswers[currentQuestion.id]) {
-                                          delete newAnswers[currentQuestion.id][answerKey];
-                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
-                                            delete newAnswers[currentQuestion.id];
+                                onDragOver={handleDragOver}
+                                onDrop={(e) =>
+                                  handleDrop(e, currentQuestion.id, answerKey)
+                                }
+                              >
+                                {isDropped ? (
+                                  <div className="relative flex items-center justify-center w-full h-full group">
+                                    <img
+                                      src={
+                                        currentQuestion[`${isDropped}_image`]
+                                      }
+                                      alt="Dropped image"
+                                      className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
+                                      onClick={() => {
+                                        setAnswers((prev) => {
+                                          const newAnswers = { ...prev };
+                                          if (newAnswers[currentQuestion.id]) {
+                                            delete newAnswers[
+                                              currentQuestion.id
+                                            ][answerKey];
+                                            if (
+                                              Object.keys(
+                                                newAnswers[currentQuestion.id]
+                                              ).length === 0
+                                            ) {
+                                              delete newAnswers[
+                                                currentQuestion.id
+                                              ];
+                                            }
                                           }
-                                        }
-                                        return newAnswers;
-                                      });
-                                    }}
-                                  />
-                                  <button
-                                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
-                                    onClick={() => {
-                                      setAnswers((prev) => {
-                                        const newAnswers = { ...prev };
-                                        if (newAnswers[currentQuestion.id]) {
-                                          delete newAnswers[currentQuestion.id][answerKey];
-                                          if (Object.keys(newAnswers[currentQuestion.id]).length === 0) {
-                                            delete newAnswers[currentQuestion.id];
-                                          }
-                                        }
-                                        return newAnswers;
-                                      });
-                                    }}
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="text-center text-text-muted">
-                                  <svg
-                                    className="w-4 h-4 mx-auto mb-1 opacity-40"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                          return newAnswers;
+                                        });
+                                      }}
                                     />
-                                  </svg>
-                                  <p className="text-[11px] font-medium">{t('testYourself.test.dropHere', 'Drop image here')}</p>
-                                </div>
-                              )}
+                                    <button
+                                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
+                                      onClick={() => {
+                                        setAnswers((prev) => {
+                                          const newAnswers = { ...prev };
+                                          if (newAnswers[currentQuestion.id]) {
+                                            delete newAnswers[
+                                              currentQuestion.id
+                                            ][answerKey];
+                                            if (
+                                              Object.keys(
+                                                newAnswers[currentQuestion.id]
+                                              ).length === 0
+                                            ) {
+                                              delete newAnswers[
+                                                currentQuestion.id
+                                              ];
+                                            }
+                                          }
+                                          return newAnswers;
+                                        });
+                                      }}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="text-center text-text-muted">
+                                    <svg
+                                      className="w-4 h-4 mx-auto mb-1 opacity-40"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                      />
+                                    </svg>
+                                    <p className="text-[11px] font-medium">
+                                      {t(
+                                        "testYourself.test.dropHere",
+                                        "Drop image here"
+                                      )}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        }
+                      )}
                     </div>
 
                     {/* Right Column — Image Cards */}
                     <div className="space-y-3">
                       <h4 className="pb-1 text-sm font-semibold border-b text-primary border-primary/40">
-                        {t('testYourself.test.images', 'Images')}
+                        {t("testYourself.test.images", "Images")}
                       </h4>
 
-                      {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
-                        const answerImage = currentQuestion[`${answerKey}_image`];
-                        const isUsed =
-                          answers[currentQuestion.id] &&
-                          Object.values(answers[currentQuestion.id]).includes(answerKey);
-                        if (!answerImage) return null;
+                      {["answer_0", "answer_1", "answer_2", "answer_3"].map(
+                        (answerKey) => {
+                          const answerImage =
+                            currentQuestion[`${answerKey}_image`];
+                          const isUsed =
+                            answers[currentQuestion.id] &&
+                            Object.values(answers[currentQuestion.id]).includes(
+                              answerKey
+                            );
+                          if (!answerImage) return null;
 
-                        return (
-                          <div
-                            key={answerKey}
-                            draggable={!isUsed}
-                            onDragStart={(e) => handleDragStart(e, currentQuestion.id, answerKey)}
-                            className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
+                          return (
+                            <div
+                              key={answerKey}
+                              draggable={!isUsed}
+                              onDragStart={(e) =>
+                                handleDragStart(
+                                  e,
+                                  currentQuestion.id,
+                                  answerKey
+                                )
+                              }
+                              className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
                               ${
                                 isUsed
-                                  ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
-                                  : 'border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing'
+                                  ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
+                                  : "border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing"
                               }`}
-                          >
-                            <div className="w-full h-[100px] rounded-lg overflow-hidden">
-                              <img
-                                src={answerImage}
-                                alt="Draggable image"
-                                className="object-cover w-full h-full rounded-lg"
-                              />
+                            >
+                              <div className="w-full h-[100px] rounded-lg overflow-hidden">
+                                <img
+                                  src={answerImage}
+                                  alt="Draggable image"
+                                  className="object-cover w-full h-full rounded-lg"
+                                />
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        }
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                {['answer_1','answer_2','answer_3','answer_4'].map((key) => {
+                {["answer_1", "answer_2", "answer_3", "answer_4"].map((key) => {
                   const text = currentQuestion[key];
                   const img = currentQuestion[`${key}_image`];
                   if (!text && !img) return null;
@@ -439,21 +630,29 @@ export default function CourseTestRunner() {
                       key={key}
                       className={`p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                         selected
-                          ? 'border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md transform scale-105'
-                          : 'border-border hover:border-primary hover:bg-accent hover:shadow-sm'
+                          ? "border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md transform scale-105"
+                          : "border-border hover:border-primary hover:bg-accent hover:shadow-sm"
                       }`}
-                      onClick={() => setAnswers(s => ({ ...s, [currentQuestion.id]: key }))}
+                      onClick={() =>
+                        setAnswers((s) => ({ ...s, [currentQuestion.id]: key }))
+                      }
                     >
                       <div className="flex items-start">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 mt-1 flex-shrink-0 ${
-                          selected ? 'border-primary bg-primary' : 'border-text-muted'
-                        }`}>
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 mt-1 flex-shrink-0 ${
+                            selected
+                              ? "border-primary bg-primary"
+                              : "border-text-muted"
+                          }`}
+                        >
                           {selected && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
                         </div>
                         <div className="flex-1">
-                          {text && <div className="font-medium text-text">{text}</div>}
+                          {text && (
+                            <div className="font-medium text-text">{text}</div>
+                          )}
                           {img && (
                             <img
                               src={img}
@@ -470,24 +669,57 @@ export default function CourseTestRunner() {
             )}
 
             <div className="flex items-center justify-between mt-8">
-              <button disabled={idx === 0} onClick={() => setIdx((v) => Math.max(0, v - 1))} className={`px-4 py-2 rounded border ${idx === 0 ? 'opacity-50 cursor-not-allowed' : 'border-border hover:border-primary'}`}>{t('courses.prev','Previous')}</button>
+              <button
+                disabled={idx === 0}
+                onClick={() => setIdx((v) => Math.max(0, v - 1))}
+                className={`px-4 py-2 rounded border ${
+                  idx === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "border-border hover:border-primary"
+                }`}
+              >
+                {t("courses.prev", "Previous")}
+              </button>
               {idx === (test.quizzes?.length || 1) - 1 ? (
-                <button onClick={finish} className="px-4 py-2 text-white rounded bg-primary hover:bg-secondary">{t('courses.finishTest','Finish Test')}</button>
+                <button
+                  onClick={finish}
+                  className="px-4 py-2 text-white rounded bg-primary hover:bg-secondary"
+                >
+                  {t("courses.finishTest", "Finish Test")}
+                </button>
               ) : (
-                <button onClick={() => setIdx((v) => v + 1)} className="px-4 py-2 text-white rounded bg-primary hover:bg-secondary">{t('courses.next','Next')}</button>
+                <button
+                  onClick={() => setIdx((v) => v + 1)}
+                  className="px-4 py-2 text-white rounded bg-primary hover:bg-secondary"
+                >
+                  {t("courses.next", "Next")}
+                </button>
               )}
             </div>
 
             {results && (
               <div className="p-4 mt-6 border rounded bg-accent border-border">
-                <div className="mb-1 text-text">{t('courses.score','Score')}: {Math.round(results.percentage)}%</div>
+                <div className="mb-1 text-text">
+                  {t("courses.score", "Score")}:{" "}
+                  {Math.round(results.percentage)}%
+                </div>
                 <div className="flex gap-2 mt-3">
-                  {(scope === 'lesson' || scope === 'section') && (
-                    <button onClick={markDoneAndBack} className="px-4 py-2 text-white rounded bg-secondary hover:opacity-90">
-                      {scope === 'lesson' ? t('courses.markLessonDone','Mark lesson as done') : t('courses.markSectionDone','Mark section as done')}
+                  {(scope === "lesson" || scope === "section") && (
+                    <button
+                      onClick={markDoneAndBack}
+                      className="px-4 py-2 text-white rounded bg-secondary hover:opacity-90"
+                    >
+                      {scope === "lesson"
+                        ? t("courses.markLessonDone", "Mark lesson as done")
+                        : t("courses.markSectionDone", "Mark section as done")}
                     </button>
                   )}
-                  <button onClick={() => navigate(-1)} className="px-4 py-2 border rounded border-border hover:border-primary">{t('common.close','Close')}</button>
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="px-4 py-2 border rounded border-border hover:border-primary"
+                  >
+                    {t("common.close", "Close")}
+                  </button>
                 </div>
               </div>
             )}
@@ -497,5 +729,3 @@ export default function CourseTestRunner() {
     </section>
   );
 }
-
-
