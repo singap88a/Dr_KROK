@@ -56,17 +56,18 @@ export default function CourseSectionTestResults() {
     );
   }
 
-  const totalQuestions = test.quizzes?.length || 0;
-  const answered = Object.keys(results.answers || {}).length;
-  const unanswered = totalQuestions - answered;
-  const percentage = results.percentage || 0;
+  // التصحيح: استخدام results.questions بدلاً من results.answers
+  const totalQuestions = results.total_questions || test.quizzes?.length || 0;
+  const correctAnswers = results.questions?.filter(q => q.is_correct).length || 0;
+  const wrongAnswers = totalQuestions - correctAnswers;
+  const percentage = totalQuestions > 0 ? (results.student_score / results.total_score) * 100 : 0;
   const passed = percentage >= 65;
 
   // Find the section
   const section = course.sections?.find(s => s.id === sectionId);
 
   return (
-    <section className="min-h-screen py-10 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-text">
+    <section className="min-h-screen py-10 bg-gradient-to-br from-primary/5 to-secondary/5 text-text">
       <div className="max-w-4xl px-4 mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -106,6 +107,9 @@ export default function CourseSectionTestResults() {
             <div className="mb-8">
               <div className="mb-2 text-6xl font-bold text-secondary">{Math.round(percentage)}%</div>
               <div className="text-xl text-text-muted">
+                {t("courses.score", "Score")}: {results.student_score}/{results.total_score}
+              </div>
+              <div className="text-xl text-text-muted">
                 {passed ? t("courses.passed", "Passed") : t("courses.failed", "Failed")}
               </div>
             </div>
@@ -117,17 +121,17 @@ export default function CourseSectionTestResults() {
                 <div className="text-sm text-text-muted">{t("courses.totalQuestions", "Total Questions")}</div>
               </div>
               <div className="p-4 border rounded-lg bg-accent border-border">
-                <div className="text-2xl font-bold text-green-600">{answered}</div>
-                <div className="text-sm text-text-muted">{t("courses.answered", "Answered")}</div>
+                <div className="text-2xl font-bold text-green-600">{correctAnswers}</div>
+                <div className="text-sm text-text-muted">{t("courses.correctAnswers", "Correct Answers")}</div>
               </div>
               <div className="p-4 border rounded-lg bg-accent border-border">
-                <div className="text-2xl font-bold text-red-600">{unanswered}</div>
-                <div className="text-sm text-text-muted">{t("courses.unanswered", "Unanswered")}</div>
+                <div className="text-2xl font-bold text-red-600">{wrongAnswers}</div>
+                <div className="text-sm text-text-muted">{t("courses.wrongAnswers", "Wrong Answers")}</div>
               </div>
             </div>
 
             {/* Detailed Results */}
-            {results.questions && results.questions.length > 0 && (
+            {/* {results.questions && results.questions.length > 0 && (
               <div className="mb-8">
                 <h3 className="mb-4 text-lg font-semibold text-text">
                   {t("courses.questionResults", "Question Results")}
@@ -158,7 +162,7 @@ export default function CourseSectionTestResults() {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Actions */}
             <div className="flex flex-col gap-4 md:flex-row md:justify-center">

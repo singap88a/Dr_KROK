@@ -23,14 +23,14 @@ export default function CourseTestRunner() {
   const [dragItem, setDragItem] = useState(null);
 
   // دالة لخلط العناصر عشوائياً
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
 
   // دالة لاستخراج جميع أزواج النصوص والصور المتاحة من السؤال
   const extractAnswerPairs = (question) => {
@@ -55,31 +55,30 @@ export default function CourseTestRunner() {
   };
 
   // دالة لتحضير أسئلة التوصل بشكل عشوائي
-  const prepareConnectQuestion = (question) => {
-    if (question.type !== 'connect') return question;
+const prepareConnectQuestion = (question) => {
+  if (question.type !== 'connect') return question;
 
-    const pairs = extractAnswerPairs(question);
+  const pairs = extractAnswerPairs(question);
+  if (pairs.length === 0) return question;
 
-    if (pairs.length === 0) return question;
+  // إنشاء shuffledTexts و shuffledImages بشكل منفصل ومستقل
+  const shuffledTexts = shuffleArray(pairs.map(pair => ({
+    key: pair.key,
+    text: pair.text
+  })));
 
-    // إنشاء shuffledTexts و shuffledImages بشكل منفصل ومستقل
-    const shuffledTexts = shuffleArray(pairs.map(pair => ({
-      key: pair.key,
-      text: pair.text
-    })));
+  const shuffledImages = shuffleArray(pairs.map(pair => ({
+    key: pair.key,
+    image: pair.image
+  })));
 
-    const shuffledImages = shuffleArray(pairs.map(pair => ({
-      key: pair.key,
-      image: pair.image
-    })));
-
-    return {
-      ...question,
-      shuffledTexts,
-      shuffledImages,
-      totalPairs: pairs.length
-    };
+  return {
+    ...question,
+    shuffledTexts,
+    shuffledImages,
+    totalPairs: pairs.length
   };
+};
 
   const handleDragStart = (e, questionId, answerKey) => {
     setDragItem({ questionId, answerKey });
