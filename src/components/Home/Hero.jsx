@@ -16,8 +16,14 @@ export default function Hero() {
   const [heroData, setHeroData] = useState({
     titleOne: "",
     titleTwo: "",
-    description: ""
+    description: "",
+    totalClients: null
   });
+
+  const formatUsers = (num) => {
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K+ Users`;
+    return `${num} Users`;
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -27,7 +33,8 @@ export default function Hero() {
           setHeroData({
             titleOne: response.data.title_one_section_one_home || "",
             titleTwo: response.data.title_tow_section_one_home || "",
-            description: response.data.description_about_us_Our_Story || ""
+            description: response.data.description_about_us_Our_Story || "",
+            totalClients: response.data.total_clients || null
           });
         }
       } catch (error) {
@@ -76,7 +83,7 @@ export default function Hero() {
               <div className="flex items-center gap-2">
                 <FaUserFriends className="text-xl text-primary" />
                 <span className="font-semibold text-text">
-                  {t('hero.stats.users')}
+                  {heroData.totalClients ? formatUsers(heroData.totalClients) : t('hero.stats.users')}
                 </span>
               </div>
               <div className="flex items-center gap-1">
