@@ -214,26 +214,23 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
         } else {
           connectWrong += 1;
         }
-} else {
-  mcqQuestionsCount += 1;
-  // التصحيح: استخدام الـ index مباشرة بدون +1
-  const correctAnswerIndex = parseInt(question.correct_answer_index);
-  const correctAnswerKey = `answer_${correctAnswerIndex}`;
-  
-  if (userAnswers[question.id]) {
-    mcqAnswered += 1;
-    answeredQuestions += 1;
-    if (userAnswers[question.id] === correctAnswerKey) {
-      earnedScore += parseInt(question.question_score) || 0;
-      correctAnswersCount += 1;
-      mcqCorrect += 1;
-    } else {
-      mcqWrong += 1;
-    }
-  } else {
-    mcqWrong += 1;
-  }
-}
+      } else {
+        mcqQuestionsCount += 1;
+        const correctAnswerKey = `answer_${parseInt(question.correct_answer_index) + 1}`;
+        if (userAnswers[question.id]) {
+          mcqAnswered += 1;
+          answeredQuestions += 1;
+          if (userAnswers[question.id] === correctAnswerKey) {
+            earnedScore += parseInt(question.question_score) || 0;
+            correctAnswersCount += 1;
+            mcqCorrect += 1;
+          } else {
+            mcqWrong += 1;
+          }
+        } else {
+          mcqWrong += 1;
+        }
+      }
     });
 
     const percentage = totalScore > 0 ? (earnedScore / totalScore) * 100 : 0;

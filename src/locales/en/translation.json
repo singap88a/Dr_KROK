@@ -121,11 +121,9 @@
     "about": "About Us",
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
-    "categories": "Categories",
-    "dentistry": "Dentistry",
-    "pharmacy": "Pharmacy",
-    "nursing": "Nursing",
-    "surgery": "Surgery",
+    "resources": "Resources",
+    "blogs": "Blogs",
+    "instructors": "Instructors",
     "followUs": "Follow Us"
   },
   "hero": {

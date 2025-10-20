@@ -1,10 +1,6 @@
 import React from 'react';
 
 const MCQQuestion = ({ question, userAnswer, onAnswerSelect }) => {
-  // التصحيح: استخدام الـ index مباشرة بدون +1
-  const correctAnswerIndex = parseInt(question.correct_answer_index);
-  const correctAnswerKey = `answer_${correctAnswerIndex}`;
-
   return (
     <>
       <div dangerouslySetInnerHTML={{ __html: question.title }} />
@@ -49,8 +45,7 @@ const MCQQuestion = ({ question, userAnswer, onAnswerSelect }) => {
           );
         })}
       </div>
-
-     </>
+    </>
   );
 };
 

@@ -121,11 +121,9 @@
     "about": "Про нас",
     "contact": "Контакти",
     "privacyPolicy": "Політика конфіденційності",
-    "categories": "Категорії",
-    "dentistry": "Стоматологія",
-    "pharmacy": "Фармація",
-    "nursing": "Медсестринство",
-    "surgery": "Хірургія",
+    "resources": "Ресурси",
+    "blogs": "Блоги",
+    "instructors": "Викладачі",
     "followUs": "Слідкуйте за нами"
   },
   "hero": {

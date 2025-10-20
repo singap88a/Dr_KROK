@@ -92,18 +92,16 @@ export default function Footer() {
             <li><a href="/courses" className="transition hover:text-primary">{t('footer.courses')}</a></li>
             <li><a href="/about" className="transition hover:text-primary">{t('footer.about')}</a></li>
             <li><a href="/contact" className="transition hover:text-primary">{t('footer.contact')}</a></li>
-            <li><a href="/privacypolicy" className="transition hover:text-primary">{t('footer.privacyPolicy')}</a></li>
           </ul>
         </div>
 
-        {/* Courses Categories */}
+        {/* Resources */}
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-text">{t('footer.categories')}</h2>
+          <h2 className="mb-4 text-lg font-semibold text-text">{t('footer.resources')}</h2>
           <ul className="space-y-2 text-text-muted">
-            <li><a href="#" className="transition hover:text-primary">{t('footer.dentistry')}</a></li>
-            <li><a href="#" className="transition hover:text-primary">{t('footer.pharmacy')}</a></li>
-            <li><a href="#" className="transition hover:text-primary">{t('footer.nursing')}</a></li>
-            <li><a href="#" className="transition hover:text-primary">{t('footer.surgery')}</a></li>
+            <li><a href="/articles" className="transition hover:text-primary">{t('footer.blogs')}</a></li>
+            <li><a href="/privacypolicy" className="transition hover:text-primary">{t('footer.privacyPolicy')}</a></li>
+            <li><a href="/instructors" className="transition hover:text-primary">{t('footer.instructors')}</a></li>
           </ul>
         </div>
 
