@@ -36,6 +36,10 @@ import { ApiProvider } from "./context/ApiContext";
 import WhatsAppIcon from "./components/WhatsAppIcon";
 import Instructors from "./pages/Instructors/Instructors";
 import InstructorDetails from "./pages/Instructors/InstructorDetails";
+import LiveCourses from "./pages/Live_courses/LiveCourses";
+import LiveCourseDetails from "./pages/Live_courses/LiveCourseDetails";
+import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
+import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
 
 export default function App() {
   return (
@@ -69,6 +73,11 @@ export default function App() {
           <Route path="/courses/:id/lesson-results" element={<LessonTestResults />} />
           <Route path="/courses/:id/section-results" element={<CourseSectionTestResults />} />
           <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
+
+          <Route path="/live-courses" element={<LiveCourses />} />
+          <Route path="/live-courses/:id" element={<LiveCourseDetails />} />
+          <Route path="/live-courses/:id/subscription" element={<LiveCourseSubscription />} />
+          <Route path="/live-courses/:id/lessons" element={<LiveCourseLessons />} />
 
  
           <Route path="/articles" element={<TrainerArticlesPage />} />

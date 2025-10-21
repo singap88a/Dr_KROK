@@ -175,9 +175,9 @@ export default function Live_courses({ courses }) {
             const finalPrice = hasDiscount
               ? (course.price - course.discount).toFixed(2)
               : course.price.toFixed(2);
-            const discountPercent = hasDiscount
-              ? Math.round((course.discount / course.price) * 100)
-              : 0;
+            // const discountPercent = hasDiscount
+            //   ? Math.round((course.discount / course.price) * 100)
+            //   : 0;
             
             const timeStatus = getTimeStatus(course.started_at);
             const isUpcoming = new Date(course.started_at) > new Date();
@@ -302,7 +302,7 @@ export default function Live_courses({ courses }) {
                         </div>
                         
                         <Link
-                          to={`/courses/${course.id}`}
+                          to={`/live-courses/${course.id}`}
                           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-200 rounded-xl bg-primary hover:shadow-md hover:brightness-110"
                         >
                           <FiPlay className="text-sm" />
@@ -320,7 +320,7 @@ export default function Live_courses({ courses }) {
         {/* View All Button */}
         <div className="mt-12 text-center">
           <Link
-            to="/courses"
+            to="/live-courses"
             className="inline-flex items-center gap-2 px-8 py-3 font-medium text-white transition shadow rounded-xl bg-primary hover:shadow-xl"
           >
             <MdLiveTv className="text-lg" />

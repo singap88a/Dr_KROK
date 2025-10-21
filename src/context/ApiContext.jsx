@@ -283,6 +283,60 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
+      async getLiveCourseById(id, auth = false) {
+        if (!id) throw new Error("Course id is required");
+        try {
+          const response = await request(`live_course/${id}`, { auth });
+          return response?.data || null;
+        } catch (err) {
+          // Fallbacks for different backend routes
+          if (err?.status === 404) {
+            const candidates = [
+              `courses/live/${id}`,
+              `courses/${id}`,
+            ];
+            for (const path of candidates) {
+              try {
+                const res2 = await request(path, { auth });
+                if (res2?.data) return res2.data;
+              } catch {
+                // try next
+              }
+            }
+          }
+          throw err;
+        }
+      },
+      async getLiveCourseLessons(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        try {
+          const response = await request(`live_courses/${courseId}/lessons`);
+          return {
+            data: Array.isArray(response?.data) ? response.data : [],
+            raw: response,
+          };
+        } catch (err) {
+          // Fallback endpoints
+          const candidates = [
+            `courses/${courseId}/lessons`,
+            `lessons?course_id=${courseId}`,
+          ];
+          for (const path of candidates) {
+            try {
+              const res2 = await request(path);
+              if (res2?.data) {
+                return {
+                  data: Array.isArray(res2.data) ? res2.data : [],
+                  raw: res2,
+                };
+              }
+            } catch {
+              // try next
+            }
+          }
+          throw err;
+        }
+      },
       async getCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {

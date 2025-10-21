@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 export default function MyFavorites() {
-  const { getFavorites, toggleFavorite, request, getVideoCourseById } = useApi();
+  const { getFavorites, toggleFavorite, request, getVideoCourseById, getLiveCourseById } = useApi();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [favorites, setFavorites] = useState([]);
@@ -61,6 +61,13 @@ export default function MyFavorites() {
               return {
                 ...favorite,
                 courseData: course
+              };
+            } else if (favorite.type === 'live_course') {
+              // Use resilient live course fetcher that handles multiple backend routes
+              const liveCourse = await getLiveCourseById(favorite.table_id);
+              return {
+                ...favorite,
+                courseData: liveCourse
               };
             }
             return favorite;
@@ -162,14 +169,21 @@ export default function MyFavorites() {
           >
             <FiUser className="inline mr-1" /> {t("favorites.filterCourses", "Courses")}
           </button>
+          <button
+            onClick={() => setActiveFilter("live_course")}
+            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "live_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
+            title={t("favorites.filterLiveCourses", "Live Courses")}
+          >
+            <FiUser className="inline mr-1" /> {t("favorites.filterLiveCourses", "Live Courses")}
+          </button>
         </div>
       </div>
 
       {/* Favorites Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredFavorites.map((item) => {
-          // If it's a course, render the same card style as books
-          if (item.type === 'video_course') {
+          // If it's a video course, render the same card style as books
+          if (item.type === 'video_course' || item.type === 'live_course') {
             const c = item.courseData || item;
             const images = c.images ? Object.values(c.images) : [];
             const mainImage = images.length > 0 ? images[0].original_url : (c.image || "/logo.png");
@@ -204,9 +218,9 @@ export default function MyFavorites() {
                     <FiHeart className="w-5 h-5 text-red-500 fill-red-500" />
                   </button>
 
-                  {/* Type Badge - video_course */}
+                  {/* Type Badge */}
                   <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-lg bottom-3 left-3 bg-primary/80">
-                    {t("favorites.course")}
+                    {item.type === 'live_course' ? t("favorites.liveCourse") : t("favorites.course")}
                   </div>
                 </div>
 
@@ -282,7 +296,7 @@ export default function MyFavorites() {
                   {/* Type Badge - Only show if not book */}
                   {item.type !== 'book' && (
                     <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-lg bottom-3 left-3 bg-primary/80">
-                      {t("favorites.course")}
+                      {item.type === 'live_course' ? t("favorites.liveCourse") : t("favorites.course")}
                     </div>
                   )}
                 </div>
