@@ -222,7 +222,7 @@ export default function CourseSubscription() {
               {t('courses.already_enrolled_message', 'You are already enrolled in this course. You can start learning now!')}
             </p>
             <Link
-              to={`/courses/${id}/lessons`}
+              to={isLiveCourse ? `/live-courses/${id}/lessons` : `/courses/${id}/lessons`}
               className="inline-flex items-center gap-2 px-6 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
             >
               <FaPlay />

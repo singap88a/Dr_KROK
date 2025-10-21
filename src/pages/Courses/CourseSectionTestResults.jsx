@@ -10,7 +10,10 @@ export default function CourseSectionTestResults() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById } = useApi();
+  const { getVideoCourseById, getLiveCourseById } = useApi();
+
+  const isLiveCourse = location.pathname.includes('/live-courses');
+  const lessonsPath = isLiveCourse ? `/live-courses/${id}/lessons` : `/courses/${id}/lessons`;
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +28,9 @@ export default function CourseSectionTestResults() {
     const loadCourse = async () => {
       try {
         setLoading(true);
-        const courseData = await getVideoCourseById(id, true);
+        const courseData = isLiveCourse
+          ? await getLiveCourseById(id, true)
+          : await getVideoCourseById(id, true);
         setCourse(courseData);
       } catch (err) {
         setError(err?.message || "Failed to load course");
@@ -34,7 +39,7 @@ export default function CourseSectionTestResults() {
       }
     };
     loadCourse();
-  }, [id, getVideoCourseById]);
+  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -46,7 +51,7 @@ export default function CourseSectionTestResults() {
         <div className="text-center">
           <div className="mb-4 text-red-600">{error || "Missing data"}</div>
           <button
-            onClick={() => navigate(`/courses/${id}/lessons`)}
+            onClick={() => navigate(lessonsPath)}
             className="px-4 py-2 text-white rounded bg-primary"
           >
             {t("common.back", "Back")}
@@ -72,7 +77,7 @@ export default function CourseSectionTestResults() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => navigate(`/courses/${id}/lessons`)}
+            onClick={() => navigate(lessonsPath)}
             className="inline-flex items-center gap-2 text-primary hover:text-secondary"
           >
             <FaArrowLeft />
@@ -175,7 +180,7 @@ export default function CourseSectionTestResults() {
                     </span>
                   </div>
                   <button
-                    onClick={() => navigate(`/courses/${id}/lessons`)}
+                    onClick={() => navigate(lessonsPath)}
                     className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-primary/90 hover:shadow-xl"
                   >
                     <FaClipboardList />
@@ -188,7 +193,7 @@ export default function CourseSectionTestResults() {
                     {t("courses.retakeRequired", "You need to retake the test to pass.")}
                   </p>
                   <button
-                    onClick={() => navigate(`/courses/${id}/lessons`)}
+                    onClick={() => navigate(lessonsPath)}
                     className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-secondary hover:shadow-xl"
                   >
                     <FaRedo />

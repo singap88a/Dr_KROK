@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   FaCheck, 
@@ -15,7 +15,6 @@ import {
 
 export default function SubscriptionSuccess({ course, orderData }) {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -177,7 +176,7 @@ export default function SubscriptionSuccess({ course, orderData }) {
             {/* Action Buttons */}
             <div className="flex flex-col gap-6 mb-8 sm:flex-row">
               <Link
-                to={`/courses/${id}/lessons`}
+                to={window.location.pathname.includes('live-courses') ? `/live-courses/${id}/lessons` : `/courses/${id}/lessons`}
                 className="flex items-center justify-center flex-1 gap-3 px-8 py-4 text-lg font-bold text-white transition-all duration-300 transform shadow-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 rounded-2xl hover:shadow-emerald-500/25 hover:scale-105 hover:-translate-y-1"
               >
                 <FaPlay className="text-xl" />

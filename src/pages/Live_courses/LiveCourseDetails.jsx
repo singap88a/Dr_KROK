@@ -316,7 +316,7 @@ export default function LiveCourseDetails() {
               </button>
             ) : (
               <button
-                onClick={() => navigate(`/live-courses/${id}/subscription`)}
+                onClick={() => navigate(`/live-courses/${id}/subscribe`)}
                 className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
               >
                 {t("courses.subscribeNow", "Subscribe Now")}
