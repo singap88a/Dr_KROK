@@ -38,7 +38,7 @@ import Instructors from "./pages/Instructors/Instructors";
 import InstructorDetails from "./pages/Instructors/InstructorDetails";
 import LiveCourses from "./pages/Live_courses/LiveCourses";
 import LiveCourseDetails from "./pages/Live_courses/LiveCourseDetails";
-import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
+// import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
 import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
 
 export default function App() {
@@ -76,7 +76,7 @@ export default function App() {
 
           <Route path="/live-courses" element={<LiveCourses />} />
           <Route path="/live-courses/:id" element={<LiveCourseDetails />} />
-          <Route path="/live-courses/:id/subscription" element={<LiveCourseSubscription />} />
+          <Route path="/live-courses/:id/subscribe" element={<CourseSubscription />} />
           <Route path="/live-courses/:id/lessons" element={<LiveCourseLessons />} />
 
  

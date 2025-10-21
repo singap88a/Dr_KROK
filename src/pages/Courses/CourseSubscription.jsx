@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
@@ -38,9 +38,12 @@ import {
 export default function CourseSubscription() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getCourseAccess, subscribeToCourse } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse } = useApi();
   const { isLoggedIn } = useUser();
+
+  const isLiveCourse = location.pathname.includes('live-courses');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -67,7 +70,7 @@ export default function CourseSubscription() {
         setError("");
 
         // Load course details
-        const courseData = await getVideoCourseById(id);
+        const courseData = await (isLiveCourse ? getLiveCourseById(id) : getVideoCourseById(id));
         if (!mounted) return;
         setCourse(courseData);
 
@@ -97,7 +100,7 @@ export default function CourseSubscription() {
     return () => {
       mounted = false;
     };
-  }, [id, getVideoCourseById, getCourseAccess, isLoggedIn]);
+  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getCourseAccess, isLoggedIn]);
 
   const handleCouponApply = (result) => {
     if (result.error) {
@@ -131,7 +134,7 @@ export default function CourseSubscription() {
         userData: JSON.parse(localStorage.getItem("user") || "{}")
       });
 
-      const response = await subscribeToCourse(id, selectedPayment, discountedPrice, couponId);
+      const response = await (isLiveCourse ? subscribeToLiveCourse(id, selectedPayment, discountedPrice, couponId) : subscribeToCourse(id, selectedPayment, discountedPrice, couponId));
 
       console.log('Subscription response:', response);
 
