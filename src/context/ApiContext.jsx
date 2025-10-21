@@ -247,6 +247,18 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           raw: response,
         };
       },
+      async getLiveCourses(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        if (params.per_page) query.set("per_page", params.per_page);
+        const path = query.toString() ? `live_courses?${query.toString()}` : "live_courses";
+        const response = await request(path);
+        return {
+          data: Array.isArray(response?.data) ? response.data : [],
+          pagination: response?.pagination || null,
+          raw: response,
+        };
+      },
       async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {

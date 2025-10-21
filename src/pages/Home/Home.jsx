@@ -7,6 +7,7 @@ import ThemeToggle from "../../components/Home/ThemeToggle";
 import NewsUpdates from "../../components/Home/Articles";
  import InstructorsCarousel from "../../components/Home/InstructorsCarousel";
 import HomeBanners from "../../components/Home/HomeBanners";
+import Live_courses from "../../components/Home/Live_courses";
   
 export default function DrKrokHome() {
   const [dark, setDark] = useState(() => {
@@ -35,6 +36,7 @@ export default function DrKrokHome() {
           <CoursesPreview />
           <BooksCarousel />
           <ThemeToggle />
+          <Live_courses/>
           <NewsUpdates />
           <HomeBanners/>
            <InstructorsCarousel/>
