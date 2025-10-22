@@ -200,6 +200,31 @@ export default function BuyNowPage() {
     setError("");
     setSuccess("");
 
+    // Validate required fields
+    if (!formData.client_name.trim()) {
+      setError("Please enter your name.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.phone1.trim()) {
+      setError("Please enter your phone number.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.city_id || !formData.city.trim()) {
+      setError("Please select a city.");
+      setLoading(false);
+      return;
+    }
+
+    if (selectedCity && branches.length > 0 && !formData.branch_id) {
+      setError("Please select a branch.");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Require authentication to place an order
       const token = localStorage.getItem("token") || localStorage.getItem("userToken");

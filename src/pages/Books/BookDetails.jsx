@@ -193,7 +193,7 @@ export default function BookDetails() {
                 <FiGlobe className="text-primary" /> {t('books.category')}: {book.category?.name}
               </div>
               <div className="flex items-center gap-2">
-                <FiGlobe className="text-primary" /> {t('books.type')}: {book.type === 1 ? t('books.delivery') : t('books.pdf_only')}
+                <FiGlobe className="text-primary" /> {t('books.type')}: {book.type?.toLowerCase() === "delivery" ? t('books.delivery') : t('books.pdf_only')}
               </div>
               {/* <div className="flex items-center gap-2">
                 <FiGlobe className="text-primary" /> {t('books.status')}: {book.is_active ? t('books.active') : t('books.inactive')}
