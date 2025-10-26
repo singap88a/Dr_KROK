@@ -562,43 +562,84 @@ async completeLessonProgress(courseId, lessonId, type) {
         }
         throw new Error('Live course progress start endpoint not available');
       },
-      async completeLiveLessonProgress(courseId, lessonId, type) {
-        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+async completeLiveLessonProgress(courseId, lessonId, type) {
+  if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+  
+  // تأكد من وجود التوكن أولاً
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Authentication token is required");
+  }
+
+  const formData = new FormData();
+  formData.append('course', String(courseId));
+  formData.append('lesson', String(lessonId));
+  formData.append('type', type || 'lesson');
+  
+  console.log('Sending completeLiveLessonProgress request:', {
+    courseId,
+    lessonId,
+    type,
+    formData: {
+      course: courseId,
+      lesson: lessonId,
+      type: type || 'lesson'
+    }
+  });
+
+  try {
+    // استخدم endpoint واحد فقط بدلاً من محاولة عدة endpoints
+    const res = await request(`live_courses/${courseId}/progress/${lessonId}/complete`, {
+      method: 'POST',
+      body: formData,
+      isFormData: true,
+      auth: true
+    });
+
+    // تحقق من الاستجابة
+    if (!res) {
+      throw new Error("No response from server");
+    }
+
+    if (res.code === 422) {
+      throw new Error(res.message || "The selected lesson is invalid.");
+    }
+
+    if (!res.success && res.code !== 200) {
+      throw new Error(res.message || "Failed to complete lesson progress");
+    }
+
+    return res;
+  } catch (error) {
+    console.error("Error completing lesson progress:", error);
+    
+    // إذا كان الخطأ 422، حاول مع endpoint بديل
+    if (error.message.includes("The selected lesson is invalid") || error.status === 422) {
+      console.log('Trying alternative endpoint for quiz completion...');
+      
+      const alternativeFormData = new FormData();
+      alternativeFormData.append('course_id', String(courseId));
+      alternativeFormData.append('lesson_id', String(lessonId));
+      alternativeFormData.append('type', type || 'quiz');
+      
+      try {
+        const altRes = await request(`courses/${courseId}/progress/${lessonId}/complete`, {
+          method: 'POST',
+          body: alternativeFormData,
+          isFormData: true,
+          auth: true
+        });
         
-        // تأكد من وجود التوكن أولاً
-        const token = getAuthToken();
-        if (!token) {
-          throw new Error("Authentication token is required");
-        }
-
-        const formData = new FormData();
-        formData.append('course', String(courseId));
-        formData.append('lesson', String(lessonId));
-        formData.append('type', type || 'lesson');
-        
-        try {
-          // استخدم endpoint واحد فقط بدلاً من محاولة عدة endpoints
-          const res = await request(`live_courses/${courseId}/progress/${lessonId}/complete`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            body: formData,
-            isFormData: true,
-            auth: true // هذا سيضمن إضافة التوكن تلقائياً
-          });
-
-          // تحقق من الاستجابة
-          if (!res || !res.success) {
-            throw new Error(res?.message || "Failed to complete lesson progress");
-          }
-
-          return res;
-        } catch (error) {
-          console.error("Error completing lesson progress:", error);
-          throw error;
-        }
-      },
+        return altRes;
+      } catch (altError) {
+        console.error("Alternative endpoint also failed:", altError);
+        throw altError;
+      }
+    }
+    
+    throw error;
+  }
+},
       async getLiveCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
