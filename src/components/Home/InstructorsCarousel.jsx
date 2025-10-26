@@ -141,12 +141,12 @@ function InstructorsCarousel() {
                     {/* Image */}
                     <div className="flex justify-center">
                       <img
-                        src={ins.image  }
+                        src={ins.image || "/logo.png"}
                         alt={ins.name}
                         className="object-cover border-4 border-white rounded-full shadow-lg w-28 h-28 dark:border-gray-700"
-                        // onError={(e) => {
-                        //   e.target.src = "/placeholder-avatar.jpg";
-                        // }}
+                        onError={(e) => {
+                          e.target.src = "/logo.png";
+                        }}
                       />
                     </div>
 

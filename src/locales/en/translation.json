@@ -256,7 +256,8 @@
       "loading": "Loading...",
       "close": "Close",
       "agree": "I Agree"
-    }
+    },
+    "select_city_branch_instruction": "Choose the city and the branch affiliated with the shipping company that will deliver the book to you."
   },
   "auth": {
     "login": {

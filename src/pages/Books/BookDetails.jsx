@@ -198,9 +198,6 @@ export default function BookDetails() {
               {/* <div className="flex items-center gap-2">
                 <FiGlobe className="text-primary" /> {t('books.status')}: {book.is_active ? t('books.active') : t('books.inactive')}
               </div> */}
-              <div className="flex items-center gap-2">
-                <FiGlobe className="text-primary" /> {t('books.created')}: {new Date(book.created_at).toLocaleDateString()}
-              </div>
             </div>
 
             {/* Price */}

@@ -739,6 +739,12 @@ export default function BuyNowPage() {
                   </select>
                 </div> */}
 
+                <div className="mb-4">
+                  <p className="text-sm text-text-secondary">
+                    {t('books.select_city_branch_instruction')}
+                  </p>
+                </div>
+
                 <CitySelector
                   value={formData.city}
                   onChange={(e) => {

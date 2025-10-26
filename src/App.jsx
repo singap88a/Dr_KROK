@@ -33,6 +33,7 @@ import SocialCallback from "./pages/auth/SocialCallback";
 import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
 import { ApiProvider } from "./context/ApiContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import WhatsAppIcon from "./components/WhatsAppIcon";
 import Instructors from "./pages/Instructors/Instructors";
 import InstructorDetails from "./pages/Instructors/InstructorDetails";
@@ -44,6 +45,7 @@ import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
 export default function App() {
   return (
     <div className="min-h-screen bg-background text-text">
+     <ThemeProvider>
      <ApiProvider>
       <UserProvider>
         <ScrollToTop />
@@ -78,6 +80,7 @@ export default function App() {
           <Route path="/live-courses/:id" element={<LiveCourseDetails />} />
           <Route path="/live-courses/:id/subscribe" element={<CourseSubscription />} />
           <Route path="/live-courses/:id/lessons" element={<LiveCourseLessons />} />
+          <Route path="/live-courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
 
  
           <Route path="/articles" element={<TrainerArticlesPage />} />
@@ -96,6 +99,7 @@ export default function App() {
         <Footer />
       </UserProvider>
      </ApiProvider>
+     </ThemeProvider>
 
     </div>
   );

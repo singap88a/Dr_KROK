@@ -337,7 +337,7 @@ export default function Profile() {
       {/* Mobile Menu Button */}
 <button
   onClick={() => setIsMobileMenuOpen(true)}
-  className="fixed left-0 z-50 flex items-center justify-center w-12 h-12 text-white transition-all duration-300 shadow-lg top-20 rounded-r-2xl bg-gradient-to-r from-primary to-primary hover:scale-105 hover:shadow-2xl lg:hidden backdrop-blur-md bg-opacity-80"
+  className="fixed left-0 z-50 flex items-center justify-center w-12 h-12 text-white transition-all duration-300 shadow-lg top-20 rounded-br-2xl bg-gradient-to-r from-primary to-primary hover:scale-105 hover:shadow-2xl lg:hidden backdrop-blur-md bg-opacity-80"
 >
   {/* أيقونة تدل على القائمة الجانبية */}
   <svg
@@ -373,7 +373,7 @@ export default function Profile() {
       )}
 
       {/* Sidebar */}
-      <aside className="sticky top-0 flex-col hidden h-screen p-6 border-r shadow-xl lg:flex w-80 bg-surface border-border">
+      <aside className="sticky top-0 flex-col hidden min-h-screen p-6 border-r shadow-xl rounded-br-xl lg:flex w-80 bg-surface border-border">
         <Sidebar />
       </aside>
 

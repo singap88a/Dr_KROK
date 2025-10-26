@@ -113,11 +113,11 @@ function InstructorDetails() {
             {/* Left */}
             <div className="flex flex-col items-center justify-center w-full p-10 text-center bg-gradient-to-br from-primary/10 to-blue-50 dark:from-primary/20 dark:to-gray-800 lg:w-1/3 lg:text-left">
               <img
-                src={image || "/placeholder-avatar.jpg"}
+                src={image || "/logo.png"}
                 alt={name}
                 className="object-cover w-32 h-32 mb-6 border-4 border-white rounded-full shadow-xl md:w-44 md:h-44 dark:border-gray-700"
                 onError={(e) => {
-                  e.target.src = "/placeholder-avatar.jpg";
+                  e.target.src = "/logo.png";
                 }}
               />
               <h1 className="mb-2 text-3xl font-extrabold text-gray-900 dark:text-white md:text-4xl">

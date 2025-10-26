@@ -135,11 +135,11 @@ function Instructors() {
                 >
                   <div className="relative">
                     <img
-                      src={instructor.image || "/placeholder-avatar.jpg"}
+                      src={instructor.image || "/logo.png"}
                       alt={instructor.name}
                       className="object-cover w-full h-56"
                       onError={(e) => {
-                        e.target.src = "/placeholder-avatar.jpg";
+                        e.target.src = "/logo.png";
                       }}
                     />
                     <div className="absolute inset-0 transition-opacity opacity-0 group-hover:opacity-100 bg-gradient-to-t from-black/40 to-transparent"></div>

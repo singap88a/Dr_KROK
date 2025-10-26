@@ -1,3 +1,4 @@
+// ApiContext.jsx
 import React, { createContext, useContext, useMemo, useCallback } from "react";
 import i18n from "../i18n";
 
@@ -527,6 +528,139 @@ async completeLessonProgress(courseId, lessonId, type) {
           }
         }
         throw new Error('Lesson progress endpoint not available');
+      },
+      // Live Course Progress API functions
+      async getLiveCourseProgress(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        const candidates = [
+          `live_courses/${courseId}/progress`,
+          `courses/${courseId}/progress`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        return { status: 'not_started', percentage: 0, course_id: Number(courseId) };
+      },
+      async startLiveLessonProgress(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        const candidates = [
+          `live_courses/${courseId}/progress/${lessonId}/start`,
+          `courses/${courseId}/progress/${lessonId}/start`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { method: 'POST', auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        throw new Error('Live course progress start endpoint not available');
+      },
+      async completeLiveLessonProgress(courseId, lessonId, type) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        
+        // تأكد من وجود التوكن أولاً
+        const token = getAuthToken();
+        if (!token) {
+          throw new Error("Authentication token is required");
+        }
+
+        const formData = new FormData();
+        formData.append('course', String(courseId));
+        formData.append('lesson', String(lessonId));
+        formData.append('type', type || 'lesson');
+        
+        try {
+          // استخدم endpoint واحد فقط بدلاً من محاولة عدة endpoints
+          const res = await request(`live_courses/${courseId}/progress/${lessonId}/complete`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+            isFormData: true,
+            auth: true // هذا سيضمن إضافة التوكن تلقائياً
+          });
+
+          // تحقق من الاستجابة
+          if (!res || !res.success) {
+            throw new Error(res?.message || "Failed to complete lesson progress");
+          }
+
+          return res;
+        } catch (error) {
+          console.error("Error completing lesson progress:", error);
+          throw error;
+        }
+      },
+      async getLiveCourseProgressDetails(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        const candidates = [
+          `live_courses/${courseId}/progress`,
+          `courses/${courseId}/progress`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        return null;
+      },
+      async markLiveLessonAsCompleted(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+
+        const formData = new FormData();
+        formData.append('course', String(courseId));
+        formData.append('lesson', String(lessonId));
+        formData.append('type', 'lesson');
+
+        const candidates = [
+          `live_courses/${courseId}/progress/${lessonId}/complete`,
+          `courses/${courseId}/progress/${lessonId}/complete`
+        ];
+
+        for (const path of candidates) {
+          try {
+            const res = await request(path, {
+              method: 'POST',
+              auth: true,
+              body: formData,
+              isFormData: true
+            });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) {
+              console.warn(`Failed with endpoint ${path}:`, e.message);
+              continue;
+            }
+          }
+        }
+        throw new Error('Live lesson complete endpoint not available');
+      },
+      async getLiveLessonProgress(courseId, lessonId) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        const candidates = [
+          `live_courses/${courseId}/progress/${lessonId}`,
+          `courses/${courseId}/progress/${lessonId}`
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { auth: true });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        return null;
       },
       // Blogs API
       async getBlogs(params = {}) {

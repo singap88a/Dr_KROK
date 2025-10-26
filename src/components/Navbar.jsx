@@ -4,17 +4,15 @@ import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser } from "react-icons/fa"
 import { useUser } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../context/ApiContext";
+import { useTheme } from "../context/ThemeContext";
 import LogoutConfirmModal from "./LogoutConfirmModal";
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const { getSettings } = useApi();
+  const { darkMode, toggleTheme } = useTheme();
   const location = useLocation();
 
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
-  });
   const [menuOpen, setMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [language, setLanguage] = useState(() => {
@@ -26,15 +24,6 @@ export default function Navbar() {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const { isLoggedIn, userData, logout } = useUser();
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-  }, [darkMode]);
 
   useEffect(() => {
     i18n.changeLanguage(language);
@@ -214,7 +203,7 @@ export default function Navbar() {
 
           {/* Dark Mode Toggle */}
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleTheme}
             className="text-xl transition text-textSecondary hover:text-primary focus:outline-none"
           >
             {darkMode ? <FaSun /> : <FaMoon />}

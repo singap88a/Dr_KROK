@@ -1,3 +1,4 @@
+// LiveCourseLessons.jsx
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
@@ -5,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import i18n from "../../i18n";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import SectionItem from "../Courses/SectionItem";
 import {
   FaPlay,
   FaLock,
@@ -39,6 +41,9 @@ import {
   FaFolder,
   FaFolderOpen,
   FaList,
+  FaQuestionCircle,
+  FaChartLine,
+  FaUnlock,
 } from "react-icons/fa";
 
 export default function LiveCourseLessons() {
@@ -49,12 +54,12 @@ export default function LiveCourseLessons() {
   const {
     getLiveCourseById,
     getCourseAccess,
-    getCourseProgress,
-    startLessonProgress,
-    completeLessonProgress,
-    getLessonProgress,
-    getCourseProgressDetails,
-    markLessonAsCompleted,
+    getLiveCourseProgress,
+    startLiveLessonProgress,
+    completeLiveLessonProgress,
+    getLiveLessonProgress,
+    getLiveCourseProgressDetails,
+    markLiveLessonAsCompleted,
   } = useApi();
   const { isLoggedIn } = useUser();
 
@@ -227,8 +232,8 @@ export default function LiveCourseLessons() {
       try {
         const [updatedCourseProgress, updatedLessonProgress] =
           await Promise.all([
-            getCourseProgressDetails(id),
-            getLessonProgress(id, lessonId),
+            getLiveCourseProgressDetails(id),
+            getLiveLessonProgress(id, lessonId),
           ]);
 
         if (updatedCourseProgress) {
@@ -258,7 +263,7 @@ export default function LiveCourseLessons() {
         console.error(`Error updating lesson ${lessonId} status:`, error);
       }
     },
-    [isLoggedIn, id, getCourseProgressDetails, getLessonProgress]
+    [isLoggedIn, id, getLiveCourseProgressDetails, getLiveLessonProgress]
   );
 
   // دالة محسنة لإكمال الدرس - تحديث فوري للواجهة
@@ -325,12 +330,21 @@ export default function LiveCourseLessons() {
 
     try {
       // استدعاء API لإكمال الدرس
-      const res = await markLessonAsCompleted(id, lessonId);
-      if (res) {
-        console.log("Lesson marked as completed successfully:", res);
+      const response = await completeLiveLessonProgress(id, lessonId, 'lesson');
+      if (response.success) {
+        // تحديث حالة الدرس
+        setLessonStatuses(prev => ({
+          ...prev,
+          [lessonId]: {
+            ...prev[lessonId],
+            status: 'completed',
+            lesson_percentage: 100,
+            completed_at: new Date().toISOString()
+          }
+        }));
 
         // تحديث التقدم العام للدورة
-        const updatedProgress = await getCourseProgressDetails(id);
+        const updatedProgress = await getLiveCourseProgressDetails(id);
         if (updatedProgress) {
           setCourseProgress(updatedProgress);
 
@@ -380,6 +394,257 @@ export default function LiveCourseLessons() {
     },
     [sections, lessonStatuses, calculateTotalProgress]
   );
+
+  // مكون لعرض اختبارات الدرس
+  const LessonTestsSection = ({ lesson }) => {
+    if (!lesson.lesson_end_tests || lesson.lesson_end_tests.length === 0) {
+      return null;
+    }
+
+    const lessonProgress = lessonStatuses[lesson.id] || {};
+    const progressPercentage = lessonProgress.percentage || lessonProgress.lesson_percentage || 0;
+    const canTakeTest = progressPercentage >= 50;
+
+    return (
+      <div className="mb-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-primary">
+            <FaChartLine className="text-lg text-white" />
+          </div>
+          <div>
+            <h5 className="text-lg font-bold text-text">
+              {t("courses.lessonTests", "Lesson Assessment")}
+            </h5>
+            <p className="text-sm text-text-muted">
+              {t("courses.testYourKnowledge", "Test your understanding of this lesson")}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {lesson.lesson_end_tests.map((test, idx) => (
+            <div
+              key={test.id || idx}
+              className={`p-5 border-2 rounded-xl transition-all transform hover:scale-105 cursor-pointer ${
+                canTakeTest
+                  ? "border-primary/20 bg-primary/5 hover:border-primary hover:shadow-lg"
+                  : "border-border bg-accent hover:border-border/80"
+              }`}
+              onClick={() => {
+                if (canTakeTest) {
+                  navigate(`/live-courses/${id}/test/lesson/${test.id}`, {
+                    state: {
+                      course,
+                      test,
+                      lessonId: lesson.id,
+                    },
+                  });
+                }
+              }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    canTakeTest
+                      ? "bg-primary text-white"
+                      : "bg-text-muted text-background"
+                  }`}>
+                    {canTakeTest ? <FaUnlock /> : <FaLock />}
+                  </div>
+                  <div>
+                    <h6 className="font-semibold text-text">
+                      {test.name || `${t("courses.test", "Test")} ${idx + 1}`}
+                    </h6>
+                  </div>
+                </div>
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  canTakeTest
+                    ? "bg-primary/10 text-primary"
+                    : "bg-accent text-text-muted"
+                }`}>
+                  {canTakeTest ? t("courses.available", "Available") : t("courses.locked", "Locked")}
+                </div>
+              </div>
+
+              {canTakeTest && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-text-muted">
+                      {t("courses.lessonProgress", "Lesson Progress")}
+                    </span>
+                    <span className="text-xs font-bold text-text">
+                      {Math.round(progressPercentage)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-accent">
+                    <div
+                      className="h-2 transition-all duration-500 rounded-full bg-primary"
+                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {!canTakeTest && (
+                <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
+                  <FaLock className="text-xs" />
+                  {t("courses.watchVideoToUnlockTest", "Watch 50% of the lesson to unlock")}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // مكون لعرض اختبارات القسم
+  const SectionTestsSection = ({ section }) => {
+    if (!section.lessons) return null;
+    
+    const sectionTests = [];
+    section.lessons.forEach(lesson => {
+      if (lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0) {
+        sectionTests.push(...lesson.lesson_end_tests);
+      }
+    });
+
+    if (sectionTests.length === 0) {
+      return null;
+    }
+
+    const sectionProgress = calculateSectionProgress(section.id);
+    const canTakeTest = sectionProgress.percentage >= 50;
+
+    return (
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-primary">
+            <FaChartLine className="text-lg text-white" />
+          </div>
+          <div>
+            <h5 className="text-lg font-bold text-text">
+              {t("courses.sectionTests", "Section Assessment")}
+            </h5>
+            <p className="text-sm text-text-muted">
+              {t("courses.testSectionKnowledge", "Test your understanding of this section")}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {sectionTests.map((test, idx) => (
+            <div
+              key={test.id || idx}
+              className={`p-5 border-2 rounded-xl transition-all transform hover:scale-105 cursor-pointer ${
+                canTakeTest
+                  ? "border-primary/20 bg-primary/5 hover:border-primary hover:shadow-lg"
+                  : "border-border bg-accent hover:border-border/80"
+              }`}
+              onClick={() => {
+                if (canTakeTest) {
+                  navigate(`/live-courses/${id}/test/section/${test.id}`, {
+                    state: {
+                      course,
+                      test,
+                      sectionId: section.id,
+                    },
+                  });
+                }
+              }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    canTakeTest
+                      ? "bg-primary text-white"
+                      : "bg-text-muted text-background"
+                  }`}>
+                    {canTakeTest ? <FaUnlock /> : <FaLock />}
+                  </div>
+                  <div>
+                    <h6 className="font-semibold text-text">
+                      {test.name || `${t("courses.sectionTest", "Section Test")} ${idx + 1}`}
+                    </h6>
+                  </div>
+                </div>
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  canTakeTest
+                    ? "bg-primary/10 text-primary"
+                    : "bg-accent text-text-muted"
+                }`}>
+                  {canTakeTest ? t("courses.available", "Available") : t("courses.locked", "Locked")}
+                </div>
+              </div>
+
+              {canTakeTest && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-text-muted">
+                      {t("courses.sectionProgress", "Section Progress")}
+                    </span>
+                    <span className="text-xs font-bold text-text">
+                      {Math.round(sectionProgress.percentage)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-accent">
+                    <div
+                      className="h-2 transition-all duration-500 rounded-full bg-primary"
+                      style={{ width: `${Math.min(sectionProgress.percentage, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {!canTakeTest && (
+                <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
+                  <FaLock className="text-xs" />
+                  {t("courses.watchSectionToUnlockTest", "Complete 50% of the section to unlock")}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // FinalTestsSection
+  const FinalTestsSection = () => {
+    if (!course || !course.final_tests || course.final_tests.length === 0) return null;
+
+    const locked = Math.round(courseProgress?.overall?.percentage || 0) < 100;
+
+    return (
+      <div className="p-4 mt-4 border rounded-lg bg-surface border-border">
+        <div className="mb-2 text-sm font-semibold text-text">
+          {t("courses.finalTests", "Final Tests")}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {course.final_tests.map((test, idx) => (
+            <button
+              key={test.id || idx}
+              onClick={() =>
+                !locked &&
+                navigate(`/live-courses/${id}/test/final/${test.id}`, {
+                  state: { course, test },
+                })
+              }
+              disabled={locked}
+              className={`px-3 py-2 text-xs font-medium rounded ${
+                locked
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "text-white bg-primary hover:bg-secondary"
+              }`}
+            >
+              {test.name || `${t("courses.finalTest", "Final Test")} ${idx + 1}`}{" "}
+              {locked && <FaLock className="inline ml-1" />}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -432,7 +697,7 @@ export default function LiveCourseLessons() {
         if (isLoggedIn) {
           try {
             // استخدام الدالة الجديدة للحصول على تفاصيل التقدم
-            const courseProgressDetails = await getCourseProgressDetails(id);
+            const courseProgressDetails = await getLiveCourseProgressDetails(id);
             console.log(
               "Course progress details loaded:",
               courseProgressDetails
@@ -471,7 +736,7 @@ export default function LiveCourseLessons() {
             console.log("Failed to load course progress details:", error);
             // Fallback to old method
             try {
-              const oldProgress = await getCourseProgress(id);
+              const oldProgress = await getLiveCourseProgress(id);
               setCourseProgress(oldProgress);
             } catch {
               // ignore
@@ -540,7 +805,7 @@ export default function LiveCourseLessons() {
               // Fire start progress when opening first free lesson for logged-in users
               if (isLoggedIn) {
                 try {
-                  const res = await startLessonProgress(
+                  const res = await startLiveLessonProgress(
                     id,
                     firstFreeContent.data.id
                   );
@@ -573,7 +838,7 @@ export default function LiveCourseLessons() {
             // Fire start progress when opening first free lesson for logged-in users
             if (isLoggedIn) {
               try {
-                const res = await startLessonProgress(id, firstFreeLesson.id);
+                const res = await startLiveLessonProgress(id, firstFreeLesson.id);
                 if (res?.course_progress)
                   setCourseProgress(res.course_progress);
                 if (res?.lesson) {
@@ -615,10 +880,10 @@ export default function LiveCourseLessons() {
     id,
     getLiveCourseById,
     getCourseAccess,
-    getCourseProgress,
-    getCourseProgressDetails,
-    startLessonProgress,
-    getLessonProgress,
+    getLiveCourseProgress,
+    getLiveCourseProgressDetails,
+    startLiveLessonProgress,
+    getLiveLessonProgress,
     isLoggedIn,
     updateLessonStatus,
   ]);
@@ -637,7 +902,7 @@ export default function LiveCourseLessons() {
     } else if (s.courseCompleted && isLoggedIn) {
       (async () => {
         try {
-          const updatedProgress = await getCourseProgressDetails(id);
+          const updatedProgress = await getLiveCourseProgressDetails(id);
           setCourseProgress(updatedProgress);
         } catch (error) {
           console.error("Error updating course progress:", error);
@@ -648,7 +913,7 @@ export default function LiveCourseLessons() {
     location.state,
     id,
     isLoggedIn,
-    getCourseProgressDetails,
+    getLiveCourseProgressDetails,
     updateLessonStatus,
   ]);
 
@@ -731,7 +996,7 @@ export default function LiveCourseLessons() {
     setCurrentSection(null); // Clear section selection when lesson is selected
     if (isLoggedIn) {
       try {
-        const res = await startLessonProgress(id, lesson.id);
+        const res = await startLiveLessonProgress(id, lesson.id);
         if (res?.course_progress) setCourseProgress(res.course_progress);
         if (res?.lesson) {
           setLessonStatuses((prev) => ({
@@ -1093,301 +1358,31 @@ export default function LiveCourseLessons() {
             </h3>
 
             <div className="space-y-2">
-              {/* Sections */}
-              {sortedSections.map((section) => {
-                const sectionLessons = getSectionLessons(section.id);
-                const hasFree = hasFreeLessons(section.id);
-                const isExpanded = expandedSections.has(section.id);
-                const isAccessible = hasFree || hasAccess;
-                const isActive = currentSection?.id === section.id;
-
-                return (
-                  <div
-                    key={`section-${section.id}`}
-                    className="border rounded-lg bg-surface border-border"
-                  >
-                    {/* Section Header */}
-                    <div
-                      onClick={() => handleSectionClick(section)}
-                      className={`p-4 transition-all cursor-pointer group hover:shadow-sm ${
-                        isActive
-                          ? "bg-primary/5 border-b border-primary/20"
-                          : "hover:bg-accent/50"
-                      }`}
-                    >
-                      <div className="flex flex-col">
-                        {/* العنوان الرئيسي + الأيقونة فوق اليمين */}
-                        <div className="relative flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            {/* Section Icon */}
-                            <div
-                              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
-                                isActive
-                                  ? "bg-primary/20 text-primary scale-105"
-                                  : "bg-accent text-text-muted hover:bg-primary/10 hover:text-primary"
-                              }`}
-                            >
-                              {isExpanded ? (
-                                <FaFolderOpen className="text-sm transition-transform duration-300 rotate-[5deg]" />
-                              ) : (
-                                <FaFolder className="text-sm" />
-                              )}
-                            </div>
-
-                            {/* Section Title + Details */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <h4
-                                  className={`font-semibold text-base tracking-wide ${
-                                    isActive ? "text-primary" : "text-text"
-                                  }`}
-                                >
-                                  {/* ✅ عرض أول 4 كلمات فقط من العنوان وبعدها ... */}
-                                  {section.title
-                                    .split(" ")
-                                    .slice(0, 4)
-                                    .join(" ")}
-                                  {section.title.split(" ").length > 4 && "..."}
-                                </h4>
-
-                                {/* 🔒 أيقونة القفل (ما تشالش) */}
-                                {!isAccessible && (
-                                  <FaLock
-                                    className="ml-2 text-sm text-text-muted"
-                                    title="Premium"
-                                  />
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
-                                <span>
-                                  {section.lessons_count || 0}{" "}
-                                  {t("courses.lessons", "Lessons")}
-                                </span>
-                                {section.video && <FaVideo />}
-                                {section.images &&
-                                  section.images.length > 0 && <FaImage />}
-                                {section.files && section.files.length > 0 && (
-                                  <FaFileAlt />
-                                )}
-                                <span>
-                                  {hasFree
-                                    ? t("courses.hasFree", "Has Free")
-                                    : t("courses.premium", "Premium")}
-                                </span>
-                              </div>
-
-                              {/* Section Progress Bar */}
-                              {isLoggedIn &&
-                                section.lessons &&
-                                section.lessons.length > 0 && (
-                                  <SectionProgressBar sectionId={section.id} />
-                                )}
-                            </div>
-                          </div>
-
-                          {/* أيقونة الفتح / الإغلاق في الزاوية العليا اليمنى */}
-                          <div className="absolute top-0 right-0">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleSection(section.id);
-                              }}
-                              className={`relative p-1 rounded-full border transition-all duration-300 ease-in-out shadow-sm ${
-                                isExpanded
-                                  ? "bg-primary text-white rotate-180 scale-105"
-                                  : "bg-accent text-text-muted hover:bg-primary/10 hover:text-primary"
-                              }`}
-                            >
-                              {isExpanded ? (
-                                <FaChevronDown className="text-lg transition-transform duration-300" />
-                              ) : (
-                                <FaChevronRight className="text-lg transition-transform duration-300" />
-                              )}
-                              {/* تأثير نبض خفيف لما تكون مفتوحة */}
-                              {isExpanded && (
-                                <span className="absolute inset-0 border-2 rounded-full border-primary/40 animate-ping"></span>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Section Lessons */}
-                    {isExpanded && sectionLessons.length > 0 && (
-                      <div className="border-t border-border">
-                        {sectionLessons.map((lesson, lessonIndex) => {
-                          const isFree =
-                            lesson.type === "free" || lesson.type === "Free";
-                          const isLessonAccessible = isFree;
-                          const ls = lessonStatuses[lesson.id];
-                          const totalPerc = calculateTotalProgress(lesson, ls);
-                          const isCompleted = totalPerc >= 100;
-
-                          // التحقق من نوع المحتوى لتحديد التقدم الأولي
-                          const _hasVideo = !!lesson.video;
-                          const _hasTests =
-                            lesson.lesson_end_tests &&
-                            lesson.lesson_end_tests.length > 0;
-
-                          // التحديث الهام: إذا كان الدرس جديداً ولم يتم البدء فيه بعد
-                          let displayProgress = totalPerc;
-                          if (!ls && isLoggedIn) {
-                            // إذا كان الدرس يحتوي على فيديو واختبارات، يبدأ بـ 0%
-                            // إذا كان يحتوي على فيديو فقط أو اختبارات فقط، يبدأ بـ 0%
-                            displayProgress = 0;
-                          }
-
-                          const isActive = currentLesson?.id === lesson.id;
-
-                          return (
-                            <div
-                              key={lesson.id || lessonIndex}
-                              onClick={() => handleLessonClick(lesson)}
-                              className={`relative p-4 pl-8 transition-all cursor-pointer group hover:shadow-sm border-l-2 ${
-                                isActive
-                                  ? "bg-primary/5 border-l-primary"
-                                  : "hover:bg-accent/30 border-l-border"
-                              }`}
-                            >
-                              <div className="flex items-start gap-3">
-                                {/* Lesson Number & Status */}
-                                <div className="flex flex-col items-center gap-1">
-                                  <div
-                                    className={`rounded-full p-[2px] ${
-                                      isActive ? "bg-primary/20" : "bg-accent"
-                                    }`}
-                                  >
-                                    <ProgressCircle
-                                      percent={displayProgress}
-                                      completed={isCompleted}
-                                      active={isActive}
-                                      size={24}
-                                      stroke={3}
-                                    />
-                                  </div>
-                                  {lessonIndex < sectionLessons.length - 1 && (
-                                    <div className="w-px h-4 bg-border"></div>
-                                  )}
-                                </div>
-
-                                {/* Lesson Content */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <h5
-                                        className={`text-sm font-medium line-clamp-1 ${
-                                          isActive
-                                            ? "text-primary"
-                                            : "text-text"
-                                        }`}
-                                      >
-                                        {lesson.title}
-                                      </h5>
-                                      <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
-                                        {lesson.video && <FaVideo />}
-                                        {lesson.images &&
-                                          lesson.images.length > 0 && (
-                                            <FaImage />
-                                          )}
-                                        {lesson.files &&
-                                          lesson.files.length > 0 && (
-                                            <FaFileAlt />
-                                          )}
-                                        {lesson.lesson_end_tests &&
-                                          lesson.lesson_end_tests.length >
-                                            0 && <FaCheck />}
-                                        <span>
-                                          {isFree
-                                            ? t("courses.free", "Free")
-                                            : t("courses.paid", "Paid")}
-                                        </span>
-                                        {lesson.duration && (
-                                          <>
-                                            <span>•</span>
-                                            <span>{lesson.duration}min</span>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Lock Icon */}
-                                    {!isLessonAccessible && (
-                                      <FaLock className="ml-2 text-text-muted" />
-                                    )}
-                                  </div>
-                                  <div className="mt-1 text-xs font-medium">
-                                    {isCompleted ? (
-                                      <span className="text-green-600">
-                                        {t(
-                                          "courses.lessonCompleted",
-                                          "Lesson Completed"
-                                        )}
-                                      </span>
-                                    ) : (
-                                      <span className="text-text-muted">
-                                        {t("courses.progress", "Progress")}:{" "}
-                                        {Math.min(
-                                          100,
-                                          Math.max(
-                                            0,
-                                            Math.round(displayProgress)
-                                          )
-                                        )}
-                                        %
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {sortedSections.map((section) => (
+                <SectionItem
+                  key={`section-${section.id}`}
+                  section={section}
+                  lessons={getSectionLessons(section.id)}
+                  isExpanded={expandedSections.has(section.id)}
+                  isActive={currentSection?.id === section.id}
+                  hasFree={hasFreeLessons(section.id)}
+                  isAccessible={hasFreeLessons(section.id) || hasAccess}
+                  lessonStatuses={lessonStatuses}
+                  currentLesson={currentLesson}
+                  sectionProgress={sectionProgress}
+                  calculateTotalProgress={calculateTotalProgress}
+                  calculateSectionProgress={calculateSectionProgress}
+                  onSectionClick={handleSectionClick}
+                  onLessonClick={handleLessonClick}
+                  onToggleSection={toggleSection}
+                  isLoggedIn={isLoggedIn}
+                  navigate={navigate}
+                  course={course}
+                />
+              ))}
 
               {/* Final Tests Under Course Content */}
-              {course.final_tests && course.final_tests.length > 0 && (
-                <div className="p-4 mt-4 border rounded-lg bg-surface border-border">
-                  <div className="mb-2 text-sm font-semibold text-text">
-                    {t("courses.finalTests", "Final Tests")}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {course.final_tests.map((test, idx) => {
-                      const locked =
-                        Math.round(courseProgress?.overall?.percentage || 0) <
-                        100;
-                      return (
-                        <button
-                          key={test.id || idx}
-                          onClick={() =>
-                            !locked &&
-                            navigate(`/live-courses/${id}/test/final/${test.id}`, {
-                              state: { course, test },
-                            })
-                          }
-                          disabled={locked}
-                          className={`px-3 py-2 text-xs font-medium rounded ${
-                            locked
-                              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                              : "text-white bg-primary hover:bg-secondary"
-                          }`}
-                        >
-                          {test.name ||
-                            `${t("courses.finalTest", "Final Test")} ${
-                              idx + 1
-                            }`}{" "}
-                          {locked && <FaLock className="inline ml-1" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              <FinalTestsSection />
 
               {/* Certificate Section */}
               {isLoggedIn &&
@@ -1402,10 +1397,7 @@ export default function LiveCourseLessons() {
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-green-800 dark:text-green-200">
-                          {t(
-                            "courses.certificate",
-                            "Certificate of Completion"
-                          )}
+                          {t("courses.certificate", "Certificate of Completion")}
                         </h4>
                         <p className="text-sm text-green-700 dark:text-green-300">
                           {t(
@@ -1466,7 +1458,7 @@ export default function LiveCourseLessons() {
                               }));
 
                               // استخدام النوع الصحيح 'lesson'
-                              const res = await completeLessonProgress(
+                              const res = await completeLiveLessonProgress(
                                 id,
                                 currentLesson.id,
                                 "lesson"
@@ -1673,43 +1665,12 @@ export default function LiveCourseLessons() {
                         )}
 
                         {/* Lesson-End Tests */}
-                        {currentLesson.lesson_end_tests &&
-                          currentLesson.lesson_end_tests.length > 0 && (
-                            <div className="mb-2">
-                              <h5 className="mb-2 text-sm font-medium text-text">
-                                {t("courses.lessonTests", "Lesson Tests")}
-                              </h5>
-                              <div className="flex flex-wrap gap-2">
-                                {currentLesson.lesson_end_tests.map(
-                                  (test, idx) => (
-                                    <button
-                                      key={test.id || idx}
-                                      onClick={() =>
-                                        navigate(
-                                          `/live-courses/${id}/test/lesson/${test.id}`,
-                                          {
-                                            state: {
-                                              course,
-                                              test,
-                                              lessonId: currentLesson.id,
-                                            },
-                                          }
-                                        )
-                                      }
-                                      className="px-3 py-2 text-xs font-medium border rounded bg-accent hover:border-primary border-border"
-                                    >
-                                      {test.name ||
-                                        `${t("courses.test", "Test")} ${
-                                          idx + 1
-                                        }`}
-                                    </button>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
+                        <LessonTestsSection lesson={currentLesson} />
                       </div>
-                    ) : null}
+                    ) : (
+                      /* إذا لم يكن هناك مرفقات، نعرض فقط الاختبارات إذا كانت موجودة */
+                      <LessonTestsSection lesson={currentLesson} />
+                    )}
 
                     {/* Ask the Instructor */}
                     {course.instructor && course.instructor.whatsapp && (
@@ -1904,8 +1865,14 @@ export default function LiveCourseLessons() {
                             </div>
                           </div>
                         )}
+
+                        {/* Section Tests */}
+                        <SectionTestsSection section={currentSection} />
                       </div>
-                    ) : null}
+                    ) : (
+                      /* إذا لم يكن هناك مرفقات، نعرض فقط الاختبارات إذا كانت موجودة */
+                      <SectionTestsSection section={currentSection} />
+                    )}
 
                     {/* Section Lessons Preview */}
                     {currentSection.lessons &&
@@ -1922,6 +1889,7 @@ export default function LiveCourseLessons() {
                                 const isFree =
                                   lesson.type === "free" ||
                                   lesson.type === "Free";
+                                const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
                                 return (
                                   <div
                                     key={lesson.id || idx}
@@ -1936,17 +1904,22 @@ export default function LiveCourseLessons() {
                                     <span className="text-sm text-text">
                                       {lesson.title}
                                     </span>
-                                    <span
-                                      className={`text-xs px-2 py-1 rounded ${
-                                        isFree
-                                          ? "bg-green-100 text-green-700"
-                                          : "bg-primary/10 text-primary"
-                                      }`}
-                                    >
-                                      {isFree
-                                        ? t("courses.free", "Free")
-                                        : t("courses.paid", "Paid")}
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <span
+                                        className={`text-xs px-2 py-1 rounded ${
+                                          isFree
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-primary/10 text-primary"
+                                        }`}
+                                      >
+                                        {isFree
+                                          ? t("courses.free", "Free")
+                                          : t("courses.paid", "Paid")}
+                                      </span>
+                                      {hasTests && (
+                                        <FaQuestionCircle className="text-xs text-blue-500" />
+                                      )}
+                                    </div>
                                   </div>
                                 );
                               })}
@@ -1987,9 +1960,7 @@ export default function LiveCourseLessons() {
 
                 <div className="flex items-start gap-4">
                   <img
-                    src={
-                      course.instructor.image || "/placeholder-instructor.jpg"
-                    }
+                    src={course.instructor.image || "/placeholder-instructor.jpg"}
                     alt={course.instructor.name}
                     className="object-cover w-16 h-16 border-2 rounded-full border-primary"
                   />
@@ -2035,43 +2006,7 @@ export default function LiveCourseLessons() {
             )}
 
             {/* Final Tests Section */}
-            {course.final_tests && course.final_tests.length > 0 && (
-              <div className="p-6 border rounded-lg bg-surface border-border">
-                <h3 className="mb-3 text-lg font-semibold text-text">
-                  {t("courses.finalTests", "Final Tests")}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {course.final_tests.map((test, idx) => {
-                    const locked =
-                      Math.round(courseProgress?.overall?.percentage || 0) <
-                      100;
-                    return (
-                      <button
-                        key={test.id || idx}
-                        onClick={() =>
-                          !locked &&
-                          navigate(`/live-courses/${id}/test/final/${test.id}`, {
-                            state: { course, test },
-                          })
-                        }
-                        disabled={locked}
-                        className={`px-4 py-2 text-sm font-medium rounded ${
-                          locked
-                            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                            : "text-white bg-primary hover:bg-secondary"
-                        }`}
-                      >
-                        {test.name ||
-                          `${t("courses.finalTest", "Final Test")} ${
-                            idx + 1
-                          }`}{" "}
-                        {locked && <FaLock className="inline ml-1" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <FinalTestsSection />
           </div>
         </div>
       </div>

@@ -342,28 +342,28 @@ const MyProfile = ({ user, onProfileUpdate }) => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">{t('profile.title')}</h2>
         {!isEditing ? (
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={() => setIsPasswordModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+              className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary sm:w-auto"
             >
               <FaLock className="text-sm" />
               {t('profile.password.change')}
             </button>
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+              className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary sm:w-auto"
             >
               <FaEdit className="text-sm" />
               {t('profile.edit')}
             </button>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={handleSave}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 sm:w-auto"
             >
               <FaSave className="text-sm" />
               {loading ? t('profile.saving') : t('profile.save')}
@@ -371,7 +371,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
             <button
               onClick={handleCancel}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 sm:w-auto"
             >
               <FaTimes className="text-sm" />
               {t('profile.cancel')}
