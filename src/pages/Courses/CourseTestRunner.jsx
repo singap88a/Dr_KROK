@@ -9,7 +9,7 @@ export default function CourseTestRunner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, completeLessonProgress, addStudentTest } =
+  const { getVideoCourseById, getLiveCourseById, completeLessonProgress, addStudentTest } =
     useApi();
 
   const passedState = location.state || {};
@@ -113,7 +113,8 @@ const prepareConnectQuestion = (question) => {
       if (test) return;
       try {
         setLoading(true);
-        const data = await getVideoCourseById(id, true);
+        const isLiveCourse = location.pathname.includes('live-courses');
+        const data = await (isLiveCourse ? getLiveCourseById(id, true) : getVideoCourseById(id, true));
         if (!mounted) return;
         if (scope === "final") {
           const found = (data.final_tests || []).find(
@@ -162,7 +163,7 @@ const prepareConnectQuestion = (question) => {
     return () => {
       mounted = false;
     };
-  }, [id, scope, testId, test, getVideoCourseById]);
+  }, [id, scope, testId, test, getVideoCourseById, getLiveCourseById]);
 
   // تحضير السؤال الحالي مع الخلط العشوائي لأسئلة التوصيل
   const currentQuestion = useMemo(() => {
@@ -307,17 +308,19 @@ const prepareConnectQuestion = (question) => {
         });
       }, 1000); // Brief delay to show results
     } else if (scope === "lesson") {
-      // Navigate to lesson test results page
+      // Navigate to lesson test results page - check if live course
+      const isLiveCourse = location.pathname.includes('live-courses');
       setTimeout(() => {
-        navigate(`/courses/${id}/lesson-results`, {
+        navigate(`${isLiveCourse ? '/live-courses' : '/courses'}/${id}/test-results/lesson/${testId}`, {
           replace: true,
           state: { results: resultsData, test, lessonId },
         });
       }, 1000);
     } else if (scope === "section") {
-      // Navigate to section test results page
+      // Navigate to section test results page - check if live course
+      const isLiveCourse = location.pathname.includes('live-courses');
       setTimeout(() => {
-        navigate(`/courses/${id}/section-results`, {
+        navigate(`${isLiveCourse ? '/live-courses' : '/courses'}/${id}/test-results/section/${testId}`, {
           replace: true,
           state: { results: resultsData, test, sectionId },
         });

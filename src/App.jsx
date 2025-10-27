@@ -41,6 +41,7 @@ import LiveCourses from "./pages/Live_courses/LiveCourses";
 import LiveCourseDetails from "./pages/Live_courses/LiveCourseDetails";
 // import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
 import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
+import LiveCourseTestResults from "./pages/Live_courses/LiveCourseTestResults";
 
 export default function App() {
   return (
@@ -72,8 +73,8 @@ export default function App() {
           <Route path="/courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
           <Route path="/courses/:id/certificate" element={<CourseCertificate />} />
           <Route path="/courses/:id/final-results" element={<CourseFinalTestResults />} />
-          <Route path="/courses/:id/lesson-results" element={<LessonTestResults />} />
-          <Route path="/courses/:id/section-results" element={<CourseSectionTestResults />} />
+          <Route path="/courses/:id/test-results/lesson/:testId" element={<LessonTestResults />} />
+          <Route path="/courses/:id/test-results/section/:testId" element={<CourseSectionTestResults />} />
           <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
 
           <Route path="/live-courses" element={<LiveCourses />} />
@@ -81,6 +82,7 @@ export default function App() {
           <Route path="/live-courses/:id/subscribe" element={<CourseSubscription />} />
           <Route path="/live-courses/:id/lessons" element={<LiveCourseLessons />} />
           <Route path="/live-courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
+          <Route path="/live-courses/:id/test-results/:scope/:testId" element={<LiveCourseTestResults />} />
 
  
           <Route path="/articles" element={<TrainerArticlesPage />} />
