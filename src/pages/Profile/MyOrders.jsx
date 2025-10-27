@@ -10,6 +10,7 @@ import {
   FaTruck,
   FaBoxOpen,
   FaFilePdf,
+  FaVideo,
 } from "react-icons/fa";
 
 // Custom Tooltip Component
@@ -41,6 +42,8 @@ const normalizeOrders = (orders) => {
       const lowerType = (o.type || "").toLowerCase();
       if (lowerType === "video_course") {
         type = "course";
+      } else if (lowerType === "live_course") {
+        type = "live_course";
       } else if (lowerType === "pdf" || lowerType === "delivery") {
         type = "book";
       }
@@ -166,7 +169,7 @@ const MyOrders = ({ orders }) => {
       ? normalizedOrders
       : normalizedOrders.filter((order) => {
           if (filterType === "book") return order.type === "book";
-          if (filterType === "course") return order.type === "course";
+          if (filterType === "course") return order.type === "course" || order.type === "live_course";
           return true;
         });
 
@@ -262,6 +265,8 @@ const MyOrders = ({ orders }) => {
                       <div className="flex items-center gap-3">
                         {order.type === "course" ? (
                           <FaPlay className="text-primary" />
+                        ) : order.type === "live_course" ? (
+                          <FaVideo className="text-primary" />
                         ) : order.type === "pdf" ? (
                           <FaFilePdf className="text-primary" />
                         ) : order.type === "delivery" ? (
@@ -351,6 +356,8 @@ const MyOrders = ({ orders }) => {
               <div className="flex items-center gap-3 mb-3">
                 {order.type === "course" ? (
                   <FaPlay className="text-lg text-primary" />
+                ) : order.type === "live_course" ? (
+                  <FaVideo className="text-lg text-primary" />
                 ) : order.type === "pdf" ? (
                   <FaFilePdf className="text-lg text-primary" />
                 ) : order.type === "delivery" ? (

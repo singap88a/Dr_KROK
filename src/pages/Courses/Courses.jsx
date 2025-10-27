@@ -26,15 +26,12 @@ export default function Courses() {
   const [videoCourses, setVideoCourses] = useState([]);
   const [liveCourses, setLiveCourses] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   // Load video courses
   useEffect(() => {
     if (activeTab !== "video") return;
     let mounted = true;
-    if (!initialLoadDone) {
-      setLoading(true);
-    }
+    setLoading(true);
     setError("");
     getVideoCourses({ page: 1, per_page: 30 })
       .then((res) => {
@@ -57,7 +54,6 @@ export default function Courses() {
               : "/logo.png",
         }));
         setVideoCourses(mapped);
-        setInitialLoadDone(true);
       })
       .catch((err) => {
         if (!mounted) return;
@@ -67,15 +63,13 @@ export default function Courses() {
     return () => {
       mounted = false;
     };
-  }, [activeTab, getVideoCourses, i18n.language, initialLoadDone]);
+  }, [activeTab, getVideoCourses, i18n.language]);
 
   // Load live courses
   useEffect(() => {
     if (activeTab !== "live") return;
     let mounted = true;
-    if (!initialLoadDone) {
-      setLoading(true);
-    }
+    setLoading(true);
     setError("");
     getLiveCourses({ page: 1, per_page: 30 })
       .then((res) => {
@@ -99,7 +93,6 @@ export default function Courses() {
               : "/logo.png",
         }));
         setLiveCourses(mapped);
-        setInitialLoadDone(true);
       })
       .catch((err) => {
         if (!mounted) return;
@@ -109,7 +102,7 @@ export default function Courses() {
     return () => {
       mounted = false;
     };
-  }, [activeTab, getLiveCourses, i18n.language, initialLoadDone]);
+  }, [activeTab, getLiveCourses, i18n.language]);
 
   // Load favorites to reflect heart state
   useEffect(() => {
@@ -269,31 +262,35 @@ export default function Courses() {
           </div>
         </div>
 
-        {loading && <LoadingSpinner />}
-        {!!error && (
-          <div className="p-6 mb-6 text-center text-red-600 bg-white shadow dark:bg-gray-800 rounded-2xl">
-            {t("common.error", "Error")}: {error}
-          </div>
-        )}
-
         {/* Grid */}
         <section>
-          {activeTab === "video" ? (
-            <VideoCourses
-              courses={filtered}
-              favoriteIds={favoriteIds}
-              onToggleFavorite={onToggleFavorite}
-              goToDetails={goToDetails}
-              t={t}
-            />
+          {loading ? (
+            <LoadingSpinner />
           ) : (
-            <LiveCourses
-              courses={filtered}
-              favoriteIds={favoriteIds}
-              onToggleFavorite={onToggleFavorite}
-              goToDetails={goToDetails}
-              t={t}
-            />
+            <>
+              {!!error && (
+                <div className="p-6 mb-6 text-center text-red-600 bg-white shadow dark:bg-gray-800 rounded-2xl">
+                  {t("common.error", "Error")}: {error}
+                </div>
+              )}
+              {activeTab === "video" ? (
+                <VideoCourses
+                  courses={filtered}
+                  favoriteIds={favoriteIds}
+                  onToggleFavorite={onToggleFavorite}
+                  goToDetails={goToDetails}
+                  t={t}
+                />
+              ) : (
+                <LiveCourses
+                  courses={filtered}
+                  favoriteIds={favoriteIds}
+                  onToggleFavorite={onToggleFavorite}
+                  goToDetails={goToDetails}
+                  t={t}
+                />
+              )}
+            </>
           )}
         </section>
       </div>

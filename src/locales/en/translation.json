@@ -753,6 +753,7 @@
     "all": "All",
     "books": "Books",
     "courses": "Courses",
+    "live_course": "Live Course",
     "pdf": "PDF",
     "delivery": "Delivery",
     "type": "Type",
