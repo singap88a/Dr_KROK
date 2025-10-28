@@ -1,4 +1,4 @@
-// LiveCourseLessons.jsx
+// LiveCourseLessons.jsx - الملف الرئيسي بعد التقسيم
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
@@ -7,11 +7,28 @@ import { useUser } from "../../context/UserContext";
 import i18n from "../../i18n";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SectionItem from "../Courses/SectionItem";
+
+// Import Components
+import { ProgressCircle } from "./ProgressSystem/ProgressCircle";
+import { SectionProgressBar } from "./ProgressSystem/SectionProgress";
+import { useLessonProgress } from "./ProgressSystem/LessonProgress";
+import { QuizModal } from "./QuizSystem/QuizModal";
+import { ResultsModal } from "./QuizSystem/ResultsModal";
+import { LessonEndTestsSection } from "./QuizSystem/LessonEndTests";
+import { PeriodicQuizzesSection } from "./QuizSystem/PeriodicQuizzes";
+import { SectionTestsSection } from "./QuizSystem/SectionTests";
+import { FinalTestsSection } from "./QuizSystem/FinalTests";
+import { ImagePopup } from "./ContentModals/ImagePopup";
+import { PDFPopup } from "./ContentModals/PDFPopup";
+import { VideoPopup } from "./ContentModals/VideoPopup";
+import { VideoPlayer } from "./LessonPlayer/VideoPlayer";
+import { LessonAttachments } from "./LessonPlayer/LessonAttachments";
+import { CertificateSection } from "./CertificateSection/CertificateSection";
+
+// Icons
 import {
   FaPlay,
   FaLock,
-  FaMoon,
-  FaSun,
   FaCheck,
   FaClock,
   FaBookOpen,
@@ -19,7 +36,6 @@ import {
   FaVideo,
   FaFileAlt,
   FaImage,
-  FaDownload,
   FaStar,
   FaShoppingCart,
   FaEye,
@@ -38,14 +54,7 @@ import {
   FaTelegram,
   FaWhatsapp,
   FaTimes,
-  FaChevronDown,
-  FaChevronRight,
-  FaFolder,
-  FaFolderOpen,
   FaList,
-  FaQuestionCircle,
-  FaChartLine,
-  FaUnlock,
 } from "react-icons/fa";
 
 export default function LiveCourseLessons() {
@@ -85,7 +94,7 @@ export default function LiveCourseLessons() {
   const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
 
-  // ========== STATES FOR PERIODIC QUIZZES ==========
+  // Quiz States
   const [quizModal, setQuizModal] = useState({
     isOpen: false,
     currentQuiz: null,
@@ -107,452 +116,19 @@ export default function LiveCourseLessons() {
   const [quizResults, setQuizResults] = useState({});
   const [processedQuizzes, setProcessedQuizzes] = useState(new Set());
 
-  // Image Popup Modal
-  const ImagePopup = () => {
-    if (!showImagePopup || !selectedImage) return null;
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-        onClick={() => setShowImagePopup(false)}
-      >
-        <img
-          src={selectedImage}
-          alt="Selected lesson"
-          className="max-w-full max-h-full rounded-lg shadow-lg"
-          style={{ width: "600px", height: "400px", objectFit: "contain" }}
-          onClick={(e) => e.stopPropagation()}
-        />
-        <button
-          onClick={() => setShowImagePopup(false)}
-          className="absolute text-3xl font-bold text-white top-4 right-4"
-          aria-label="Close image popup"
-        >
-          &times;
-        </button>
-      </div>
-    );
-  };
+  // Progress Hooks
+  const { calculateTotalProgress, calculateSectionProgress: calcSectionProgress } = useLessonProgress();
 
-  // PDF Popup Modal
-  const PDFPopup = () => {
-    if (!showFilesPopup || !selectedFile) return null;
-
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-        onClick={() => setShowFilesPopup(false)}
-      >
-        <div
-          className="w-full max-w-4xl p-6 mx-4 rounded-lg dark:bg-gray-800 h-4/5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => setShowFilesPopup(false)}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              aria-label={t("common.close", "Close")}
-            >
-              <FaTimes className="text-xl text-teal-50" />
-            </button>
-          </div>
-          <div className="h-full border rounded-lg">
-            <iframe
-              src={`${selectedFile}#toolbar=0`}
-              className="w-full h-full rounded-lg"
-              title="PDF Viewer"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Video Popup Modal
-  const VideoPopup = () => {
-    if (!showVideoPopup || !selectedVideo) return null;
-
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-        onClick={() => setShowVideoPopup(false)}
-      >
-        <div
-          className="w-full max-w-4xl p-4 mx-4 bg-white rounded-lg shadow-xl dark:bg-gray-800"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-text">
-              {t("courses.additionalVideo", "Additional Video")}
-            </h3>
-            <button
-              onClick={() => setShowVideoPopup(false)}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              aria-label={t("common.close", "Close")}
-            >
-              <FaTimes className="text-xl" />
-            </button>
-          </div>
-          <div className="aspect-video">
-            <video
-              src={selectedVideo}
-              controls
-              className="w-full h-full rounded"
-              autoPlay
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ========== PERIODIC QUIZZES MODALS ==========
-
-  // Quiz Modal for periodic quizzes - positioned exactly over video
-  const QuizModal = () => {
-    if (!quizModal.isOpen || !quizModal.currentQuiz) return null;
-
-    const { currentQuiz, currentQuestionIndex } = quizModal;
-
-    // Handle quiz submission
-    const handleQuizSubmit = (answerIndex) => {
-      const { currentQuiz, userAnswers, currentQuestionIndex } = quizModal;
-
-      const newUserAnswers = [...userAnswers];
-      newUserAnswers[currentQuestionIndex] = answerIndex;
-
-      // Store result without showing it immediately
-      const isCorrect = answerIndex === currentQuiz.correct_answer_index;
-
-      // Update quiz results
-      setQuizResults((prev) => ({
-        ...prev,
-        [currentQuiz.id]: {
-          question: currentQuiz.title,
-          userAnswer: answerIndex,
-          correctAnswer: currentQuiz.correct_answer_index,
-          isCorrect: isCorrect,
-          score: isCorrect ? parseInt(currentQuiz.question_score) : 0,
-          showAtTime: currentQuiz.show_at_time,
-        },
-      }));
-
-      // Mark this quiz as answered
-      setAnsweredQuizzes((prev) => new Set([...prev, currentQuiz.id]));
-
-      // Close modal and resume video immediately
-      setQuizModal({
-        isOpen: false,
-        currentQuiz: null,
-        currentTest: null,
-        currentQuestionIndex: 0,
-        userAnswers: [],
-        showResult: false,
-      });
-
-      // Resume video
-      const videoElement = document.querySelector("video");
-      if (videoElement) {
-        videoElement.play();
-      }
-    };
-
-    return (
-      <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]">
-        <div className="flex items-center justify-center w-full h-full p-4">
-          <div className="w-full max-w-lg overflow-hidden transition-all transform shadow-xl bg-surface rounded-2xl">
-            {/* Header */}
-            <div className="p-4 text-white bg-primary">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-full bg-opacity-20">
-                    <FaChartLine className="text-sm" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold">
-                      {t("courses.quickQuiz", "Quick Quiz")}
-                    </h3>
-                    <p className="text-xs text-white text-opacity-90">
-                      {t("courses.atTime", "At")} {currentQuiz.show_at_time}s
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-xs bg-white rounded-full bg-opacity-20">
-                    {currentQuestionIndex + 1}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-              {/* Question */}
-              <div className="mb-4">
-                <h4 className="mb-3 text-sm font-semibold leading-relaxed text-text">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        currentQuiz.title || t("courses.question", "Question"),
-                    }}
-                  />
-                </h4>
-
-                {/* Answers */}
-                <div className="space-y-2">
-                  {[1, 2, 3, 4].map((index) => {
-                    const answer = currentQuiz[`answer_${index}`];
-                    if (!answer) return null;
-
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => handleQuizSubmit(index - 1)}
-                        className="w-full p-3 text-sm text-left transition-all border rounded-lg cursor-pointer bg-surface border-border hover:border-primary hover:bg-primary/5 hover:shadow-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-medium text-gray-500 border border-gray-300 rounded-full">
-                            {String.fromCharCode(64 + index)}
-                          </div>
-                          <span className="text-sm font-medium text-text">
-                            {answer}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setQuizModal({
-                      isOpen: false,
-                      currentQuiz: null,
-                      currentTest: null,
-                      currentQuestionIndex: 0,
-                      userAnswers: [],
-                      showResult: false,
-                    });
-                    // Resume video
-                    const videoElement = document.querySelector("video");
-                    if (videoElement) {
-                      videoElement.play();
-                    }
-                  }}
-                  className="flex-1 px-3 py-2 text-xs font-medium transition-colors rounded-lg text-text bg-accent hover:bg-accent/80"
-                >
-                  {t("common.skip", "Skip")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Results Modal for showing final quiz results
-  const ResultsModal = () => {
-    if (!resultsModal.isOpen) return null;
-
-    const { totalQuestions, correctAnswers, score } = resultsModal;
-    const isExcellent = score >= 90;
-    const isGood = score >= 70;
-    const isAverage = score >= 50;
-
-    const getPerformanceMessage = () => {
-      if (isExcellent)
-        return {
-          message: t(
-            "courses.excellentMessage",
-            "Outstanding! You've mastered this lesson completely."
-          ),
-          color: "text-green-600",
-          bgColor: "bg-green-50",
-          borderColor: "border-green-200",
-          icon: "🏆",
-        };
-      if (isGood)
-        return {
-          message: t(
-            "courses.goodMessage",
-            "Great job! You have a solid understanding of the material."
-          ),
-          color: "text-blue-600",
-          bgColor: "bg-blue-50",
-          borderColor: "border-blue-200",
-          icon: "⭐",
-        };
-      if (isAverage)
-        return {
-          message: t(
-            "courses.averageMessage",
-            "Good effort! You understand the main concepts."
-          ),
-          color: "text-yellow-600",
-          bgColor: "bg-yellow-50",
-          borderColor: "border-yellow-200",
-          icon: "📚",
-        };
-      return {
-        message: t(
-          "courses.poorMessage",
-          "Keep practicing! Review the material and try again."
-        ),
-        color: "text-orange-600",
-        bgColor: "bg-orange-50",
-        borderColor: "border-orange-200",
-        icon: "💪",
-      };
-    };
-
-    const performance = getPerformanceMessage();
-
-    return (
-      <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]">
-        <div className="flex items-center justify-center w-full h-full p-4">
-          <div className="w-full max-w-xs overflow-hidden transition-all transform shadow-xl bg-surface rounded-xl">
-            {/* Header */}
-            <div className="p-3 text-white bg-primary">
-              <div className="text-center">
-                <div className="flex justify-center mb-1">
-                  <div className="p-1 bg-white rounded-full bg-opacity-20">
-                    <FaTimes className="text-sm" />
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold">
-                  {t("courses.quizCompleted", "Quiz Completed!")}
-                </h3>
-                <p className="mt-0.5 text-[10px] text-white text-opacity-90">
-                  {t("courses.videoCompleted", "Video Completed")}
-                </p>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-3 bg-surface">
-              {/* Score Circle */}
-              <div className="flex justify-center mb-3">
-                <div className="relative">
-                  <div
-                    className={`w-16 h-16 rounded-full border-4 flex items-center justify-center ${
-                      isExcellent
-                        ? "border-green-500"
-                        : isGood
-                        ? "border-blue-500"
-                        : isAverage
-                        ? "border-yellow-500"
-                        : "border-orange-500"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-text">
-                        {score}%
-                      </div>
-                      <div className="text-[9px] text-text-muted">
-                        {t("courses.score", "Score")}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="p-2 text-center border rounded-lg bg-background border-border">
-                  <div className="text-base font-bold text-green-600">
-                    {correctAnswers}
-                  </div>
-                  <div className="text-[10px] text-text-muted">
-                    {t("courses.correct", "Correct")}
-                  </div>
-                </div>
-                <div className="p-2 text-center border rounded-lg bg-background border-border">
-                  <div className="text-base font-bold text-red-600">
-                    {totalQuestions - correctAnswers}
-                  </div>
-                  <div className="text-[10px] text-text-muted">
-                    {t("courses.incorrect", "Incorrect")}
-                  </div>
-                </div>
-              </div>
-
-              {/* Performance Message */}
-              <div
-                className={`p-2 mb-3 rounded-lg ${performance.bgColor} ${performance.borderColor} border`}
-              >
-                <div className="flex items-center gap-1">
-                  <span className="text-base">{performance.icon}</span>
-                  <div>
-                    <p
-                      className={`text-[11px] font-medium ${performance.color} leading-tight`}
-                    >
-                      {performance.message}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-text-muted">
-                    {t("courses.progress", "Progress")}
-                  </span>
-                  <span className="text-[10px] font-bold text-text">
-                    {correctAnswers}/{totalQuestions}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-accent">
-                  <div
-                    className={`h-1.5 transition-all duration-500 rounded-full ${
-                      isExcellent
-                        ? "bg-green-500"
-                        : isGood
-                        ? "bg-blue-500"
-                        : isAverage
-                        ? "bg-yellow-500"
-                        : "bg-orange-500"
-                    }`}
-                    style={{
-                      width: `${(correctAnswers / totalQuestions) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <button
-                onClick={() =>
-                  setResultsModal({ ...resultsModal, isOpen: false })
-                }
-                className="w-full px-3 py-2 text-xs font-medium text-white transition-all transform rounded-lg bg-primary hover:bg-primary/90 hover:scale-105 active:scale-95"
-              >
-                {t("common.continue", "Continue")}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Get all periodic quizzes from current lesson
+  // Helper Functions
   const getPeriodicQuizzes = () => {
     if (!currentLesson || !currentLesson.lesson_end_tests) return [];
-
     return currentLesson.lesson_end_tests.filter(
       (test) => test.test_type === "Periodic Quiz (Live Session)"
     );
   };
 
-  // Handle video time update for periodic quizzes
   const handleVideoTimeUpdate = (e) => {
     const time = Math.floor(e.target.currentTime);
-
-    // Check if there's a quiz at this time that hasn't been processed yet
     const periodicQuizzes = getPeriodicQuizzes();
     let foundQuiz = null;
     let foundTest = null;
@@ -573,13 +149,8 @@ export default function LiveCourseLessons() {
     });
 
     if (foundQuiz) {
-      // Pause video
       e.target.pause();
-
-      // Mark quiz as processed
       setProcessedQuizzes((prev) => new Set([...prev, foundQuiz.id]));
-
-      // Show quiz modal
       setQuizModal({
         isOpen: true,
         currentQuiz: foundQuiz,
@@ -591,11 +162,8 @@ export default function LiveCourseLessons() {
     }
   };
 
-  // Show final results when video ends
   const handleVideoEnd = async () => {
-    // Calculate final results for periodic quizzes
     const periodicQuizzes = getPeriodicQuizzes();
-
     if (periodicQuizzes.length > 0) {
       let totalQuestions = 0;
       let correctAnswers = 0;
@@ -606,19 +174,15 @@ export default function LiveCourseLessons() {
         test.quizzes.forEach((quiz) => {
           totalQuestions++;
           maxScore += parseInt(quiz.question_score) || 50;
-
           const result = quizResults[quiz.id];
-          if (result) {
-            if (result.isCorrect) {
-              correctAnswers++;
-              totalScore += result.score;
-            }
+          if (result && result.isCorrect) {
+            correctAnswers++;
+            totalScore += result.score;
           }
         });
       });
 
       if (totalQuestions > 0) {
-        // Wait a moment before showing results
         setTimeout(() => {
           setResultsModal({
             isOpen: true,
@@ -631,24 +195,18 @@ export default function LiveCourseLessons() {
       }
     }
 
-    // Mark lesson as completed
     if (isLoggedIn && currentLesson) {
       try {
         const currentStatus = lessonStatuses[currentLesson.id] || {};
-        const hasTests =
-          currentLesson.lesson_end_tests &&
-          currentLesson.lesson_end_tests.length > 0;
-
+        const hasTests = currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0;
         let newPercentage = 100;
         let type = "lesson";
 
         if (hasTests) {
-          // إذا كان هناك اختبارات، يكمل الفيديو فقط (50%)
           const quizCompleted = currentStatus.quiz_percentage >= 100;
           newPercentage = quizCompleted ? 100 : 50;
         }
 
-        // تحديث فوري للواجهة
         setLessonStatuses((prev) => ({
           ...prev,
           [currentLesson.id]: {
@@ -659,12 +217,7 @@ export default function LiveCourseLessons() {
           },
         }));
 
-        // استخدام النوع الصحيح 'lesson' لإكمال الفيديو
-        const res = await completeLiveLessonProgress(
-          id,
-          currentLesson.id,
-          "lesson"
-        );
+        const res = await completeLiveLessonProgress(id, currentLesson.id, "lesson");
         if (res?.course_progress) setCourseProgress(res.course_progress);
         if (res?.lesson) {
           setLessonStatuses((prev) => ({
@@ -675,7 +228,6 @@ export default function LiveCourseLessons() {
             },
           }));
         }
-        // Refresh from server to ensure persistence
         await updateLessonStatus(currentLesson.id);
       } catch (error) {
         // Handle error silently
@@ -683,88 +235,17 @@ export default function LiveCourseLessons() {
     }
   };
 
-  // Reset processed quizzes when lesson changes
-  useEffect(() => {
-    setProcessedQuizzes(new Set());
-    setAnsweredQuizzes(new Set());
-    setQuizResults({});
-  }, [currentLesson?.id]);
-
-  // دالة محسنة لحساب التقدم الكلي للدرس بناءً على النظام الجديد
-  const calculateTotalProgress = useCallback((lesson, lessonStatus) => {
-    if (!lessonStatus) return 0;
-
-    // إذا كان status مباشرة completed نرجع 100%
-    if (
-      lessonStatus.status === "completed" ||
-      lessonStatus.progress_status === "completed"
-    ) {
-      return 100;
-    }
-
-    // استخدام النسبة المئوية المباشرة من API إذا كانت متوفرة
-    if (
-      lessonStatus.percentage !== undefined &&
-      lessonStatus.percentage !== null
-    ) {
-      return Math.min(100, Math.max(0, lessonStatus.percentage));
-    }
-
-    // التحقق مما إذا كان الدرس يحتوي على فيديو و/أو اختبارات
-    const hasVideo = !!lesson.video;
-    const hasTests =
-      lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
-
-    let totalProgress = 0;
-
-    if (hasVideo && hasTests) {
-      // إذا كان يحتوي على فيديو واختبارات: 50% للفيديو + 50% للاختبار
-      const videoProgress = lessonStatus.lesson_percentage || 0;
-      const quizProgress = lessonStatus.quiz_percentage || 0;
-
-      // إذا اكتمل الفيديو فقط: 50%
-      if (videoProgress >= 100 && quizProgress < 100) {
-        totalProgress = 50;
-      }
-      // إذا اكتمل الاختبار فقط: 50%
-      else if (quizProgress >= 100 && videoProgress < 100) {
-        totalProgress = 50;
-      }
-      // إذا اكتمل الاثنان: 100%
-      else if (videoProgress >= 100 && quizProgress >= 100) {
-        totalProgress = 100;
-      }
-      // إذا لم يكتمل أي منهما: النسبة الأعلى
-      else {
-        totalProgress = Math.max(videoProgress, quizProgress) / 2;
-      }
-    } else if (hasTests && !hasVideo) {
-      // إذا كان يحتوي على اختبارات فقط: 100% للاختبار
-      totalProgress = lessonStatus.quiz_percentage || 0;
-    } else if (hasVideo && !hasTests) {
-      // إذا كان يحتوي على فيديو فقط: 100% للفيديو
-      totalProgress = lessonStatus.lesson_percentage || 0;
-    }
-
-    return Math.min(100, totalProgress);
-  }, []);
-
-  // دالة محسنة لتحديث حالة الدرس
   const updateLessonStatus = useCallback(
     async (lessonId) => {
       if (!isLoggedIn) return;
-
       try {
-        const [updatedCourseProgress, updatedLessonProgress] =
-          await Promise.all([
-            getLiveCourseProgressDetails(id),
-            getLiveLessonProgress(id, lessonId),
-          ]);
+        const [updatedCourseProgress, updatedLessonProgress] = await Promise.all([
+          getLiveCourseProgressDetails(id),
+          getLiveLessonProgress(id, lessonId),
+        ]);
 
         if (updatedCourseProgress) {
           setCourseProgress(updatedCourseProgress);
-
-          // تحديث تقدم الأقسام
           if (updatedCourseProgress.sections_progress) {
             const sectionProgressData = {};
             updatedCourseProgress.sections_progress.forEach((section) => {
@@ -787,11 +268,8 @@ export default function LiveCourseLessons() {
     [isLoggedIn, id, getLiveCourseProgressDetails, getLiveLessonProgress]
   );
 
-  // دالة محسنة لإكمال الدرس - تحديث فوري للواجهة
   const handleLessonComplete = async (lessonId) => {
     let lesson = null;
-
-    // البحث في جميع الدروس من جميع الأقسام
     lesson = lessons.find((l) => l.id === lessonId);
 
     if (!lesson && sections.length > 0) {
@@ -812,33 +290,27 @@ export default function LiveCourseLessons() {
       return;
     }
 
-    // تحديد النسبة المئوية بناءً على محتوى الدرس
     const hasVideo = !!lesson.video;
-    const hasTests =
-      lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
 
     let newPercentage = 100;
     let lessonPercentage = 100;
     let quizPercentage = 0;
 
     if (hasVideo && hasTests) {
-      // إذا كان يحتوي على فيديو واختبارات، يكمل الفيديو فقط (50%)
       const currentStatus = lessonStatuses[lessonId] || {};
       const quizCompleted = currentStatus.quiz_percentage >= 100;
       newPercentage = quizCompleted ? 100 : 50;
       lessonPercentage = 100;
       quizPercentage = quizCompleted ? 100 : currentStatus.quiz_percentage || 0;
     } else if (hasVideo && !hasTests) {
-      // إذا كان يحتوي على فيديو فقط: 100%
       newPercentage = 100;
       lessonPercentage = 100;
     } else if (hasTests && !hasVideo) {
-      // إذا كان يحتوي على اختبارات فقط: 100%
       newPercentage = 100;
       quizPercentage = 100;
     }
 
-    // تحديث فوري للواجهة
     setLessonStatuses((prev) => ({
       ...prev,
       [lessonId]: {
@@ -851,10 +323,8 @@ export default function LiveCourseLessons() {
     }));
 
     try {
-      // استدعاء API لإكمال الدرس - استخدم 'lesson' للنوع
       const response = await completeLiveLessonProgress(id, lessonId, "lesson");
       if (response.success) {
-        // تحديث حالة الدرس من الاستجابة
         if (response.data && response.data.lesson) {
           setLessonStatuses((prev) => ({
             ...prev,
@@ -865,12 +335,9 @@ export default function LiveCourseLessons() {
           }));
         }
 
-        // تحديث التقدم العام للدورة
         const updatedProgress = await getLiveCourseProgressDetails(id);
         if (updatedProgress) {
           setCourseProgress(updatedProgress);
-
-          // تحديث تقدم الأقسام
           if (updatedProgress.sections_progress) {
             const sectionProgressData = {};
             updatedProgress.sections_progress.forEach((section) => {
@@ -882,523 +349,40 @@ export default function LiveCourseLessons() {
       }
     } catch (error) {
       console.error("Error completing lesson:", error);
-      // في حالة الخطأ، إعادة التحديث من الخادم
       await updateLessonStatus(lessonId);
     }
   };
 
-  // دالة لحساب تقدم القسم
   const calculateSectionProgress = useCallback(
     (sectionId) => {
-      const section = sections.find((s) => s.id === sectionId);
-      if (!section || !section.lessons || section.lessons.length === 0) {
-        return 0;
-      }
-
-      let totalProgress = 0;
-      let completedLessons = 0;
-
-      section.lessons.forEach((lesson) => {
-        const lessonStatus = lessonStatuses[lesson.id];
-        const progress = calculateTotalProgress(lesson, lessonStatus);
-        totalProgress += progress;
-        if (progress === 100) {
-          completedLessons++;
-        }
-      });
-
-      const averageProgress = totalProgress / section.lessons.length;
-      return {
-        percentage: Math.round(averageProgress),
-        completedLessons,
-        totalLessons: section.lessons.length,
-      };
+      return calcSectionProgress(sectionId, sections, lessonStatuses, calculateTotalProgress);
     },
-    [sections, lessonStatuses, calculateTotalProgress]
+    [sections, lessonStatuses, calculateTotalProgress, calcSectionProgress]
   );
 
-  // ========== مكونات الاختبارات المختلفة ==========
-
-  // مكون لعرض اختبارات نهاية الدرس (Lesson-End Test)
-  const LessonEndTestsSection = ({ lesson }) => {
-    if (!lesson.lesson_end_tests || lesson.lesson_end_tests.length === 0) {
-      return null;
-    }
-
-    // تصفية اختبارات نهاية الدرس فقط
-    const lessonEndTests = lesson.lesson_end_tests.filter(
-      (test) => test.test_type === "Lesson-End Test (Live Session)"
-    );
-
-    if (lessonEndTests.length === 0) {
-      return null;
-    }
-
-    const lessonProgress = lessonStatuses[lesson.id] || {};
-    const progressPercentage =
-      lessonProgress.percentage || lessonProgress.lesson_percentage || 0;
-    const canTakeTest = progressPercentage >= 50;
-
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-500 rounded-lg">
-            <FaQuestionCircle className="text-lg text-white" />
-          </div>
-          <div>
-            <h5 className="text-lg font-bold text-text">
-              {t("courses.lessonEndTests", "Lesson End Assessment")}
-            </h5>
-            <p className="text-sm text-text-muted">
-              {t(
-                "courses.testLessonKnowledge",
-                "Evaluate your understanding of this lesson"
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {lessonEndTests.map((test, idx) => (
-            <div
-              key={test.id || idx}
-              className={`p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
-                canTakeTest
-                  ? "border-blue-500/20 bg-blue-500/5 hover:border-blue-500 hover:shadow-lg hover:bg-blue-500/10"
-                  : "border-border bg-accent hover:border-border/80"
-              }`}
-              onClick={() => {
-                if (canTakeTest) {
-                  navigate(`/live-courses/${id}/test/lesson/${test.id}`, {
-                    state: {
-                      course,
-                      test,
-                      lessonId: lesson.id,
-                    },
-                  });
-                }
-              }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      canTakeTest
-                        ? "bg-blue-500 text-white"
-                        : "bg-text-muted text-background"
-                    }`}
-                  >
-                    {canTakeTest ? <FaUnlock /> : <FaLock />}
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-text">
-                      {test.name ||
-                        `${t("courses.lessonEndTest", "Lesson End Test")} ${
-                          idx + 1
-                        }`}
-                    </h6>
-                    <p className="mt-1 text-xs text-text-muted">
-                      {test.description &&
-                        test.description
-                          .replace(/<[^>]*>/g, "")
-                          .substring(0, 100)}
-                      {test.description && test.description.length > 100
-                        ? "..."
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    canTakeTest
-                      ? "bg-blue-500/10 text-blue-500"
-                      : "bg-accent text-text-muted"
-                  }`}
-                >
-                  {canTakeTest
-                    ? t("courses.available", "Available")
-                    : t("courses.locked", "Locked")}
-                </div>
-              </div>
-
-              {canTakeTest && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-text-muted">
-                      {t("courses.lessonProgress", "Lesson Progress")}
-                    </span>
-                    <span className="text-xs font-bold text-text">
-                      {Math.round(progressPercentage)}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-accent">
-                    <div
-                      className="h-2 transition-all duration-500 bg-blue-500 rounded-full"
-                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              {!canTakeTest && (
-                <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
-                  <FaLock className="text-xs" />
-                  {t(
-                    "courses.watchVideoToUnlockTest",
-                    "Watch 50% of the lesson to unlock"
-                  )}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // مكون لعرض الاختبارات الدورية (Periodic Quiz)
-  const PeriodicQuizzesSection = ({ lesson }) => {
-    if (!lesson.lesson_end_tests || lesson.lesson_end_tests.length === 0) {
-      return null;
-    }
-
-    // تصفية الاختبارات الدورية فقط
-    const periodicQuizzes = lesson.lesson_end_tests.filter(
-      (test) => test.test_type === "Periodic Quiz (Live Session)"
-    );
-
-    if (periodicQuizzes.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-green-500 rounded-lg">
-            <FaClock className="text-lg text-white" />
-          </div>
-          <div>
-            <h5 className="text-lg font-bold text-text">
-              {t("courses.periodicQuizzes", "Periodic Quizzes")}
-            </h5>
-            <p className="text-sm text-text-muted">
-              {t(
-                "courses.quickKnowledgeChecks",
-                "Quick knowledge checks during the lesson"
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="p-4 border-2 border-green-500/20 bg-green-500/5 rounded-xl">
-          <div className="text-center">
-            <p className="mb-2 text-sm text-text-muted">
-              {t(
-                "courses.quizzesWillAppear",
-                "Quizzes will appear automatically during the video"
-              )}
-            </p>
-            <div className="flex items-center justify-center gap-4 text-xs text-text-muted">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>
-                  {t("courses.automaticAppearance", "Automatic appearance")}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>
-                  {t("courses.videoPauses", "Video pauses during quiz")}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // مكون لعرض اختبارات القسم (Section Tests)
-  const SectionTestsSection = ({ section }) => {
-    if (!section.lesson_end_tests || section.lesson_end_tests.length === 0) {
-      return null;
-    }
-
-    const sectionProgress = calculateSectionProgress(section.id);
-    const canTakeTest = sectionProgress.percentage >= 70;
-
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-purple-500 rounded-lg">
-            <FaBookOpen className="text-lg text-white" />
-          </div>
-          <div>
-            <h5 className="text-lg font-bold text-text">
-              {t("courses.sectionTests", "Section Assessment")}
-            </h5>
-            <p className="text-sm text-text-muted">
-              {t(
-                "courses.testSectionKnowledge",
-                "Comprehensive test for this entire section"
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {section.lesson_end_tests.map((test, idx) => (
-            <div
-              key={test.id || idx}
-              className={`p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
-                canTakeTest
-                  ? "border-purple-500/20 bg-purple-500/5 hover:border-purple-500 hover:shadow-lg hover:bg-purple-500/10"
-                  : "border-border bg-accent hover:border-border/80"
-              }`}
-              onClick={() => {
-                if (canTakeTest) {
-                  navigate(`/live-courses/${id}/test/section/${test.id}`, {
-                    state: {
-                      course,
-                      test,
-                      sectionId: section.id,
-                    },
-                  });
-                }
-              }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      canTakeTest
-                        ? "bg-purple-500 text-white"
-                        : "bg-text-muted text-background"
-                    }`}
-                  >
-                    {canTakeTest ? <FaUnlock /> : <FaLock />}
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-text">
-                      {test.name ||
-                        `${t("courses.sectionTest", "Section Test")} ${
-                          idx + 1
-                        }`}
-                    </h6>
-                    <p className="mt-1 text-xs text-text-muted">
-                      {test.description &&
-                        test.description
-                          .replace(/<[^>]*>/g, "")
-                          .substring(0, 100)}
-                      {test.description && test.description.length > 100
-                        ? "..."
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    canTakeTest
-                      ? "bg-purple-500/10 text-purple-500"
-                      : "bg-accent text-text-muted"
-                  }`}
-                >
-                  {canTakeTest
-                    ? t("courses.available", "Available")
-                    : t("courses.locked", "Locked")}
-                </div>
-              </div>
-
-              {canTakeTest && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-text-muted">
-                      {t("courses.sectionProgress", "Section Progress")}
-                    </span>
-                    <span className="text-xs font-bold text-text">
-                      {Math.round(sectionProgress.percentage)}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-accent">
-                    <div
-                      className="h-2 transition-all duration-500 bg-purple-500 rounded-full"
-                      style={{
-                        width: `${Math.min(sectionProgress.percentage, 100)}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              {!canTakeTest && (
-                <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
-                  <FaLock className="text-xs" />
-                  {t(
-                    "courses.completeSectionToUnlockTest",
-                    "Complete 70% of the section to unlock"
-                  )}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // FinalTestsSection - تم نقله للجانب الأيمن فقط
-  const FinalTestsSection = () => {
-    if (!course || !course.final_tests || course.final_tests.length === 0) {
-      return null;
-    }
-
-    const overallProgress = Math.round(courseProgress?.overall?.percentage || 0);
-    const canTakeTest = overallProgress >= 100;
-
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-emerald-500">
-            <FaAward className="text-lg text-white" />
-          </div>
-          <div>
-            <h5 className="text-lg font-bold text-text">
-              {t("courses.finalTests", "Final Tests")}
-            </h5>
-            <p className="text-sm text-text-muted">
-              {t(
-                "courses.finalAssessment",
-                "Comprehensive final assessment for the entire course"
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3">
-          {course.final_tests.map((test, idx) => (
-            <div
-              key={test.id || idx}
-              className={`p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
-                canTakeTest
-                  ? "border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 hover:shadow-lg hover:bg-emerald-500/10"
-                  : "border-border bg-accent hover:border-border/80"
-              }`}
-              onClick={() => {
-                if (canTakeTest) {
-                  navigate(`/live-courses/${id}/test/final/${test.id}`, {
-                    state: { course, test },
-                  });
-                }
-              }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      canTakeTest
-                        ? "bg-emerald-500 text-white"
-                        : "bg-text-muted text-background"
-                    }`}
-                  >
-                    {canTakeTest ? <FaUnlock /> : <FaLock />}
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-text">
-                      {test.name ||
-                        `${t("courses.finalTest", "Final Test")} ${idx + 1}`}
-                    </h6>
-                    <p className="mt-1 text-xs text-text-muted">
-                      {test.description &&
-                        test.description
-                          .replace(/<[^>]*>/g, "")
-                          .substring(0, 100)}
-                      {test.description && test.description.length > 100
-                        ? "..."
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    canTakeTest
-                      ? "bg-emerald-500/10 text-emerald-500"
-                      : "bg-accent text-text-muted"
-                  }`}
-                >
-                  {canTakeTest
-                    ? t("courses.available", "Available")
-                    : t("courses.locked", "Locked")}
-                </div>
-              </div>
-
-              {canTakeTest && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-text-muted">
-                      {t("courses.overallProgress", "Overall Progress")}
-                    </span>
-                    <span className="text-xs font-bold text-text">
-                      {overallProgress}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-accent">
-                    <div
-                      className="h-2 transition-all duration-500 rounded-full bg-emerald-500"
-                      style={{ width: `${Math.min(overallProgress, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              {!canTakeTest && (
-                <p className="flex items-center gap-1 mt-2 text-xs text-red-500">
-                  <FaLock className="text-xs" />
-                  {t(
-                    "courses.completeCourseToUnlockTest",
-                    "Complete the entire course to unlock final exams"
-                  )}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // ... باقي الكود بدون تغيير (useEffect, useMemo, وغيرها)
-
+  // Data Loading
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
       try {
         setLoading(true);
         setError("");
-
-        // Load course details (includes lessons) with auth token if logged in
         const courseData = await getLiveCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(courseData);
         setLessons(courseData.lessons || []);
         setSections(courseData.sections || []);
 
-        // Initialize expanded sections with sections that have free lessons
         const sectionsWithFreeLessons = new Set();
         if (courseData.sections) {
           courseData.sections.forEach((section) => {
-            if (
-              section.lessons &&
-              section.lessons.some(
-                (lesson) => lesson.type === "free" || lesson.type === "Free"
-              )
-            ) {
+            if (section.lessons && section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free")) {
               sectionsWithFreeLessons.add(section.id);
             }
           });
         }
         setExpandedSections(sectionsWithFreeLessons);
 
-        // تحميل حالة التقدم للدروس من البيانات التي تأتي مباشرة من API
         if (courseData?.lessons?.length) {
           const initialStatuses = {};
           courseData.lessons.forEach((lesson) => {
@@ -1414,16 +398,11 @@ export default function LiveCourseLessons() {
           setLessonStatuses(initialStatuses);
         }
 
-        // تحميل التقدم الإضافي إذا كان المستخدم مسجل الدخول
         if (isLoggedIn) {
           try {
-            const courseProgressDetails = await getLiveCourseProgressDetails(
-              id
-            );
+            const courseProgressDetails = await getLiveCourseProgressDetails(id);
             if (courseProgressDetails) {
               setCourseProgress(courseProgressDetails);
-
-              // تحديث حالة الدروس من بيانات تقدم الأقسام
               const updatedStatuses = { ...lessonStatuses };
               if (courseProgressDetails.sections_progress) {
                 courseProgressDetails.sections_progress.forEach((section) => {
@@ -1440,7 +419,6 @@ export default function LiveCourseLessons() {
                   }
                 });
 
-                // تحديث تقدم الأقسام
                 const sectionProgressData = {};
                 courseProgressDetails.sections_progress.forEach((section) => {
                   sectionProgressData[section.section_id] = section.progress;
@@ -1460,7 +438,6 @@ export default function LiveCourseLessons() {
           }
         }
 
-        // Check access if logged in
         if (isLoggedIn) {
           try {
             const access = await getCourseAccess(id);
@@ -1472,7 +449,6 @@ export default function LiveCourseLessons() {
           setHasAccess(false);
         }
 
-        // Set first free content as current if available
         if (courseData.sections && courseData.sections.length > 0) {
           let firstFreeContent = null;
           for (const section of courseData.sections) {
@@ -1491,23 +467,15 @@ export default function LiveCourseLessons() {
             const firstSectionWithFree = courseData.sections.find(
               (section) =>
                 section.lessons &&
-                section.lessons.some(
-                  (lesson) => lesson.type === "free" || lesson.type === "Free"
-                )
+                section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free")
             );
             if (firstSectionWithFree) {
-              firstFreeContent = {
-                type: "section",
-                data: firstSectionWithFree,
-              };
+              firstFreeContent = { type: "section", data: firstSectionWithFree };
             }
           }
 
           if (!firstFreeContent && courseData.sections[0]) {
-            firstFreeContent = {
-              type: "section",
-              data: courseData.sections[0],
-            };
+            firstFreeContent = { type: "section", data: courseData.sections[0] };
           }
 
           if (firstFreeContent) {
@@ -1515,12 +483,8 @@ export default function LiveCourseLessons() {
               setCurrentLesson(firstFreeContent.data);
               if (isLoggedIn) {
                 try {
-                  const res = await startLiveLessonProgress(
-                    id,
-                    firstFreeContent.data.id
-                  );
-                  if (res?.course_progress)
-                    setCourseProgress(res.course_progress);
+                  const res = await startLiveLessonProgress(id, firstFreeContent.data.id);
+                  if (res?.course_progress) setCourseProgress(res.course_progress);
                   if (res?.lesson) {
                     setLessonStatuses((prev) => ({
                       ...prev,
@@ -1546,12 +510,8 @@ export default function LiveCourseLessons() {
             setCurrentLesson(firstFreeLesson);
             if (isLoggedIn) {
               try {
-                const res = await startLiveLessonProgress(
-                  id,
-                  firstFreeLesson.id
-                );
-                if (res?.course_progress)
-                  setCourseProgress(res.course_progress);
+                const res = await startLiveLessonProgress(id, firstFreeLesson.id);
+                if (res?.course_progress) setCourseProgress(res.course_progress);
                 if (res?.lesson) {
                   setLessonStatuses((prev) => ({
                     ...prev,
@@ -1598,7 +558,6 @@ export default function LiveCourseLessons() {
     updateLessonStatus,
   ]);
 
-  // When returning from quiz page, update the specific lesson status and overall progress
   useEffect(() => {
     const s = location.state || {};
     if (s.lessonCompleted && s.lessonId && isLoggedIn) {
@@ -1619,31 +578,18 @@ export default function LiveCourseLessons() {
         }
       })();
     }
-  }, [
-    location.state,
-    id,
-    isLoggedIn,
-    getLiveCourseProgressDetails,
-    updateLessonStatus,
-  ]);
+  }, [location.state, id, isLoggedIn, getLiveCourseProgressDetails, updateLessonStatus]);
 
-  // Sort lessons: free first, then paid (kept for backward compatibility)
-  const _sortedLessons = useMemo(() => {
-    return [...lessons].sort((a, b) => {
-      const aFree = a.type === "free" || a.type === "Free";
-      const bFree = b.type === "free" || b.type === "Free";
-      if (aFree && !bFree) return -1;
-      if (!aFree && bFree) return 1;
-      return (a.id || 0) - (b.id || 0);
-    });
-  }, [lessons]);
+  useEffect(() => {
+    setProcessedQuizzes(new Set());
+    setAnsweredQuizzes(new Set());
+    setQuizResults({});
+  }, [currentLesson?.id]);
 
-  // Sort sections by ID
   const sortedSections = useMemo(() => {
     return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
   }, [sections]);
 
-  // Get lessons for a specific section
   const getSectionLessons = useMemo(() => {
     return (sectionId) => {
       const section = sections.find((s) => s.id === sectionId);
@@ -1658,18 +604,14 @@ export default function LiveCourseLessons() {
     };
   }, [sections]);
 
-  // Check if section has free lessons
   const hasFreeLessons = useMemo(() => {
     return (sectionId) => {
       const section = sections.find((s) => s.id === sectionId);
       if (!section || !section.lessons) return false;
-      return section.lessons.some(
-        (lesson) => lesson.type === "free" || lesson.type === "Free"
-      );
+      return section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free");
     };
   }, [sections]);
 
-  // Toggle section expansion
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => {
       const newSet = new Set(prev);
@@ -1680,13 +622,6 @@ export default function LiveCourseLessons() {
       }
       return newSet;
     });
-  };
-
-  // Helper function to safely convert video_related to array
-  const getVideoRelatedArray = (videoRelated) => {
-    if (!videoRelated) return [];
-    if (Array.isArray(videoRelated)) return videoRelated;
-    return [videoRelated];
   };
 
   const handleLessonClick = async (lesson) => {
@@ -1780,109 +715,6 @@ export default function LiveCourseLessons() {
     }
   };
 
-  // Small circular progress indicator for lesson items
-  const ProgressCircle = ({
-    percent = 0,
-    size = 32,
-    stroke = 4,
-    completed = false,
-    active = false,
-  }) => {
-    const radius = (size - stroke) / 2;
-    const circumference = 2 * Math.PI * radius;
-    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
-    const offset = circumference * (1 - clamped / 100);
-    const trackColor = active ? "#22c55e33" : "#94a3b833";
-    const barColor = completed ? "#22c55e" : active ? "#22c55e" : "#0ea5e9";
-
-    return (
-      <svg width={size} height={size} className="shrink-0">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={trackColor}
-          strokeWidth={stroke}
-          fill="none"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={barColor}
-          strokeWidth={stroke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-        {completed ? (
-          <g transform={`translate(${size / 2 - 6} ${size / 2 - 6})`}>
-            <FaCheck className="text-xs text-green-500" />
-          </g>
-        ) : (
-          <text
-            x="50%"
-            y="50%"
-            dominantBaseline="middle"
-            textAnchor="middle"
-            fontSize="8"
-            fill={active ? "#fff" : "#334155"}
-            fontWeight="bold"
-          >
-            {clamped}%
-          </text>
-        )}
-      </svg>
-    );
-  };
-
-  // Section Progress Bar Component
-  const SectionProgressBar = ({ sectionId }) => {
-    const progress = calculateSectionProgress(sectionId);
-    const sectionProgressData = sectionProgress[sectionId];
-
-    const displayPercentage =
-      sectionProgressData?.percentage || progress.percentage;
-    const displayCompleted =
-      sectionProgressData?.completed_lessons || progress.completedLessons;
-    const displayTotal =
-      sectionProgressData?.total_lessons || progress.totalLessons;
-
-    return (
-      <div className="mt-2">
-        <div className="flex items-center justify-between mb-1 text-xs">
-          <span className="text-text-muted">
-            {t("courses.sectionProgress", "Section Progress")}
-          </span>
-          <span className="font-medium">{displayPercentage}%</span>
-        </div>
-        <div className="w-full h-1.5 rounded-full bg-accent">
-          <div
-            className={`h-1.5 rounded-full ${
-              displayPercentage === 100 ? "bg-green-500" : "bg-primary"
-            }`}
-            style={{
-              width: `${Math.min(100, Math.max(0, displayPercentage))}%`,
-            }}
-          />
-        </div>
-        <div className="flex justify-between mt-1 text-xs text-text-muted">
-          <span>
-            {displayCompleted} of {displayTotal}{" "}
-            {t("courses.lessons", "lessons")} completed
-          </span>
-          {displayPercentage === 100 && (
-            <span className="font-semibold text-green-600">
-              {t("courses.completed", "Completed")}
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -1891,8 +723,7 @@ export default function LiveCourseLessons() {
     return (
       <section className="min-h-[50vh] flex flex-col items-center justify-center gap-4 text-text">
         <div className="text-red-600">
-          {t("common.error", "Error")}:{" "}
-          {error || t("courses.courseNotFound", "Course not found.")}
+          {t("common.error", "Error")}: {error || t("courses.courseNotFound", "Course not found.")}
         </div>
         <Link
           to="/live-courses"
@@ -1931,8 +762,7 @@ export default function LiveCourseLessons() {
                 <div className="flex items-center gap-2">
                   <FaUsers className="text-primary" />
                   <span>
-                    {course.enrolled_count || 0}{" "}
-                    {t("courses.students", "Students")}
+                    {course.enrolled_count || 0} {t("courses.students", "Students")}
                   </span>
                 </div>
                 {isLoggedIn && (
@@ -1940,11 +770,7 @@ export default function LiveCourseLessons() {
                     <FaClock className="text-primary" />
                     <span>
                       {t("courses.progress", "Progress")}:{" "}
-                      {progressLoading
-                        ? "..."
-                        : `${Math.round(
-                            courseProgress?.overall?.percentage || 0
-                          )}%`}
+                      {progressLoading ? "..." : `${Math.round(courseProgress?.overall?.percentage || 0)}%`}
                     </span>
                   </div>
                 )}
@@ -1953,18 +779,14 @@ export default function LiveCourseLessons() {
                     {renderStars(course.avg_rating || 0)}
                   </div>
                   <span className="text-sm">
-                    {(course.avg_rating || 0).toFixed(1)} (
-                    {course.ratings_count || 0})
+                    {(course.avg_rating || 0).toFixed(1)} ({course.ratings_count || 0})
                   </span>
                 </div>
               </div>
 
-              {/* Course Level & Language */}
               <div className="flex flex-wrap items-center gap-3 mt-3">
                 <span
-                  className={`px-3 py-1 text-xs font-semibold rounded-full border ${getLevelColor(
-                    course.level
-                  )}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full border ${getLevelColor(course.level)}`}
                 >
                   {course.level}
                 </span>
@@ -1991,24 +813,19 @@ export default function LiveCourseLessons() {
                   <div className="w-full h-2 rounded-full bg-accent">
                     <div
                       className={`h-2 rounded-full ${
-                        Math.round(courseProgress?.overall?.percentage || 0) ===
-                        100
+                        Math.round(courseProgress?.overall?.percentage || 0) === 100
                           ? "bg-green-500"
                           : "bg-primary"
                       }`}
                       style={{
                         width: `${Math.min(
                           100,
-                          Math.max(
-                            0,
-                            Math.round(courseProgress?.overall?.percentage || 0)
-                          )
+                          Math.max(0, Math.round(courseProgress?.overall?.percentage || 0))
                         )}%`,
                       }}
                     />
                   </div>
-                  {Math.round(courseProgress?.overall?.percentage || 0) ===
-                    100 && (
+                  {Math.round(courseProgress?.overall?.percentage || 0) === 100 && (
                     <div className="inline-block px-2 py-1 mt-2 text-xs font-semibold text-green-700 bg-green-100 rounded">
                       {t("courses.completed", "Completed")}
                     </div>
@@ -2017,15 +834,15 @@ export default function LiveCourseLessons() {
               )}
             </div>
 
-            {/* Price & Enroll */}
             <div className="flex flex-col items-end gap-3">
               <div className="text-right">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
                     $
-                    {(Number(course.discount) > 0
-                      ? Number(course.price) - Number(course.discount)
-                      : Number(course.price)
+                    {(
+                      Number(course.discount) > 0
+                        ? Number(course.price) - Number(course.discount)
+                        : Number(course.price)
                     ).toFixed(2)}
                   </span>
                   {Number(course.discount) > 0 && (
@@ -2034,10 +851,7 @@ export default function LiveCourseLessons() {
                         ${Number(course.price).toFixed(2)}
                       </span>
                       <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
-                        {Math.round(
-                          (Number(course.discount) / Number(course.price)) * 100
-                        )}
-                        %
+                        {Math.round((Number(course.discount) / Number(course.price)) * 100)}%
                       </span>
                     </>
                   )}
@@ -2087,39 +901,11 @@ export default function LiveCourseLessons() {
                 />
               ))}
 
-              {/* Final Tests Under Course Content - في الجانب الأيمن فقط */}
-              <FinalTestsSection />
+              {/* Final Tests */}
+              <FinalTestsSection course={course} courseProgress={courseProgress} id={id} />
 
               {/* Certificate Section */}
-              {isLoggedIn &&
-                localStorage.getItem(`course_${id}_certificate`) && (
-                  <div className="p-4 mt-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-700">
-                    <button
-                      onClick={() =>
-                        navigate(`/live-courses/${id}/certificate`)
-                      }
-                      className="flex items-center w-full gap-3 p-2 text-left transition-all rounded hover:bg-green-100 dark:hover:bg-green-800/50"
-                    >
-                      <div className="flex-shrink-0 p-2 bg-green-100 rounded-full dark:bg-green-800">
-                        <FaAward className="text-green-600 dark:text-green-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-green-800 dark:text-green-200">
-                          {t(
-                            "courses.certificate",
-                            "Certificate of Completion"
-                          )}
-                        </h4>
-                        <p className="text-sm text-green-700 dark:text-green-300">
-                          {t(
-                            "courses.downloadCertificate",
-                            "Download your certificate"
-                          )}
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                )}
+              <CertificateSection id={id} isLoggedIn={isLoggedIn} />
             </div>
           </div>
 
@@ -2127,43 +913,34 @@ export default function LiveCourseLessons() {
           <div className="space-y-6 lg:col-span-2">
             {/* Video Player */}
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
-              {currentLesson ? (
+              {currentLesson || currentSection ? (
                 <div className="relative">
                   <div className="relative aspect-video">
-                    {currentLesson.video ? (
-                      <video
-                        src={currentLesson.video}
-                        controls
-                        className="w-full h-full"
-                        poster={currentLesson.image}
-                        onTimeUpdate={handleVideoTimeUpdate}
-                        onEnded={handleVideoEnd}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full bg-accent">
-                        <div className="text-center">
-                          <FaVideo className="mx-auto mb-2 text-4xl text-text-muted" />
-                          <p className="text-text-muted">
-                            {t(
-                              "courses.videoNotAvailable",
-                              "Video not available"
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <VideoPlayer
+                      currentLesson={currentLesson}
+                      currentSection={currentSection}
+                      handleVideoTimeUpdate={handleVideoTimeUpdate}
+                      handleVideoEnd={handleVideoEnd}
+                    />
 
-                    {/* Quiz Modal positioned exactly over video */}
-                    {quizModal.isOpen && <QuizModal />}
+                    {/* Quiz Modals */}
+                    <QuizModal
+                      quizModal={quizModal}
+                      setQuizModal={setQuizModal}
+                      setAnsweredQuizzes={setAnsweredQuizzes}
+                      setQuizResults={setQuizResults}
+                    />
 
-                    {/* Results Modal positioned exactly over video */}
-                    {resultsModal.isOpen && <ResultsModal />}
+                    <ResultsModal
+                      resultsModal={resultsModal}
+                      setResultsModal={setResultsModal}
+                    />
                   </div>
                   <div className="p-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-text">
-                      {currentLesson.title}
+                      {currentLesson?.title || currentSection?.title}
                     </h3>
-                    {isLoggedIn && currentLesson.video && (
+                    {isLoggedIn && currentLesson?.video && (
                       <div className="mt-3">
                         <button
                           onClick={(e) => {
@@ -2177,372 +954,46 @@ export default function LiveCourseLessons() {
                         </button>
                       </div>
                     )}
-                    {currentLesson.description && (
+                    {(currentLesson?.description || currentSection?.description) && (
                       <div className="mt-2 text-sm text-text-secondary">
                         <p className="leading-relaxed line-clamp-2">
-                          {currentLesson.description}
+                          {currentLesson?.description || currentSection?.description}
                         </p>
                       </div>
                     )}
 
-                    {/* Lesson Attachments */}
-                    {(currentLesson.images &&
-                      currentLesson.images.length > 0) ||
-                    (currentLesson.files && currentLesson.files.length > 0) ||
-                    (currentLesson.video_related &&
-                      currentLesson.video_related.length > 0) ? (
-                      <div className="mt-4">
-                        <h4 className="mb-3 font-semibold text-md text-text">
-                          {t("courses.lessonAttachments", "Lesson Attachments")}
-                        </h4>
+                    {/* Attachments */}
+                    <LessonAttachments
+                      content={currentLesson || currentSection}
+                      setSelectedImage={setSelectedImage}
+                      setShowImagePopup={setShowImagePopup}
+                      handleFileClick={handleFileClick}
+                      handleVideoClick={handleVideoClick}
+                      type={currentLesson ? "lesson" : "section"}
+                    />
 
-                        {/* Image Gallery */}
-                        {currentLesson.images &&
-                          currentLesson.images.length > 0 && (
-                            <div className="mb-4">
-                              <h5 className="mb-2 text-sm font-medium text-text">
-                                {t("courses.images", "Images")}
-                              </h5>
-                              <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                                {currentLesson.images.map((img, idx) => (
-                                  <img
-                                    key={idx}
-                                    src={img}
-                                    alt={`Lesson image ${idx + 1}`}
-                                    className="object-cover w-full h-32 rounded cursor-pointer"
-                                    style={{
-                                      width: "100%",
-                                      height: "128px",
-                                      objectFit: "cover",
-                                    }}
-                                    onClick={() => {
-                                      setSelectedImage(img);
-                                      setShowImagePopup(true);
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                        {/* File Gallery */}
-                        {currentLesson.files &&
-                          currentLesson.files.length > 0 && (
-                            <div className="mb-4">
-                              <h5 className="mb-2 text-sm font-medium text-text">
-                                {t("courses.files", "Files")}
-                              </h5>
-                              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                                {currentLesson.files.map((file, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => handleFileClick(file)}
-                                    className="flex flex-col items-center p-3 transition-colors border rounded hover:bg-accent"
-                                  >
-                                    <FaFileAlt className="mb-2 text-2xl text-primary" />
-                                    <span className="text-xs text-center text-text">
-                                      {t("courses.file", "File")} {idx + 1}
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                        {/* Additional Videos */}
-                        {currentLesson.video_related && (
-                          <div className="mb-4">
-                            <h5 className="mb-2 text-sm font-medium text-text">
-                              {t(
-                                "courses.additionalVideos",
-                                "Additional Videos"
-                              )}
-                            </h5>
-                            <div className="grid grid-cols-1 gap-3">
-                              {getVideoRelatedArray(
-                                currentLesson.video_related
-                              ).map((video, idx) => {
-                                const isObj =
-                                  typeof video === "object" && video !== null;
-                                const videoUrl = isObj
-                                  ? video.url || video.src || video.video || ""
-                                  : video;
-                                const thumbnail = isObj
-                                  ? video.thumbnail ||
-                                    video.poster ||
-                                    video.image ||
-                                    ""
-                                  : "";
-                                return (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
-                                    onClick={() => handleVideoClick(video)}
-                                  >
-                                    <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden rounded-lg">
-                                      {thumbnail ? (
-                                        <img
-                                          src={thumbnail}
-                                          alt={`Additional video ${idx + 1}`}
-                                          className="object-cover w-full h-full"
-                                        />
-                                      ) : (
-                                        <video
-                                          src={videoUrl}
-                                          className="object-cover w-full h-full"
-                                          muted
-                                          playsInline
-                                          preload="metadata"
-                                        />
-                                      )}
-                                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                        <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
-                                          <FaPlay className="text-gray-700 text-xs ml-0.5" />
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <FaVideo className="text-sm text-primary" />
-                                        <span className="text-sm font-medium text-text">
-                                          {t(
-                                            "courses.additionalVideo",
-                                            "Additional Video"
-                                          )}{" "}
-                                          {idx + 1}
-                                        </span>
-                                      </div>
-                                      <p className="text-xs text-text-muted">
-                                        {t(
-                                          "courses.clickToWatch",
-                                          "Click to watch this video"
-                                        )}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Periodic Quizzes */}
-                        <PeriodicQuizzesSection lesson={currentLesson} />
-
-                        {/* Lesson-End Tests */}
-                        <LessonEndTestsSection lesson={currentLesson} />
-                      </div>
-                    ) : (
-                      /* إذا لم يكن هناك مرفقات، نعرض فقط الاختبارات إذا كانت موجودة */
+                    {/* Quizzes */}
+                    {currentLesson && (
                       <>
                         <PeriodicQuizzesSection lesson={currentLesson} />
-                        <LessonEndTestsSection lesson={currentLesson} />
+                        <LessonEndTestsSection 
+                          lesson={currentLesson} 
+                          lessonStatuses={lessonStatuses} 
+                          id={id} 
+                          course={course} 
+                        />
                       </>
                     )}
 
-                    {/* Ask the Instructor */}
-                    {course.instructor && course.instructor.whatsapp && (
-                      <div className="p-3 mt-4 border rounded-lg bg-surface border-border">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full dark:bg-green-900">
-                            <FaWhatsapp className="text-lg text-green-600 dark:text-green-400" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-semibold text-text">
-                              {t("courses.askInstructor", "Ask the Instructor")}
-                            </h4>
-                            <a
-                              href={`https://wa.me/${course.instructor.whatsapp.replace(
-                                /[^0-9]/g,
-                                ""
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-green-600 hover:text-green-700"
-                            >
-                              {t(
-                                "courses.contactInstructor",
-                                "Contact Instructor"
-                              )}
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : currentSection ? (
-                <div>
-                  <div className="aspect-video">
-                    {currentSection.video ? (
-                      <video
-                        src={currentSection.video}
-                        controls
-                        className="w-full h-full"
-                        poster={currentSection.images?.[0]}
+                    {currentSection && (
+                      <SectionTestsSection
+                        section={currentSection}
+                        id={id}
+                        course={course}
+                        calculateSectionProgress={calculateSectionProgress}
+                        sectionProgress={sectionProgress}
                       />
-                    ) : (
-                      <div className="flex items-center justify-center h-full bg-accent">
-                        <div className="text-center">
-                          <FaVideo className="mx-auto mb-2 text-4xl text-text-muted" />
-                          <p className="text-text-muted">
-                            {t(
-                              "courses.videoNotAvailable",
-                              "Video not available"
-                            )}
-                          </p>
-                        </div>
-                      </div>
                     )}
-                  </div>
-                  <div className="p-4 border-t border-border">
-                    <h3 className="text-lg font-semibold text-text">
-                      {currentSection.title}
-                    </h3>
-                    {currentSection.description && (
-                      <div className="mt-2 text-sm text-text-secondary">
-                        <p className="leading-relaxed line-clamp-3">
-                          {currentSection.description}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Section Attachments */}
-                    {(currentSection.images &&
-                      currentSection.images.length > 0) ||
-                    (currentSection.files && currentSection.files.length > 0) ||
-                    (currentSection.video_related &&
-                      currentSection.video_related) ? (
-                      <div className="mt-4">
-                        <h4 className="mb-3 font-semibold text-md text-text">
-                          {t(
-                            "courses.sectionAttachments",
-                            "Section Attachments"
-                          )}
-                        </h4>
-
-                        {/* Image Gallery */}
-                        {currentSection.images &&
-                          currentSection.images.length > 0 && (
-                            <div className="mb-4">
-                              <h5 className="mb-2 text-sm font-medium text-text">
-                                {t("courses.images", "Images")}
-                              </h5>
-                              <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                                {currentSection.images.map((img, idx) => (
-                                  <img
-                                    key={idx}
-                                    src={img}
-                                    alt={`Section image ${idx + 1}`}
-                                    className="object-cover w-full h-32 rounded cursor-pointer"
-                                    style={{
-                                      width: "100%",
-                                      height: "128px",
-                                      objectFit: "cover",
-                                    }}
-                                    onClick={() => {
-                                      setSelectedImage(img);
-                                      setShowImagePopup(true);
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                        {/* File Gallery */}
-                        {currentSection.files &&
-                          currentSection.files.length > 0 && (
-                            <div className="mb-4">
-                              <h5 className="mb-2 text-sm font-medium text-text">
-                                {t("courses.files", "Files")}
-                              </h5>
-                              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                                {currentSection.files.map((file, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() =>
-                                      handleFileClick(file.url || file)
-                                    }
-                                    className="flex flex-col items-center p-3 transition-colors border rounded hover:bg-accent"
-                                  >
-                                    <FaFileAlt className="mb-2 text-2xl text-primary" />
-                                    <span className="text-xs text-center text-text">
-                                      {file.name ||
-                                        `${t("courses.file", "File")} ${
-                                          idx + 1
-                                        }`}
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                        {/* Additional Videos */}
-                        {currentSection.video_related && (
-                          <div className="mb-4">
-                            <h5 className="mb-2 text-sm font-medium text-text">
-                              {t(
-                                "courses.additionalVideos",
-                                "Additional Videos"
-                              )}
-                            </h5>
-                            <div className="grid grid-cols-1 gap-3">
-                              {getVideoRelatedArray(
-                                currentSection.video_related
-                              ).map((video, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center gap-4 p-4 transition-all border rounded-lg cursor-pointer group hover:bg-accent hover:border-primary/50"
-                                  onClick={() => handleVideoClick(video)}
-                                >
-                                  <div className="relative flex-shrink-0 w-24 h-16 overflow-hidden rounded-lg">
-                                    <video
-                                      src={video}
-                                      className="object-cover w-full h-full"
-                                      muted
-                                      playsInline
-                                      preload="metadata"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                      <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full bg-opacity-90">
-                                        <FaPlay className="text-gray-700 text-xs ml-0.5" />
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <FaVideo className="text-sm text-primary" />
-                                      <span className="text-sm font-medium text-text">
-                                        {t(
-                                          "courses.additionalVideo",
-                                          "Additional Video"
-                                        )}
-                                      </span>
-                                    </div>
-                                    <p className="text-xs text-text-muted">
-                                      {t(
-                                        "courses.clickToWatch",
-                                        "Click to watch this video"
-                                      )}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Section Tests */}
-                        <SectionTestsSection section={currentSection} />
-                      </div>
-                    ) : (
-                      /* إذا لم يكن هناك مرفقات، نعرض فقط الاختبارات إذا كانت موجودة */
-                      <SectionTestsSection section={currentSection} />
-                    )}
-
-                    {/* Section Lessons Preview */}
                   </div>
                 </div>
               ) : (
@@ -2550,10 +1001,7 @@ export default function LiveCourseLessons() {
                   <div className="text-center">
                     <FaList className="mx-auto mb-4 text-6xl text-text-muted" />
                     <p className="text-text-muted">
-                      {t(
-                        "courses.selectContent",
-                        "Select a lesson or section to start"
-                      )}
+                      {t("courses.selectContent", "Select a lesson or section to start")}
                     </p>
                   </div>
                 </div>
@@ -2569,9 +1017,7 @@ export default function LiveCourseLessons() {
 
                 <div className="flex items-start gap-4">
                   <img
-                    src={
-                      course.instructor.image || "/placeholder-instructor.jpg"
-                    }
+                    src={course.instructor.image || "/placeholder-instructor.jpg"}
                     alt={course.instructor.name}
                     className="object-cover w-16 h-16 border-2 rounded-full border-primary"
                   />
@@ -2588,15 +1034,12 @@ export default function LiveCourseLessons() {
                       <div className="flex items-center gap-1">
                         <FaGraduationCap />
                         <span>
-                          {course.instructor.years_of_experience}{" "}
-                          {t("courses.yearsExp", "years experience")}
+                          {course.instructor.years_of_experience} {t("courses.yearsExp", "years experience")}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <FaStarSolid className="text-yellow-400" />
-                        <span>
-                          {(course.instructor.average_rating || 0).toFixed(1)}
-                        </span>
+                        <span>{(course.instructor.average_rating || 0).toFixed(1)}</span>
                       </div>
                     </div>
 
@@ -2604,7 +1047,6 @@ export default function LiveCourseLessons() {
                       {course.instructor.bio}
                     </p>
 
-                    {/* View Details Button */}
                     <Link
                       to={`/instructors/${course.instructor.id}`}
                       className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
@@ -2615,8 +1057,6 @@ export default function LiveCourseLessons() {
                 </div>
               </div>
             )}
-
-            {/* Final Tests Section - تم إزالته من هنا ووضعه في الجانب الأيمن فقط */}
           </div>
         </div>
       </div>
@@ -2632,10 +1072,7 @@ export default function LiveCourseLessons() {
                   {t("courses.unlockPremium", "Unlock Premium Content")}
                 </h3>
                 <p className="text-text-muted">
-                  {t(
-                    "courses.purchaseToAccess",
-                    "Purchase this course to access all premium lessons and materials"
-                  )}
+                  {t("courses.purchaseToAccess", "Purchase this course to access all premium lessons and materials")}
                 </p>
               </div>
 
@@ -2659,14 +1096,24 @@ export default function LiveCourseLessons() {
         </div>
       )}
 
-      {/* Image Popup */}
-      <ImagePopup />
+      {/* Content Modals */}
+      <ImagePopup
+        showImagePopup={showImagePopup}
+        setShowImagePopup={setShowImagePopup}
+        selectedImage={selectedImage}
+      />
 
-      {/* PDF Popup */}
-      <PDFPopup />
+      <PDFPopup
+        showFilesPopup={showFilesPopup}
+        setShowFilesPopup={setShowFilesPopup}
+        selectedFile={selectedFile}
+      />
 
-      {/* Video Popup */}
-      <VideoPopup />
+      <VideoPopup
+        showVideoPopup={showVideoPopup}
+        setShowVideoPopup={setShowVideoPopup}
+        selectedVideo={selectedVideo}
+      />
     </section>
   );
 }
