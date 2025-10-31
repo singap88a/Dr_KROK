@@ -7,8 +7,18 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const handleCourseClick = (courseId) => {
-    navigate(`/courses/${courseId}/lessons`);
+  const handleCourseClick = (courseId, courseType) => {
+    // Check if it's a live course based on type or other indicators
+    const isLiveCourse = courseType === 'live_course' ||
+                        courseType === 'live' ||
+                        (typeof courseType === 'object' && courseType?.is_live) ||
+                        courseId.toString().startsWith('live_');
+
+    if (isLiveCourse) {
+      navigate(`/live-courses/${courseId}/lessons`);
+    } else {
+      navigate(`/courses/${courseId}/lessons`);
+    }
   };
 
   return (
@@ -25,7 +35,7 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
           <div
             key={course.id}
             className="overflow-hidden transition-shadow duration-200 border shadow-sm cursor-pointer bg-surface border-border rounded-xl hover:shadow-lg"
-            onClick={() => handleCourseClick(course.id)}
+            onClick={() => handleCourseClick(course.id, course.type || course.course_type)}
           >
             <div className="relative">
               <img
@@ -39,7 +49,7 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
                   className="px-4 py-2 font-medium transition-colors rounded-lg bg-white/90 dark:bg-black/50 text-text dark:text-white hover:bg-white dark:hover:bg-black/70"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleCourseClick(course.id);
+                    handleCourseClick(course.id, course.type || course.course_type);
                   }}
                 >
                   <FaPlay className="inline mr-2" />
@@ -96,7 +106,7 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
                   className="px-4 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleCourseClick(course.id);
+                    handleCourseClick(course.id, course.type || course.course_type);
                   }}
                 >
                   {t("myCourses.continue")}

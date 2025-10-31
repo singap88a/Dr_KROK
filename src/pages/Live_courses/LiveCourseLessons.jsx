@@ -70,6 +70,7 @@ export default function LiveCourseLessons() {
     completeLiveLessonProgress,
     getLiveLessonProgress,
     getLiveCourseProgressDetails,
+    getLiveCourseLessons,
   } = useApi();
   const { isLoggedIn } = useUser();
 
@@ -200,7 +201,6 @@ export default function LiveCourseLessons() {
         const currentStatus = lessonStatuses[currentLesson.id] || {};
         const hasTests = currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0;
         let newPercentage = 100;
-        let type = "lesson";
 
         if (hasTests) {
           const quizCompleted = currentStatus.quiz_percentage >= 100;
@@ -229,7 +229,7 @@ export default function LiveCourseLessons() {
           }));
         }
         await updateLessonStatus(currentLesson.id);
-      } catch (error) {
+      } catch {
         // Handle error silently
       }
     }
@@ -440,7 +440,7 @@ export default function LiveCourseLessons() {
 
         if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id);
+            const access = await getCourseAccess(id, 'live_course');
             setHasAccess(access);
           } catch {
             setHasAccess(courseData.price === 0 || courseData.price === "0");
@@ -590,27 +590,40 @@ export default function LiveCourseLessons() {
     return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
   }, [sections]);
 
-  const getSectionLessons = useMemo(() => {
-    return (sectionId) => {
-      const section = sections.find((s) => s.id === sectionId);
-      if (!section || !section.lessons) return [];
-      return [...section.lessons].sort((a, b) => {
-        const aFree = a.type === "free" || a.type === "Free";
-        const bFree = b.type === "free" || b.type === "Free";
-        if (aFree && !bFree) return -1;
-        if (!aFree && bFree) return 1;
-        return (a.id || 0) - (b.id || 0);
-      });
-    };
-  }, [sections]);
+const getSectionLessons = useMemo(() => {
+  return (sectionId) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section || !section.lessons) return [];
+    
+    const sectionLessons = [...section.lessons].sort((a, b) => {
+      const aFree = a.type === "free" || a.type === "Free" || a.is_free === true;
+      const bFree = b.type === "free" || b.type === "Free" || b.is_free === true;
+      if (aFree && !bFree) return -1;
+      if (!aFree && bFree) return 1;
+      return (a.id || 0) - (b.id || 0);
+    });
 
-  const hasFreeLessons = useMemo(() => {
-    return (sectionId) => {
-      const section = sections.find((s) => s.id === sectionId);
-      if (!section || !section.lessons) return false;
-      return section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free");
-    };
-  }, [sections]);
+    // إذا المستخدم عنده اشتراك، عرض كل الدروس
+    if (hasAccess) {
+      return sectionLessons;
+    }
+    
+    // إذا مفيش اشتراك، عرض فقط الدروس المجانية
+    return sectionLessons.filter(lesson => 
+      lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
+    );
+  };
+}, [sections, hasAccess]);
+
+const hasFreeLessons = useMemo(() => {
+  return (sectionId) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section || !section.lessons) return false;
+    return section.lessons.some((lesson) => 
+      lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
+    );
+  };
+}, [sections]);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => {
@@ -624,52 +637,55 @@ export default function LiveCourseLessons() {
     });
   };
 
-  const handleLessonClick = async (lesson) => {
-    const isFree = lesson.type === "free" || lesson.type === "Free";
-    if (!isFree) {
-      if (!isLoggedIn) {
-        navigate("/login");
-        return;
-      }
-      setShowPurchaseModal(true);
+const handleLessonClick = async (lesson) => {
+  const isFree = lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true;
+  
+  // إذا الدرس مش مجاني والمستخدم ماعندهوش اشتراك
+  if (!isFree && !hasAccess) {
+    if (!isLoggedIn) {
+      navigate("/login");
       return;
     }
+    setShowPurchaseModal(true);
+    return;
+  }
 
-    setCurrentLesson(lesson);
-    setCurrentSection(null);
-    if (isLoggedIn) {
-      try {
-        const res = await startLiveLessonProgress(id, lesson.id);
-        if (res?.course_progress) setCourseProgress(res.course_progress);
-        if (res?.lesson) {
-          setLessonStatuses((prev) => ({
-            ...prev,
-            [lesson.id]: {
-              ...prev[lesson.id],
-              ...res.lesson,
-            },
-          }));
-        }
-      } catch {
-        // ignore
+  setCurrentLesson(lesson);
+  setCurrentSection(null);
+  if (isLoggedIn) {
+    try {
+      const res = await startLiveLessonProgress(id, lesson.id);
+      if (res?.course_progress) setCourseProgress(res.course_progress);
+      if (res?.lesson) {
+        setLessonStatuses((prev) => ({
+          ...prev,
+          [lesson.id]: {
+            ...prev[lesson.id],
+            ...res.lesson,
+          },
+        }));
       }
+    } catch {
+      // ignore
     }
-  };
+  }
+};
 
-  const handleSectionClick = (section) => {
-    const hasFree = hasFreeLessons(section.id);
-    if (!hasFree && !hasAccess) {
-      if (!isLoggedIn) {
-        navigate("/login");
-        return;
-      }
-      setShowPurchaseModal(true);
+const handleSectionClick = (section) => {
+  // إذا مفيش دروس مجانية في السيكشن والمستخدم ماعندهوش اشتراك
+  const hasFree = hasFreeLessons(section.id);
+  if (!hasFree && !hasAccess) {
+    if (!isLoggedIn) {
+      navigate("/login");
       return;
     }
+    setShowPurchaseModal(true);
+    return;
+  }
 
-    setCurrentSection(section);
-    setCurrentLesson(null);
-  };
+  setCurrentSection(section);
+  setCurrentLesson(null);
+};
 
   const closePurchaseModal = () => {
     setShowPurchaseModal(false);
@@ -878,28 +894,29 @@ export default function LiveCourseLessons() {
             </h3>
 
             <div className="space-y-2">
-              {sortedSections.map((section) => (
-                <SectionItem
-                  key={`section-${section.id}`}
-                  section={section}
-                  lessons={getSectionLessons(section.id)}
-                  isExpanded={expandedSections.has(section.id)}
-                  isActive={currentSection?.id === section.id}
-                  hasFree={hasFreeLessons(section.id)}
-                  isAccessible={hasFreeLessons(section.id) || hasAccess}
-                  lessonStatuses={lessonStatuses}
-                  currentLesson={currentLesson}
-                  sectionProgress={sectionProgress}
-                  calculateTotalProgress={calculateTotalProgress}
-                  calculateSectionProgress={calculateSectionProgress}
-                  onSectionClick={handleSectionClick}
-                  onLessonClick={handleLessonClick}
-                  onToggleSection={toggleSection}
-                  isLoggedIn={isLoggedIn}
-                  navigate={navigate}
-                  course={course}
-                />
-              ))}
+{sortedSections.map((section) => (
+  <SectionItem
+    key={`section-${section.id}`}
+    section={section}
+    lessons={getSectionLessons(section.id)}
+    isExpanded={expandedSections.has(section.id)}
+    isActive={currentSection?.id === section.id}
+    hasFree={hasFreeLessons(section.id)}
+    isAccessible={hasFreeLessons(section.id) || hasAccess}
+    lessonStatuses={lessonStatuses}
+    currentLesson={currentLesson}
+    sectionProgress={sectionProgress}
+    calculateTotalProgress={calculateTotalProgress}
+    calculateSectionProgress={calculateSectionProgress}
+    onSectionClick={handleSectionClick}
+    onLessonClick={handleLessonClick}
+    onToggleSection={toggleSection}
+    isLoggedIn={isLoggedIn}
+    navigate={navigate}
+    course={course}
+    hasAccess={hasAccess}
+  />
+))}
 
               {/* Final Tests */}
               <FinalTestsSection course={course} courseProgress={courseProgress} id={id} />

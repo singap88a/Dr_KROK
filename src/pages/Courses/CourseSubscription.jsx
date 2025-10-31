@@ -77,7 +77,7 @@ export default function CourseSubscription() {
         // Check access if logged in
         if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id);
+            const access = await getCourseAccess(id, isLiveCourse ? 'live_course' : 'video_course');
             setHasAccess(access);
           } catch {
             // If access check fails, assume no access for paid content

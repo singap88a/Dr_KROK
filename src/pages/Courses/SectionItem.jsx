@@ -63,7 +63,7 @@ const SectionItem = ({
           onClick={() => onSectionClick(section)}
           className="flex items-center justify-center w-full gap-3 p-4 transition-all duration-300 transform border-2 border-dashed border-primary/30 rounded-xl hover:border-primary hover:bg-primary/5 hover:scale-105 group"
         >
-          <div className="flex-shrink-0 p-3 transition-all duration-300 bg-primary/10 rounded-full group-hover:bg-primary/20 group-hover:scale-110">
+          <div className="flex-shrink-0 p-3 transition-all duration-300 rounded-full bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110">
             <FaPaperclip className="text-lg text-primary group-hover:text-primary" />
           </div>
           <div className="flex-1 text-left">
@@ -94,7 +94,7 @@ const SectionItem = ({
       <div className="p-4 border-t border-border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-800">
+            <div className="p-2 bg-green-100 rounded-lg dark:bg-green-800">
               <FaClipboardList className="text-lg text-green-600 dark:text-green-400" />
             </div>
             <h4 className="font-semibold text-text">

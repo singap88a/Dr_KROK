@@ -368,12 +368,34 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
-      async getCourseAccess(courseId) {
+      async getCourseAccess(courseId, type = null) {
         if (!courseId) throw new Error("Course id is required");
         try {
           const response = await request(`profile/get-my-courses`, { auth: true });
           const myCourses = response.data || [];
-          return myCourses.some(course => course.id === parseInt(courseId));
+
+          // Helper: normalize type from course item
+          const detectType = (item) => {
+            if (!item) return null;
+            if (item.type) return String(item.type);
+            if (item.course_type) return String(item.course_type);
+            // common backend field names
+            if (item.is_live !== undefined) return item.is_live ? "live_course" : "video_course";
+            if (item.resource_type) return String(item.resource_type);
+            return null;
+          };
+
+          if (type) {
+            // match both id and type to avoid collisions when ids overlap
+            return myCourses.some((c) => {
+              const itemId = Number(c.id || c.course_id || c.id_course || 0);
+              const itemType = detectType(c);
+              return itemId === Number(courseId) && itemType && itemType.includes(type);
+            });
+          }
+
+          // fallback: if no type passed, match by id only
+          return myCourses.some(course => Number(course.id) === Number(courseId));
         } catch (err) {
           console.warn('Failed to get my courses for access check:', err);
           return false;
@@ -1001,13 +1023,75 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
         return response.data || [];
       },
       // Add student test results
-      async addStudentTest(testData) {
-        return await request("add_student_test", {
-          method: "POST",
-          body: testData,
-          auth: true
-        });
-      }
+// ApiContext.jsx - عدل الدالة دي
+
+// ApiContext.jsx - عدل الدالة دي فقط
+
+async addStudentTest(testData) {
+  console.log('🎯 addStudentTest called with:', testData);
+  
+  try {
+    // استخدم getAuthToken من الـ closure بدل this
+    const token = getAuthToken();
+    
+    if (!token) {
+      console.error('❌ No authentication token found');
+      throw new Error("Authentication token is required");
+    }
+
+    console.log('🔑 Token found:', token ? 'Yes' : 'No');
+
+    // استخدم الـ request function الموجود بدل fetch مباشر
+    const response = await request("add_student_test", {
+      method: "POST",
+      body: testData,
+      auth: true
+    });
+
+    console.log('✅ API Response:', response);
+    return response;
+    
+  } catch (error) {
+    console.error('❌ Error in addStudentTest:', error);
+    
+    // إذا فشل مع JSON، جرب مع FormData
+    console.log('🔄 Trying with FormData...');
+    
+    const formData = new FormData();
+    formData.append('test_id', testData.test_id?.toString() || "");
+    formData.append('course_id', testData.course_id?.toString() || "");
+    if (testData.lesson_id) {
+      formData.append('lesson_id', testData.lesson_id?.toString() || "");
+    }
+    formData.append('type', testData.type || "");
+    formData.append('student_score', testData.student_score?.toString() || "0");
+    formData.append('total_score', testData.total_score?.toString() || "0");
+    formData.append('result_status', testData.result_status?.toString() || "1");
+    formData.append('total_questions', testData.total_questions?.toString() || "0");
+    formData.append('questions', JSON.stringify(testData.questions || []));
+
+    console.log('🧾 FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    try {
+      const formDataResponse = await request("add_student_test", {
+        method: "POST",
+        body: formData,
+        auth: true,
+        isFormData: true
+      });
+      
+      console.log('✅ FormData response:', formDataResponse);
+      return formDataResponse;
+    } catch (formDataError) {
+      console.error('❌ FormData also failed:', formDataError);
+      throw formDataError;
+    }
+  }
+}
+
     }),
     [
       baseUrl,

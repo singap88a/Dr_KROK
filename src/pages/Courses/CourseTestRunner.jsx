@@ -177,156 +177,144 @@ const prepareConnectQuestion = (question) => {
     return question;
   }, [test, idx]);
 
-  const finish = async () => {
-    const quizzes = test?.quizzes || [];
-    const total = quizzes.reduce(
-      (acc, q) => acc + parseInt(q.question_score || 1),
-      0
-    );
-    let earned = 0;
-    const questions = [];
-    for (const q of quizzes) {
-      let isCorrect = false;
-      let studentAnswer = "";
-      if (q.type === "match") {
-        let correct = 0;
-        for (let n = 1; n <= 4; n++) {
-          if (
-            answers[`${q.id}_${n}`] &&
-            answers[`${q.id}_${n}`] === q[`match_${n}`]
-          )
-            correct++;
-        }
-        isCorrect = correct === 4;
-        studentAnswer = Object.keys(answers)
-          .filter((k) => k.startsWith(`${q.id}_`))
-          .map((k) => answers[k])
-          .join(", ");
-      } else if (q.type === "connect") {
-        // حساب النقاط لأسئلة التوصيل
-        const userAnswer = answers[q.id];
-        const pairs = extractAnswerPairs(q);
-        const totalPairs = pairs.length;
-        
-        let correctConnections = 0;
-        if (userAnswer) {
-          Object.keys(userAnswer).forEach(textKey => {
-            if (userAnswer[textKey] === textKey) {
-              correctConnections++;
-            }
-          });
-        }
-        
-        isCorrect = correctConnections === totalPairs && totalPairs > 0;
-        const questionScore = parseInt(q.question_score || 1);
-        earned += (correctConnections / totalPairs) * questionScore;
-        
-        studentAnswer = userAnswer
-          ? Object.entries(userAnswer)
-              .map(([k, v]) => `${k}:${v}`)
-              .join(", ")
-          : "";
-      } else {
-        studentAnswer = answers[q.id] || "";
+// ✅ تعديل finish علشان ينادي الدالة الجديدة
+const finish = async () => {
+  const quizzes = test?.quizzes || [];
+  const total = quizzes.reduce(
+    (acc, q) => acc + parseInt(q.question_score || 1),
+    0
+  );
+  let earned = 0;
+  const questions = [];
 
-        // احسب المفتاح الصحيح بناءً على index يبدأ من 0
-        const correctAnswerKey = [
-          "answer_1",
-          "answer_2",
-          "answer_3",
-          "answer_4",
-        ][q.correct_answer_index];
+  for (const q of quizzes) {
+    let isCorrect = false;
+    let studentAnswer = "";
+    let correctAnswer = "";
 
-        // المقارنة تكون بين المفتاح المختار والمفتاح الصحيح
-        isCorrect = answers[q.id] === correctAnswerKey;
-        if (isCorrect) earned += parseInt(q.question_score || 1);
+    if (q.type === "match") {
+      let correct = 0;
+      for (let n = 1; n <= 4; n++) {
+        if (
+          answers[`${q.id}_${n}`] &&
+          answers[`${q.id}_${n}`] === q[`match_${n}`]
+        )
+          correct++;
+      }
+      isCorrect = correct === 4;
+      studentAnswer = Object.keys(answers)
+        .filter((k) => k.startsWith(`${q.id}_`))
+        .map((k) => answers[k])
+        .join(", ");
+      correctAnswer = [1, 2, 3, 4].map(n => q[`match_${n}`]).join(", ");
+    } else if (q.type === "connect") {
+      const userAnswer = answers[q.id];
+      const pairs = extractAnswerPairs(q);
+      const totalPairs = pairs.length;
+
+      let correctConnections = 0;
+      if (userAnswer) {
+        Object.keys(userAnswer).forEach(textKey => {
+          if (userAnswer[textKey] === textKey) {
+            correctConnections++;
+          }
+        });
       }
 
-      questions.push({
-        question_id: q.id,
-        student_answer: studentAnswer,
-        correct_answer: q.correct_answer || "",
-        is_correct: isCorrect,
+      isCorrect = correctConnections === totalPairs && totalPairs > 0;
+      const questionScore = parseInt(q.question_score || 1);
+      earned += (correctConnections / totalPairs) * questionScore;
+
+      studentAnswer = userAnswer
+        ? Object.entries(userAnswer)
+            .map(([k, v]) => `${k}:${v}`)
+            .join(", ")
+        : "";
+
+      correctAnswer = pairs.map(pair => `${pair.key}:${pair.key}`).join(", ");
+    } else {
+      studentAnswer = answers[q.id] || "";
+      const correctAnswerKey = ["answer_1", "answer_2", "answer_3", "answer_4"][q.correct_answer_index];
+      isCorrect = answers[q.id] === correctAnswerKey;
+      correctAnswer = q[correctAnswerKey] || "";
+
+      if (isCorrect) earned += parseInt(q.question_score || 1);
+    }
+
+    questions.push({
+      question_id: q.id,
+      student_answer: studentAnswer,
+      correct_answer: correctAnswer,
+      is_correct: isCorrect,
+    });
+  }
+
+  const percentage = total > 0 ? (earned / total) * 100 : 0;
+  const isLiveCourse = location.pathname.includes('live-courses');
+  const courseType = isLiveCourse ? "live" : "video";
+
+  const testData = {
+    test_id: parseInt(test.id),
+    course_id: parseInt(id),
+    lesson_id: lessonId ? parseInt(lessonId) : null,
+    type: courseType,
+    student_score: parseFloat(earned.toFixed(2)),
+    total_score: parseFloat(total.toFixed(2)),
+    result_status: 1,
+    total_questions: parseInt(quizzes.length),
+    questions: questions
+  };
+
+  console.log('📤 Prepared test data for API:', testData);
+
+  try {
+    console.log('🚀 Sending test data to API...');
+    const apiResponse = await addStudentTest(testData);
+    console.log('✅ Test submitted successfully:', apiResponse);
+  } catch (error) {
+    console.error("❌ Failed to submit test results:", error);
+  }
+
+  const resultsData = {
+    total_score: total,
+    student_score: earned,
+    total_questions: quizzes.length,
+    questions: questions,
+    percentage: percentage
+  };
+
+  if (scope === "lesson" && lessonId) {
+    try {
+      console.log('🎯 Marking lesson as completed...');
+      await completeLessonProgress(id, lessonId, "quiz");
+      console.log('✅ Lesson marked as completed');
+    } catch (error) {
+      console.error("❌ Failed to complete lesson progress:", error);
+    }
+  }
+
+  setResults({ total, earned, percentage, questions });
+
+  setTimeout(() => {
+    const basePath = isLiveCourse ? '/live-courses' : '/courses';
+    if (scope === "final") {
+      navigate(`/courses/${id}/final-results`, {
+        replace: true,
+        state: { results: { total, earned, percentage, answers: resultsData }, test },
+      });
+    } else if (scope === "lesson") {
+      navigate(`${basePath}/${id}/test-results/lesson/${testId}`, {
+        replace: true,
+        state: { results: resultsData, test, lessonId },
+      });
+    } else if (scope === "section") {
+      navigate(`${basePath}/${id}/test-results/section/${testId}`, {
+        replace: true,
+        state: { results: resultsData, test, sectionId },
       });
     }
-    const percentage = total > 0 ? (earned / total) * 100 : 0;
-    const resultsData = {
-      total_score: total,
-      student_score: earned,
-      total_questions: quizzes.length,
-      questions,
-    };
-
-    // Submit to API for lesson tests
-    if (scope === "lesson") {
-      try {
-        await addStudentTest({
-          test_id: test.id,
-          student_score: earned,
-          total_score: total,
-          result_status: 1, // Assuming 1 for completed
-          total_questions: quizzes.length,
-          questions,
-        });
-      } catch (error) {
-        console.error("Failed to submit test results:", error);
-        // Continue anyway
-      }
-
-      // Automatically mark lesson as completed when quiz is finished
-      try {
-        await completeLessonProgress(id, lessonId, "quiz");
-      } catch (error) {
-        console.error("Failed to complete lesson progress:", error);
-        // Continue anyway
-      }
-    } else if (scope === "section") {
-      // Submit to API for section tests
-      try {
-        await addStudentTest({
-          test_id: test.id,
-          student_score: earned,
-          total_score: total,
-          result_status: 1, // Assuming 1 for completed
-          total_questions: quizzes.length,
-          questions,
-        });
-      } catch (error) {
-        console.error("Failed to submit section test results:", error);
-        // Continue anyway
-      }
-    }
-
-    setResults({ total, earned, percentage, questions });
-
-    // If final test, navigate to results page
-    if (scope === "final") {
-      setTimeout(() => {
-        navigate(`/courses/${id}/final-results`, {
-          replace: true,
-          state: { results: { total, earned, percentage, answers }, test },
-        });
-      }, 1000); // Brief delay to show results
-    } else if (scope === "lesson") {
-      // Navigate to lesson test results page - check if live course
-      const isLiveCourse = location.pathname.includes('live-courses');
-      setTimeout(() => {
-        navigate(`${isLiveCourse ? '/live-courses' : '/courses'}/${id}/test-results/lesson/${testId}`, {
-          replace: true,
-          state: { results: resultsData, test, lessonId },
-        });
-      }, 1000);
-    } else if (scope === "section") {
-      // Navigate to section test results page - check if live course
-      const isLiveCourse = location.pathname.includes('live-courses');
-      setTimeout(() => {
-        navigate(`${isLiveCourse ? '/live-courses' : '/courses'}/${id}/test-results/section/${testId}`, {
-          replace: true,
-          state: { results: resultsData, test, sectionId },
-        });
-      }, 1000);
-    }
-  };
+  }, 1000);
+};
 
   const markDoneAndBack = async () => {
     if (scope === "lesson" && lessonId) {

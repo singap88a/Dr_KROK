@@ -72,7 +72,7 @@ export default function LiveCourseDetails() {
         // Check course access if logged in
         if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id);
+            const access = await getCourseAccess(id, 'live_course');
             setUserHasAccess(access);
           } catch {
             // If access check fails, assume no access for paid content
