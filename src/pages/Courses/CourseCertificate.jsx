@@ -4,7 +4,7 @@ import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import jsPDF from "jspdf";
-import { FaArrowLeft, FaDownload } from "react-icons/fa";
+import { FaArrowLeft, FaDownload, FaExclamationTriangle, FaSync } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function CourseCertificate() {
@@ -12,45 +12,77 @@ export default function CourseCertificate() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById } = useApi();
+  const { getVideoCourseById, getFinalTestResult } = useApi(); // إضافة الدالة الجديدة
   const { userData } = useUser();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [certificateInfo, setCertificateInfo] = useState(null);
+  const [checkingServer, setCheckingServer] = useState(false);
 
-  const certificateImage = "/certificate.jpeg"; // استخدم الصورة دي من عندك
+  const certificateImage = "/certificate.jpeg";
 
   const passedState = location.state || {};
-  const storedData = localStorage.getItem(`course_${id}_certificate`);
+  
+  // جلب البيانات من مصادر متعددة
+  const userSpecificKey = `course_${id}_certificate_${userData?.id || 'anonymous'}`;
+  const storedData = localStorage.getItem(userSpecificKey);
   const storedInfo = storedData ? JSON.parse(storedData) : null;
+  
   const percentage = passedState.finalTestPercentage || (storedInfo ? storedInfo.score : 0);
   const certDate = storedInfo ? new Date(storedInfo.date).toLocaleDateString() : new Date().toLocaleDateString();
   const userName = passedState.userName || userData?.name || 'Student';
 
+  // تحقق إذا كان الطالب مؤهل للحصول على الشهادة
+  const isEligibleForCertificate = percentage >= 65;
+
   useEffect(() => {
-    const loadCourse = async () => {
+    const loadCourseAndResult = async () => {
       try {
         setLoading(true);
+        
+        // جلب بيانات الكورس
         const courseData = await getVideoCourseById(id, true);
         setCourse(courseData);
+
+        // جلب نتيجة الاختبار النهائي من السيرفر (الأولوية للسيرفر)
+        if (userData?.id) {
+          setCheckingServer(true);
+          try {
+            const serverResult = await getFinalTestResult(id);
+            if (serverResult && serverResult.score >= 65) {
+              setCertificateInfo(serverResult);
+              console.log('✅ Using server result:', serverResult);
+            }
+          } catch (serverError) {
+            console.log('ℹ️ No server result available, using local storage');
+          } finally {
+            setCheckingServer(false);
+          }
+        }
+
       } catch (err) {
         setError(err?.message || "Failed to load course");
       } finally {
         setLoading(false);
       }
     };
-    loadCourse();
-  }, [id, getVideoCourseById]);
+    
+    loadCourseAndResult();
+  }, [id, getVideoCourseById, getFinalTestResult, userData]);
 
-  useEffect(() => {
-    if (storedData && !certificateInfo) {
-      setCertificateInfo(storedInfo);
-    }
-  }, [storedData, certificateInfo]);
+  // استخدام بيانات السيرفر إذا كانت متاحة
+  const finalPercentage = certificateInfo?.score || percentage;
+  const finalIsEligible = finalPercentage >= 65;
 
   const downloadPDF = async () => {
+    // منع تحميل الشهادة إذا لم يكن مؤهلاً
+    if (!finalIsEligible) {
+      alert("You are not eligible to download the certificate. You need to score 65% or higher in the final test.");
+      return;
+    }
+
     try {
       const pdf = new jsPDF("landscape", "mm", "a4");
       const img = new Image();
@@ -88,7 +120,7 @@ export default function CourseCertificate() {
         pdf.text(course?.title || "Course Title", 148, 130, { align: "center" });
 
         pdf.setFontSize(16);
-        pdf.text(`Score: ${Math.round(percentage)}%`, 148, 142, { align: "center" });
+        pdf.text(`Score: ${Math.round(finalPercentage)}%`, 148, 142, { align: "center" });
 
         pdf.setFontSize(14);
         pdf.text(`Date: ${certDate}`, 40, 190);
@@ -102,8 +134,51 @@ export default function CourseCertificate() {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
-  if (error || !course || (!percentage && !storedInfo))
+  if (loading || checkingServer) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <LoadingSpinner />
+        {checkingServer && (
+          <p className="mt-4 text-text-muted">Checking test results...</p>
+        )}
+      </div>
+    );
+  }
+  
+  // إذا لم يكن مؤهلاً للشهادة، اعرض رسالة خطأ
+  if (!finalIsEligible) {
+    return (
+      <section className="flex items-center justify-center min-h-screen bg-background text-text">
+        <div className="max-w-md p-8 text-center bg-white rounded-lg shadow-lg">
+          <div className="flex justify-center mb-4">
+            <FaExclamationTriangle className="w-16 h-16 text-yellow-500" />
+          </div>
+          <h2 className="mb-4 text-2xl font-bold text-gray-800">
+            {t("courses.certificateNotAvailable", "Certificate Not Available")}
+          </h2>
+          <p className="mb-6 text-gray-600">
+            {t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate.")}
+          </p>
+          <div className="p-4 mb-6 bg-gray-100 rounded-lg">
+            <p className="text-lg font-semibold text-gray-800">
+              {t("courses.yourScore", "Your Score")}: <span className="text-red-600">{Math.round(finalPercentage)}%</span>
+            </p>
+            <p className="mt-2 text-sm text-gray-600">
+              {t("courses.requiredScore", "Required Score")}: 65%
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/courses/${id}/lessons`)}
+            className="px-6 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+          >
+            {t("courses.backToLessons", "Back to Lessons")}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (error || !course)
     return (
       <section className="flex items-center justify-center min-h-screen bg-background text-text">
         <div className="text-center">
@@ -138,6 +213,13 @@ export default function CourseCertificate() {
 
         {/* Certificate Container */}
         <div className="flex flex-col items-center justify-center min-h-[70vh] bg-surface rounded-2xl shadow-2xl border border-border p-4 sm:p-8">
+          {certificateInfo?.fromServer && (
+            <div className="flex items-center gap-2 p-2 mb-4 text-green-800 bg-green-100 rounded-lg">
+              <FaSync className="animate-spin" />
+              <span className="text-sm">Verified Server Result</span>
+            </div>
+          )}
+          
           <div className="relative w-full max-w-4xl aspect-[1.41/1]">
             <img
               src={certificateImage}
@@ -180,7 +262,7 @@ export default function CourseCertificate() {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                Score: {Math.round(percentage)}%
+                Score: {Math.round(finalPercentage)}%
               </p>
 
               {/* Date */}

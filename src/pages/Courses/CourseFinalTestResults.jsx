@@ -11,11 +11,12 @@ export default function CourseFinalTestResults() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById } = useApi();
+  const { getVideoCourseById, saveFinalTestResult } = useApi(); // إضافة الدالة الجديدة
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [savingResult, setSavingResult] = useState(false);
 
   const passedState = location.state || {};
   const results = passedState.results || null;
@@ -38,6 +39,33 @@ export default function CourseFinalTestResults() {
     };
     loadCourse();
   }, [id, getVideoCourseById]);
+
+  // دالة لحفظ نتيجة الاختبار في السيرفر
+  const saveResultToServer = async (percentage, passed) => {
+    try {
+      setSavingResult(true);
+      const testData = {
+        score: percentage,
+        percentage: percentage,
+        passed: passed
+      };
+      
+      await saveFinalTestResult(id, testData);
+      console.log('✅ Final test result saved to server');
+    } catch (error) {
+      console.error('❌ Failed to save final test result:', error);
+      // لو فشل الحفظ في السيرفر، نرجع للطريقة القديمة كـ fallback
+      const userSpecificKey = `course_${id}_certificate_${userData?.id || 'anonymous'}`;
+      const certificateData = {
+        score: percentage,
+        date: new Date().toISOString(),
+        passed: passed
+      };
+      localStorage.setItem(userSpecificKey, JSON.stringify(certificateData));
+    } finally {
+      setSavingResult(false);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner />;
@@ -120,23 +148,24 @@ export default function CourseFinalTestResults() {
             <div className="flex flex-col gap-4 md:flex-row md:justify-center">
               {passed ? (
                 <button
-                  onClick={() => {
-                    // Store certificate data in localStorage for persistence
-                    const certificateData = {
-                      score: percentage,
-                      date: new Date().toISOString(),
-                      passed: true
-                    };
-                    localStorage.setItem(`course_${id}_certificate`, JSON.stringify(certificateData));
-                    localStorage.setItem(`course_${id}_certificate_score`, percentage.toString());
+                  onClick={async () => {
+                    // حفظ النتيجة في السيرفر أولاً
+                    await saveResultToServer(percentage, true);
+                    
+                    // ثم التوجه للشهادة
                     navigate(`/courses/${id}/certificate`, { 
-                      state: { finalTestPercentage: percentage, userName } 
+                      state: { 
+                        finalTestPercentage: percentage, 
+                        userName,
+                        fromServer: true // إشارة أن البيانات من السيرفر
+                      } 
                     });
                   }}
-                  className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl"
+                  disabled={savingResult}
+                  className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FaCertificate />
-                  {t("courses.viewCertificate", "View Certificate")}
+                  {savingResult ? t("common.saving", "Saving...") : t("courses.viewCertificate", "View Certificate")}
                 </button>
               ) : (
                 <div className="text-center">
