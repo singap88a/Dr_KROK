@@ -91,18 +91,9 @@ export default function CourseTestRunner() {
         setCheckingPreviousTest(true);
         console.log('🔍 Checking for previous test...');
         
-        const isLiveCourse = location.pathname.includes('live-courses');
-        const courseType = isLiveCourse ? "live" : "video";
-        
         const checkData = {
-          type: courseType
+          test_id: parseInt(testId)
         };
-
-        if (scope === "lesson") {
-          checkData.lesson_id = parseInt(lessonId);
-        } else {
-          checkData.course_id = parseInt(id);
-        }
 
         console.log('📤 Sending check data:', checkData);
 
