@@ -9,7 +9,7 @@ export default function CourseTestRunner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, completeLessonProgress, addStudentTest, checkStudentTest } =
+  const { getVideoCourseById, getLiveCourseById, completeLessonProgress, completeLiveLessonProgress, addStudentTest, checkStudentTest } =
     useApi();
 
   const passedState = location.state || {};
@@ -322,7 +322,11 @@ export default function CourseTestRunner() {
     if (scope === "lesson" && lessonId) {
       try {
         console.log('🎯 Marking lesson as completed...');
-        await completeLessonProgress(id, lessonId, "quiz");
+        if (isLiveCourse) {
+          await completeLiveLessonProgress(id, lessonId, "quiz");
+        } else {
+          await completeLessonProgress(id, lessonId, "quiz");
+        }
         console.log('✅ Lesson marked as completed');
       } catch (error) {
         console.error("❌ Failed to complete lesson progress:", error);
@@ -355,7 +359,12 @@ export default function CourseTestRunner() {
   const markDoneAndBack = async () => {
     if (scope === "lesson" && lessonId) {
       try {
-        await completeLessonProgress(id, lessonId, "quiz");
+        const isLiveCourse = location.pathname.includes('live-courses');
+        if (isLiveCourse) {
+          await completeLiveLessonProgress(id, lessonId, "quiz");
+        } else {
+          await completeLessonProgress(id, lessonId, "quiz");
+        }
       } catch (e) {
         console.warn("Failed to complete lesson progress:", e);
       }
