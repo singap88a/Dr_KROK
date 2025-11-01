@@ -213,6 +213,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      
       // Placement Courses API
       async getPlacementCourses(params = {}) {
         const type = params.type || 'all';
@@ -235,6 +236,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         const live = Array.isArray(liveRes?.data) ? liveRes.data.map((c) => ({ ...c, type: 'live' })) : [];
         return { data: [...video, ...live], raw: { video: videoRes, live: liveRes } };
       },
+      
       // Video Courses API
       async getVideoCourses(params = {}) {
         const query = new URLSearchParams();
@@ -248,6 +250,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           raw: response,
         };
       },
+      
       async getLiveCourses(params = {}) {
         const query = new URLSearchParams();
         if (params.page) query.set("page", params.page);
@@ -260,6 +263,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           raw: response,
         };
       },
+      
       async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
@@ -284,6 +288,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
+      
       async getLiveCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
@@ -308,6 +313,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
+      
       async getLiveCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -338,6 +344,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
+      
       async getCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -368,6 +375,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           throw err;
         }
       },
+      
       async getCourseAccess(courseId, type = null) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -401,6 +409,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           return false;
         }
       },
+      
       // Video course progress API
       async getCourseProgress(courseId) {
         if (!courseId) throw new Error("Course id is required");
@@ -419,6 +428,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         }
         return { status: 'not_started', percentage: 0, course_id: Number(courseId) };
       },
+      
       async startLessonProgress(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         const candidates = [
@@ -437,35 +447,36 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         throw new Error('Progress start endpoint not available');
       },
 
-async completeLessonProgress(courseId, lessonId, type) {
-  if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-  
-  const formData = new FormData();
-  formData.append('course', String(courseId));
-  formData.append('lesson', String(lessonId));
-  formData.append('type', type || 'lesson'); // Default to 'lesson' if not provided
-  
-  const candidates = [
-    `courses/${courseId}/progress/${lessonId}/complete`,
-    `video_courses/${courseId}/progress/${lessonId}/complete`,
-    `video_course/${courseId}/progress/${lessonId}/complete`
-  ];
-  
-  for (const path of candidates) {
-    try {
-      const res = await request(path, { 
-        method: 'POST', 
-        auth: true, 
-        body: formData, 
-        isFormData: true 
-      });
-      return res?.data || null;
-    } catch (e) {
-      if (e?.status && e.status !== 404) throw e;
-    }
-  }
-  throw new Error('Progress complete endpoint not available');
-},
+      async completeLessonProgress(courseId, lessonId, type) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
+        
+        const formData = new FormData();
+        formData.append('course', String(courseId));
+        formData.append('lesson', String(lessonId));
+        formData.append('type', type || 'lesson'); // Default to 'lesson' if not provided
+        
+        const candidates = [
+          `courses/${courseId}/progress/${lessonId}/complete`,
+          `video_courses/${courseId}/progress/${lessonId}/complete`,
+          `video_course/${courseId}/progress/${lessonId}/complete`
+        ];
+        
+        for (const path of candidates) {
+          try {
+            const res = await request(path, { 
+              method: 'POST', 
+              auth: true, 
+              body: formData, 
+              isFormData: true 
+            });
+            return res?.data || null;
+          } catch (e) {
+            if (e?.status && e.status !== 404) throw e;
+          }
+        }
+        throw new Error('Progress complete endpoint not available');
+      },
+      
       // Course Progress API functions
       async getCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
@@ -482,6 +493,7 @@ async completeLessonProgress(courseId, lessonId, type) {
         }
         return null;
       },
+      
       async markLessonAsCompleted(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
 
@@ -513,6 +525,7 @@ async completeLessonProgress(courseId, lessonId, type) {
         }
         throw new Error('Lesson complete endpoint not available');
       },
+      
       async updateLessonProgress(courseId, lessonId, progressData) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
 
@@ -551,6 +564,7 @@ async completeLessonProgress(courseId, lessonId, type) {
         }
         throw new Error('Lesson progress endpoint not available');
       },
+      
       // Live Course Progress API functions
       async getLiveCourseProgress(courseId) {
         if (!courseId) throw new Error("Course id is required");
@@ -568,6 +582,7 @@ async completeLessonProgress(courseId, lessonId, type) {
         }
         return { status: 'not_started', percentage: 0, course_id: Number(courseId) };
       },
+      
       async startLiveLessonProgress(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         const candidates = [
@@ -584,84 +599,86 @@ async completeLessonProgress(courseId, lessonId, type) {
         }
         throw new Error('Live course progress start endpoint not available');
       },
-async completeLiveLessonProgress(courseId, lessonId, type) {
-  if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-  
-  // تأكد من وجود التوكن أولاً
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error("Authentication token is required");
-  }
-
-  const formData = new FormData();
-  formData.append('course', String(courseId));
-  formData.append('lesson', String(lessonId));
-  formData.append('type', type || 'lesson');
-  
-  console.log('Sending completeLiveLessonProgress request:', {
-    courseId,
-    lessonId,
-    type,
-    formData: {
-      course: courseId,
-      lesson: lessonId,
-      type: type || 'lesson'
-    }
-  });
-
-  try {
-    // استخدم endpoint واحد فقط بدلاً من محاولة عدة endpoints
-    const res = await request(`live_courses/${courseId}/progress/${lessonId}/complete`, {
-      method: 'POST',
-      body: formData,
-      isFormData: true,
-      auth: true
-    });
-
-    // تحقق من الاستجابة
-    if (!res) {
-      throw new Error("No response from server");
-    }
-
-    if (res.code === 422) {
-      throw new Error(res.message || "The selected lesson is invalid.");
-    }
-
-    if (!res.success && res.code !== 200) {
-      throw new Error(res.message || "Failed to complete lesson progress");
-    }
-
-    return res;
-  } catch (error) {
-    console.error("Error completing lesson progress:", error);
-    
-    // إذا كان الخطأ 422، حاول مع endpoint بديل
-    if (error.message.includes("The selected lesson is invalid") || error.status === 422) {
-      console.log('Trying alternative endpoint for quiz completion...');
       
-      const alternativeFormData = new FormData();
-      alternativeFormData.append('course_id', String(courseId));
-      alternativeFormData.append('lesson_id', String(lessonId));
-      alternativeFormData.append('type', type || 'quiz');
-      
-      try {
-        const altRes = await request(`courses/${courseId}/progress/${lessonId}/complete`, {
-          method: 'POST',
-          body: alternativeFormData,
-          isFormData: true,
-          auth: true
-        });
+      async completeLiveLessonProgress(courseId, lessonId, type) {
+        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         
-        return altRes;
-      } catch (altError) {
-        console.error("Alternative endpoint also failed:", altError);
-        throw altError;
-      }
-    }
-    
-    throw error;
-  }
-},
+        // تأكد من وجود التوكن أولاً
+        const token = getAuthToken();
+        if (!token) {
+          throw new Error("Authentication token is required");
+        }
+
+        const formData = new FormData();
+        formData.append('course', String(courseId));
+        formData.append('lesson', String(lessonId));
+        formData.append('type', type || 'lesson');
+        
+        console.log('Sending completeLiveLessonProgress request:', {
+          courseId,
+          lessonId,
+          type,
+          formData: {
+            course: courseId,
+            lesson: lessonId,
+            type: type || 'lesson'
+          }
+        });
+
+        try {
+          // استخدم endpoint واحد فقط بدلاً من محاولة عدة endpoints
+          const res = await request(`live_courses/${courseId}/progress/${lessonId}/complete`, {
+            method: 'POST',
+            body: formData,
+            isFormData: true,
+            auth: true
+          });
+
+          // تحقق من الاستجابة
+          if (!res) {
+            throw new Error("No response from server");
+          }
+
+          if (res.code === 422) {
+            throw new Error(res.message || "The selected lesson is invalid.");
+          }
+
+          if (!res.success && res.code !== 200) {
+            throw new Error(res.message || "Failed to complete lesson progress");
+          }
+
+          return res;
+        } catch (error) {
+          console.error("Error completing lesson progress:", error);
+          
+          // إذا كان الخطأ 422، حاول مع endpoint بديل
+          if (error.message.includes("The selected lesson is invalid") || error.status === 422) {
+            console.log('Trying alternative endpoint for quiz completion...');
+            
+            const alternativeFormData = new FormData();
+            alternativeFormData.append('course_id', String(courseId));
+            alternativeFormData.append('lesson_id', String(lessonId));
+            alternativeFormData.append('type', type || 'quiz');
+            
+            try {
+              const altRes = await request(`courses/${courseId}/progress/${lessonId}/complete`, {
+                method: 'POST',
+                body: alternativeFormData,
+                isFormData: true,
+                auth: true
+              });
+              
+              return altRes;
+            } catch (altError) {
+              console.error("Alternative endpoint also failed:", altError);
+              throw altError;
+            }
+          }
+          
+          throw error;
+        }
+      },
+      
       async getLiveCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
@@ -678,6 +695,7 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
         }
         return null;
       },
+      
       async markLiveLessonAsCompleted(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
 
@@ -709,6 +727,7 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
         }
         throw new Error('Live lesson complete endpoint not available');
       },
+      
       async getLiveLessonProgress(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         const candidates = [
@@ -725,6 +744,7 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
         }
         return null;
       },
+      
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();
@@ -739,6 +759,7 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
           raw: response
         };
       },
+      
       // Reviews API
       async submitCourseReview(courseId, rating, comment) {
         const formData = new FormData();
@@ -766,17 +787,21 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
           isFormData: true
         });
       },
+      
       async getUserRatings() {
         return await request('user/ratings', { auth: true });
       },
+      
       async checkUserReview(courseId) {
         return await request(`courses/${courseId}/user-review`, { auth: true });
       },
+      
       // Orders API
       async getOrders() {
         const response = await request('orders', { auth: true });
         return response.data || { orders: [] };
       },
+      
       // Course subscription
       async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();
@@ -897,6 +922,7 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
           throw error;
         }
       },
+      
       // Live course subscription
       async subscribeToLiveCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();
@@ -1017,80 +1043,122 @@ async completeLiveLessonProgress(courseId, lessonId, type) {
           throw error;
         }
       },
+      
       // Get user's enrolled courses
       async getMyCourses() {
         const response = await request("profile/get-my-courses", { auth: true });
         return response.data || [];
       },
-      // Add student test results
-// ApiContext.jsx - عدل الدالة دي
-
-// ApiContext.jsx - عدل الدالة دي فقط
-
-async addStudentTest(testData) {
-  console.log('🎯 addStudentTest called with:', testData);
-  
-  try {
-    // استخدم getAuthToken من الـ closure بدل this
-    const token = getAuthToken();
-    
-    if (!token) {
-      console.error('❌ No authentication token found');
-      throw new Error("Authentication token is required");
-    }
-
-    console.log('🔑 Token found:', token ? 'Yes' : 'No');
-
-    // استخدم الـ request function الموجود بدل fetch مباشر
-    const response = await request("add_student_test", {
-      method: "POST",
-      body: testData,
-      auth: true
-    });
-
-    console.log('✅ API Response:', response);
-    return response;
-    
-  } catch (error) {
-    console.error('❌ Error in addStudentTest:', error);
-    
-    // إذا فشل مع JSON، جرب مع FormData
-    console.log('🔄 Trying with FormData...');
-    
-    const formData = new FormData();
-    formData.append('test_id', testData.test_id?.toString() || "");
-    formData.append('course_id', testData.course_id?.toString() || "");
-    if (testData.lesson_id) {
-      formData.append('lesson_id', testData.lesson_id?.toString() || "");
-    }
-    formData.append('type', testData.type || "");
-    formData.append('student_score', testData.student_score?.toString() || "0");
-    formData.append('total_score', testData.total_score?.toString() || "0");
-    formData.append('result_status', testData.result_status?.toString() || "1");
-    formData.append('total_questions', testData.total_questions?.toString() || "0");
-    formData.append('questions', JSON.stringify(testData.questions || []));
-
-    console.log('🧾 FormData entries:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
-
-    try {
-      const formDataResponse = await request("add_student_test", {
-        method: "POST",
-        body: formData,
-        auth: true,
-        isFormData: true
-      });
       
-      console.log('✅ FormData response:', formDataResponse);
-      return formDataResponse;
-    } catch (formDataError) {
-      console.error('❌ FormData also failed:', formDataError);
-      throw formDataError;
-    }
-  }
-}
+      // Add student test results
+      async addStudentTest(testData) {
+        console.log('🎯 addStudentTest called with:', testData);
+        
+        try {
+          // استخدم getAuthToken من الـ closure بدل this
+          const token = getAuthToken();
+          
+          if (!token) {
+            console.error('❌ No authentication token found');
+            throw new Error("Authentication token is required");
+          }
+
+          console.log('🔑 Token found:', token ? 'Yes' : 'No');
+
+          // استخدم الـ request function الموجود بدل fetch مباشر
+          const response = await request("add_student_test", {
+            method: "POST",
+            body: testData,
+            auth: true
+          });
+
+          console.log('✅ API Response:', response);
+          return response;
+          
+        } catch (error) {
+          console.error('❌ Error in addStudentTest:', error);
+          
+          // إذا فشل مع JSON، جرب مع FormData
+          console.log('🔄 Trying with FormData...');
+          
+          const formData = new FormData();
+          formData.append('test_id', testData.test_id?.toString() || "");
+          formData.append('course_id', testData.course_id?.toString() || "");
+          if (testData.lesson_id) {
+            formData.append('lesson_id', testData.lesson_id?.toString() || "");
+          }
+          formData.append('type', testData.type || "");
+          formData.append('student_score', testData.student_score?.toString() || "0");
+          formData.append('total_score', testData.total_score?.toString() || "0");
+          formData.append('result_status', testData.result_status?.toString() || "1");
+          formData.append('total_questions', testData.total_questions?.toString() || "0");
+          formData.append('questions', JSON.stringify(testData.questions || []));
+
+          console.log('🧾 FormData entries:');
+          for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+          }
+
+          try {
+            const formDataResponse = await request("add_student_test", {
+              method: "POST",
+              body: formData,
+              auth: true,
+              isFormData: true
+            });
+            
+            console.log('✅ FormData response:', formDataResponse);
+            return formDataResponse;
+          } catch (formDataError) {
+            console.error('❌ FormData also failed:', formDataError);
+            throw formDataError;
+          }
+        }
+      },
+
+      // Check student test - التحقق من الاختبار السابق
+      async checkStudentTest(testData) {
+        console.log('🔍 checkStudentTest called with:', testData);
+        
+        try {
+          const response = await request("checkStudentTest", {
+            method: "POST",
+            body: testData,
+            auth: true
+          });
+
+          console.log('✅ checkStudentTest response:', response);
+          return response;
+          
+        } catch (error) {
+          console.error('❌ Error in checkStudentTest:', error);
+          
+          // إذا فشل مع JSON، جرب مع FormData
+          console.log('🔄 Trying with FormData...');
+          
+          const formData = new FormData();
+          formData.append('course_id', testData.course_id?.toString() || "");
+          if (testData.lesson_id) {
+            formData.append('lesson_id', testData.lesson_id?.toString() || "");
+          }
+          formData.append('type', testData.type || "");
+
+          try {
+            const formDataResponse = await request("checkStudentTest", {
+              method: "POST",
+              body: formData,
+              auth: true,
+              isFormData: true
+            });
+            
+            console.log('✅ FormData response for checkStudentTest:', formDataResponse);
+            return formDataResponse;
+          } catch (formDataError) {
+            console.error('❌ FormData also failed for checkStudentTest:', formDataError);
+            throw formDataError;
+          }
+        }
+      }
 
     }),
     [
