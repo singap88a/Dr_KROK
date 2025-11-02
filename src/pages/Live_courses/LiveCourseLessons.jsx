@@ -373,15 +373,14 @@ export default function LiveCourseLessons() {
         setLessons(courseData.lessons || []);
         setSections(courseData.sections || []);
 
-        const sectionsWithFreeLessons = new Set();
+        // Expand all sections to show all lessons including locked ones
+        const allSectionIds = new Set();
         if (courseData.sections) {
           courseData.sections.forEach((section) => {
-            if (section.lessons && section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free")) {
-              sectionsWithFreeLessons.add(section.id);
-            }
+            allSectionIds.add(section.id);
           });
         }
-        setExpandedSections(sectionsWithFreeLessons);
+        setExpandedSections(allSectionIds);
 
         if (courseData?.lessons?.length) {
           const initialStatuses = {};
@@ -603,17 +602,9 @@ const getSectionLessons = useMemo(() => {
       return (a.id || 0) - (b.id || 0);
     });
 
-    // إذا المستخدم عنده اشتراك، عرض كل الدروس
-    if (hasAccess) {
-      return sectionLessons;
-    }
-    
-    // إذا مفيش اشتراك، عرض فقط الدروس المجانية
-    return sectionLessons.filter(lesson => 
-      lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
-    );
+    return sectionLessons;
   };
-}, [sections, hasAccess]);
+}, [sections]);
 
 const hasFreeLessons = useMemo(() => {
   return (sectionId) => {
@@ -640,7 +631,7 @@ const hasFreeLessons = useMemo(() => {
 const handleLessonClick = async (lesson) => {
   const isFree = lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true;
   
-  // إذا الدرس مش مجاني والمستخدم ماعندهوش اشتراك
+  // If lesson is not free and user doesn't have access
   if (!isFree && !hasAccess) {
     if (!isLoggedIn) {
       navigate("/login");
@@ -672,7 +663,7 @@ const handleLessonClick = async (lesson) => {
 };
 
 const handleSectionClick = (section) => {
-  // إذا مفيش دروس مجانية في السيكشن والمستخدم ماعندهوش اشتراك
+  // If no free lessons in section and user doesn't have access
   const hasFree = hasFreeLessons(section.id);
   if (!hasFree && !hasAccess) {
     if (!isLoggedIn) {
@@ -728,6 +719,25 @@ const handleSectionClick = (section) => {
         return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700";
+    }
+  };
+
+  // Helper: format session start time like "02 Nov 2025 - 06:43 PM"
+  const formatSessionTime = (dateString) => {
+    if (!dateString) return null;
+    try {
+      const d = new Date(dateString.replace(" ", "T"));
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = d.toLocaleString(undefined, { month: "short" });
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = d.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      const hourStr = hours.toString().padStart(2, "0");
+      return `${day} ${month} ${year} - ${hourStr}:${minutes} ${ampm}`;
+    } catch {
+      return dateString;
     }
   };
 
@@ -932,86 +942,179 @@ const handleSectionClick = (section) => {
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
               {currentLesson || currentSection ? (
                 <div className="relative">
-                  <div className="relative aspect-video">
-                    <VideoPlayer
-                      currentLesson={currentLesson}
-                      currentSection={currentSection}
-                      handleVideoTimeUpdate={handleVideoTimeUpdate}
-                      handleVideoEnd={handleVideoEnd}
-                    />
+                  {currentLesson && currentLesson.status === "active" ? (
+                    // Active status - show ALL content normally
+                    <>
+                      <div className="relative aspect-video">
+                        <VideoPlayer
+                          currentLesson={currentLesson}
+                          currentSection={currentSection}
+                          handleVideoTimeUpdate={handleVideoTimeUpdate}
+                          handleVideoEnd={handleVideoEnd}
+                        />
 
-                    {/* Quiz Modals */}
-                    <QuizModal
-                      quizModal={quizModal}
-                      setQuizModal={setQuizModal}
-                      setAnsweredQuizzes={setAnsweredQuizzes}
-                      setQuizResults={setQuizResults}
-                    />
+                        {/* Quiz Modals */}
+                        <QuizModal
+                          quizModal={quizModal}
+                          setQuizModal={setQuizModal}
+                          setAnsweredQuizzes={setAnsweredQuizzes}
+                          setQuizResults={setQuizResults}
+                        />
 
-                    <ResultsModal
-                      resultsModal={resultsModal}
-                      setResultsModal={setResultsModal}
-                    />
-                  </div>
-                  <div className="p-4 border-t border-border">
-                    <h3 className="text-lg font-semibold text-text">
-                      {currentLesson?.title || currentSection?.title}
-                    </h3>
-                    {isLoggedIn && currentLesson?.video && (
-                      <div className="mt-3">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleLessonComplete(currentLesson.id);
-                          }}
-                          className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
-                        >
-                          {t("courses.markCompleted", "Mark as Completed")}
-                        </button>
+                        <ResultsModal
+                          resultsModal={resultsModal}
+                          setResultsModal={setResultsModal}
+                        />
                       </div>
-                    )}
-                    {(currentLesson?.description || currentSection?.description) && (
-                      <div className="mt-2 text-sm text-text-secondary">
-                        <p className="leading-relaxed line-clamp-2">
-                          {currentLesson?.description || currentSection?.description}
+
+                      <div className="p-4 border-t border-border">
+                        <h3 className="text-lg font-semibold text-text">
+                          {currentLesson?.title || currentSection?.title}
+                        </h3>
+
+                        {/* Mark as Completed Button */}
+                        {isLoggedIn && currentLesson?.video && (
+                          <div className="mt-3">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleLessonComplete(currentLesson.id);
+                              }}
+                              className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
+                            >
+                              {t("courses.markCompleted", "Mark as Completed")}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Session description */}
+                        {currentLesson?.description && (
+                          <div className="mt-3 text-sm text-text-secondary">
+                            <p className="leading-relaxed">
+                              {currentLesson.description}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Session start time - ALWAYS show if available */}
+                        {currentLesson?.started_at && (
+                          <div className="flex items-center gap-2 p-3 mt-3 text-sm border rounded bg-surface-2 border-border-2">
+                            <FaCalendarAlt className="text-primary" />
+                            <span className="font-medium">Session Date:</span>
+                            <span className="text-text-muted">
+                              {formatSessionTime(currentLesson.started_at)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Zoom link - ALWAYS show if available */}
+                        {currentLesson?.zoom_link && (
+                          <div className="mt-3">
+                            <a
+                              href={currentLesson.zoom_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
+                            >
+                              <FaVideo />
+                              Join Live Session
+                            </a>
+                          </div>
+                        )}
+
+                        {/* Batch info */}
+                        {course?.batch_info || currentLesson?.batch_status ? (
+                          <div className="p-3 mt-3 text-sm border rounded bg-surface-2 border-border-2">
+                            <div className="mb-1 font-semibold">Batch Info</div>
+                            <div className="text-sm text-text-muted">
+                              {course?.batch_info?.batch_name ? (
+                                <>
+                                  <div><span className="font-medium">Batch:</span> {course.batch_info.batch_name}</div>
+                                  <div><span className="font-medium">Status:</span> {course.batch_info.status || currentLesson.batch_status || "-"}</div>
+                                  <div><span className="font-medium">Students:</span> {course.batch_info.students_count ?? currentLesson.students_count ?? "-"}</div>
+                                  {course.batch_info.instructor && <div><span className="font-medium">Instructor:</span> {course.batch_info.instructor}</div>}
+                                </>
+                              ) : (
+                                <>
+                                  <div><span className="font-medium">Status:</span> {currentLesson.batch_status || "—"}</div>
+                                  <div><span className="font-medium">Students:</span> {course?.batch_info?.students_count ?? "-"}</div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Attachments */}
+                        <LessonAttachments
+                          content={currentLesson || currentSection}
+                          setSelectedImage={setSelectedImage}
+                          setShowImagePopup={setShowImagePopup}
+                          handleFileClick={handleFileClick}
+                          handleVideoClick={handleVideoClick}
+                          type={currentLesson ? "lesson" : "section"}
+                        />
+
+                        {/* Quizzes */}
+                        {currentLesson && (
+                          <>
+                            <PeriodicQuizzesSection lesson={currentLesson} />
+                            <LessonEndTestsSection 
+                              lesson={currentLesson} 
+                              lessonStatuses={lessonStatuses} 
+                              id={id} 
+                              course={course} 
+                            />
+                          </>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    // Inactive status - show professional message
+                    <div className="p-8 text-center aspect-video bg-accent">
+                      <div className="max-w-lg mx-auto">
+                        <div className="mb-4 text-3xl">
+                          <FaClock className="mx-auto text-4xl text-yellow-500" />
+                        </div>
+
+                        <div className="mb-3 text-lg font-semibold text-text">
+                          Session is Currently Inactive
+                        </div>
+
+                        {/* ALWAYS show session date if available */}
+                        {currentLesson?.started_at && (
+                          <div className="p-3 mb-4 text-sm border rounded bg-surface-2 border-border-2">
+                            <div className="flex items-center justify-center gap-2">
+                              <FaCalendarAlt className="text-primary" />
+                              <span className="font-medium">Session Date:</span>
+                              <span className="text-text-muted">
+                                {formatSessionTime(currentLesson.started_at)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ALWAYS show zoom link if available */}
+                        {currentLesson?.zoom_link && (
+                          <div className="mt-4">
+                            <a
+                              href={currentLesson.zoom_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded text-primary hover:bg-primary/5"
+                            >
+                              <FaVideo />
+                              View Meeting Link
+                            </a>
+                          </div>
+                        )}
+
+                        <p className="mt-3 text-sm text-text-muted">
+                          This session is not currently active. Please check the schedule for updates.
                         </p>
                       </div>
-                    )}
-
-                    {/* Attachments */}
-                    <LessonAttachments
-                      content={currentLesson || currentSection}
-                      setSelectedImage={setSelectedImage}
-                      setShowImagePopup={setShowImagePopup}
-                      handleFileClick={handleFileClick}
-                      handleVideoClick={handleVideoClick}
-                      type={currentLesson ? "lesson" : "section"}
-                    />
-
-                    {/* Quizzes */}
-                    {currentLesson && (
-                      <>
-                        <PeriodicQuizzesSection lesson={currentLesson} />
-                        <LessonEndTestsSection 
-                          lesson={currentLesson} 
-                          lessonStatuses={lessonStatuses} 
-                          id={id} 
-                          course={course} 
-                        />
-                      </>
-                    )}
-
-                    {currentSection && (
-                      <SectionTestsSection
-                        section={currentSection}
-                        id={id}
-                        course={course}
-                        calculateSectionProgress={calculateSectionProgress}
-                        sectionProgress={sectionProgress}
-                      />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-center bg-accent aspect-video">
@@ -1020,6 +1123,23 @@ const handleSectionClick = (section) => {
                     <p className="text-text-muted">
                       {t("courses.selectContent", "Select a lesson or section to start")}
                     </p>
+                    {!hasAccess && (
+                      <div className="p-4 mt-4 border border-yellow-300 rounded-lg bg-yellow-50">
+                        <div className="flex items-center gap-2 text-yellow-800">
+                          <FaLock className="text-yellow-600" />
+                          <span className="font-medium">Premium Content Locked</span>
+                        </div>
+                        <p className="mt-2 text-sm text-yellow-700">
+                          You need to enroll in this course to access all premium lessons and materials.
+                        </p>
+                        <button
+                          onClick={() => setShowPurchaseModal(true)}
+                          className="px-4 py-2 mt-3 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700"
+                        >
+                          Enroll Now to Unlock
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
