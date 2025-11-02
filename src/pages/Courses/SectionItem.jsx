@@ -23,7 +23,6 @@ const SectionItem = ({
   isExpanded,
   isActive,
   hasFree,
-  isAccessible,
   lessonStatuses,
   currentLesson,
   sectionProgress,
@@ -37,6 +36,9 @@ const SectionItem = ({
   course
 }) => {
   const { t } = useTranslation();
+
+  // التحقق من وجود دروس مقفلة في السيكشن
+  const hasPremiumLessons = lessons && lessons.some(lesson => lesson.type !== "free" && lesson.type !== "Free");
 
   // حساب نسبة إكمال السيكشن
   const calculateSectionCompletion = () => {
@@ -210,7 +212,7 @@ const SectionItem = ({
                     {section.title.split(" ").length > 4 && "..."}
                   </h4>
 
-                  {!isAccessible && (
+                  {hasPremiumLessons && (
                     <FaLock
                       className="ml-2 text-sm text-text-muted"
                       title="Premium"

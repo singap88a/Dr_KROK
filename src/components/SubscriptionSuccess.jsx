@@ -202,13 +202,7 @@ export default function SubscriptionSuccess({ course, orderData }) {
                 {t('profile.title', 'My Profile')}
               </Link>
               
-              <Link
-                to="/dashboard"
-                className="flex items-center justify-center flex-1 gap-2 px-6 py-3 font-semibold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl hover:shadow-xl hover:scale-105"
-              >
-                <FaGraduationCap />
-                {t('dashboard.title', 'Dashboard')}
-              </Link>
+ 
             </div>
           </div>
         </div>
