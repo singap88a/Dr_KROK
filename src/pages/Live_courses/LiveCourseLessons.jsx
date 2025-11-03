@@ -9,14 +9,11 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import SectionItem from "../Courses/SectionItem";
 
 // Import Components
-import { ProgressCircle } from "./ProgressSystem/ProgressCircle";
-import { SectionProgressBar } from "./ProgressSystem/SectionProgress";
 import { useLessonProgress } from "./ProgressSystem/LessonProgress";
 import { QuizModal } from "./QuizSystem/QuizModal";
 import { ResultsModal } from "./QuizSystem/ResultsModal";
 import { LessonEndTestsSection } from "./QuizSystem/LessonEndTests";
 import { PeriodicQuizzesSection } from "./QuizSystem/PeriodicQuizzes";
-import { SectionTestsSection } from "./QuizSystem/SectionTests";
 import { FinalTestsSection } from "./QuizSystem/FinalTests";
 import { ImagePopup } from "./ContentModals/ImagePopup";
 import { PDFPopup } from "./ContentModals/PDFPopup";
@@ -70,7 +67,6 @@ export default function LiveCourseLessons() {
     completeLiveLessonProgress,
     getLiveLessonProgress,
     getLiveCourseProgressDetails,
-    getLiveCourseLessons,
   } = useApi();
   const { isLoggedIn } = useUser();
 
@@ -964,7 +960,7 @@ const handleSectionClick = (section) => {
           </div>
           <div className="overflow-hidden">
             <div className="text-xs font-medium tracking-wide uppercase text-text-muted">Instructor</div>
-            <div className="font-semibold truncate text-text">{course.batch_info.instructor}</div>
+          <div className="font-semibold truncate text-text">{course.batch_info.instructor?.name || 'Unknown Instructor'}</div>
           </div>
         </div>
       )}
