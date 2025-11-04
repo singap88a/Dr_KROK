@@ -62,6 +62,12 @@ export default function CourseSubscription() {
   // Payment method (default to visa for informational display)
   const selectedPayment = "visa";
 
+  // States الجديدة للتقسيط
+  const [showInstallmentModal, setShowInstallmentModal] = useState(false);
+  const [installmentAmount, setInstallmentAmount] = useState("");
+  const [useInstallment, setUseInstallment] = useState(false);
+  const [installmentError, setInstallmentError] = useState("");
+
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
@@ -116,6 +122,57 @@ export default function CourseSubscription() {
     }
   };
 
+  // دالة لفتح وإغلاق المودال
+  const handleOpenInstallmentModal = () => {
+    setShowInstallmentModal(true);
+    setInstallmentAmount("");
+    setInstallmentError("");
+  };
+
+  const handleCloseInstallmentModal = () => {
+    setShowInstallmentModal(false);
+    setInstallmentAmount("");
+    setInstallmentError("");
+    setUseInstallment(false);
+  };
+
+  // دالة التحقق من مبلغ التقسيط
+  const validateInstallmentAmount = (amount) => {
+    const minAmount = 100; // أقل مبلغ 100 دولار
+    const numericAmount = Number(amount);
+    
+    if (numericAmount < minAmount) {
+      return `أقل مبلغ للتقسيط هو ${minAmount} دولار`;
+    }
+    
+    if (numericAmount > discountedPrice) {
+      return `مبلغ التقسيط لا يمكن أن يزيد عن السعر الإجمالي (${discountedPrice} دولار)`;
+    }
+    
+    return null;
+  };
+
+  // دالة تطبيق التقسيط
+  const handleApplyInstallment = () => {
+    const validationError = validateInstallmentAmount(installmentAmount);
+    
+    if (validationError) {
+      setInstallmentError(validationError);
+      return;
+    }
+    
+    setUseInstallment(true);
+    setShowInstallmentModal(false);
+    setInstallmentError("");
+  };
+
+  // دالة إلغاء التقسيط
+  const handleCancelInstallment = () => {
+    setUseInstallment(false);
+    setInstallmentAmount("");
+    setInstallmentError("");
+  };
+
   const handleSubscription = async () => {
     if (!isLoggedIn) {
       navigate('/login');
@@ -129,18 +186,27 @@ export default function CourseSubscription() {
       console.log('Starting subscription with:', {
         courseId: id,
         paymentMethod: selectedPayment,
-        amount: discountedPrice,
+        amount: useInstallment ? installmentAmount : discountedPrice, // هنا بنبعت مبلغ التقسيط أو المبلغ الكامل
         couponId,
-        userData: JSON.parse(localStorage.getItem("user") || "{}")
+        userData: JSON.parse(localStorage.getItem("user") || "{}"),
+        isInstallment: useInstallment // فلاج علشان نعرف في الباك اند إن ده تقسيط
       });
 
-      const response = await (isLiveCourse ? subscribeToLiveCourse(id, selectedPayment, discountedPrice, couponId) : subscribeToCourse(id, selectedPayment, discountedPrice, couponId));
+      const finalAmount = useInstallment ? installmentAmount : discountedPrice;
+
+      const response = await (isLiveCourse ? 
+        subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId) : 
+        subscribeToCourse(id, selectedPayment, finalAmount, couponId)
+      );
 
       console.log('Subscription response:', response);
 
       if (response && (response.success || response.code === 200)) {
         setOrderData(response.data);
         setSubscriptionSuccess(true);
+        // Reset installment state after successful subscription
+        setUseInstallment(false);
+        setInstallmentAmount("");
       } else {
         throw new Error(response?.message || 'Subscription failed');
       }
@@ -485,10 +551,50 @@ export default function CourseSubscription() {
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <FaShoppingCart />
-                      {t('courses.subscribeNow', 'Subscribe Now')}
+                      {useInstallment ? 
+                        `Pay $${installmentAmount} Installment` : 
+                        t('courses.subscribeNow', 'Subscribe Now')
+                      }
                     </div>
                   )}
                 </button>
+
+                {/* Installment Option */}
+                {!useInstallment && (
+                  <button
+                    onClick={handleOpenInstallmentModal}
+                    disabled={!isLoggedIn}
+                    className="w-full px-6 py-3 mt-3 font-medium transition-colors border rounded-lg text-primary border-primary hover:bg-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <FaCreditCard />
+                      {t('courses.payInInstallments', 'Pay in Installments')}
+                    </div>
+                  </button>
+                )}
+
+                {/* Installment Info */}
+                {useInstallment && (
+                  <div className="p-3 mt-3 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FaCheck className="text-green-600" />
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                          Paying in installments: ${installmentAmount}
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleCancelInstallment}
+                        className="text-sm text-red-600 hover:text-red-800"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-green-600 dark:text-green-300">
+                      Remaining balance: ${(discountedPrice - installmentAmount).toFixed(2)}
+                    </p>
+                  </div>
+                )}
 
                 {/* Login Link */}
                 {!isLoggedIn && (
@@ -531,6 +637,56 @@ export default function CourseSubscription() {
           </div>
         </div>
       </div>
+
+      {/* Installment Modal */}
+      {showInstallmentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-surface">
+            <h3 className="mb-4 text-xl font-bold text-text">
+              {t('courses.payInInstallments', 'Pay in Installments')}
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block mb-2 text-sm font-medium text-text-secondary">
+                {t('courses.installmentAmount', 'Installment Amount')}
+              </label>
+              <div className="relative">
+                <span className="absolute transform -translate-y-1/2 left-3 top-1/2 text-text-muted">$</span>
+                <input
+                  type="number"
+                  value={installmentAmount}
+                  onChange={(e) => setInstallmentAmount(e.target.value)}
+                  placeholder="Enter installment amount"
+                  className="w-full py-2 pl-8 pr-4 border rounded-lg border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  min="100"
+                  max={discountedPrice}
+                />
+              </div>
+              {installmentError && (
+                <p className="mt-2 text-sm text-red-600">{installmentError}</p>
+              )}
+              <p className="mt-2 text-xs text-text-muted">
+                Minimum installment: $100 | Total price: ${discountedPrice.toFixed(2)}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleApplyInstallment}
+                className="flex-1 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+              >
+                {t('courses.applyInstallment', 'Apply Installment')}
+              </button>
+              <button
+                onClick={handleCloseInstallmentModal}
+                className="flex-1 px-4 py-2 transition-colors border rounded-lg border-border text-text hover:bg-gray-50"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
