@@ -845,5 +845,11 @@
     "type_at_least_3": "Type at least 3 characters to search",
     "retry": "Retry",
     "select_city": "Select City"
+  },
+  "logoutModal": {
+    "title": "Confirm Logout",
+    "message": "Are you sure you want to logout?",
+    "cancel": "Cancel",
+    "confirm": "Logout"
   }
 }

@@ -70,12 +70,12 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 mb-4">
+              {/* <div className="flex items-center gap-2 mb-4">
                 <FaClock className="text-sm text-primary" />
                 <span className="text-sm text-text-secondary">
                   {course.duration || "Duration not specified"}
                 </span>
-              </div>
+              </div> */}
 
               {/* Progress Bar - Show if progress data exists */}
               {course.progress !== undefined && (
