@@ -56,9 +56,9 @@ const SocialCallback = () => {
           } catch (userError) {
             console.error("Error fetching user data:", userError);
             
-            // إذا فشل جلب البيانات، استخدم البيانات الأساسية من الـ URL
+            // إذا فشل جلب البيانات، استخدم البيانات الأساسية
             const basicUserData = {
-              id: 106, // يمكن تغيير هذا حسب الرد من السيرفر
+              id: Date.now(), // ID مؤقت
               email: email || 'user@example.com',
               name: email?.split('@')[0] || 'User',
             };

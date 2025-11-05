@@ -104,9 +104,13 @@ export default function RegisterPage() {
   }
 
   const handleGoogleRegister = () => {
-    // التوجيه لـ Google OAuth للتسجيل مع إضافة callback URL
-    const callbackUrl = "https://dr-krok.vercel.app/auth/callback";
-    window.location.href = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+    // استخدام الـ Vercel URL مباشرة للتسجيل بجوجل
+    const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
+    
+    const googleAuthUrl = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+    
+    console.log("Redirecting to Google OAuth for registration:", googleAuthUrl);
+    window.location.href = googleAuthUrl;
   };
 
   return (

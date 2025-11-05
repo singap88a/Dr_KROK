@@ -57,15 +57,12 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = () => {
-    // استخدام الـ callback URL الصحيح بناءً على البيئة
-    const isLocalhost = window.location.hostname === 'localhost';
-    const callbackUrl = isLocalhost 
-      ? 'http://localhost:3000/auth/callback'
-      : 'https://dr-krok.vercel.app/auth/callback';
+    // استخدام الـ Vercel URL مباشرة بدون localhost
+    const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
     
     const googleAuthUrl = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
     
-    console.log("Redirecting to:", googleAuthUrl);
+    console.log("Redirecting to Google OAuth:", googleAuthUrl);
     window.location.href = googleAuthUrl;
   };
 
