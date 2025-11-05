@@ -25,9 +25,9 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
     const diffTime = courseDate.getTime() - now.getTime();
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
 
-    if (diffHours < 0) return { status: 'completed', text: 'ENDED', color: 'bg-gray-500' };
-    if (diffHours <= 24) return { status: 'today', text: 'LIVE TODAY', color: 'bg-red-500' };
-    if (diffHours <= 168) return { status: 'soon', text: 'COMING SOON', color: 'bg-orange-500' };
+    if (diffHours < 0) return { status: 'ended', text: 'ENDED', color: 'bg-gray-500' };
+    if (diffHours <= 24) return { status: 'liveToday', text: 'LIVE TODAY', color: 'bg-red-500' };
+    if (diffHours <= 168) return { status: 'comingSoon', text: 'COMING SOON', color: 'bg-orange-500' };
     return { status: 'upcoming', text: 'UPCOMING', color: 'bg-blue-500' };
   };
 
@@ -51,14 +51,14 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
             <div className="absolute z-10 top-3 left-3">
               <div className="flex items-center gap-1 px-2 py-1 text-white rounded-full shadow-lg bg-gradient-to-r from-[#FF416C] to-[#FF4B2B]">
                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                <span className="text-xs font-bold">LIVE</span>
+                <span className="text-xs font-bold">{t("liveCourses.live", "LIVE")}</span>
               </div>
             </div>
 
             {/* Time Status Badge */}
             <div className="absolute z-10 bottom-3 left-3">
               <div className={`px-2 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${getTimeStatus(course.started_at).color}`}>
-                {getTimeStatus(course.started_at).text}
+                {t(`liveCourses.${getTimeStatus(course.started_at).status}`, getTimeStatus(course.started_at).text)}
               </div>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
                   <FiHeart className={`text-lg ${favoriteIds.includes(course.id) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
                 </button>
                 <button className="px-3 py-2 text-sm font-medium text-white rounded-lg bg-primary hover:shadow-md hover:brightness-110">
-                  {new Date(course.started_at) > new Date() ? 'Join Live' : 'View Details'}
+                  {new Date(course.started_at) > new Date() ? t("liveCourses.joinLive", "Join Live") : t("liveCourses.viewDetails", "View Details")}
                 </button>
               </div>
             </div>

@@ -282,10 +282,16 @@
     "loading_paint_data": "Loading Paint Data...",
     "optional_load_paint_data": "Optional: Load your previous order information",
     "paint_data_unavailable": "Paint order data feature is not available at the moment. Please fill in your details manually.",
-    "failed_to_load_paint_data": "Failed to load paint data",
+"failed_to_load_paint_data": "Failed to load paint data",
     "visa": "Visa",
     "mastercard": "Mastercard",
-    "paypal": "PayPal"
+    "paypal": "PayPal",
+    "close": "Close",
+    "finalTestResults": "Final Test Results",
+    "finalTestPassed": "Final Test Passed!",
+    "finalTestFailed": "Final Test Failed",
+    "certificateOfCompletion": "Certificate of Completion",
+    "downloadCertificate": "Download Certificate"
   },
   "auth": {
     "login": {
@@ -495,8 +501,8 @@
       "male": "Male",
       "female": "Female"
     }
-  }
-  ,
+
+  },
   "testYourself": {
     "main": {
       "title": "Placement Tests",
@@ -575,8 +581,8 @@
     "readMore": "Read More",
     "instructorCard": "Author of selected articles",
     "selectInstructorInfo": "Select an instructor to view their info here."
-  }
-  ,
+  },
+
   "courses": {
     "askInstructor": "Ask the Instructor",
     "askInstructorDescription": "Have questions about this course? Contact the instructor directly via WhatsApp for personalized assistance.",
@@ -851,5 +857,48 @@
     "message": "Are you sure you want to logout?",
     "cancel": "Cancel",
     "confirm": "Logout"
+  },
+    "liveCourses": {
+      "live": "LIVE",
+      "ended": "ENDED",
+      "liveToday": "LIVE TODAY",
+      "comingSoon": "COMING SOON",
+      "upcoming": "UPCOMING",
+      "joinLive": "Join Live",
+    "viewDetails": "View Details"
+  },
+  "installments": {
+    "payInInstallments": "Pay in Installments",
+    "installmentAmount": "Installment Amount",
+    "applyInstallment": "Apply Installment",
+    "payingInInstallments": "Paying in installments",
+    "remainingBalance": "Remaining balance",
+    "minimumInstallment": "Minimum installment: $100",
+    "totalPrice": "Total price",
+    "installmentErrorMin": "Minimum installment amount is $100",
+    "installmentErrorMax": "Installment amount cannot exceed the total price",
+    "payInstallment": "Pay ${{amount}} Installment",
+    "installmentModal": {
+      "title": "Pay in Installments",
+      "amountLabel": "Installment Amount",
+      "amountPlaceholder": "Enter installment amount",
+      "apply": "Apply Installment",
+      "cancel": "Cancel",
+      "errorMin": "Minimum installment amount is $100",
+      "errorMax": "Installment amount cannot exceed the total price (${{price}})",
+      "helpText": "Minimum installment: $100 | Total price: ${{price}}"
+    }
+  },
+    "video_courses": {
+    "coupon": {
+      "label": "Coupon Code",
+      "placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "invalid": "The coupon is not valid",
+      "applied": "Coupon applied successfully!",
+      "discount": "Discount: {{percent}}%",
+      "discount_label": "Coupon Discount ({{percent}}%)",
+      "required": "Please enter a coupon code"
+    }
   }
 }

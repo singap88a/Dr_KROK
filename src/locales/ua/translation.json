@@ -570,6 +570,8 @@
     "chooseType": "Оберіть тип курсу — Записані відеокурси або Інтерактивні живі курси.",
     "videoCourse": "Відеокурс",
     "liveCourse": "Живий курс",
+    "featuredLiveCourses": "Рекомендовані живі курси",
+    "browseAllLive": "Переглянути всі живі курси",
     "searchPlaceholder": "Пошук курсу або викладача...",
     "showing": "Показано",
     "of": "з",
@@ -655,6 +657,10 @@
     "paid": "Платно",
     "min": "хв",
     "h": "г",
+    "joinLive": "Приєднатися до наживо",
+    "viewRecording": "Переглянути запис",
+    "startedAt": "Почато",
+    "collegeYear": "Курс навчання",
     "subscribeNow": "Підписатися зараз",
     "previewCourse": "Попередній перегляд курсу",
     "backToCourse": "Повернутися до курсу",
@@ -743,7 +749,16 @@
     "sectionTestResults": "Результати тесту розділу",
     "sectionTestPassed": "Тест розділу пройдено!",
     "continueToNextSection": "Перейти до наступного розділу",
-    "questionResults": "Результати питань"
+    "questionResults": "Результати питань",
+    "payInInstallments": "Оплата частинами",
+    "installmentAmount": "Сума внеску",
+    "applyInstallment": "Застосувати внесок",
+    "payingInInstallments": "Оплата частинами",
+    "remainingBalance": "Залишок",
+    "minimumInstallment": "Мінімальний внесок: $100",
+    "totalPrice": "Загальна ціна",
+    "installmentErrorMin": "Мінімальна сума внеску - 100$",
+    "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну"
   },
   "video_courses": {
     "coupon": {
@@ -897,5 +912,35 @@
     "message": "Ви впевнені, що хочете вийти?",
     "cancel": "Скасувати",
     "confirm": "Вийти"
+  },
+  "liveCourses": {
+    "live": "НАЖИВО",
+    "ended": "ЗАВЕРШЕНО",
+    "liveToday": "НАЖИВО СЬОГОДНІ",
+    "comingSoon": "НЕЗАБАРОМ",
+    "upcoming": "МАЙБУТНІ",
+    "joinLive": "Приєднатися до наживо",
+    "viewDetails": "Переглянути деталі"
+  },
+  "installments": {
+    "payInInstallments": "Оплата частинами",
+    "installmentAmount": "Сума внеску",
+    "applyInstallment": "Застосувати внесок",
+    "payingInInstallments": "Оплата частинами",
+    "remainingBalance": "Залишок",
+    "minimumInstallment": "Мінімальний внесок: 100$",
+    "totalPrice": "Загальна ціна",
+    "installmentErrorMin": "Мінімальна сума внеску - 100$",
+    "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну",
+    "installmentModal": {
+      "title": "Оплата частинами",
+      "amountLabel": "Сума внеску",
+      "amountPlaceholder": "Введіть суму внеску",
+      "errorMin": "Мінімальна сума внеску - 100$",
+      "errorMax": "Сума внеску не може перевищувати загальну ціну (${{price}})",
+      "helpText": "Мінімальний внесок: 100$ | Загальна ціна: ${{price}}",
+      "apply": "Застосувати внесок",
+      "cancel": "Скасувати"
+    }
   }
 }

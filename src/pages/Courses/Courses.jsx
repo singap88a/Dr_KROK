@@ -217,7 +217,7 @@ export default function Courses() {
     value={query}
     onChange={(e) => setQuery(e.target.value)}
     className="w-48 px-3 text-sm text-gray-700 placeholder-gray-400 bg-transparent outline-none sm:w-64 dark:text-gray-200 dark:placeholder-gray-500"
-    placeholder="Search for a course or instructor..."
+    placeholder={t("courses.searchPlaceholder", "Search for a course or instructor...")}
     aria-label="Search courses"
   />
 </div>

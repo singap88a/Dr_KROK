@@ -140,15 +140,15 @@ export default function CourseSubscription() {
   const validateInstallmentAmount = (amount) => {
     const minAmount = 100; // أقل مبلغ 100 دولار
     const numericAmount = Number(amount);
-    
+
     if (numericAmount < minAmount) {
-      return `أقل مبلغ للتقسيط هو ${minAmount} دولار`;
+      return t('installments.installmentModal.errorMin', 'Minimum installment amount is $100');
     }
-    
+
     if (numericAmount > discountedPrice) {
-      return `مبلغ التقسيط لا يمكن أن يزيد عن السعر الإجمالي (${discountedPrice} دولار)`;
+      return t('installments.installmentModal.errorMax', { price: discountedPrice.toFixed(2) }, 'Installment amount cannot exceed the total price (${{price}})');
     }
-    
+
     return null;
   };
 
@@ -643,21 +643,21 @@ export default function CourseSubscription() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-md p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-surface">
             <h3 className="mb-4 text-xl font-bold text-text">
-              {t('courses.payInInstallments', 'Pay in Installments')}
+              {t('installments.installmentModal.title', 'Pay in Installments')}
             </h3>
-            
+
             <div className="mb-4">
               <label className="block mb-2 text-sm font-medium text-text-secondary">
-                {t('courses.installmentAmount', 'Installment Amount')}
+                {t('installments.installmentModal.amountLabel', 'Installment Amount')}
               </label>
               <div className="relative">
-                <span className="absolute transform -translate-y-1/2 left-3 top-1/2 text-text-muted">$</span>
+                <span className="absolute transform -translate-y-1/2 left-3 top-1/2 text-text-muted dark:text-gray-400">$</span>
                 <input
                   type="number"
                   value={installmentAmount}
                   onChange={(e) => setInstallmentAmount(e.target.value)}
-                  placeholder="Enter installment amount"
-                  className="w-full py-2 pl-8 pr-4 border rounded-lg border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder={t('installments.installmentModal.amountPlaceholder', 'Enter installment amount')}
+                  className="w-full py-2 pl-8 pr-4 bg-white border rounded-lg border-border text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                   min="100"
                   max={discountedPrice}
                 />
@@ -665,8 +665,8 @@ export default function CourseSubscription() {
               {installmentError && (
                 <p className="mt-2 text-sm text-red-600">{installmentError}</p>
               )}
-              <p className="mt-2 text-xs text-text-muted">
-                Minimum installment: $100 | Total price: ${discountedPrice.toFixed(2)}
+              <p className="mt-2 text-xs text-text-muted dark:text-gray-400">
+                {t('installments.installmentModal.helpText', { price: discountedPrice.toFixed(2) }, 'Minimum installment: $100 | Total price: ${{price}}')}
               </p>
             </div>
 
@@ -675,13 +675,13 @@ export default function CourseSubscription() {
                 onClick={handleApplyInstallment}
                 className="flex-1 px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
               >
-                {t('courses.applyInstallment', 'Apply Installment')}
+                {t('installments.installmentModal.apply', 'Apply Installment')}
               </button>
               <button
                 onClick={handleCloseInstallmentModal}
-                className="flex-1 px-4 py-2 transition-colors border rounded-lg border-border text-text hover:bg-gray-50"
+                className="flex-1 px-4 py-2 transition-colors border rounded-lg border-border text-text hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                {t('common.cancel', 'Cancel')}
+                {t('installments.installmentModal.cancel', 'Cancel')}
               </button>
             </div>
           </div>

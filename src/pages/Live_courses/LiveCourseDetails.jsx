@@ -181,9 +181,9 @@ export default function LiveCourseDetails() {
     const diffTime = courseDate.getTime() - now.getTime();
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
 
-    if (diffHours < 0) return { status: 'completed', text: 'ENDED', color: 'bg-gray-500' };
-    if (diffHours <= 24) return { status: 'today', text: 'LIVE TODAY', color: 'bg-red-500' };
-    if (diffHours <= 168) return { status: 'soon', text: 'COMING SOON', color: 'bg-orange-500' };
+    if (diffHours < 0) return { status: 'ended', text: 'ENDED', color: 'bg-gray-500' };
+    if (diffHours <= 24) return { status: 'liveToday', text: 'LIVE TODAY', color: 'bg-red-500' };
+    if (diffHours <= 168) return { status: 'comingSoon', text: 'COMING SOON', color: 'bg-orange-500' };
     return { status: 'upcoming', text: 'UPCOMING', color: 'bg-blue-500' };
   };
 
@@ -230,13 +230,13 @@ export default function LiveCourseDetails() {
           <div className="absolute z-10 top-4 left-4">
             <div className="flex items-center gap-1 px-3 py-1 text-white rounded-full shadow-lg bg-gradient-to-r from-[#E11D48] to-[#F97316]">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-              <span className="text-xs font-bold">LIVE</span>
+              <span className="text-xs font-bold">{t("liveCourses.live", "LIVE")}</span>
             </div>
           </div>
           {/* Time Status Badge */}
           <div className="absolute z-10 bottom-4 left-4">
             <div className={`px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
-              {timeStatus.text}
+              {t(`liveCourses.${timeStatus.status}`, timeStatus.text)}
             </div>
           </div>
         </div>
