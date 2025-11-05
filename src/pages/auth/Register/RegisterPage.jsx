@@ -103,6 +103,12 @@ export default function RegisterPage() {
     }
   }
 
+  const handleGoogleRegister = () => {
+    // التوجيه لـ Google OAuth للتسجيل مع إضافة callback URL
+    const callbackUrl = "https://dr-krok.vercel.app/auth/callback";
+    window.location.href = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
       <ToastContainer />
@@ -237,7 +243,7 @@ export default function RegisterPage() {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.com/api/auth/google/redirect?register=true'}
+                onClick={handleGoogleRegister}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <GoogleIcon className="w-5 h-5 mr-3" />

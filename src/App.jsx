@@ -55,9 +55,10 @@ export default function App() {
         <main className="pt-16">
         <Routes>
           <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/auth/google/callback" element={<SocialCallback />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          {/* ✅ التصحيح هنا: تغيير المسار إلى /auth/callback بدلاً من /auth/google/callback */}
+          <Route path="/auth/callback" element={<SocialCallback />} />
           <Route path="/about" element={<About />} />
           {/* <Route path="/login" element={<Login />} /> */}
           {/* <Route path="/auth" element={<AuthPage />} /> */}
@@ -89,7 +90,7 @@ export default function App() {
           <Route path="/gemini" element={<GeminiSingap />} />
           <Route path="/test" element={<TestYourself />} />
           <Route path="/privacypolicy" element={<Privacypolicy />} />
-                    <Route path="/instructors" element={<Instructors />} />
+          <Route path="/instructors" element={<Instructors />} />
           <Route path="/instructors/:id" element={<InstructorDetails />} />
 
         </Routes>

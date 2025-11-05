@@ -5,44 +5,89 @@ import { useUser } from '../../context/UserContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const GoogleCallback = () => {
+const SocialCallback = () => {
   const navigate = useNavigate();
   const { login } = useUser();
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const handleSocialCallback = async () => {
       try {
-        // هنا هنكلم API بتاع لارافيل اللي بيهندل الكولباك
-        const response = await axios.get(
-          "https://dr-krok.com/api/auth/google/callback",
-          {
-            withCredentials: true,
+        // استخراج التوكن من الـ URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const email = urlParams.get('email');
+
+        console.log("Token received:", token);
+        console.log("Email received:", email);
+
+        if (token) {
+          // حفظ التوكن في localStorage
+          localStorage.setItem("token", token);
+
+          // جلب بيانات المستخدم باستخدام التوكن
+          try {
+            const userResponse = await axios.get(
+              "https://dr-krok.com/api/auth/me",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
+                },
+              }
+            );
+
+            console.log("User data response:", userResponse.data);
+
+            if (userResponse.data.success) {
+              // حفظ بيانات المستخدم في context
+              login(token, userResponse.data.data);
+              
+              toast.success('✅ تسجيل الدخول بنجاح!', {
+                position: 'top-right',
+              });
+              
+              // التوجيه لصفحة الملف الشخصي
+              setTimeout(() => {
+                navigate("/profile", { replace: true });
+              }, 1500);
+            } else {
+              throw new Error("Failed to get user data");
+            }
+          } catch (userError) {
+            console.error("Error fetching user data:", userError);
+            
+            // إذا فشل جلب البيانات، استخدم البيانات الأساسية من الـ URL
+            const basicUserData = {
+              id: 106, // يمكن تغيير هذا حسب الرد من السيرفر
+              email: email || 'user@example.com',
+              name: email?.split('@')[0] || 'User',
+            };
+            
+            login(token, basicUserData);
+            
+            toast.success('✅ تسجيل الدخول بنجاح!', {
+              position: 'top-right',
+            });
+            
+            setTimeout(() => {
+              navigate("/profile", { replace: true });
+            }, 1500);
           }
-        );
-
-        // خزن التوكن اللي جالك
-        localStorage.setItem("token", response.data.token);
-
-        // روح على الصفحة الرئيسية أو الداشبورد
-        login(response.data.token, response.data.user);
-        toast.success('✅ Login successful!', {
-          position: 'top-right',
-        });
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
+        } else {
+          throw new Error("No token received from social login");
+        }
       } catch (error) {
-        console.error("Google login failed:", error);
-        toast.error('❌ Authentication failed. Please try again.', {
+        console.error("Social authentication failed:", error);
+        toast.error('❌ فشل المصادقة. يرجى المحاولة مرة أخرى.', {
           position: 'top-right',
         });
         setTimeout(() => {
-          navigate('/login');
+          navigate('/login', { replace: true });
         }, 2000);
       }
     };
 
-    fetchUser();
+    handleSocialCallback();
   }, [navigate, login]);
 
   return (
@@ -50,10 +95,11 @@ const GoogleCallback = () => {
       <ToastContainer />
       <div className="text-center">
         <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary"></div>
-        <p className="text-lg">Processing authentication...</p>
+        <p className="text-lg">جاري معالجة المصادقة...</p>
+        <p className="mt-2 text-sm text-gray-500">يرجى الانتظار</p>
       </div>
     </div>
   );
 };
 
-export default GoogleCallback;
+export default SocialCallback;

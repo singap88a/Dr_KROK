@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Lottie from "lottie-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useUser } from "../../../context/UserContext"; // ✅ Context
+import { useUser } from "../../../context/UserContext";
 import { useApi } from "../../../context/ApiContext";
 import loginAnimation from "../../../components/animations/Login_animation.json";
 import { ToastContainer, toast } from "react-toastify";
@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { login: userLogin } = useUser(); // ✅ Context login
+  const { login: userLogin } = useUser();
   const { login: apiLogin } = useApi();
 
   function validate() {
@@ -43,7 +43,7 @@ export default function LoginPage() {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = "/profile";
         }, 1500);
       } else {
         toast.error("❌ Login failed: " + data.message, { position: "top-right" });
@@ -56,9 +56,21 @@ export default function LoginPage() {
     }
   }
 
+  const handleGoogleLogin = () => {
+    // استخدام الـ callback URL الصحيح بناءً على البيئة
+    const isLocalhost = window.location.hostname === 'localhost';
+    const callbackUrl = isLocalhost 
+      ? 'http://localhost:3000/auth/callback'
+      : 'https://dr-krok.vercel.app/auth/callback';
+    
+    const googleAuthUrl = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
+    
+    console.log("Redirecting to:", googleAuthUrl);
+    window.location.href = googleAuthUrl;
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
-      {/* ✅ Toast container */}
       <ToastContainer />
 
       <div className="container p-6 mx-auto">
@@ -138,24 +150,7 @@ export default function LoginPage() {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    const data = await apiLogin(null, null, "google");
-                    console.log("Google login response:", data);
-                    if (data.success) {
-                      toast.success("✅ Login successful!", { position: "top-right" });
-                      userLogin(data.data.token, data.data);
-                      setTimeout(() => {
-                        window.location.href = "/";
-                      }, 1500);
-                    } else {
-                      toast.error("❌ Login failed: " + data.message, { position: "top-right" });
-                    }
-                  } catch (err) {
-                    console.error("Google login error:", err);
-                    toast.error("⚠️ Server connection error!", { position: "top-right" });
-                  }
-                }}
+                onClick={handleGoogleLogin}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <GoogleIcon className="w-5 h-5 mr-3" />
