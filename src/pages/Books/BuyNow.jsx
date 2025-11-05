@@ -116,11 +116,11 @@ export default function BuyNowPage() {
             const decoded = he.decode(result.data[0].description);
             setTermsText(decoded);
           } else {
-            setTermsText("⚠️ Unable to load Terms and Conditions.");
+            setTermsText(t('books.terms.unable_to_load'));
           }
         })
         .catch(() => {
-          setTermsText("⚠️ Error fetching Terms and Conditions.");
+          setTermsText(t('books.terms.error_fetching'));
         })
         .finally(() => setTermsLoading(false));
     }
@@ -146,9 +146,9 @@ export default function BuyNowPage() {
     } catch (err) {
       // Handle 404 error gracefully - this endpoint may not exist
       if (err.message.includes('404') || err.message.includes('Not Found')) {
-        setError('Paint order data feature is not available at the moment. Please fill in your details manually.');
+        setError(t('books.paint_data_unavailable'));
       } else {
-        setError(err.message || 'Failed to load paint data');
+        setError(err.message || t('books.failed_to_load_paint_data'));
       }
       console.error('Error fetching paint order data:', err);
     } finally {
@@ -202,25 +202,25 @@ export default function BuyNowPage() {
 
     // Validate required fields
     if (!formData.client_name.trim()) {
-      setError("Please enter your name.");
+      setError(t('books.enter_name_error'));
       setLoading(false);
       return;
     }
 
     if (!formData.phone1.trim()) {
-      setError("Please enter your phone number.");
+      setError(t('books.enter_phone_error'));
       setLoading(false);
       return;
     }
 
     if (!formData.city_id || !formData.city.trim()) {
-      setError("Please select a city.");
+      setError(t('books.select_city_error'));
       setLoading(false);
       return;
     }
 
     if (selectedCity && branches.length > 0 && !formData.branch_id) {
-      setError("Please select a branch.");
+      setError(t('books.select_branch_error'));
       setLoading(false);
       return;
     }
@@ -229,7 +229,7 @@ export default function BuyNowPage() {
       // Require authentication to place an order
       const token = localStorage.getItem("token") || localStorage.getItem("userToken");
       if (!isLoggedIn || !token) {
-        setError("You must be logged in to place an order.");
+        setError(t('books.login_required'));
         setLoading(false);
         setTimeout(() => navigate('/Login'), 1200);
         return;
@@ -314,7 +314,7 @@ export default function BuyNowPage() {
             console.log('No-cors response:', noCorsResponse);
 
             // If no-cors request doesn't throw, assume it succeeded
-            setSuccess("Order submitted successfully! Please check your profile for order status.");
+            setSuccess(t('books.order_submitted_success'));
             setTimeout(() => {
               navigate('/profile', { state: { activeTab: 'orders' } });
             }, 2000);
@@ -364,7 +364,7 @@ export default function BuyNowPage() {
       // Require authentication to place an order
       const token = localStorage.getItem("token") || localStorage.getItem("userToken");
       if (!isLoggedIn || !token) {
-        setError("You must be logged in to place an order.");
+        setError(t('books.login_required'));
         setLoading(false);
         setTimeout(() => navigate('/Login'), 1200);
         return;
@@ -518,7 +518,7 @@ export default function BuyNowPage() {
                 <div className="flex items-center justify-center w-full text-gray-500 bg-gray-200 h-96">
                   <div className="text-center">
                     <FiCreditCard className="w-16 h-16 mx-auto mb-2" />
-                    <p>No image available</p>
+                    <p>{t('books.no_image_available')}</p>
                   </div>
                 </div>
               )}
@@ -634,10 +634,10 @@ export default function BuyNowPage() {
                   className="flex items-center gap-2 px-4 py-2 text-sm transition border rounded-lg text-primary border-primary hover:bg-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiRefreshCw className={loadingPaintData ? 'animate-spin' : ''} />
-                  {loadingPaintData ? 'Loading Paint Data...' : 'Load Paint Data'}
+                  {loadingPaintData ? t('books.loading_paint_data') : t('books.load_paint_data')}
                 </button>
                 <p className="mt-1 text-xs text-text-secondary">
-                  Optional: Load your previous order information
+                  {t('books.optional_load_paint_data')}
                 </p>
               </div>
             )}
@@ -756,7 +756,7 @@ export default function BuyNowPage() {
                   }}
                   onCitySelect={handleCitySelect}
                   required
-                  placeholder="Select City"
+                  placeholder={t('city_selector.select_city')}
                 />
 
                 {selectedCity && branches.length > 0 && (
@@ -771,7 +771,7 @@ export default function BuyNowPage() {
                       required
                       className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
-                      <option value="">Select Branch</option>
+                      <option value="">{t('books.select_branch_placeholder')}</option>
                       {branches.map((branch) => (
                         <option key={branch.id} value={branch.id}>
                           {branch.name}
@@ -801,19 +801,19 @@ export default function BuyNowPage() {
                       className="mt-1"
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-text-secondary">
-                      I agree to the{' '}
+                      {t('books.agree_to_terms_start')}{' '}
                       <button
                         type="button"
                         onClick={() => setShowTerms(true)}
                         className="text-primary hover:underline"
                       >
-                        Terms and Conditions
+                        {t('books.terms_conditions')}
                       </button>
                     </label>
                   </div>
                   {!agreeToTerms && (
                     <p className="mt-2 text-sm text-red-500">
-                      You must agree to the terms and conditions to proceed.
+                      {t('books.must_agree_to_terms')}
                     </p>
                   )}
                 </div>
@@ -845,7 +845,7 @@ export default function BuyNowPage() {
                         className="flex flex-col items-center p-4 border rounded-lg border-border bg-background/60"
                       >
                         <IconComponent className={`text-3xl mb-2 ${method.color}`} />
-                        <span className="font-medium">{method.name}</span>
+                        <span className="font-medium">{t(`books.${method.id}`)}</span>
                       </div>
                     );
                   })}
@@ -862,19 +862,19 @@ export default function BuyNowPage() {
                       className="mt-1"
                     />
                     <label htmlFor="agreeToTermsPdf" className="text-sm text-text-secondary">
-                      I agree to the{' '}
+                      {t('books.agree_to_terms_start')}{' '}
                       <button
                         type="button"
                         onClick={() => setShowTerms(true)}
                         className="text-primary hover:underline"
                       >
-                        Terms and Conditions
+                        {t('books.terms_conditions')}
                       </button>
                     </label>
                   </div>
                   {!agreeToTerms && (
                     <p className="mt-2 text-sm text-red-500">
-                      You must agree to the terms and conditions to proceed.
+                      {t('books.must_agree_to_terms')}
                     </p>
                   )}
                 </div>
@@ -897,7 +897,7 @@ export default function BuyNowPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-2xl max-h-[80vh] p-6 mx-4 bg-white rounded-lg shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Terms and Conditions</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('books.terms.title')}</h3>
               <button
                 onClick={() => setShowTerms(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -921,7 +921,7 @@ export default function BuyNowPage() {
                 onClick={() => setShowTerms(false)}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                Close
+                {t('books.terms.close')}
               </button>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { FiMapPin, FiChevronDown, FiSearch } from 'react-icons/fi';
 import { useApi } from '../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 
-const CitySelector = ({ value, onChange, required = false, placeholder = "Select City", onCitySelect }) => {
+const CitySelector = ({ value, onChange, required = false, onCitySelect }) => {
   const { request } = useApi();
   const { t } = useTranslation();
   const [cities, setCities] = useState([]);
@@ -84,7 +84,7 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
           disabled={loading}
         >
           <span className={value ? 'text-text' : 'text-text-secondary'}>
-            {loading ? 'Loading...' : (value || placeholder)}
+            {loading ? t('city_selector.loading') : (value || t('city_selector.select_city'))}
           </span>
           <FiChevronDown className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
@@ -100,7 +100,7 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  placeholder="Search cities (3+ characters)..."
+                  placeholder={t('city_selector.search_placeholder')}
                   className="w-full py-2 pl-10 pr-3 text-sm border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
                   autoFocus
                 />
@@ -116,12 +116,12 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
                     onClick={() => fetchCities(searchQuery)}
                     className="block mt-2 text-primary hover:underline"
                   >
-                    Retry
+                    {t('city_selector.retry')}
                   </button>
                 </div>
               ) : loading ? (
                 <div className="p-3 text-sm text-text-secondary">
-                  Searching...
+                  {t('city_selector.searching')}
                 </div>
               ) : cities.length > 0 ? (
                 cities.map((city) => (
@@ -135,11 +135,11 @@ const CitySelector = ({ value, onChange, required = false, placeholder = "Select
                 ))
               ) : searchQuery.length >= 3 ? (
                 <div className="p-3 text-sm text-text-secondary">
-                  No cities found for "{searchQuery}"
+                  {t('city_selector.no_cities_found', { query: searchQuery })}
                 </div>
               ) : (
                 <div className="p-3 text-sm text-text-secondary">
-                  Type at least 3 characters to search
+                  {t('city_selector.type_at_least_3')}
                 </div>
               )}
             </div>

@@ -255,9 +255,37 @@
       "title": "Terms and Conditions",
       "loading": "Loading...",
       "close": "Close",
-      "agree": "I Agree"
+      "agree": "I Agree",
+      "unable_to_load": "⚠️ Unable to load Terms and Conditions.",
+      "error_fetching": "⚠️ Error fetching Terms and Conditions."
     },
-    "select_city_branch_instruction": "Choose the city and the branch affiliated with the shipping company that will deliver the book to you."
+    "select_city_branch_instruction": "Choose the city and the branch affiliated with the shipping company that will deliver the book to you.",
+ 
+    "enter_name_error": "Please enter your name.",
+    "enter_phone_error": "Please enter your phone number.",
+    "select_city_error": "Please select a city.",
+    "select_branch_error": "Please select a branch.",
+    "login_required": "You must be logged in to place an order.",
+    "purchase_completed_success": "Purchase completed successfully! Please check your profile for order status.",
+    "network_error": "Network error. Please check your connection and try again.",
+    "server_redirect_error": "Server redirected the request. This may be a server configuration issue.",
+    "order_processed_despite_redirect": "Order may have been processed despite the redirect. Please check your profile for order status.",
+    "select_city_placeholder": "Select City",
+    "select_branch_placeholder": "Select Branch",
+    "no_image_available": "No image available",
+    "unable_to_load_terms": "⚠️ Unable to load Terms and Conditions.",
+    "error_fetching_terms": "⚠️ Error fetching Terms and Conditions.",
+    "agree_to_terms_label": "I agree to the Terms and Conditions",
+    "agree_to_terms_start": "I agree to the",
+    "must_agree_to_terms": "You must agree to the terms and conditions to continue.",
+    "load_paint_data": "Load Paint Data",
+    "loading_paint_data": "Loading Paint Data...",
+    "optional_load_paint_data": "Optional: Load your previous order information",
+    "paint_data_unavailable": "Paint order data feature is not available at the moment. Please fill in your details manually.",
+    "failed_to_load_paint_data": "Failed to load paint data",
+    "visa": "Visa",
+    "mastercard": "Mastercard",
+    "paypal": "PayPal"
   },
   "auth": {
     "login": {
@@ -744,18 +772,6 @@
     "continueToNextSection": "Continue to Next Section",
     "questionResults": "Question Results"
   },
-  "video_courses": {
-    "coupon": {
-      "label": "Coupon Code",
-      "placeholder": "Enter coupon code",
-      "apply": "Apply",
-      "invalid": "The coupon is not valid",
-      "applied": "Coupon applied successfully!",
-      "discount": "Discount: {{percent}}%",
-      "discount_label": "Coupon Discount ({{percent}}%)",
-      "required": "Please enter a coupon code"
-    }
-  },
   "orders": {
     "title": "My Orders",
     "totalOrders": "{{count}} total orders",
@@ -819,5 +835,15 @@
     "progress": "Progress",
     "noCourses": "No courses enrolled yet",
     "browseCourses": "Browse our courses and start learning today!"
+  },
+  "dental_companion": "Your companion in dentistry learning",
+  "city_selector": {
+    "loading": "Loading...",
+    "search_placeholder": "Search cities (3+ characters)...",
+    "searching": "Searching...",
+    "no_cities_found": "No cities found for \"{{query}}\"",
+    "type_at_least_3": "Type at least 3 characters to search",
+    "retry": "Retry",
+    "select_city": "Select City"
   }
 }
