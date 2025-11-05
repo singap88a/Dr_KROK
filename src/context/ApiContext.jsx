@@ -761,22 +761,23 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       },
       
       // Reviews API
-      async submitCourseReview(courseId, rating, comment) {
+      async submitCourseReview(courseId, rating, comment, type = 'video_course') {
         const formData = new FormData();
         formData.append('course_id', courseId);
         formData.append('rate_number', rating);
         formData.append('rate_comment', comment);
-        formData.append('type', 'video_course');
+        formData.append('type', type);
 
         console.log('API Request - submitCourseReview:', {
           courseId,
           rating,
           comment,
+          type,
           formData: {
             course_id: courseId,
             rate_number: rating,
             rate_comment: comment,
-            type: 'video_course'
+            type: type
           }
         });
 

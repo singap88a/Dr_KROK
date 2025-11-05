@@ -6,7 +6,7 @@ import { useApi } from '../../context/ApiContext';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
-const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) => {
+const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, type = 'video_course' }) => {
   const { t } = useTranslation();
   const { isLoggedIn } = useUser();
   const { submitCourseReview } = useApi();
@@ -54,7 +54,7 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false }) =
     
     try {
       console.log('Submitting review:', { courseId, rating, comment: comment.trim() });
-      const response = await submitCourseReview(courseId, rating, comment.trim());
+      const response = await submitCourseReview(courseId, rating, comment.trim(), type);
       console.log('Review response:', response);
 
       if (response.success) {

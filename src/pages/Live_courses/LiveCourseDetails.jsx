@@ -344,6 +344,7 @@ export default function LiveCourseDetails() {
               courseId={id}
               onReviewSubmitted={handleReviewSubmitted}
               userHasReviewed={userHasReviewed}
+              type="live_course"
             />
           </div>
 
