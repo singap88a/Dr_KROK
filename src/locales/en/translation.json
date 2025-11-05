@@ -676,6 +676,9 @@
     "enrollToReview": "Enroll to Review",
     "enrollToReviewMessage": "You must be enrolled in this course to leave a review.",
     "alreadyReviewed": "Already Reviewed",
+    "enrollment_required": "Enrollment Required",
+    "enrollment_required_message": "You must be enrolled in this course to leave a review. Please subscribe to the course first.",
+    "subscribe_to_review": "Subscribe to Leave Review",
     "coupon": {
       "label": "Coupon Code",
       "placeholder": "Enter coupon code",

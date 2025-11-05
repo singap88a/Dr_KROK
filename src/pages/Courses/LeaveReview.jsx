@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaLock, FaUser } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../../context/UserContext';
 import { useApi } from '../../context/ApiContext';
@@ -9,17 +9,41 @@ import { useNavigate } from 'react-router-dom';
 const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, type = 'video_course' }) => {
   const { t } = useTranslation();
   const { isLoggedIn } = useUser();
-  const { submitCourseReview } = useApi();
+  const { submitCourseReview, getCourseAccess } = useApi();
   const navigate = useNavigate();
-  
+
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(userHasReviewed);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
 
   useEffect(() => {
     setHasReviewed(userHasReviewed);
   }, [userHasReviewed]);
+
+  // Check course access when component mounts
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (isLoggedIn && courseId) {
+        try {
+          setCheckingAccess(true);
+          const access = await getCourseAccess(courseId, type);
+          setHasAccess(access);
+        } catch (error) {
+          console.error('Error checking course access:', error);
+          setHasAccess(false);
+        } finally {
+          setCheckingAccess(false);
+        }
+      } else {
+        setCheckingAccess(false);
+      }
+    };
+
+    checkAccess();
+  }, [courseId, type, isLoggedIn, getCourseAccess]);
 
   const handleRatingClick = (selectedRating) => {
     if (hasReviewed) return;
@@ -28,10 +52,15 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, typ
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isLoggedIn) {
       toast.info(t('auth.login_required') || 'Please login to leave a review');
       navigate('/login');
+      return;
+    }
+
+    if (!hasAccess) {
+      toast.error(t('courses.no_access_review') || 'You must be enrolled in this course to leave a review');
       return;
     }
 
@@ -51,7 +80,7 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, typ
     }
 
     setIsSubmitting(true);
-    
+
     try {
       console.log('Submitting review:', { courseId, rating, comment: comment.trim() });
       const response = await submitCourseReview(courseId, rating, comment.trim(), type);
@@ -94,6 +123,48 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, typ
 
   // Don't return early for hasReviewed - show the form with disabled state
 
+  // Show access restriction message if user doesn't have access
+  if (isLoggedIn && !hasAccess && !checkingAccess) {
+    return (
+      <div className="p-6 transition-shadow duration-200 border shadow-sm bg-background border-border rounded-xl hover:shadow-md">
+        <div className="p-4 mb-6 border border-orange-200 shadow-sm dark:border-orange-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900 dark:to-amber-900 rounded-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-orange-100 rounded-full shadow-sm dark:bg-orange-900">
+              <FaLock className="text-lg text-orange-600 dark:text-orange-400" />
+            </div>
+            <h4 className="text-lg font-semibold text-orange-800 dark:text-orange-200">
+              {t('courses.enrollment_required') || 'Enrollment Required'}
+            </h4>
+          </div>
+          <p className="text-sm leading-relaxed text-orange-700 dark:text-orange-300">
+            {t('courses.enrollment_required_message') || 'You must be enrolled in this course to leave a review. Please subscribe to the course first.'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <FaStar className="text-xl text-primary" />
+          </div>
+          <h3 className="text-xl font-bold text-text">
+            {t('courses.leaveReview') || 'Leave a Review'}
+          </h3>
+        </div>
+
+        <div className="text-center">
+          <button
+            onClick={() => navigate(type === 'live_course' ? `/live-courses/${courseId}/subscribe` : `/courses/${courseId}/subscribe`)}
+            className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <FaUser />
+              {t('courses.subscribe_to_review') || 'Subscribe to Leave Review'}
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 transition-shadow duration-200 border shadow-sm bg-background border-border rounded-xl hover:shadow-md">
       {/* Show success message if already reviewed */}
@@ -121,7 +192,7 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, typ
           {t('courses.leaveReview') || 'Leave a Review'}
         </h3>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Rating Stars */}
         <div className="space-y-3">
