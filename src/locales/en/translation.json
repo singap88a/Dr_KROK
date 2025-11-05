@@ -320,6 +320,12 @@
         "close": "Close",
         "agree": "I Agree"
       }
+    },
+    "social": {
+      "login_success": "Login successful!",
+      "auth_failed": "Authentication failed. Please try again.",
+      "processing_auth": "Processing authentication...",
+      "please_wait": "Please wait"
     }
   },
   "testimonials": {

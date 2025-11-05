@@ -4,15 +4,17 @@ import axios from "axios";
 import { useUser } from '../../context/UserContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useTranslation } from 'react-i18next';
 
 const SocialCallback = () => {
   const navigate = useNavigate();
   const { login } = useUser();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleSocialCallback = async () => {
       try {
-        // استخراج التوكن من الـ URL parameters
+        // Extract token from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const email = urlParams.get('email');
@@ -21,10 +23,10 @@ const SocialCallback = () => {
         console.log("Email received:", email);
 
         if (token) {
-          // حفظ التوكن في localStorage
+          // Save token in localStorage
           localStorage.setItem("token", token);
 
-          // جلب بيانات المستخدم باستخدام التوكن
+          // Fetch user data using the token
           try {
             const userResponse = await axios.get(
               "https://dr-krok.com/api/auth/me",
@@ -39,14 +41,14 @@ const SocialCallback = () => {
             console.log("User data response:", userResponse.data);
 
             if (userResponse.data.success) {
-              // حفظ بيانات المستخدم في context
+              // Save user data in context
               login(token, userResponse.data.data);
               
-              toast.success('✅ تسجيل الدخول بنجاح!', {
+              toast.success(t('auth.social.login_success'), {
                 position: 'top-right',
               });
               
-              // التوجيه لصفحة الملف الشخصي
+              // Navigate to profile page
               setTimeout(() => {
                 navigate("/profile", { replace: true });
               }, 1500);
@@ -55,17 +57,17 @@ const SocialCallback = () => {
             }
           } catch (userError) {
             console.error("Error fetching user data:", userError);
-            
-            // إذا فشل جلب البيانات، استخدم البيانات الأساسية
+
+            // If fetching data fails, use basic data
             const basicUserData = {
-              id: Date.now(), // ID مؤقت
+              id: Date.now(), // Temporary ID
               email: email || 'user@example.com',
               name: email?.split('@')[0] || 'User',
             };
             
             login(token, basicUserData);
             
-            toast.success('✅ تسجيل الدخول بنجاح!', {
+            toast.success(t('auth.social.login_success'), {
               position: 'top-right',
             });
             
@@ -78,7 +80,7 @@ const SocialCallback = () => {
         }
       } catch (error) {
         console.error("Social authentication failed:", error);
-        toast.error('❌ فشل المصادقة. يرجى المحاولة مرة أخرى.', {
+        toast.error(t('auth.social.auth_failed'), {
           position: 'top-right',
         });
         setTimeout(() => {
@@ -95,8 +97,8 @@ const SocialCallback = () => {
       <ToastContainer />
       <div className="text-center">
         <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary"></div>
-        <p className="text-lg">جاري معالجة المصادقة...</p>
-        <p className="mt-2 text-sm text-gray-500">يرجى الانتظار</p>
+        <p className="text-lg">{t('auth.social.processing_auth')}</p>
+        <p className="mt-2 text-sm text-gray-500">{t('auth.social.please_wait')}</p>
       </div>
     </div>
   );
