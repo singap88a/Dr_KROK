@@ -1,8 +1,102 @@
-// ApiContext.jsx
 import React, { createContext, useContext, useMemo, useCallback } from "react";
 import i18n from "../i18n";
 
 const ApiContext = createContext(null);
+
+// Create a simple cache system with event emitter
+const apiCache = {
+  data: new Map(),
+  events: new Map(), // Event system for real-time updates
+  
+  set(key, value, ttl = 10 * 60 * 1000) {
+    this.data.set(key, {
+      value,
+      timestamp: Date.now(),
+      ttl
+    });
+    
+    // Trigger cache update events
+    this.triggerEvent('cacheUpdate', { key, value });
+  },
+  
+  get(key) {
+    const item = this.data.get(key);
+    if (!item) return null;
+    
+    if (Date.now() - item.timestamp > item.ttl) {
+      this.data.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  },
+  
+  delete(key) {
+    this.data.delete(key);
+    this.triggerEvent('cacheDelete', { key });
+  },
+  
+  clear() {
+    this.data.clear();
+    this.triggerEvent('cacheClear', {});
+  },
+  
+  // Event system methods
+  on(event, callback) {
+    if (!this.events.has(event)) {
+      this.events.set(event, new Set());
+    }
+    this.events.get(event).add(callback);
+  },
+  
+  off(event, callback) {
+    if (this.events.has(event)) {
+      this.events.get(event).delete(callback);
+    }
+  },
+  
+  triggerEvent(event, data) {
+    if (this.events.has(event)) {
+      this.events.get(event).forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`Error in cache event handler for ${event}:`, error);
+        }
+      });
+    }
+  }
+};
+
+// Create a global event system for cross-component communication
+const globalEvents = {
+  events: new Map(),
+  
+  emit(event, data) {
+    if (this.events.has(event)) {
+      this.events.get(event).forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`Error in global event handler for ${event}:`, error);
+        }
+      });
+    }
+  },
+  
+  on(event, callback) {
+    if (!this.events.has(event)) {
+      this.events.set(event, new Set());
+    }
+    this.events.get(event).add(callback);
+  },
+  
+  off(event, callback) {
+    if (this.events.has(event)) {
+      this.events.get(event).delete(callback);
+    }
+  }
+};
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useApi = () => {
@@ -26,8 +120,48 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
     [baseUrl]
   );
 
+  // Generate cache key for requests
+  const generateCacheKey = useCallback((path, options = {}) => {
+    const authToken = getAuthToken();
+    const lang = (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0];
+    
+    return JSON.stringify({
+      path,
+      auth: !!authToken,
+      lang,
+      method: options.method || 'GET',
+      body: options.body ? JSON.stringify(options.body) : null
+    });
+  }, [getAuthToken]);
+
   const request = useCallback(
-    async (path, { method = "GET", headers = {}, body, auth = false, isFormData = false } = {}) => {
+    async (path, { 
+      method = "GET", 
+      headers = {}, 
+      body, 
+      auth = false, 
+      isFormData = false,
+      useCache = true,
+      cacheTTL = 10 * 60 * 1000,
+      invalidateCacheOnSuccess = [] // New: specify cache patterns to invalidate on success
+    } = {}) => {
+      
+      // Don't cache non-GET requests or form data
+      if (method !== 'GET' || isFormData) {
+        useCache = false;
+      }
+
+      const cacheKey = generateCacheKey(path, { method, body });
+      
+      // Try to get from cache first
+      if (useCache) {
+        const cached = apiCache.get(cacheKey);
+        if (cached) {
+          console.log('📦 Serving from cache:', path);
+          return cached;
+        }
+      }
+
       const url = buildUrl(path);
       const finalHeaders = { ...headers };
 
@@ -36,7 +170,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
 
       // Attach Accept-Language from current i18n language (map ua -> uk for backend)
       const currentLng = (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0];
-      const backendLng = currentLng === "ua" ? "uk" : currentLng; // backend expects uk for Ukrainian
+      const backendLng = currentLng === "ua" ? "uk" : currentLng;
       if (!finalHeaders["Accept-Language"]) {
         finalHeaders["Accept-Language"] = backendLng;
       }
@@ -56,16 +190,13 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           method,
           headers: finalHeaders,
           body: isFormData ? body : body ? JSON.stringify(body) : undefined,
-          redirect: isPalceOrder ? 'manual' : 'follow', // Manual redirect handling for place_order_book
-          mode: 'cors', // Ensure CORS mode
+          redirect: isPalceOrder ? 'manual' : 'follow',
+          mode: 'cors',
         });
       } catch (fetchError) {
-        // Handle network errors, CORS errors, etc.
         if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
-          // Check if this is a CORS issue with place_video_course or place_order_book specifically
-          if (path === 'place_video_course' || path === 'place_order_book') {
+          if (path === 'place_video_course' || path === 'place_order_book' || path === 'place_live_course') {
             console.warn(`CORS issue with ${path} endpoint, but request might have succeeded on server side`);
-            // For these endpoints, we'll handle this in the calling function
             const error = new Error(`CORS issue detected with ${path} endpoint`);
             error.status = 0;
             error.data = null;
@@ -82,21 +213,16 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
 
       // Handle redirects manually for place_order_book
       if (isPalceOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
-        // For place_order_book, try to get the response anyway as it might still contain data
         console.warn('place_order_book endpoint redirected, but continuing...');
-
-        // If we can't get the response due to redirect, try a different approach
         if (res.type === 'opaqueredirect') {
-          // Try to make the request again with different settings
           try {
             const retryRes = await fetch(url, {
               method,
               headers: finalHeaders,
               body: isFormData ? body : body ? JSON.stringify(body) : undefined,
               redirect: 'follow',
-              mode: 'no-cors', // Try no-cors mode as fallback
+              mode: 'no-cors',
             });
-
             if (retryRes.ok) {
               res = retryRes;
             }
@@ -121,14 +247,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       if (!res.ok) {
         let message = data?.message || `Request failed: ${res.status}`;
 
-        // Handle specific error cases
         if (res.status === 401) {
-          // Token expired or invalid - auto logout
           localStorage.removeItem("token");
           localStorage.removeItem("userToken");
           localStorage.removeItem("user");
           localStorage.removeItem("userName");
-          // Dispatch custom event to notify UserContext
           window.dispatchEvent(new CustomEvent('user-logout'));
           message = "Session expired. Please login again.";
         } else if (res.status === 302) {
@@ -142,11 +265,79 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         error.data = data;
         throw error;
       }
+
+      // Cache successful GET responses
+      if (useCache && method === 'GET' && res.ok) {
+        apiCache.set(cacheKey, data, cacheTTL);
+      }
+
+      // Invalidate specified cache on successful non-GET requests
+      if (method !== 'GET' && res.ok && invalidateCacheOnSuccess.length > 0) {
+        invalidateCache(invalidateCacheOnSuccess);
+        
+        // Emit global event for real-time updates
+        globalEvents.emit('dataUpdated', {
+          type: 'cacheInvalidation',
+          patterns: invalidateCacheOnSuccess,
+          source: path
+        });
+      }
+
       return data;
     },
-    [buildUrl, getAuthToken]
+    [buildUrl, getAuthToken, generateCacheKey]
   );
 
+  // Cache management functions
+  const clearCache = useCallback((pattern = null) => {
+    if (pattern) {
+      for (const key of apiCache.data.keys()) {
+        if (key.includes(pattern)) {
+          apiCache.delete(key);
+        }
+      }
+    } else {
+      apiCache.clear();
+    }
+  }, []);
+
+  const invalidateCache = useCallback((patterns = []) => {
+    if (patterns.length === 0) {
+      apiCache.clear();
+      return;
+    }
+
+    for (const key of apiCache.data.keys()) {
+      for (const pattern of patterns) {
+        if (key.includes(pattern)) {
+          apiCache.delete(key);
+          break;
+        }
+      }
+    }
+
+    // Emit global event
+    globalEvents.emit('dataUpdated', {
+      type: 'cacheInvalidation',
+      patterns: patterns
+    });
+  }, []);
+
+  const updateCache = useCallback((key, value) => {
+    apiCache.set(key, value);
+  }, []);
+
+  // Real-time update functions
+  const emitDataUpdate = useCallback((eventData) => {
+    globalEvents.emit('dataUpdated', eventData);
+  }, []);
+
+  const onDataUpdate = useCallback((callback) => {
+    globalEvents.on('dataUpdated', callback);
+    return () => globalEvents.off('dataUpdated', callback);
+  }, []);
+
+  // Existing API functions...
   const getSettings = useCallback(async () => {
     return await request("setting");
   }, [request]);
@@ -184,18 +375,19 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       method: "POST",
       body: formData,
       auth: true,
-      isFormData: true
+      isFormData: true,
+      invalidateCacheOnSuccess: ['favorites']
     });
   }, [request]);
 
   // Instructor API functions
   const getInstructors = useCallback(async () => {
-    const response = await request("instructor");
+    const response = await request("instructor", { useCache: true });
     return response.data || [];
   }, [request]);
 
   const getInstructorById = useCallback(async (id) => {
-    const response = await request(`instructor/${id}`);
+    const response = await request(`instructor/${id}`, { useCache: true });
     return response.data;
   }, [request]);
 
@@ -213,24 +405,29 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      clearCache,
+      invalidateCache,
+      updateCache,
+      emitDataUpdate,
+      onDataUpdate,
       
       // Placement Courses API
       async getPlacementCourses(params = {}) {
         const type = params.type || 'all';
+        
         if (type === 'video') {
-          const res = await request('placementCourses/video');
+          const res = await request('placementCourses/video', { useCache: true });
           const list = Array.isArray(res?.data) ? res.data.map((c) => ({ ...c, type: 'video' })) : [];
           return { data: list, raw: res };
         }
         if (type === 'live') {
-          const res = await request('placementCourses/live');
+          const res = await request('placementCourses/live', { useCache: true });
           const list = Array.isArray(res?.data) ? res.data.map((c) => ({ ...c, type: 'live' })) : [];
           return { data: list, raw: res };
         }
-        // all
         const [videoRes, liveRes] = await Promise.all([
-          request('placementCourses/video'),
-          request('placementCourses/live')
+          request('placementCourses/video', { useCache: true }),
+          request('placementCourses/live', { useCache: true })
         ]);
         const video = Array.isArray(videoRes?.data) ? videoRes.data.map((c) => ({ ...c, type: 'video' })) : [];
         const live = Array.isArray(liveRes?.data) ? liveRes.data.map((c) => ({ ...c, type: 'live' })) : [];
@@ -243,7 +440,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         if (params.page) query.set("page", params.page);
         if (params.per_page) query.set("per_page", params.per_page);
         const path = query.toString() ? `video_courses?${query.toString()}` : "video_courses";
-        const response = await request(path);
+        const response = await request(path, { useCache: true });
         return {
           data: Array.isArray(response?.data) ? response.data : [],
           pagination: response?.pagination || null,
@@ -256,7 +453,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         if (params.page) query.set("page", params.page);
         if (params.per_page) query.set("per_page", params.per_page);
         const path = query.toString() ? `live_courses?${query.toString()}` : "live_courses";
-        const response = await request(path);
+        const response = await request(path, { useCache: true });
         return {
           data: Array.isArray(response?.data) ? response.data : [],
           pagination: response?.pagination || null,
@@ -267,10 +464,9 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
-          const response = await request(`video_course/${id}`, { auth });
+          const response = await request(`video_course/${id}`, { auth, useCache: true });
           return response?.data || null;
         } catch (err) {
-          // Fallbacks for different backend routes
           if (err?.status === 404) {
             const candidates = [
               `courses/video/${id}`,
@@ -278,7 +474,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
             ];
             for (const path of candidates) {
               try {
-                const res2 = await request(path, { auth });
+                const res2 = await request(path, { auth, useCache: true });
                 if (res2?.data) return res2.data;
               } catch {
                 // try next
@@ -292,10 +488,9 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getLiveCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
-          const response = await request(`live_course/${id}`, { auth });
+          const response = await request(`live_course/${id}`, { auth, useCache: true });
           return response?.data || null;
         } catch (err) {
-          // Fallbacks for different backend routes
           if (err?.status === 404) {
             const candidates = [
               `courses/live/${id}`,
@@ -303,7 +498,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
             ];
             for (const path of candidates) {
               try {
-                const res2 = await request(path, { auth });
+                const res2 = await request(path, { auth, useCache: true });
                 if (res2?.data) return res2.data;
               } catch {
                 // try next
@@ -317,20 +512,19 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getLiveCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
-          const response = await request(`live_courses/${courseId}/lessons`);
+          const response = await request(`live_courses/${courseId}/lessons`, { useCache: true });
           return {
             data: Array.isArray(response?.data) ? response.data : [],
             raw: response,
           };
         } catch (err) {
-          // Fallback endpoints
           const candidates = [
             `courses/${courseId}/lessons`,
             `lessons?course_id=${courseId}`,
           ];
           for (const path of candidates) {
             try {
-              const res2 = await request(path);
+              const res2 = await request(path, { useCache: true });
               if (res2?.data) {
                 return {
                   data: Array.isArray(res2.data) ? res2.data : [],
@@ -348,20 +542,19 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
-          const response = await request(`video_courses/${courseId}/lessons`);
+          const response = await request(`video_courses/${courseId}/lessons`, { useCache: true });
           return {
             data: Array.isArray(response?.data) ? response.data : [],
             raw: response,
           };
         } catch (err) {
-          // Fallback endpoints
           const candidates = [
             `courses/${courseId}/lessons`,
             `lessons?course_id=${courseId}`,
           ];
           for (const path of candidates) {
             try {
-              const res2 = await request(path);
+              const res2 = await request(path, { useCache: true });
               if (res2?.data) {
                 return {
                   data: Array.isArray(res2.data) ? res2.data : [],
@@ -382,19 +575,16 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           const response = await request(`profile/get-my-courses`, { auth: true });
           const myCourses = response.data || [];
 
-          // Helper: normalize type from course item
           const detectType = (item) => {
             if (!item) return null;
             if (item.type) return String(item.type);
             if (item.course_type) return String(item.course_type);
-            // common backend field names
             if (item.is_live !== undefined) return item.is_live ? "live_course" : "video_course";
             if (item.resource_type) return String(item.resource_type);
             return null;
           };
 
           if (type) {
-            // match both id and type to avoid collisions when ids overlap
             return myCourses.some((c) => {
               const itemId = Number(c.id || c.course_id || c.id_course || 0);
               const itemType = detectType(c);
@@ -402,7 +592,6 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
             });
           }
 
-          // fallback: if no type passed, match by id only
           return myCourses.some(course => Number(course.id) === Number(courseId));
         } catch (err) {
           console.warn('Failed to get my courses for access check:', err);
@@ -410,7 +599,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         }
       },
       
-      // Video course progress API
+      // Video course progress API - UPDATED with auto cache invalidation
       async getCourseProgress(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
@@ -438,7 +627,11 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         ];
         for (const path of candidates) {
           try {
-            const res = await request(path, { method: 'POST', auth: true });
+            const res = await request(path, { 
+              method: 'POST', 
+              auth: true,
+              invalidateCacheOnSuccess: [`courses/${courseId}`, `progress`]
+            });
             return res?.data || null;
           } catch (e) {
             if (e?.status && e.status !== 404) throw e;
@@ -453,7 +646,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         const formData = new FormData();
         formData.append('course', String(courseId));
         formData.append('lesson', String(lessonId));
-        formData.append('type', type || 'lesson'); // Default to 'lesson' if not provided
+        formData.append('type', type || 'lesson');
         
         const candidates = [
           `courses/${courseId}/progress/${lessonId}/complete`,
@@ -467,7 +660,13 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
               method: 'POST', 
               auth: true, 
               body: formData, 
-              isFormData: true 
+              isFormData: true,
+              invalidateCacheOnSuccess: [
+                `courses/${courseId}`, 
+                `progress`,
+                `video_course/${courseId}`,
+                `course/${courseId}`
+              ]
             });
             return res?.data || null;
           } catch (e) {
@@ -477,7 +676,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         throw new Error('Progress complete endpoint not available');
       },
       
-      // Course Progress API functions
+      // Course Progress API functions - UPDATED
       async getCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
@@ -512,13 +711,17 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
               method: 'POST',
               auth: true,
               body: formData,
-              isFormData: true
+              isFormData: true,
+              invalidateCacheOnSuccess: [
+                `courses/${courseId}`,
+                `progress`,
+                `video_course/${courseId}`
+              ]
             });
             return res?.data || null;
           } catch (e) {
             if (e?.status && e.status !== 404) {
               console.warn(`Failed with endpoint ${path}:`, e.message);
-              // Continue to next endpoint instead of throwing immediately
               continue;
             }
           }
@@ -526,46 +729,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         throw new Error('Lesson complete endpoint not available');
       },
       
-      async updateLessonProgress(courseId, lessonId, progressData) {
-        if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-
-        const formData = new FormData();
-        formData.append('course_id', String(courseId));
-        formData.append('lesson_id', String(lessonId));
-        formData.append('percentage', String(progressData.percentage));
-        formData.append('status', progressData.status);
-
-        if (progressData.lesson_percentage !== undefined) {
-          formData.append('lesson_percentage', String(progressData.lesson_percentage));
-        }
-        if (progressData.quiz_percentage !== undefined) {
-          formData.append('quiz_percentage', String(progressData.quiz_percentage));
-        }
-
-        const candidates = [
-          `courses/${courseId}/progress/${lessonId}/progress`
-        ];
-
-        for (const path of candidates) {
-          try {
-            const res = await request(path, {
-              method: 'POST',
-              auth: true,
-              body: formData,
-              isFormData: true
-            });
-            return res?.data || null;
-          } catch (e) {
-            if (e?.status && e.status !== 404) {
-              console.warn(`Failed with endpoint ${path}:`, e.message);
-              continue;
-            }
-          }
-        }
-        throw new Error('Lesson progress endpoint not available');
-      },
-      
-      // Live Course Progress API functions
+      // Live Course Progress API functions - UPDATED بنفس نظام الفيديو
       async getLiveCourseProgress(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
@@ -591,7 +755,16 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         ];
         for (const path of candidates) {
           try {
-            const res = await request(path, { method: 'POST', auth: true });
+            const res = await request(path, { 
+              method: 'POST', 
+              auth: true,
+              invalidateCacheOnSuccess: [
+                `courses/${courseId}`, 
+                `progress`,
+                `live_courses/${courseId}`,
+                `live_course/${courseId}`
+              ]
+            });
             return res?.data || null;
           } catch (e) {
             if (e?.status && e.status !== 404) throw e;
@@ -603,7 +776,6 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async completeLiveLessonProgress(courseId, lessonId, type) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         
-        // تأكد من وجود التوكن أولاً
         const token = getAuthToken();
         if (!token) {
           throw new Error("Authentication token is required");
@@ -626,15 +798,20 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         });
 
         try {
-          // استخدم endpoint واحد فقط بدلاً من محاولة عدة endpoints
           const res = await request(`live_courses/${courseId}/progress/${lessonId}/complete`, {
             method: 'POST',
             body: formData,
             isFormData: true,
-            auth: true
+            auth: true,
+            invalidateCacheOnSuccess: [
+              `courses/${courseId}`,
+              `progress`,
+              `live_courses/${courseId}`,
+              `live_course/${courseId}`,
+              `course/${courseId}`
+            ]
           });
 
-          // تحقق من الاستجابة
           if (!res) {
             throw new Error("No response from server");
           }
@@ -651,7 +828,6 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         } catch (error) {
           console.error("Error completing lesson progress:", error);
           
-          // إذا كان الخطأ 422، حاول مع endpoint بديل
           if (error.message.includes("The selected lesson is invalid") || error.status === 422) {
             console.log('Trying alternative endpoint for quiz completion...');
             
@@ -665,7 +841,13 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
                 method: 'POST',
                 body: alternativeFormData,
                 isFormData: true,
-                auth: true
+                auth: true,
+                invalidateCacheOnSuccess: [
+                  `courses/${courseId}`,
+                  `progress`,
+                  `live_courses/${courseId}`,
+                  `live_course/${courseId}`
+                ]
               });
               
               return altRes;
@@ -715,7 +897,13 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
               method: 'POST',
               auth: true,
               body: formData,
-              isFormData: true
+              isFormData: true,
+              invalidateCacheOnSuccess: [
+                `courses/${courseId}`,
+                `progress`,
+                `live_courses/${courseId}`,
+                `live_course/${courseId}`
+              ]
             });
             return res?.data || null;
           } catch (e) {
@@ -745,6 +933,291 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         return null;
       },
       
+      // Course subscription - UPDATED with auto cache invalidation
+      async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
+        const formData = new FormData();
+
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        const userId = userData.id || userData.user_id || userData.client_id || courseId;
+
+        formData.append('client_id', userId.toString());
+        formData.append('course_id', courseId.toString());
+        formData.append('payment_method', paymentMethod);
+        formData.append('amount', amount.toString());
+        if (couponId) {
+          formData.append('coupon_id', couponId);
+        }
+
+        try {
+          const result = await request('place_video_course', {
+            method: 'POST',
+            body: formData,
+            auth: true,
+            isFormData: true,
+            invalidateCacheOnSuccess: [
+              `profile/get-my-courses`,
+              `video_course/${courseId}`,
+              `course/${courseId}`,
+              `courses/${courseId}`,
+              'my-courses'
+            ]
+          });
+
+          globalEvents.emit('dataUpdated', {
+            type: 'purchaseSuccess',
+            courseId: courseId,
+            courseType: 'video_course',
+            source: 'subscribeToCourse'
+          });
+
+          return result;
+        } catch (error) {
+          if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
+            console.warn('CORS error detected, returning success...');
+            
+            invalidateCache([
+              `profile/get-my-courses`,
+              `video_course/${courseId}`,
+              `course/${courseId}`,
+              `courses/${courseId}`,
+              'my-courses'
+            ]);
+
+            globalEvents.emit('dataUpdated', {
+              type: 'purchaseSuccess',
+              courseId: courseId,
+              courseType: 'video_course',
+              source: 'subscribeToCourse'
+            });
+
+            return {
+              code: 200,
+              success: true,
+              message: "Paint Order Data",
+              data: {
+                id: Date.now(),
+                client_name: userData.name || userData.full_name || "user",
+                details: [
+                  {
+                    id: Date.now(),
+                    name: "Course subscription completed",
+                    price: amount,
+                    discount: "0.00",
+                    images: ""
+                  }
+                ]
+              }
+            };
+          }
+          throw error;
+        }
+      },
+
+      // Live course subscription - UPDATED بنفس النظام
+      async subscribeToLiveCourse(courseId, paymentMethod, amount, couponId = null) {
+        const formData = new FormData();
+
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        const userId = userData.id || userData.user_id || userData.client_id || courseId;
+
+        formData.append('client_id', userId.toString());
+        formData.append('course_id', courseId.toString());
+        formData.append('payment_method', paymentMethod);
+        formData.append('amount', amount.toString());
+        if (couponId) {
+          formData.append('coupon_id', couponId);
+        }
+
+        try {
+          const result = await request('place_live_course', {
+            method: 'POST',
+            body: formData,
+            auth: true,
+            isFormData: true,
+            invalidateCacheOnSuccess: [
+              `profile/get-my-courses`,
+              `live_course/${courseId}`,
+              `course/${courseId}`,
+              `courses/${courseId}`,
+              'my-courses'
+            ]
+          });
+
+          globalEvents.emit('dataUpdated', {
+            type: 'purchaseSuccess',
+            courseId: courseId,
+            courseType: 'live_course',
+            source: 'subscribeToLiveCourse'
+          });
+
+          return result;
+        } catch (error) {
+          if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
+            console.warn('CORS error detected for live course, returning success...');
+            
+            invalidateCache([
+              `profile/get-my-courses`,
+              `live_course/${courseId}`,
+              `course/${courseId}`,
+              `courses/${courseId}`,
+              'my-courses'
+            ]);
+
+            globalEvents.emit('dataUpdated', {
+              type: 'purchaseSuccess',
+              courseId: courseId,
+              courseType: 'live_course',
+              source: 'subscribeToLiveCourse'
+            });
+
+            return {
+              code: 200,
+              success: true,
+              message: "Paint Order Data",
+              data: {
+                id: Date.now(),
+                client_name: userData.name || userData.full_name || "user",
+                details: [
+                  {
+                    id: Date.now(),
+                    name: "Live course subscription completed",
+                    price: amount,
+                    discount: "0.00",
+                    images: ""
+                  }
+                ]
+              }
+            };
+          }
+          throw error;
+        }
+      },
+
+      // Get user's enrolled courses
+      async getMyCourses() {
+        const response = await request("profile/get-my-courses", { auth: true });
+        return response.data || [];
+      },
+      
+      // Add student test results - UPDATED
+      async addStudentTest(testData) {
+        console.log('🎯 addStudentTest called with:', testData);
+        
+        try {
+          const response = await request("add_student_test", {
+            method: "POST",
+            body: testData,
+            auth: true,
+            invalidateCacheOnSuccess: [
+              `progress`,
+              `courses/${testData.course_id}`,
+              `student_test`,
+              `test`
+            ]
+          });
+
+          globalEvents.emit('dataUpdated', {
+            type: 'testCompleted',
+            courseId: testData.course_id,
+            lessonId: testData.lesson_id,
+            testId: testData.test_id
+          });
+
+          return response;
+        } catch (error) {
+          console.error('❌ Error in addStudentTest:', error);
+          
+          const formData = new FormData();
+          formData.append('test_id', testData.test_id?.toString() || "");
+          formData.append('course_id', testData.course_id?.toString() || "");
+          if (testData.lesson_id) {
+            formData.append('lesson_id', testData.lesson_id?.toString() || "");
+          }
+          formData.append('type', testData.type || "");
+          formData.append('student_score', testData.student_score?.toString() || "0");
+          formData.append('total_score', testData.total_score?.toString() || "0");
+          formData.append('result_status', testData.result_status?.toString() || "1");
+          formData.append('total_questions', testData.total_questions?.toString() || "0");
+          formData.append('questions', JSON.stringify(testData.questions || []));
+
+          try {
+            const formDataResponse = await request("add_student_test", {
+              method: "POST",
+              body: formData,
+              auth: true,
+              isFormData: true,
+              invalidateCacheOnSuccess: [
+                `progress`,
+                `courses/${testData.course_id}`,
+                `student_test`,
+                `test`
+              ]
+            });
+
+            globalEvents.emit('dataUpdated', {
+              type: 'testCompleted',
+              courseId: testData.course_id,
+              lessonId: testData.lesson_id,
+              testId: testData.test_id
+            });
+
+            return formDataResponse;
+          } catch (formDataError) {
+            console.error('❌ FormData also failed:', formDataError);
+            throw formDataError;
+          }
+        }
+      },
+
+      // Check student test - UPDATED مع cache invalidation
+      async checkStudentTest(testData) {
+        console.log('🔍 checkStudentTest called with:', testData);
+        
+        try {
+          const response = await request("checkStudentTest", {
+            method: "POST",
+            body: testData,
+            auth: true,
+            invalidateCacheOnSuccess: [
+              `student_test`,
+              `test`
+            ]
+          });
+
+          console.log('✅ checkStudentTest response:', response);
+          return response;
+          
+        } catch (error) {
+          console.error('❌ Error in checkStudentTest:', error);
+          
+          const formData = new FormData();
+          formData.append('course_id', testData.course_id?.toString() || "");
+          if (testData.lesson_id) {
+            formData.append('lesson_id', testData.lesson_id?.toString() || "");
+          }
+          formData.append('type', testData.type || "");
+
+          try {
+            const formDataResponse = await request("checkStudentTest", {
+              method: "POST",
+              body: formData,
+              auth: true,
+              isFormData: true,
+              invalidateCacheOnSuccess: [
+                `student_test`,
+                `test`
+              ]
+            });
+            
+            console.log('✅ FormData response for checkStudentTest:', formDataResponse);
+            return formDataResponse;
+          } catch (formDataError) {
+            console.error('❌ FormData also failed for checkStudentTest:', formDataError);
+            throw formDataError;
+          }
+        }
+      },
+
       // Blogs API
       async getBlogs(params = {}) {
         const query = new URLSearchParams();
@@ -752,7 +1225,7 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
         if (params.per_page) query.set("per_page", params.per_page);
         if (params.instructor_id) query.set("instructor_id", params.instructor_id);
         const path = query.toString() ? `blog?${query.toString()}` : "blog";
-        const response = await request(path);
+        const response = await request(path, { useCache: true });
         return {
           data: Array.isArray(response?.data) ? response.data : [],
           pagination: response?.pagination || null,
@@ -785,7 +1258,13 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           method: 'POST',
           body: formData,
           auth: true,
-          isFormData: true
+          isFormData: true,
+          invalidateCacheOnSuccess: [
+            `ratings`,
+            `courses/${courseId}`,
+            `video_course/${courseId}`,
+            `live_course/${courseId}`
+          ]
         });
       },
       
@@ -801,364 +1280,6 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getOrders() {
         const response = await request('orders', { auth: true });
         return response.data || { orders: [] };
-      },
-      
-      // Course subscription
-      async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
-        const formData = new FormData();
-
-        // Get user ID from token or user data
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
-        const userId = userData.id || userData.user_id || userData.client_id || courseId; // fallback to courseId if no user ID
-
-        console.log('User data from localStorage:', userData);
-        console.log('Extracted user ID:', userId);
-
-        formData.append('client_id', userId.toString()); // API expects client_id (user ID) as string
-        formData.append('course_id', courseId.toString()); // API expects course_id as string
-        formData.append('payment_method', paymentMethod);
-        formData.append('amount', amount.toString()); // Ensure amount is string
-        if (couponId) {
-          formData.append('coupon_id', couponId);
-        }
-
-        console.log('FormData being sent:', {
-          client_id: userId.toString(),
-          course_id: courseId.toString(),
-          payment_method: paymentMethod,
-          amount: amount.toString(),
-          coupon_id: couponId,
-          userData: userData
-        });
-
-        // Log actual FormData entries
-        console.log('FormData entries:');
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
-        }
-
-        // First try with normal CORS mode
-        try {
-          return await request('place_video_course', {
-            method: 'POST',
-            body: formData,
-            auth: true,
-            isFormData: true
-          });
-        } catch (error) {
-          // Handle CORS issues - if the API actually succeeded but we got a CORS error
-          if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
-            console.warn('CORS error detected, trying no-cors fallback:', error);
-
-            // Try with no-cors mode as fallback
-            try {
-              const url = buildUrl('place_video_course');
-              const token = getAuthToken();
-
-              const headers = {
-                'Authorization': `Bearer ${token}`,
-                'Accept-Language': (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0]
-              };
-
-              console.log('No-cors request data:', {
-                url,
-                client_id: userId,
-                course_id: courseId,
-                payment_method: paymentMethod,
-                amount: amount,
-                coupon_id: couponId
-              });
-
-              const noCorsResponse = await fetch(url, {
-                method: 'POST',
-                headers,
-                body: formData,
-                mode: 'no-cors'
-              });
-
-              console.log('No-cors response:', noCorsResponse);
-
-              // If no-cors request doesn't throw, assume it succeeded
-              return {
-                code: 200,
-                success: true,
-                message: "Paint Order Data",
-                data: {
-                  id: Date.now(), // Use timestamp as temporary ID
-                  client_name: userData.name || userData.full_name || "user",
-                  details: [
-                    {
-                      id: Date.now(),
-                      name: "Course subscription completed",
-                      price: amount,
-                      discount: "0.00",
-                      images: ""
-                    }
-                  ]
-                }
-              };
-            } catch (noCorsError) {
-              console.warn('No-cors fallback also failed:', noCorsError);
-              // Return success anyway since the server likely processed the request
-              return {
-                code: 200,
-                success: true,
-                message: "Paint Order Data",
-                data: {
-                  id: Date.now(),
-                  client_name: userData.name || userData.full_name || "user",
-                  details: [
-                    {
-                      id: Date.now(),
-                      name: "Course subscription completed",
-                      price: amount,
-                      discount: "0.00",
-                      images: ""
-                    }
-                  ]
-                }
-              };
-            }
-          }
-          throw error;
-        }
-      },
-      
-      // Live course subscription
-      async subscribeToLiveCourse(courseId, paymentMethod, amount, couponId = null) {
-        const formData = new FormData();
-
-        // Get user ID from token or user data
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
-        const userId = userData.id || userData.user_id || userData.client_id || courseId; // fallback to courseId if no user ID
-
-        console.log('User data from localStorage:', userData);
-        console.log('Extracted user ID:', userId);
-
-        formData.append('client_id', userId.toString()); // API expects client_id (user ID) as string
-        formData.append('course_id', courseId.toString()); // API expects course_id as string
-        formData.append('payment_method', paymentMethod);
-        formData.append('amount', amount.toString()); // Ensure amount is string
-        if (couponId) {
-          formData.append('coupon_id', couponId);
-        }
-
-        console.log('FormData being sent for live course:', {
-          client_id: userId.toString(),
-          course_id: courseId.toString(),
-          payment_method: paymentMethod,
-          amount: amount.toString(),
-          coupon_id: couponId,
-          userData: userData
-        });
-
-        // Log actual FormData entries
-        console.log('FormData entries:');
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
-        }
-
-        // First try with normal CORS mode
-        try {
-          return await request('place_live_course', {
-            method: 'POST',
-            body: formData,
-            auth: true,
-            isFormData: true
-          });
-        } catch (error) {
-          // Handle CORS issues - if the API actually succeeded but we got a CORS error
-          if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
-            console.warn('CORS error detected for live course, trying no-cors fallback:', error);
-
-            // Try with no-cors mode as fallback
-            try {
-              const url = buildUrl('place_live_course');
-              const token = getAuthToken();
-
-              const headers = {
-                'Authorization': `Bearer ${token}`,
-                'Accept-Language': (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0]
-              };
-
-              console.log('No-cors request data for live course:', {
-                url,
-                client_id: userId,
-                course_id: courseId,
-                payment_method: paymentMethod,
-                amount: amount,
-                coupon_id: couponId
-              });
-
-              const noCorsResponse = await fetch(url, {
-                method: 'POST',
-                headers,
-                body: formData,
-                mode: 'no-cors'
-              });
-
-              console.log('No-cors response for live course:', noCorsResponse);
-
-              // If no-cors request doesn't throw, assume it succeeded
-              return {
-                code: 200,
-                success: true,
-                message: "Paint Order Data",
-                data: {
-                  id: Date.now(), // Use timestamp as temporary ID
-                  client_name: userData.name || userData.full_name || "user",
-                  details: [
-                    {
-                      id: Date.now(),
-                      name: "Live course subscription completed",
-                      price: amount,
-                      discount: "0.00",
-                      images: ""
-                    }
-                  ]
-                }
-              };
-            } catch (noCorsError) {
-              console.warn('No-cors fallback also failed for live course:', noCorsError);
-              // Return success anyway since the server likely processed the request
-              return {
-                code: 200,
-                success: true,
-                message: "Paint Order Data",
-                data: {
-                  id: Date.now(),
-                  client_name: userData.name || userData.full_name || "user",
-                  details: [
-                    {
-                      id: Date.now(),
-                      name: "Live course subscription completed",
-                      price: amount,
-                      discount: "0.00",
-                      images: ""
-                    }
-                  ]
-                }
-              };
-            }
-          }
-          throw error;
-        }
-      },
-      
-      // Get user's enrolled courses
-      async getMyCourses() {
-        const response = await request("profile/get-my-courses", { auth: true });
-        return response.data || [];
-      },
-      
-      // Add student test results
-      async addStudentTest(testData) {
-        console.log('🎯 addStudentTest called with:', testData);
-        
-        try {
-          // استخدم getAuthToken من الـ closure بدل this
-          const token = getAuthToken();
-          
-          if (!token) {
-            console.error('❌ No authentication token found');
-            throw new Error("Authentication token is required");
-          }
-
-          console.log('🔑 Token found:', token ? 'Yes' : 'No');
-
-          // استخدم الـ request function الموجود بدل fetch مباشر
-          const response = await request("add_student_test", {
-            method: "POST",
-            body: testData,
-            auth: true
-          });
-
-          console.log('✅ API Response:', response);
-          return response;
-          
-        } catch (error) {
-          console.error('❌ Error in addStudentTest:', error);
-          
-          // إذا فشل مع JSON، جرب مع FormData
-          console.log('🔄 Trying with FormData...');
-          
-          const formData = new FormData();
-          formData.append('test_id', testData.test_id?.toString() || "");
-          formData.append('course_id', testData.course_id?.toString() || "");
-          if (testData.lesson_id) {
-            formData.append('lesson_id', testData.lesson_id?.toString() || "");
-          }
-          formData.append('type', testData.type || "");
-          formData.append('student_score', testData.student_score?.toString() || "0");
-          formData.append('total_score', testData.total_score?.toString() || "0");
-          formData.append('result_status', testData.result_status?.toString() || "1");
-          formData.append('total_questions', testData.total_questions?.toString() || "0");
-          formData.append('questions', JSON.stringify(testData.questions || []));
-
-          console.log('🧾 FormData entries:');
-          for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
-          }
-
-          try {
-            const formDataResponse = await request("add_student_test", {
-              method: "POST",
-              body: formData,
-              auth: true,
-              isFormData: true
-            });
-            
-            console.log('✅ FormData response:', formDataResponse);
-            return formDataResponse;
-          } catch (formDataError) {
-            console.error('❌ FormData also failed:', formDataError);
-            throw formDataError;
-          }
-        }
-      },
-
-      // Check student test - التحقق من الاختبار السابق
-      async checkStudentTest(testData) {
-        console.log('🔍 checkStudentTest called with:', testData);
-        
-        try {
-          const response = await request("checkStudentTest", {
-            method: "POST",
-            body: testData,
-            auth: true
-          });
-
-          console.log('✅ checkStudentTest response:', response);
-          return response;
-          
-        } catch (error) {
-          console.error('❌ Error in checkStudentTest:', error);
-          
-          // إذا فشل مع JSON، جرب مع FormData
-          console.log('🔄 Trying with FormData...');
-          
-          const formData = new FormData();
-          formData.append('course_id', testData.course_id?.toString() || "");
-          if (testData.lesson_id) {
-            formData.append('lesson_id', testData.lesson_id?.toString() || "");
-          }
-          formData.append('type', testData.type || "");
-
-          try {
-            const formDataResponse = await request("checkStudentTest", {
-              method: "POST",
-              body: formData,
-              auth: true,
-              isFormData: true
-            });
-            
-            console.log('✅ FormData response for checkStudentTest:', formDataResponse);
-            return formDataResponse;
-          } catch (formDataError) {
-            console.error('❌ FormData also failed for checkStudentTest:', formDataError);
-            throw formDataError;
-          }
-        }
       }
 
     }),
@@ -1174,7 +1295,12 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       getFavorites,
       toggleFavorite,
       getInstructors,
-      getInstructorById
+      getInstructorById,
+      clearCache,
+      invalidateCache,
+      updateCache,
+      emitDataUpdate,
+      onDataUpdate
     ]
   );
 

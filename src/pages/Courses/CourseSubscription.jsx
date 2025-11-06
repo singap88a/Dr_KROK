@@ -560,7 +560,7 @@ export default function CourseSubscription() {
                 </button>
 
                 {/* Installment Option */}
-                {!useInstallment && (
+                {discountedPrice >= 100 && !useInstallment && (
                   <button
                     onClick={handleOpenInstallmentModal}
                     disabled={!isLoggedIn}
