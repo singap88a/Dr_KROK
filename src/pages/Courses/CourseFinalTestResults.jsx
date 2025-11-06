@@ -32,7 +32,7 @@ export default function CourseFinalTestResults() {
         const courseData = await getVideoCourseById(id, true);
         setCourse(courseData);
       } catch (err) {
-        setError(err?.message || "Failed to load course");
+        setError(err?.message || t("courses.failedToLoadCourse", "Failed to load course"));
       } finally {
         setLoading(false);
       }
@@ -75,7 +75,7 @@ export default function CourseFinalTestResults() {
     return (
       <section className="flex items-center justify-center min-h-screen bg-background text-text">
         <div className="text-center">
-          <div className="mb-4 text-red-600">{error || "Missing data"}</div>
+          <div className="mb-4 text-red-600">{error || t("common.missingData", "Missing data")}</div>
           <button
             onClick={() => navigate(`/courses/${id}/lessons`)}
             className="px-4 py-2 text-white rounded bg-primary"

@@ -338,7 +338,7 @@ export default function CourseTestRunner() {
     setTimeout(() => {
       const basePath = isLiveCourse ? '/live-courses' : '/courses';
       if (scope === "final") {
-        navigate(`/courses/${id}/final-results`, {
+        navigate(`${basePath}/${id}/final-results`, {
           replace: true,
           state: { results: { total, earned, percentage, answers: resultsData }, test },
         });
@@ -827,7 +827,7 @@ export default function CourseTestRunner() {
                           );
                         })
                       ) : (
-                        <p className="text-center text-text-muted">No texts available</p>
+                        <p className="text-center text-text-muted">{t("testYourself.noTexts", "No texts available")}</p>
                       )}
                     </div>
 
@@ -874,7 +874,7 @@ export default function CourseTestRunner() {
                           );
                         })
                       ) : (
-                        <p className="text-center text-text-muted">No images available</p>
+                        <p className="text-center text-text-muted">{t("testYourself.noImages", "No images available")}</p>
                       )}
                     </div>
                   </div>
