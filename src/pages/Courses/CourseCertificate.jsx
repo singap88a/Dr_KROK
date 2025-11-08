@@ -181,14 +181,14 @@ export default function CourseCertificate() {
           <p className="mb-6 text-gray-600">
             {t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate.")}
           </p>
-          <div className="p-4 mb-6 bg-gray-100 rounded-lg">
+          {/* <div className="p-4 mb-6 bg-gray-100 rounded-lg">
             <p className="text-lg font-semibold text-gray-800">
               {t("courses.yourScore", "Your Score")}: <span className="text-red-600">{Math.round(finalPercentage)}%</span>
             </p>
             <p className="mt-2 text-sm text-gray-600">
               {t("courses.requiredScore", "Required Score")}: 65%
             </p>
-          </div>
+          </div> */}
           <button
             onClick={() => navigate(`/courses/${id}/lessons`)}
             className="px-6 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"

@@ -21,6 +21,32 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import ChangePasswordModal from "./ChangePasswordModal";
 
+// Helper function to format date for display as YYYY-MM-DD
+const formatDateForDisplay = (dateString) => {
+  if (!dateString) return "Not provided";
+
+  // Handle different date formats from API
+  const dateParts = dateString.split('-');
+  if (dateParts.length === 3) {
+    // If date is in format "dd-MM-yyyy" or "MM-dd-yyyy"
+    if (dateParts[0].length === 2 && dateParts[1].length === 2) {
+      // Assume format is "dd-MM-yyyy"
+      return `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    }
+    // If date is in format "yyyy-MM-dd"
+    return dateString;
+  }
+
+  // Fallback: try to parse as Date object
+  const date = new Date(dateString);
+  if (!isNaN(date.getTime())) {
+    return date.toISOString().split('T')[0];
+  }
+
+  // If all parsing fails, return the original string
+  return dateString;
+};
+
 const MyProfile = ({ user, onProfileUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -504,7 +530,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <FaCalendarAlt className="text-primary" />
-                    <span>{user.birth ? new Date(user.birth).toLocaleDateString() : t('profile.not_provided')}</span>
+                    <span>{user.birth ? formatDateForDisplay(user.birth) : t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>

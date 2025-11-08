@@ -23,7 +23,7 @@ const MyCourses = ({ enrolledCourses, renderStars }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2">
         <h2 className="text-2xl font-bold">{t("myCourses.title")}</h2>
         <span className="text-sm text-text-secondary">
           {t("myCourses.enrolledCount", { count: enrolledCourses.length })}

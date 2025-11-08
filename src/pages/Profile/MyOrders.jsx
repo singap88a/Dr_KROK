@@ -85,6 +85,15 @@ const MyOrders = ({ orders }) => {
   const { t } = useTranslation();
   const [filterType, setFilterType] = useState("all");
 
+  // Helper function to format date as YYYY/MM/DD
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${year}/${month}/${day}`;
+  };
+
   // Normalize orders first
   const normalizedOrders = normalizeOrders(orders);
 
@@ -313,7 +322,7 @@ const MyOrders = ({ orders }) => {
                       </CustomTooltip>
                     </td>
                     <td className="px-6 py-4 text-gray-500">
-                      {new Date(order.date).toLocaleDateString()}
+                      {formatDate(order.date)}
                     </td>
                   </tr>
                 );
@@ -392,7 +401,7 @@ const MyOrders = ({ orders }) => {
                 </p>
                 <p>
                   <span className="font-medium">{t("orders.date")}:</span>{" "}
-                  {new Date(order.date).toLocaleDateString()}
+                  {formatDate(order.date)}
                 </p>
                 {order.type === 'delivery' && order.city && order.branch && (
                   <p>

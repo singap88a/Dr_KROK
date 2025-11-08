@@ -135,9 +135,9 @@ export default function MyFavorites() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold">{t("favorites.title")}</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{t("favorites.title")}</h2>
           <p className="text-text-secondary">
             {favorites.length === 1
               ? t("favorites.itemsCount_one", { count: favorites.length })
@@ -147,31 +147,31 @@ export default function MyFavorites() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "all" ? "bg-primary text-white" : "bg-surface text-text"}`}
+            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "all" ? "bg-primary text-white" : "bg-surface text-text"}`}
             title={t("favorites.filterAll", "All")}
           >
             {t("favorites.filterAll", "All")}
           </button>
           <button
             onClick={() => setActiveFilter("book")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "book" ? "bg-primary text-white" : "bg-surface text-text"}`}
+            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "book" ? "bg-primary text-white" : "bg-surface text-text"}`}
             title={t("favorites.filterBooks", "Books")}
           >
             <FiBook className="inline mr-1" /> {t("favorites.filterBooks", "Books")}
           </button>
           <button
             onClick={() => setActiveFilter("video_course")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "video_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
+            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "video_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
             title={t("favorites.filterCourses", "Courses")}
           >
             <FiUser className="inline mr-1" /> {t("favorites.filterCourses", "Courses")}
           </button>
           <button
             onClick={() => setActiveFilter("live_course")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium ${activeFilter === "live_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
+            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "live_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
             title={t("favorites.filterLiveCourses", "Live Courses")}
           >
             <FiUser className="inline mr-1" /> {t("favorites.filterLiveCourses", "Live Courses")}
