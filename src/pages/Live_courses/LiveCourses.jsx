@@ -37,10 +37,10 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
         <div
           key={course.id}
           onClick={() => goToDetails(course)}
-          className="flex overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg"
+          className="flex flex-col overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg sm:flex-row"
         >
           {/* الصورة على اليسار */}
-          <div className="relative w-2/5">
+          <div className="relative w-full sm:w-2/5">
             <img
               src={course.img}
               alt={course.title}
@@ -64,7 +64,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
           </div>
 
           {/* المحتوى على اليمين */}
-          <div className="flex flex-col flex-1 w-3/5 p-4">
+          <div className="flex flex-col flex-1 w-full p-4 sm:w-3/5">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-1 text-xs font-medium rounded text-primary bg-blue-50 dark:bg-blue-900/30">

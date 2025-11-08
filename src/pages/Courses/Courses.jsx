@@ -162,9 +162,9 @@ export default function Courses() {
 
   return (
     <div className="min-h-screen py-10 transition-colors duration-300 ">
-      <div className="mx-auto max-w-7xl">
+      <div className="px-4 mx-auto max-w-7xl sm:px-0">
         {/* Header */}
-        <header className="flex items-center justify-between gap-4 mb-6">
+        <header className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl dark:text-white">{t("courses.allCourses", "All Courses")}</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
