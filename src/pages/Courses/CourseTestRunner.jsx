@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
-import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaChartBar } from "react-icons/fa";
+import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaChartBar, FaHandPointer, FaArrowsAlt, FaTimes } from "react-icons/fa";
 
 export default function CourseTestRunner() {
   const { id, scope, testId } = useParams();
@@ -23,6 +23,25 @@ export default function CourseTestRunner() {
   const [dragItem, setDragItem] = useState(null);
   const [previousTestResult, setPreviousTestResult] = useState(null);
   const [checkingPreviousTest, setCheckingPreviousTest] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [activeDropZone, setActiveDropZone] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImage, setModalImage] = useState(null);
+
+  // اكتشاف إذا كان الجهاز موبايل
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // دالة لخلط العناصر عشوائياً
   const shuffleArray = (array) => {
@@ -116,16 +135,69 @@ export default function CourseTestRunner() {
     }
   }, [test, id, scope, lessonId, checkStudentTest, location.pathname]);
 
+  // Touch Handlers للموبايل
+  const handleTouchStart = (e, questionId, answerKey) => {
+    if (!isMobile) return;
+    
+    e.preventDefault();
+    setSelectedImage({
+      questionId,
+      answerKey,
+      image: e.currentTarget.querySelector('img')?.src,
+      element: e.currentTarget
+    });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isMobile || !selectedImage) return;
+    e.preventDefault();
+  };
+
+  const handleTouchEnd = (e, questionId, textKey) => {
+    if (!isMobile || !selectedImage) return;
+    
+    e.preventDefault();
+    
+    if (selectedImage.questionId === questionId) {
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          [textKey]: selectedImage.answerKey,
+        },
+      }));
+    }
+    
+    setSelectedImage(null);
+    setActiveDropZone(null);
+  };
+
+  const handleTouchEnter = (questionId, textKey) => {
+    if (!isMobile || !selectedImage) return;
+    setActiveDropZone({ questionId, textKey });
+  };
+
+  const handleTouchLeave = () => {
+    if (!isMobile || !selectedImage) return;
+    setActiveDropZone(null);
+  };
+
+  // Drag Handlers للديسكتوب
   const handleDragStart = (e, questionId, answerKey) => {
+    if (isMobile) return;
+    
     setDragItem({ questionId, answerKey });
     e.dataTransfer.setData("text/plain", `${questionId}-${answerKey}`);
   };
 
   const handleDragOver = (e) => {
+    if (isMobile) return;
     e.preventDefault();
   };
 
   const handleDrop = (e, questionId, textKey) => {
+    if (isMobile) return;
+    
     e.preventDefault();
     if (dragItem && dragItem.questionId === questionId) {
       setAnswers((prev) => ({
@@ -137,6 +209,26 @@ export default function CourseTestRunner() {
       }));
     }
     setDragItem(null);
+  };
+
+  // دالة لإزالة التوصيل
+  const removeConnection = (questionId, textKey) => {
+    setAnswers((prev) => {
+      const newAnswers = { ...prev };
+      if (newAnswers[questionId]) {
+        delete newAnswers[questionId][textKey];
+        if (Object.keys(newAnswers[questionId]).length === 0) {
+          delete newAnswers[questionId];
+        }
+      }
+      return newAnswers;
+    });
+  };
+
+  // دالة لعرض الصورة في مودال
+  const openImageModal = (imageSrc) => {
+    setModalImage(imageSrc);
+    setShowImageModal(true);
   };
 
   const [loading, setLoading] = useState(!test);
@@ -382,20 +474,6 @@ export default function CourseTestRunner() {
         state: { lessonCompleted: true, lessonId },
       });
     }
-  };
-
-  // دالة لإزالة التوصيل في أسئلة التوصيل
-  const removeConnection = (questionId, textKey) => {
-    setAnswers((prev) => {
-      const newAnswers = { ...prev };
-      if (newAnswers[questionId]) {
-        delete newAnswers[questionId][textKey];
-        if (Object.keys(newAnswers[questionId]).length === 0) {
-          delete newAnswers[questionId];
-        }
-      }
-      return newAnswers;
-    });
   };
 
   // الحصول على الحد الأدنى للإجابات المطلوبة لأسئلة التوصيل
@@ -735,6 +813,21 @@ export default function CourseTestRunner() {
             ) : currentQuestion?.type === "connect" ? (
               // Connect Questions: Drag images to matching texts (مع الخلط العشوائي)
               <div className="space-y-6">
+                {/* Mobile Instructions */}
+                {isMobile && (
+                  <div className="p-4 mb-4 text-center border border-yellow-200 rounded-lg bg-yellow-50">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <FaHandPointer className="text-yellow-600" />
+                      <span className="font-medium text-yellow-800">
+                        {t("testYourself.test.mobileInstructions", "Mobile Instructions")}
+                      </span>
+                    </div>
+                    <p className="text-sm text-yellow-700">
+                      {t("testYourself.test.tapHoldToDrag", "Tap and hold an image, then drag it to the matching text box.")}
+                    </p>
+                  </div>
+                )}
+
                 <div className="max-w-5xl p-4 mx-auto border shadow-md bg-gradient-to-br from-surface to-accent border-border rounded-2xl">
                   <h3 className="mb-4 text-lg font-bold text-center text-text">
                     {t(
@@ -756,11 +849,24 @@ export default function CourseTestRunner() {
                           const isDropped =
                             answers[currentQuestion.id] &&
                             answers[currentQuestion.id][key];
+                          const isActiveDropZone = 
+                            activeDropZone?.questionId === currentQuestion.id && 
+                            activeDropZone?.textKey === key;
                           
                           return (
                             <div
                               key={key}
-                              className="relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]"
+                              className={`relative flex flex-col justify-between w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 ${
+                                isActiveDropZone 
+                                  ? 'ring-2 ring-primary scale-105 bg-primary/10' 
+                                  : 'hover:shadow-md hover:scale-[1.01] border-border'
+                              }`}
+                              onTouchMove={handleTouchMove}
+                              onTouchEnd={(e) => handleTouchEnd(e, currentQuestion.id, key)}
+                              onTouchEnter={() => handleTouchEnter(currentQuestion.id, key)}
+                              onTouchLeave={handleTouchLeave}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, currentQuestion.id, key)}
                             >
                               {/* Text Content */}
                               <div className="flex flex-col items-center justify-center p-3 text-center">
@@ -775,22 +881,18 @@ export default function CourseTestRunner() {
                                 ${
                                   isDropped
                                     ? "border-green-400 bg-green-50 dark:bg-green-900/30 shadow-inner"
+                                    : isActiveDropZone
+                                    ? "border-primary bg-primary/20 border-dashed"
                                     : "border-dashed border-border bg-surface hover:border-primary hover:bg-accent"
                                 }`}
-                                onDragOver={handleDragOver}
-                                onDrop={(e) =>
-                                  handleDrop(e, currentQuestion.id, key)
-                                }
                               >
                                 {isDropped ? (
                                   <div className="relative flex items-center justify-center w-full h-full group">
                                     <img
-                                      src={
-                                        currentQuestion[`${isDropped}_image`]
-                                      }
+                                      src={currentQuestion[`${isDropped}_image`]}
                                       alt="Dropped image"
                                       className="object-cover w-full h-20 transition-transform duration-300 rounded-md cursor-pointer group-hover:scale-105"
-                                      onClick={() => removeConnection(currentQuestion.id, key)}
+                                      onClick={() => isMobile && openImageModal(currentQuestion[`${isDropped}_image`])}
                                     />
                                     <button
                                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow-md hover:bg-red-600"
@@ -801,25 +903,33 @@ export default function CourseTestRunner() {
                                   </div>
                                 ) : (
                                   <div className="text-center text-text-muted">
-                                    <svg
-                                      className="w-4 h-4 mx-auto mb-1 opacity-40"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                      />
-                                    </svg>
-                                    <p className="text-[11px] font-medium">
-                                      {t(
-                                        "testYourself.test.dropHere",
-                                        "Drop image here"
-                                      )}
-                                    </p>
+                                    {isMobile ? (
+                                      <>
+                                        <FaHandPointer className="w-4 h-4 mx-auto mb-1 opacity-40" />
+                                        <p className="text-[11px] font-medium">
+                                          {t("testYourself.test.dropHereMobile", "Drop image here")}
+                                        </p>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <svg
+                                          className="w-4 h-4 mx-auto mb-1 opacity-40"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                          />
+                                        </svg>
+                                        <p className="text-[11px] font-medium">
+                                          {t("testYourself.test.dropHere", "Drop image here")}
+                                        </p>
+                                      </>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -848,28 +958,32 @@ export default function CourseTestRunner() {
                           return (
                             <div
                               key={key}
-                              draggable={!isUsed}
-                              onDragStart={(e) =>
-                                handleDragStart(
-                                  e,
-                                  currentQuestion.id,
-                                  key
-                                )
-                              }
-                              className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]
-                              ${
+                              draggable={!isMobile && !isUsed}
+                              onDragStart={(e) => !isMobile && handleDragStart(e, currentQuestion.id, key)}
+                              onTouchStart={(e) => isMobile && !isUsed && handleTouchStart(e, currentQuestion.id, key)}
+                              onTouchMove={handleTouchMove}
+                              className={`w-full max-w-[220px] mx-auto bg-white dark:bg-gray-900 border rounded-lg shadow-sm transition-all duration-300 ${
                                 isUsed
                                   ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50"
-                                  : "border-dashed border-border cursor-grab hover:border-primary active:cursor-grabbing"
-                              }`}
+                                  : isMobile
+                                  ? "border-dashed border-primary cursor-pointer active:scale-95 active:shadow-inner active:bg-accent"
+                                  : "border-dashed border-border cursor-grab hover:border-primary hover:shadow-md active:cursor-grabbing"
+                              } ${selectedImage?.answerKey === key ? 'ring-2 ring-primary scale-105' : ''}`}
                             >
                               <div className="w-full h-[100px] rounded-lg overflow-hidden">
                                 <img
                                   src={image}
                                   alt="Draggable image"
                                   className="object-cover w-full h-full rounded-lg"
+                                  onClick={() => isMobile && openImageModal(image)}
                                 />
                               </div>
+                              {isMobile && !isUsed && (
+                                <div className="p-1 text-xs text-center text-text-muted">
+                                  <FaArrowsAlt className="inline w-3 h-3 mr-1" />
+                                  {t("testYourself.test.tapAndDrag", "Tap & drag")}
+                                </div>
+                              )}
                             </div>
                           );
                         })
@@ -1014,6 +1128,25 @@ export default function CourseTestRunner() {
           </div>
         </div>
       </div>
+
+      {/* Image Modal for Mobile */}
+      {showImageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="relative max-w-lg mx-4">
+            <button
+              className="absolute top-0 right-0 z-10 p-2 text-white translate-x-2 -translate-y-2 bg-red-500 rounded-full hover:bg-red-600"
+              onClick={() => setShowImageModal(false)}
+            >
+              <FaTimes />
+            </button>
+            <img
+              src={modalImage}
+              alt="Enlarged view"
+              className="rounded-lg max-h-[80vh]"
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
