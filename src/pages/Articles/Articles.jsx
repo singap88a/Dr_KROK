@@ -1,12 +1,11 @@
- 
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaFacebook, FaInstagram, FaYoutube, FaStar } from 'react-icons/fa';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
- 
+// الصورة الافتراضية للمحاضرين
+const DEFAULT_INSTRUCTOR_IMAGE = '/logo.png';
 
 // ---------- Component ----------
 export default function TrainerArticlesPage() {
@@ -27,15 +26,38 @@ export default function TrainerArticlesPage() {
       setLoading(true);
       setError("");
       try {
-        const [inst] = await Promise.all([
-          getInstructors()
-        ]);
+        // جلب البيانات من API الجديد
+        const blogsResponse = await getBlogs({ page: 1, per_page: 15 });
         if (!mounted) return;
-        setInstructors(inst);
 
-        const res = await getBlogs({ page: 1, per_page: 15 });
-        if (!mounted) return;
-        setBlogs(Array.isArray(res.data) ? res.data : []);
+        if (blogsResponse && blogsResponse.data) {
+          // استخراج المحاضرين من البيانات
+          const instructorsFromBlogs = blogsResponse.data.map(instructor => ({
+            id: instructor.id,
+            name: instructor.name,
+            image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
+            blogs: instructor.blogs || []
+          }));
+
+          setInstructors(instructorsFromBlogs);
+          
+          // إنشاء مصفوفة مسطحة للمقالات
+          const allBlogs = instructorsFromBlogs.flatMap(instructor => 
+            instructor.blogs.map(blog => ({
+              ...blog,
+              instructor_id: {
+                id: instructor.id,
+                name: instructor.name,
+                image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE
+              }
+            }))
+          );
+          
+          setBlogs(allBlogs);
+        } else {
+          setInstructors([]);
+          setBlogs([]);
+        }
       } catch (e) {
         if (!mounted) return;
         setError(e?.message || t('articles.error'));
@@ -45,7 +67,7 @@ export default function TrainerArticlesPage() {
     };
     load();
     return () => { mounted = false; };
-  }, [getBlogs, getInstructors, t]);
+  }, [getBlogs, t]);
 
   useEffect(() => {
     // reset expansion on language change to recompute truncation length if needed
@@ -60,6 +82,11 @@ export default function TrainerArticlesPage() {
   const selectedInstructor = useMemo(() => {
     return instructors.find(i => String(i.id) === String(selectedInstructorId)) || null;
   }, [instructors, selectedInstructorId]);
+
+  // الحصول على المحاضرين الذين لديهم مقالات فقط
+  const instructorsWithArticles = useMemo(() => {
+    return instructors.filter(instructor => instructor.blogs && instructor.blogs.length > 0);
+  }, [instructors]);
 
   const toggleExpand = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -83,6 +110,11 @@ export default function TrainerArticlesPage() {
     });
   };
 
+  // دالة لمعالجة الصور التالفة
+  const handleImageError = (e) => {
+    e.target.src = DEFAULT_INSTRUCTOR_IMAGE;
+  };
+
   return (
     <div className="min-h-screen text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-gray-100">
       <div className="p-4 mx-auto max-w-7xl sm:p-6 lg:p-8">
@@ -100,16 +132,23 @@ export default function TrainerArticlesPage() {
               >
                 {t('articles.allInstructors')}
               </button>
-              {instructors.map((tr) => (
+              {instructorsWithArticles.map((tr) => (
                 <button
                   key={tr.id}
                   onClick={() => setSelectedInstructorId(tr.id)}
                   className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${String(selectedInstructorId) === String(tr.id) ? 'border border-primary dark:border-primary bg-primary/10 dark:bg-primary/30 shadow-sm' : 'border border-primary/20 dark:border-primary/70 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                 >
-                  <img src={tr.image} alt={tr.name} className="object-cover w-12 h-12 border-2 border-white rounded-full shadow-sm" />
+                  <img 
+                    src={tr.image} 
+                    alt={tr.name} 
+                    className="object-cover w-12 h-12 border-2 border-white rounded-full shadow-sm"
+                    onError={handleImageError}
+                  />
                   <div className="flex-1 text-left">
                     <div className="font-semibold leading-tight">{tr.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-300">{tr.job_title || t('instructors.noJobTitle')}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-300">
+                      {tr.blogs.length} {t('articles.articleCount', { count: tr.blogs.length })}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -121,7 +160,9 @@ export default function TrainerArticlesPage() {
               <h3 className="text-xl font-semibold">
                 {selectedInstructor ? t('articles.byInstructor', { name: selectedInstructor.name }) : t('articles.allArticles')}
               </h3>
-              <div className="text-sm text-gray-500 dark:text-gray-400">{filteredBlogs.length} {t('articles.count')}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {filteredBlogs.length} {t('articles.count')}
+              </div>
             </div>
 
             {loading ? (
@@ -156,13 +197,27 @@ export default function TrainerArticlesPage() {
                         </button>
                       )}
                       {b.image && (
-                        <img src={b.image} alt={b.name} className="object-cover w-full h-56 mb-3 rounded-lg" />
+                        <img 
+                          src={b.image} 
+                          alt={b.name} 
+                          className="object-cover w-full h-56 mb-3 rounded-lg"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
                       )}
                       <div className="flex items-center gap-3 mt-2">
-                        <img src={instr.image} alt={instr.name} className="object-cover w-10 h-10 rounded-full" />
+                        <img 
+                          src={instr.image} 
+                          alt={instr.name} 
+                          className="object-cover w-10 h-10 rounded-full"
+                          onError={handleImageError}
+                        />
                         <div>
                           <div className="text-sm font-medium">{instr.name}</div>
-                          {instr.job_title && <div className="text-xs text-gray-500 dark:text-gray-400">{instr.job_title}</div>}
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {t('articles.instructor')}
+                          </div>
                         </div>
                       </div>
                     </article>
@@ -176,20 +231,22 @@ export default function TrainerArticlesPage() {
             {selectedInstructor ? (
               <div className="sticky p-6 bg-white border border-gray-100 shadow-lg dark:bg-gray-800 rounded-2xl dark:border-gray-700 top-6">
                 <div className="flex items-center gap-4">
-                  <img src={selectedInstructor.image} alt={selectedInstructor.name} className="object-cover w-20 h-20 border-2 rounded-full shadow-md border-primary" />
+                  <img 
+                    src={selectedInstructor.image} 
+                    alt={selectedInstructor.name} 
+                    className="object-cover w-20 h-20 border-2 rounded-full shadow-md border-primary"
+                    onError={handleImageError}
+                  />
                   <div>
                     <div className="text-xl font-semibold">{selectedInstructor.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-300">{selectedInstructor.job_title || t('instructors.noJobTitle')}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-300">
+                      {selectedInstructor.blogs.length} {t('articles.articleCount', { count: selectedInstructor.blogs.length })}
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid gap-2 mt-4 text-sm">
-                  {selectedInstructor.email && (
-                    <div className="text-gray-600 dark:text-gray-300">{selectedInstructor.email}</div>
-                  )}
-                </div>
-
                 <div className="flex gap-3 mt-4">
+                  {/* يمكن إضافة روابط السوشيال ميديا إذا كانت متوفرة في البيانات */}
                   {selectedInstructor.facebook && (
                     <a href={selectedInstructor.facebook} target="_blank" rel="noreferrer" className="p-2 transition bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"><FaFacebook /></a>
                   )}
@@ -214,9 +271,6 @@ export default function TrainerArticlesPage() {
           </aside>
         </div>
       </div>
-
     </div>
   );
 }
-
- 
