@@ -778,15 +778,15 @@ const handleSectionClick = (section) => {
                 <div className="flex items-center gap-2">
                   <FaBookOpen className="text-primary" />
                   <span>
-                    {lessons.length} {t("courses.lessons", "Lessons")}
+                    {course.sections?.reduce((acc, section) => acc + (section.lessons?.length || 0), 0) || 0} {t("courses.lessons", "Lessons")}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <FaUsers className="text-primary" />
                   <span>
                     {course.enrolled_count || 0} {t("courses.students", "Students")}
                   </span>
-                </div>
+                </div> */}
                 {isLoggedIn && (
                   <div className="flex items-center gap-2">
                     <FaClock className="text-primary" />
