@@ -45,7 +45,7 @@ const CouponInput = ({ onApply, t, initialDiscount = 0, type = "book" }) => {
       <label className="block mb-2 text-sm font-medium text-text-secondary">
         {t(`${type}s.coupon.label`) || "Coupon Code"}
       </label>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           value={couponCode}
@@ -57,7 +57,7 @@ const CouponInput = ({ onApply, t, initialDiscount = 0, type = "book" }) => {
         <button
           onClick={handleApplyCoupon}
           disabled={loading || !couponCode.trim() || initialDiscount > 0}
-          className="flex items-center gap-2 px-4 py-3 text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center w-full gap-2 px-4 py-3 text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
         >
           {loading ? (
             <FiLoader className="w-4 h-4 animate-spin" />

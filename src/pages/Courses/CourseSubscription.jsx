@@ -40,7 +40,7 @@ export default function CourseSubscription() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request } = useApi();
   const { isLoggedIn } = useUser();
 
   const isLiveCourse = location.pathname.includes('live-courses');
@@ -67,6 +67,12 @@ export default function CourseSubscription() {
   const [installmentAmount, setInstallmentAmount] = useState("");
   const [useInstallment, setUseInstallment] = useState(false);
   const [installmentError, setInstallmentError] = useState("");
+
+  // States جديدة لسياسة الشراء
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [termsText, setTermsText] = useState("");
+  const [termsLoading, setTermsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -107,6 +113,27 @@ export default function CourseSubscription() {
       mounted = false;
     };
   }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getCourseAccess, isLoggedIn]);
+
+  // Fetch terms and conditions when modal is opened
+  useEffect(() => {
+    if (showTerms) {
+      setTermsLoading(true);
+      request("termsandcondition")
+        .then((result) => {
+          if (result.data && result.data.length > 0) {
+            // Use he.decode if you have HTML entities, otherwise use directly
+            const decoded = result.data[0].description;
+            setTermsText(decoded);
+          } else {
+            setTermsText(t('courses.terms.unable_to_load', 'Unable to load terms and conditions.'));
+          }
+        })
+        .catch(() => {
+          setTermsText(t('courses.terms.error_fetching', 'Error fetching terms and conditions.'));
+        })
+        .finally(() => setTermsLoading(false));
+    }
+  }, [showTerms, request, t]);
 
   const handleCouponApply = (result) => {
     if (result.error) {
@@ -176,6 +203,12 @@ export default function CourseSubscription() {
   const handleSubscription = async () => {
     if (!isLoggedIn) {
       navigate('/login');
+      return;
+    }
+
+    // Check if user agreed to terms
+    if (!agreeToTerms) {
+      setError(t('courses.must_agree_to_terms', 'You must agree to the terms and conditions to subscribe.'));
       return;
     }
 
@@ -478,7 +511,6 @@ export default function CourseSubscription() {
                   </div>
                 </div>
 
-
                 {/* Error/Success Messages */}
                 {error && (
                   <div className="flex items-center gap-2 p-3 mb-4 text-red-600 border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/20 dark:border-red-800">
@@ -486,7 +518,6 @@ export default function CourseSubscription() {
                     <span className="text-sm">{error}</span>
                   </div>
                 )}
-
 
                 {couponError && (
                   <div className="flex items-center gap-2 p-3 mb-4 text-red-600 border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/20 dark:border-red-800">
@@ -537,10 +568,40 @@ export default function CourseSubscription() {
                   </div>
                 )}
 
+                {/* Terms and Conditions */}
+                {isLoggedIn && (
+                  <div className="mb-6">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="agreeToTerms"
+                        checked={agreeToTerms}
+                        onChange={(e) => setAgreeToTerms(e.target.checked)}
+                        className="mt-1"
+                      />
+                      <label htmlFor="agreeToTerms" className="text-sm text-text-secondary">
+                        {t('courses.agree_to_terms_start', 'I agree to the')}{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowTerms(true)}
+                          className="text-primary hover:underline"
+                        >
+                          {t('courses.terms_conditions', 'terms and conditions')}
+                        </button>
+                      </label>
+                    </div>
+                    {!agreeToTerms && (
+                      <p className="mt-2 text-sm text-red-500">
+                        {t('courses.must_agree_to_terms', 'You must agree to the terms and conditions to subscribe.')}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Subscribe Button */}
                 <button
                   onClick={handleSubscription}
-                  disabled={isSubscribing || !isLoggedIn}
+                  disabled={isSubscribing || !isLoggedIn || !agreeToTerms}
                   className="w-full px-6 py-4 font-semibold text-white transition-all rounded-lg bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubscribing ? (
@@ -563,7 +624,7 @@ export default function CourseSubscription() {
                 {discountedPrice >= 100 && !useInstallment && (
                   <button
                     onClick={handleOpenInstallmentModal}
-                    disabled={!isLoggedIn}
+                    disabled={!isLoggedIn || !agreeToTerms}
                     className="w-full px-6 py-3 mt-3 font-medium transition-colors border rounded-lg text-primary border-primary hover:bg-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-center gap-2">
@@ -682,6 +743,42 @@ export default function CourseSubscription() {
                 className="flex-1 px-4 py-2 transition-colors border rounded-lg border-border text-text hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 {t('installments.installmentModal.cancel', 'Cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Terms and Conditions Modal */}
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-2xl max-h-[80vh] p-6 mx-4 bg-white rounded-lg shadow-xl dark:bg-surface dark:text-text">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-text">{t('courses.terms.title', 'Terms and Conditions')}</h3>
+              <button
+                onClick={() => setShowTerms(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[60vh] text-gray-700 dark:text-text-secondary">
+              {termsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-b-2 rounded-full animate-spin border-primary"></div>
+                </div>
+              ) : (
+                <div dangerouslySetInnerHTML={{ __html: termsText }} />
+              )}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowTerms(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-text dark:border-gray-600 dark:hover:bg-gray-700"
+              >
+                {t('courses.terms.close', 'Close')}
               </button>
             </div>
           </div>
