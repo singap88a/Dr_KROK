@@ -11,6 +11,7 @@ import {
   FaBoxOpen,
   FaFilePdf,
   FaVideo,
+  FaDownload,
 } from "react-icons/fa";
 
 // Custom Tooltip Component
@@ -34,6 +35,225 @@ const CustomTooltip = ({ text, children }) => {
   );
 };
 
+const getStatusIcon = (status) => {
+  switch (status) {
+    case "pending":
+      return <FaClock className="w-4 h-4 text-yellow-500" />;
+    case "processing":
+      return <FaExclamationTriangle className="w-4 h-4 text-blue-500" />;
+    case "shipped":
+      return <FaTruck className="w-4 h-4 text-purple-500" />;
+    case "delivered":
+    case "completed":
+    case "paid":
+      return <FaCheckCircle className="w-4 h-4 text-green-500" />;
+    case "cancelled":
+      return <FaTimesCircle className="w-4 h-4 text-red-500" />;
+    default:
+      return <FaExclamationTriangle className="w-4 h-4 text-gray-500" />;
+  }
+};
+
+// Professional Status Badge Component
+const StatusBadge = ({ status, onClick }) => {
+  const { t } = useTranslation();
+  
+  const getStatusConfig = (status) => {
+    const statusConfigs = {
+      pending: {
+        bgColor: "bg-yellow-50",
+        textColor: "text-yellow-800",
+        borderColor: "border-yellow-200",
+        icon: <FaClock className="w-4 h-4 text-yellow-500" />,
+        label: t("orders.statuses.pending") || "Pending"
+      },
+      processing: {
+        bgColor: "bg-blue-50",
+        textColor: "text-blue-800",
+        borderColor: "border-blue-200",
+        icon: <FaExclamationTriangle className="w-4 h-4 text-blue-500" />,
+        label: t("orders.statuses.processing") || "Processing"
+      },
+      shipped: {
+        bgColor: "bg-purple-50",
+        textColor: "text-purple-800",
+        borderColor: "border-purple-200",
+        icon: <FaTruck className="w-4 h-4 text-purple-500" />,
+        label: t("orders.statuses.shipped") || "Shipped"
+      },
+      delivered: {
+        bgColor: "bg-green-50",
+        textColor: "text-green-800",
+        borderColor: "border-green-200",
+        icon: <FaCheckCircle className="w-4 h-4 text-green-500" />,
+        label: t("orders.statuses.delivered") || "Delivered"
+      },
+      completed: {
+        bgColor: "bg-green-50",
+        textColor: "text-green-800",
+        borderColor: "border-green-200",
+        icon: <FaCheckCircle className="w-4 h-4 text-green-500" />,
+        label: t("orders.statuses.completed") || "Completed"
+      },
+      paid: {
+        bgColor: "bg-green-50",
+        textColor: "text-green-800",
+        borderColor: "border-green-200",
+        icon: <FaCheckCircle className="w-4 h-4 text-green-500" />,
+        label: t("orders.statuses.paid") || "Paid"
+      },
+      cancelled: {
+        bgColor: "bg-red-50",
+        textColor: "text-red-800",
+        borderColor: "border-red-200",
+        icon: <FaTimesCircle className="w-4 h-4 text-red-500" />,
+        label: t("orders.statuses.cancelled") || "Cancelled"
+      },
+      payment: {
+        bgColor: "bg-yellow-50",
+        textColor: "text-yellow-800",
+        borderColor: "border-yellow-200",
+        icon: <FaClock className="w-4 h-4 text-yellow-500" />,
+        label: t("orders.statuses.payment") || "Payment Processing"
+      }
+    };
+
+    return statusConfigs[status] || {
+      bgColor: "bg-gray-50",
+      textColor: "text-gray-800",
+      borderColor: "border-gray-200",
+      icon: <FaExclamationTriangle className="w-4 h-4 text-gray-500" />,
+      label: status || "Unknown"
+    };
+  };
+
+  const config = getStatusConfig(status);
+
+  return (
+    <div
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all hover:scale-105 ${config.bgColor} ${config.textColor} ${config.borderColor}`}
+    >
+      {config.icon}
+      <span className="text-sm font-medium capitalize">{config.label}</span>
+    </div>
+  );
+};
+
+// Status Modal Component
+const StatusModal = ({ isOpen, onClose, status, orderType, order }) => {
+  if (!isOpen) return null;
+
+  const getStatusMessage = () => {
+    // Delivery book cases
+    if (orderType === "delivery") {
+      if (status === "paid") {
+        return "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours";
+      } else if (status === "completed") {
+        return "Your order has reached the shipping company, you can go to receive it now";
+      }
+    }
+
+    // PDF book case
+    if (orderType === "pdf" && status === "completed") {
+      return "Your order has been completed successfully and you can now download the file as PDF";
+    }
+
+    // Course cases
+    if (orderType === "course" || orderType === "live_course") {
+      if (status === "completed") {
+        return "This course is now fully yours, you can watch it now";
+      } else if (status === "pending") {
+        return "This course is now yours, but the remaining course amount is pending";
+      }
+    }
+
+    // Default cases
+    switch (status) {
+      case "pending":
+        return "Your order has been received and is waiting for processing.";
+      case "processing":
+        return "Your order is being prepared for shipment.";
+      case "shipped":
+        return "Your order has been shipped and is on its way.";
+      case "delivered":
+      case "completed":
+        return "Your order has been successfully delivered.";
+      case "paid":
+        return "Payment has been successfully processed.";
+      case "cancelled":
+        return "Your order has been cancelled.";
+      case "payment":
+        return "Payment is being processed.";
+      default:
+        return "Status information not available.";
+    }
+  };
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      pending: { bg: "bg-yellow-500", text: "text-white", iconColor: "text-white" },
+      processing: { bg: "bg-blue-500", text: "text-white", iconColor: "text-white" },
+      shipped: { bg: "bg-purple-500", text: "text-white", iconColor: "text-white" },
+      delivered: { bg: "bg-green-500", text: "text-white", iconColor: "text-white" },
+      completed: { bg: "bg-green-500", text: "text-white", iconColor: "text-white" },
+      paid: { bg: "bg-green-500", text: "text-white", iconColor: "text-white" },
+      cancelled: { bg: "bg-red-500", text: "text-white", iconColor: "text-white" },
+      payment: { bg: "bg-yellow-500", text: "text-white", iconColor: "text-white" },
+    };
+    return configs[status] || { bg: "bg-gray-500", text: "text-white", iconColor: "text-white" };
+  };
+
+  const config = getStatusConfig(status);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-lg mx-4 transition-all duration-300 transform scale-100 bg-white shadow-2xl rounded-2xl animate-slideUp">
+        {/* Header with gradient */}
+        <div className={`relative ${config.bg} rounded-t-2xl p-6 text-white`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white rounded-full shadow-lg bg-opacity-20">
+                {React.cloneElement(getStatusIcon(status), { className: "w-8 h-8 text-white" })}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold capitalize">{status}</h3>
+                <p className="text-sm opacity-90">{order?.item}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 transition-colors rounded-full hover:bg-white hover:bg-opacity-20"
+            >
+              <FaTimesCircle className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Status Message */}
+          <div className="p-4 border border-blue-200 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+            <p className="text-sm leading-relaxed text-gray-700">
+              {getStatusMessage()}
+            </p>
+          </div>
+
+          {/* Action Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-6 py-3 font-semibold text-white transition-all duration-200 transform shadow-lg bg-primary rounded-xl hover:shadow-xl hover:scale-105"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const normalizeOrders = (orders) => {
   if (!Array.isArray(orders)) return [];
   return orders.map((o) => {
@@ -44,8 +264,10 @@ const normalizeOrders = (orders) => {
         type = "course";
       } else if (lowerType === "live_course") {
         type = "live_course";
-      } else if (lowerType === "pdf" || lowerType === "delivery") {
-        type = "book";
+      } else if (lowerType === "pdf") {
+        type = "pdf";
+      } else if (lowerType === "delivery") {
+        type = "delivery";
       }
       return {
         id: o.order_id,
@@ -56,6 +278,8 @@ const normalizeOrders = (orders) => {
         date: o.created_at || new Date().toISOString(),
         image: o.image,
         file: o.file,
+        city: o.city,
+        branch: o.branch,
       };
     }
     if (o && typeof o === "object" && "total_price" in o) {
@@ -75,6 +299,9 @@ const normalizeOrders = (orders) => {
       price: o.price,
       status: (o.status || "").toLowerCase(),
       date: o.date,
+      file: o.file,
+      city: o.city,
+      branch: o.branch,
     };
   });
 };
@@ -84,6 +311,8 @@ const mapBackendStatus = (status) => status || "";
 const MyOrders = ({ orders }) => {
   const { t } = useTranslation();
   const [filterType, setFilterType] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Helper function to format date as YYYY/MM/DD
   const formatDate = (dateString) => {
@@ -97,79 +326,14 @@ const MyOrders = ({ orders }) => {
   // Normalize orders first
   const normalizedOrders = normalizeOrders(orders);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "processing":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "shipped":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "delivered":
-      case "completed":
-      case "paid":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "payment":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
+  const handleStatusClick = (order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
   };
 
-  const getStatusTooltip = (status, order) => {
-    let tooltip = '';
-    switch (status) {
-      case "pending":
-        tooltip =   'Your order has been received and is waiting for processing.';
-        break;
-      case "processing":
-        tooltip =   'Your order is being prepared for shipment.';
-        break;
-      case "shipped":
-        tooltip =   'Your order has been shipped and is on its way.';
-        break;
-      case "delivered":
-      case "completed":
-        tooltip =   'Your order has been successfully delivered.';
-        break;
-      case "paid":
-        tooltip =   'Payment has been successfully processed.';
-        break;
-      case "cancelled":
-        tooltip =  'Your order has been cancelled.';
-        break;
-      case "payment":
-        tooltip =   'Payment is being processed.';
-        break;
-      default:
-        tooltip =   'Status information not available.';
-    }
-
-    if (order.type === 'delivery' && order.city && order.branch) {
-      tooltip += ` ${t('orders.tooltips.delivery_info') || 'Being delivered to'} ${order.city} ${t('orders.tooltips.at_branch') || 'at'} ${order.branch}.`;
-    }
-
-    return tooltip;
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "pending":
-        return <FaClock className="w-3 h-3" />;
-      case "processing":
-        return <FaExclamationTriangle className="w-3 h-3" />;
-      case "shipped":
-        return <FaTruck className="w-3 h-3" />;
-      case "delivered":
-      case "completed":
-      case "paid":
-        return <FaCheckCircle className="w-3 h-3" />;
-      case "cancelled":
-        return <FaTimesCircle className="w-3 h-3" />;
-      default:
-        return <FaExclamationTriangle className="w-3 h-3" />;
+  const handleDownload = (fileUrl) => {
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
     }
   };
 
@@ -177,7 +341,7 @@ const MyOrders = ({ orders }) => {
     filterType === "all"
       ? normalizedOrders
       : normalizedOrders.filter((order) => {
-          if (filterType === "book") return order.type === "book";
+          if (filterType === "book") return order.type === "book" || order.type === "pdf" || order.type === "delivery";
           if (filterType === "course") return order.type === "course" || order.type === "live_course";
           return true;
         });
@@ -192,6 +356,7 @@ const MyOrders = ({ orders }) => {
     ...order,
     rowNumber: index + 1,
   }));
+
   return (
     <div className="pt-4 space-y-6 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -242,9 +407,6 @@ const MyOrders = ({ orders }) => {
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="px-6 py-3 font-semibold text-left">
-                  {t("orders.number")}
-                </th>
-                <th className="px-6 py-3 font-semibold text-left">
                   {t("orders.item")}
                 </th>
                 <th className="px-6 py-3 font-semibold text-left">
@@ -264,12 +426,8 @@ const MyOrders = ({ orders }) => {
             <tbody className="divide-y divide-border">
               {normalizeOrders(numberedOrders).map((order) => {
                 const normalizedStatus = mapBackendStatus(order.status);
-                const statusKey = `orders.statuses.${normalizedStatus}`;
-                const translatedStatus =
-                  t(statusKey) !== statusKey ? t(statusKey) : normalizedStatus;
                 return (
                   <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="px-6 py-4 font-medium">{order.rowNumber}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {order.type === "course" ? (
@@ -285,17 +443,15 @@ const MyOrders = ({ orders }) => {
                         )}
                         <div className="flex flex-col">
                           <span className="text-sm">{order.item}</span>
-                          {(order.type === "pdf" || order.type === "delivery") &&
-                            order.file && (
-                              <a
-                                href={order.file}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-500 hover:underline"
-                              >
-                                View PDF
-                              </a>
-                            )}
+                          {order.type === "pdf" && order.file && (
+                            <button
+                              onClick={() => handleDownload(order.file)}
+                              className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                            >
+                              <FaDownload className="w-3 h-3" />
+                              Download File
+                            </button>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -310,20 +466,15 @@ const MyOrders = ({ orders }) => {
                       ${Number(order.price).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
-                      <CustomTooltip text={getStatusTooltip(normalizedStatus, order)}>
-                        <div
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border transition-all hover:scale-105 cursor-pointer ${getStatusColor(
-                            normalizedStatus
-                          )}`}
-                        >
-                          {getStatusIcon(normalizedStatus)}
-                          <span className="capitalize">{translatedStatus}</span>
-                        </div>
-                      </CustomTooltip>
+                      <StatusBadge 
+                        status={normalizedStatus} 
+                        onClick={() => handleStatusClick(order)}
+                      />
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {formatDate(order.date)}
                     </td>
+
                   </tr>
                 );
               })}
@@ -336,10 +487,6 @@ const MyOrders = ({ orders }) => {
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {normalizeOrders(numberedOrders).map((order) => {
           const normalizedStatus = mapBackendStatus(order.status);
-          const translatedStatus =
-            t(`orders.statuses.${normalizedStatus}`) ||
-            normalizedStatus ||
-            "N/A";
 
           return (
             <div
@@ -347,19 +494,10 @@ const MyOrders = ({ orders }) => {
               className="p-4 bg-white border rounded-lg shadow-sm border-border dark:bg-gray-800"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  #{order.rowNumber}
-                </span>
-                <CustomTooltip text={getStatusTooltip(normalizedStatus, order)}>
-                  <div
-                    className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs border transition-all hover:scale-105 cursor-pointer ${getStatusColor(
-                      normalizedStatus
-                    )}`}
-                  >
-                    {getStatusIcon(normalizedStatus)}
-                    <span>{translatedStatus}</span>
-                  </div>
-                </CustomTooltip>
+                <StatusBadge
+                  status={normalizedStatus}
+                  onClick={() => handleStatusClick(order)}
+                />
               </div>
 
               <div className="flex items-center gap-3 mb-3">
@@ -374,26 +512,28 @@ const MyOrders = ({ orders }) => {
                 ) : (
                   <FaBook className="text-lg text-primary" />
                 )}
-                <div>
+                <div className="flex-1">
                   <p className="font-medium">{order.item}</p>
-                  {(order.type === "pdf" || order.type === "delivery") &&
-                    order.file && (
-                      <a
-                        href={order.file}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-500 hover:underline"
-                      >
-                        View PDF
-                      </a>
-                    )}
+                  {order.type === "pdf" && order.file && (
+                    <button
+                      onClick={() => handleDownload(order.file)}
+                      className="flex items-center gap-1 mt-1 text-sm text-blue-500 hover:underline"
+                    >
+                      <FaDownload className="w-3 h-3" />
+                      Download File
+                    </button>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 <p>
                   <span className="font-medium">{t("orders.type")}:</span>{" "}
-                  {order.type}
+                  {order.type === "course"
+                    ? t("orders.courses")
+                    : order.type === "book"
+                    ? t("orders.books")
+                    : t(`orders.${order.type}`) || order.type}
                 </p>
                 <p>
                   <span className="font-medium">{t("orders.price")}:</span> $
@@ -410,10 +550,31 @@ const MyOrders = ({ orders }) => {
                   </p>
                 )}
               </div>
+
+              {order.type === "pdf" && order.file && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => handleDownload(order.file)}
+                    className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    Download File
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
+
+      {/* Status Modal */}
+      <StatusModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        status={selectedOrder?.status}
+        orderType={selectedOrder?.type}
+        order={selectedOrder}
+      />
     </div>
   );
 };
