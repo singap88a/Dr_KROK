@@ -52,6 +52,7 @@ import {
   FaWhatsapp,
   FaTimes,
   FaList,
+  FaHourglassHalf,
 } from "react-icons/fa";
 
 export default function LiveCourseLessons() {
@@ -900,8 +901,8 @@ const handleSectionClick = (section) => {
           <FaUsers className="text-lg text-primary" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-text dark:text-text">Batch Information</h3>
-          <p className="text-sm text-text-muted dark:text-text-muted">Details about your course batch</p>
+          <h3 className="text-lg font-bold text-text dark:text-text">{t("liveCourses.batchInformation", "Batch Information")}</h3>
+          <p className="text-sm text-text-muted dark:text-text-muted">{t("liveCourses.batchInformationDescription", "Details about your course batch")}</p>
         </div>
       </div>
       {course.batch_info.telegram_link && (
@@ -912,7 +913,7 @@ const handleSectionClick = (section) => {
           className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white transition-all rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
         >
           <FaTelegram className="text-base" />
-          Join Telegram Group
+          {t("liveCourses.joinTelegramGroup", "Join Telegram Group")}
         </a>
       )}
     </div>
@@ -923,7 +924,7 @@ const handleSectionClick = (section) => {
           <FaGraduationCap className="text-primary" />
         </div>
         <div className="overflow-hidden">
-          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Batch Name</div>
+          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("liveCourses.batchName", "Batch Name")}</div>
           <div className="font-semibold text-text dark:text-text">{course.batch_info.batch_name}</div>
         </div>
       </div>
@@ -933,7 +934,7 @@ const handleSectionClick = (section) => {
           <FaUsers className="text-primary" />
         </div>
         <div>
-          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Students</div>
+          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.students", "Students")}</div>
           <div className="font-semibold text-text dark:text-text">{course.batch_info.students_count}</div>
         </div>
       </div>
@@ -944,7 +945,7 @@ const handleSectionClick = (section) => {
             <FaClock className="text-primary" />
           </div>
           <div>
-            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Status</div>
+            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.status", "Status")}</div>
             <div className="flex items-center gap-1 font-semibold text-text dark:text-text">
               <span className={`inline-block w-2 h-2 rounded-full ${course.batch_info.status === 'Active' ? 'bg-green-500' : course.batch_info.status === 'Completed' ? 'bg-blue-500' : 'bg-yellow-500'}`}></span>
               {course.batch_info.status}
@@ -959,8 +960,8 @@ const handleSectionClick = (section) => {
             <FaUser className="text-primary" />
           </div>
           <div className="overflow-hidden">
-            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Instructor</div>
-          <div className="font-semibold text-text dark:text-text">{course.batch_info.instructor?.name || 'Unknown Instructor'}</div>
+            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.instructor", "Instructor")}</div>
+          <div className="font-semibold text-text dark:text-text">{course.batch_info.instructor?.name || t("liveCourses.unknownInstructor", "Unknown Instructor")}</div>
           </div>
         </div>
       )}
@@ -972,19 +973,19 @@ const handleSectionClick = (section) => {
         {course.batch_info.start_date && (
           <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-primary/5 text-primary border border-primary/10 dark:bg-primary/10 dark:border-primary/5">
             <FaCalendarAlt className="text-xs" />
-            <span>Starts: {course.batch_info.start_date}</span>
+            <span>{t("liveCourses.starts", "Starts")}: {course.batch_info.start_date}</span>
           </div>
         )}
         {course.batch_info.duration && (
           <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-secondary/5 text-secondary border border-secondary/10 dark:bg-secondary/10 dark:border-secondary/5">
             <FaHourglassHalf className="text-xs" />
-            <span>Duration: {course.batch_info.duration}</span>
+            <span>{t("liveCourses.duration", "Duration")}: {course.batch_info.duration}</span>
           </div>
         )}
         {course.batch_info.language && (
           <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-green-500/5 text-green-600 border border-green-500/10 dark:bg-green-500/10 dark:border-green-500/5">
             <FaLanguage className="text-xs" />
-            <span>Language: {course.batch_info.language}</span>
+            <span>{t("courses.language", "Language")}: {course.batch_info.language}</span>
           </div>
         )}
       </div>
@@ -1099,7 +1100,7 @@ const handleSectionClick = (section) => {
                         {currentLesson?.started_at && (
                           <div className="flex items-center gap-2 p-3 mt-3 text-sm border rounded bg-surface-2 border-border-2">
                             <FaCalendarAlt className="text-primary" />
-                            <span className="font-medium">Session Date:</span>
+                            <span className="font-medium">{t("liveCourses.sessionDate", "Session Date")}:</span>
                             <span className="text-text-muted">
                               {formatSessionTime(currentLesson.started_at)}
                             </span>
@@ -1116,7 +1117,7 @@ const handleSectionClick = (section) => {
                               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
                             >
                               <FaVideo />
-                              Join Live Session
+                              {t("liveCourses.joinLiveSession", "Join Live Session")}
                             </a>
                           </div>
                         )}
@@ -1156,7 +1157,7 @@ const handleSectionClick = (section) => {
                         </div>
 
                         <div className="mb-3 text-lg font-semibold text-text">
-                          Session is Currently Inactive
+                          {t("liveCourses.sessionInactive", "Session is Currently Inactive")}
                         </div>
 
                         {/* ALWAYS show session date if available */}
@@ -1164,7 +1165,7 @@ const handleSectionClick = (section) => {
                           <div className="p-3 mb-4 text-sm border rounded bg-surface-2 border-border-2">
                             <div className="flex items-center justify-center gap-2">
                               <FaCalendarAlt className="text-primary" />
-                              <span className="font-medium">Session Date:</span>
+                              <span className="font-medium">{t("liveCourses.sessionDate", "Session Date")}:</span>
                               <span className="text-text-muted">
                                 {formatSessionTime(currentLesson.started_at)}
                               </span>
@@ -1182,13 +1183,13 @@ const handleSectionClick = (section) => {
                               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded text-primary hover:bg-primary/5"
                             >
                               <FaVideo />
-                              View Meeting Link
+                              {t("liveCourses.viewMeetingLink", "View Meeting Link")}
                             </a>
                           </div>
                         )}
 
                         <p className="mt-3 text-sm text-text-muted">
-                          This session is not currently active. Please check the schedule for updates.
+                          {t("liveCourses.sessionInactiveMessage", "This session is not currently active. Please check the schedule for updates.")}
                         </p>
                       </div>
                     </div>
@@ -1205,16 +1206,16 @@ const handleSectionClick = (section) => {
                       <div className="p-4 mt-4 border border-yellow-300 rounded-lg bg-yellow-50">
                         <div className="flex items-center gap-2 text-yellow-800">
                           <FaLock className="text-yellow-600" />
-                          <span className="font-medium">Premium Content Locked</span>
+                          <span className="font-medium">{t("liveCourses.premiumContentLocked", "Premium Content Locked")}</span>
                         </div>
                         <p className="mt-2 text-sm text-yellow-700">
-                          You need to enroll in this course to access all premium lessons and materials.
+                          {t("liveCourses.premiumContentMessage", "You need to enroll in this course to access all premium lessons and materials.")}
                         </p>
                         <button
                           onClick={() => setShowPurchaseModal(true)}
                           className="px-4 py-2 mt-3 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700"
                         >
-                          Enroll Now to Unlock
+                          {t("liveCourses.enrollNowToUnlock", "Enroll Now to Unlock")}
                         </button>
                       </div>
                     )}

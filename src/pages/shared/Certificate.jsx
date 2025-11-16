@@ -73,7 +73,7 @@ export default function Certificate() {
     ? new Date(certificateInfo.date).toLocaleDateString()
     : new Date().toLocaleDateString();
     
-  const userName = passedState.userName || userData?.name || 'Student';
+  const userName = passedState.userName || userData?.name || t("courses.student", "Student");
 
   useEffect(() => {
     const loadCourseAndResult = async () => {
@@ -158,7 +158,7 @@ export default function Certificate() {
         pdf.text(userName, 148, 115, { align: "center" });
 
         pdf.setFontSize(18);
-        pdf.text(course?.title || "Course Title", 148, 130, { align: "center" });
+        pdf.text(course?.title || t("courses.courseTitle", "Course Title"), 148, 130, { align: "center" });
 
         pdf.setFontSize(16);
         pdf.text(`${t("courses.scoreLabel", "Score")}: ${Math.round(finalPercentage)}%`, 148, 142, { align: "center" });
@@ -167,7 +167,7 @@ export default function Certificate() {
         pdf.text(`${t("courses.dateLabel", "Date")}: ${certDate}`, 40, 190);
         pdf.text(t("courses.signatureLabel", "Signature: Dr. KROK Academy"), 240, 190, { align: "right" });
 
-        pdf.save(`${course?.title || "certificate"}.pdf`);
+        pdf.save(`${course?.title || t("courses.certificateFileName", "certificate")}.pdf`);
       };
     } catch (err) {
       console.error("PDF generation error:", err);
@@ -284,7 +284,7 @@ export default function Certificate() {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                {course?.title || "Course Title"}
+                {course?.title || t("courses.courseTitle", "Course Title")}
               </p>
 
               {/* Score */}
@@ -318,7 +318,7 @@ export default function Certificate() {
                   right: "12%",
                 }}
               >
-                 Dr. KROK Academy
+                 {t("courses.drKrokAcademy", "Dr. KROK Academy")}
               </p>
             </div>
           </div>

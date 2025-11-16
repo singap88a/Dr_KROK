@@ -842,7 +842,15 @@
     "testDate": "Test Date",
     "testNotFound": "Test not found",
     "checkingPreviousTest": "Checking previous test results...",
-    "dropHere": "Drop here"
+    "dropHere": "Drop here",
+    "answered": "Answered",
+    "unanswered": "Unanswered",
+    "viewCertificate": "View Certificate",
+    "retakeRequired": "You need to retake the test to pass.",
+    "student": "Student",
+    "courseTitle": "Course Title",
+    "certificateFileName": "certificate",
+    "drKrokAcademy": "Dr. KROK Academy"
   },
   "orders": {
     "title": "My Orders",
@@ -931,8 +939,23 @@
       "comingSoon": "COMING SOON",
       "upcoming": "UPCOMING",
       "joinLive": "Join Live",
-    "viewDetails": "View Details"
-  },
+      "viewDetails": "View Details",
+      "batchInformation": "Batch Information",
+      "batchInformationDescription": "Details about your course batch",
+      "joinTelegramGroup": "Join Telegram Group",
+      "batchName": "Batch Name",
+      "unknownInstructor": "Unknown Instructor",
+      "starts": "Starts",
+      "duration": "Duration",
+      "sessionDate": "Session Date",
+      "joinLiveSession": "Join Live Session",
+      "sessionInactive": "Session is Currently Inactive",
+      "viewMeetingLink": "View Meeting Link",
+      "sessionInactiveMessage": "This session is not currently active. Please check the schedule for updates.",
+      "premiumContentLocked": "Premium Content Locked",
+      "premiumContentMessage": "You need to enroll in this course to access all premium lessons and materials.",
+      "enrollNowToUnlock": "Enroll Now to Unlock"
+    },
   "installments": {
     "payInInstallments": "Pay in Installments",
     "installmentAmount": "Installment Amount",

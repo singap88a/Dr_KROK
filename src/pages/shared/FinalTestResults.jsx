@@ -34,7 +34,7 @@ export default function FinalTestResults() {
   // إذا كان المسار final-results بدون scope، افترض أنه final
   const actualScope = scope || (location.pathname.includes('/final-results') ? 'final' : null);
 
-  const userName = userData?.name || 'Student';
+  const userName = userData?.name || t("courses.student", "Student");
 
   useEffect(() => {
     const loadCourse = async () => {
