@@ -893,15 +893,15 @@ const handleSectionClick = (section) => {
 
 {/* Batch Info */}
 {course?.batch_info && (
-  <div className="p-6 mb-6 transition-all duration-300 border shadow-sm rounded-xl bg-gradient-to-br from-primary/10 via-background to-secondary/5 border-primary/20 hover:shadow-md">
+  <div className="p-6 mb-6 transition-all duration-300 border shadow-sm rounded-xl bg-gradient-to-br from-primary/10 via-background to-secondary/5 border-primary/20 hover:shadow-md dark:bg-gradient-to-br dark:from-primary/5 dark:via-background dark:to-secondary/5 dark:border-primary/10">
     <div className="flex flex-col justify-between gap-4 mb-4 md:flex-row md:items-center">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg shadow-sm bg-gradient-to-r from-primary/20 to-secondary/20">
+        <div className="p-2 rounded-lg shadow-sm bg-gradient-to-r from-primary/20 to-secondary/20 dark:from-primary/10 dark:to-secondary/10">
           <FaUsers className="text-lg text-primary" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-text">Batch Information</h3>
-          <p className="text-sm text-text-muted">Details about your course batch</p>
+          <h3 className="text-lg font-bold text-text dark:text-text">Batch Information</h3>
+          <p className="text-sm text-text-muted dark:text-text-muted">Details about your course batch</p>
         </div>
       </div>
       {course.batch_info.telegram_link && (
@@ -916,73 +916,73 @@ const handleSectionClick = (section) => {
         </a>
       )}
     </div>
-    
+
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5">
-        <div className="p-2 rounded-md bg-primary/10">
+      <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
           <FaGraduationCap className="text-primary" />
         </div>
         <div className="overflow-hidden">
-          <div className="text-xs font-medium tracking-wide uppercase text-text-muted">Batch Name</div>
-          <div className="font-semibold truncate text-text">{course.batch_info.batch_name}</div>
+          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Batch Name</div>
+          <div className="font-semibold text-text dark:text-text">{course.batch_info.batch_name}</div>
         </div>
       </div>
-      
-      <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5">
-        <div className="p-2 rounded-md bg-primary/10">
+
+      <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
           <FaUsers className="text-primary" />
         </div>
         <div>
-          <div className="text-xs font-medium tracking-wide uppercase text-text-muted">Students</div>
-          <div className="font-semibold text-text">{course.batch_info.students_count}</div>
+          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Students</div>
+          <div className="font-semibold text-text dark:text-text">{course.batch_info.students_count}</div>
         </div>
       </div>
-      
+
       {course.batch_info.status && (
-        <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5">
-          <div className="p-2 rounded-md bg-primary/10">
+        <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+          <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
             <FaClock className="text-primary" />
           </div>
           <div>
-            <div className="text-xs font-medium tracking-wide uppercase text-text-muted">Status</div>
-            <div className="flex items-center gap-1 font-semibold text-text">
+            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Status</div>
+            <div className="flex items-center gap-1 font-semibold text-text dark:text-text">
               <span className={`inline-block w-2 h-2 rounded-full ${course.batch_info.status === 'Active' ? 'bg-green-500' : course.batch_info.status === 'Completed' ? 'bg-blue-500' : 'bg-yellow-500'}`}></span>
               {course.batch_info.status}
             </div>
           </div>
         </div>
       )}
-      
+
       {course.batch_info.instructor && (
-        <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5">
-          <div className="p-2 rounded-md bg-primary/10">
+        <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+          <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
             <FaUser className="text-primary" />
           </div>
           <div className="overflow-hidden">
-            <div className="text-xs font-medium tracking-wide uppercase text-text-muted">Instructor</div>
-          <div className="font-semibold truncate text-text">{course.batch_info.instructor?.name || 'Unknown Instructor'}</div>
+            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">Instructor</div>
+          <div className="font-semibold text-text dark:text-text">{course.batch_info.instructor?.name || 'Unknown Instructor'}</div>
           </div>
         </div>
       )}
     </div>
-    
+
     {/* Additional Info Section */}
-    <div className="pt-4 mt-4 border-t border-primary/10">
+    <div className="pt-4 mt-4 border-t border-primary/10 dark:border-primary/5">
       <div className="flex flex-wrap gap-2">
         {course.batch_info.start_date && (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-primary/5 text-primary border border-primary/10">
+          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-primary/5 text-primary border border-primary/10 dark:bg-primary/10 dark:border-primary/5">
             <FaCalendarAlt className="text-xs" />
             <span>Starts: {course.batch_info.start_date}</span>
           </div>
         )}
         {course.batch_info.duration && (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-secondary/5 text-secondary border border-secondary/10">
+          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-secondary/5 text-secondary border border-secondary/10 dark:bg-secondary/10 dark:border-secondary/5">
             <FaHourglassHalf className="text-xs" />
             <span>Duration: {course.batch_info.duration}</span>
           </div>
         )}
         {course.batch_info.language && (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-green-500/5 text-green-600 border border-green-500/10">
+          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-green-500/5 text-green-600 border border-green-500/10 dark:bg-green-500/10 dark:border-green-500/5">
             <FaLanguage className="text-xs" />
             <span>Language: {course.batch_info.language}</span>
           </div>
