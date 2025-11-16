@@ -6,7 +6,6 @@ import SectionItem from "../SectionItem";
 
 const CourseContentSidebar = ({
   sections,
-  lessons,
   course,
   courseProgress,
   expandedSections,
@@ -109,7 +108,7 @@ const CourseContentSidebar = ({
           </div>
         )}
 
-        {isLoggedIn && localStorage.getItem(`course_${course.id}_certificate`) && (
+        {isLoggedIn && courseProgress?.overall?.percentage >= 100 && (
           <div className="p-4 mt-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-700">
             <button
               onClick={() => navigate(`/courses/${course.id}/certificate`)}

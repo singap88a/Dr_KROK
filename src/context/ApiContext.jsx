@@ -1280,6 +1280,47 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
       async getOrders() {
         const response = await request('orders', { auth: true });
         return response.data || { orders: [] };
+      },
+
+      // Final Test Results API
+      async getFinalTestResult(courseId) {
+        if (!courseId) throw new Error("Course id is required");
+        try {
+          const response = await request(`courses/${courseId}/final-test-result`, { auth: true });
+          return response?.data || null;
+        } catch (err) {
+          if (err?.status === 404) {
+            return null;
+          }
+          throw err;
+        }
+      },
+
+      async saveFinalTestResult(courseId, testData) {
+        if (!courseId) throw new Error("Course id is required");
+        try {
+          const formData = new FormData();
+          formData.append('course_id', courseId.toString());
+          formData.append('score', testData.score?.toString() || '0');
+          formData.append('percentage', testData.percentage?.toString() || '0');
+          formData.append('passed', testData.passed ? '1' : '0');
+
+          const response = await request(`courses/${courseId}/final-test-result`, {
+            method: 'POST',
+            body: formData,
+            auth: true,
+            isFormData: true,
+            invalidateCacheOnSuccess: [
+              `courses/${courseId}`,
+              `video_course/${courseId}`,
+              `final-test-result`
+            ]
+          });
+          return response?.data || null;
+        } catch (err) {
+          console.error('Failed to save final test result:', err);
+          throw err;
+        }
       }
 
     }),

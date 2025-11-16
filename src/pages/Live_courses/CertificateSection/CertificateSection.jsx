@@ -3,12 +3,29 @@ import React from "react";
 import { FaAward } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useApi } from "../../../context/ApiContext";
 
 export const CertificateSection = ({ id, isLoggedIn }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { getLiveCourseProgressDetails } = useApi();
+  const [courseProgress, setCourseProgress] = React.useState(null);
 
-  if (!isLoggedIn || !localStorage.getItem(`course_${id}_certificate`)) {
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      const loadProgress = async () => {
+        try {
+          const progress = await getLiveCourseProgressDetails(id);
+          setCourseProgress(progress);
+        } catch (error) {
+          console.error("Error loading course progress:", error);
+        }
+      };
+      loadProgress();
+    }
+  }, [id, isLoggedIn, getLiveCourseProgressDetails]);
+
+  if (!isLoggedIn || !courseProgress?.overall?.percentage >= 100) {
     return null;
   }
 

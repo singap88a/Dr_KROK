@@ -4,26 +4,33 @@ import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import jsPDF from "jspdf";
-import { FaArrowLeft, FaDownload, FaExclamationTriangle } from "react-icons/fa";
+import { FaArrowLeft, FaDownload, FaExclamationTriangle, FaSync } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
-export default function LiveCourseCertificate() {
+export default function Certificate() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getLiveCourseById } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getFinalTestResult } = useApi();
   const { userData } = useUser();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [certificateInfo, setCertificateInfo] = useState(null);
+  const [checkingServer, setCheckingServer] = useState(false);
 
   const certificateImage = "/certificate.jpeg";
 
-  const passedState = location.state || {};
+  // تحديد نوع الكورس من المسار
+  const isLiveCourse = location.pathname.includes('/live-courses');
+  const basePath = isLiveCourse ? '/live-courses' : '/courses';
+  const backPath = `${basePath}/${id}/lessons`;
 
-  // Normalize percentage from various structures
+  const passedState = location.state || {};
+  
+  // Helper: normalize percentage from different result shapes
   const getPercentage = (data) => {
     if (!data) return null;
     if (typeof data === 'number') return data;
@@ -39,7 +46,11 @@ export default function LiveCourseCertificate() {
     return null;
   };
 
-  const storageKey = `live_course_${id}_certificate`;
+  // جلب البيانات من مصادر متعددة
+  const storageKey = isLiveCourse 
+    ? `live_course_${id}_certificate`
+    : `course_${id}_certificate_${userData?.id || 'anonymous'}`;
+  
   const stored = (() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -52,29 +63,63 @@ export default function LiveCourseCertificate() {
   const percentage = (
     passedState.finalTestPercentage ??
     getPercentage(stored) ??
+    getPercentage(certificateInfo) ??
     0
   );
-  const certDate = stored?.date ? new Date(stored.date).toLocaleDateString() : new Date().toLocaleDateString();
+  
+  const certDate = stored?.date 
+    ? new Date(stored.date).toLocaleDateString() 
+    : certificateInfo?.date 
+    ? new Date(certificateInfo.date).toLocaleDateString()
+    : new Date().toLocaleDateString();
+    
   const userName = passedState.userName || userData?.name || 'Student';
-  const isEligible = percentage >= 65;
 
   useEffect(() => {
-    const load = async () => {
+    const loadCourseAndResult = async () => {
       try {
         setLoading(true);
-        const data = await getLiveCourseById(id, true);
-        setCourse(data);
+        
+        // جلب بيانات الكورس
+        const courseData = isLiveCourse
+          ? await getLiveCourseById(id, true)
+          : await getVideoCourseById(id, true);
+        setCourse(courseData);
+
+        // جلب نتيجة الاختبار النهائي من السيرفر (للفيديو كورس فقط)
+        if (!isLiveCourse && userData?.id && getFinalTestResult) {
+          setCheckingServer(true);
+          try {
+            const serverResult = await getFinalTestResult(id);
+            const normalized = getPercentage(serverResult);
+            if (serverResult && typeof normalized === 'number') {
+              setCertificateInfo({ ...serverResult, score: normalized, fromServer: true });
+              console.log('✅ Using server result:', { ...serverResult, score: normalized });
+            }
+          } catch {
+            console.log('ℹ️ No server result available, using local storage');
+          } finally {
+            setCheckingServer(false);
+          }
+        }
+
       } catch (err) {
         setError(err?.message || t("courses.failedToLoadCourse", "Failed to load course"));
       } finally {
         setLoading(false);
       }
     };
-    load();
-  }, [id, getLiveCourseById, t]);
+    
+    loadCourseAndResult();
+  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getFinalTestResult, userData, t]);
+
+  // استخدام بيانات السيرفر إذا كانت متاحة
+  const finalPercentage = (typeof certificateInfo?.score === 'number') ? certificateInfo.score : percentage;
+  const finalIsEligible = finalPercentage >= 65;
 
   const downloadPDF = async () => {
-    if (!isEligible) {
+    // منع تحميل الشهادة إذا لم يكن مؤهلاً
+    if (!finalIsEligible) {
       alert(t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate."));
       return;
     }
@@ -116,7 +161,7 @@ export default function LiveCourseCertificate() {
         pdf.text(course?.title || "Course Title", 148, 130, { align: "center" });
 
         pdf.setFontSize(16);
-        pdf.text(`${t("courses.scoreLabel", "Score")}: ${Math.round(percentage)}%`, 148, 142, { align: "center" });
+        pdf.text(`${t("courses.scoreLabel", "Score")}: ${Math.round(finalPercentage)}%`, 148, 142, { align: "center" });
 
         pdf.setFontSize(14);
         pdf.text(`${t("courses.dateLabel", "Date")}: ${certDate}`, 40, 190);
@@ -130,15 +175,19 @@ export default function LiveCourseCertificate() {
     }
   };
 
-  if (loading) {
+  if (loading || checkingServer) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <LoadingSpinner />
+        {checkingServer && (
+          <p className="mt-4 text-text-muted">{t("courses.checkingTestResults", "Checking test results...")}</p>
+        )}
       </div>
     );
   }
-
-  if (!isEligible) {
+  
+  // إذا لم يكن مؤهلاً للشهادة، اعرض رسالة خطأ
+  if (!finalIsEligible) {
     return (
       <section className="flex items-center justify-center min-h-screen bg-background text-text">
         <div className="max-w-md p-8 text-center bg-white rounded-lg shadow-lg">
@@ -151,16 +200,8 @@ export default function LiveCourseCertificate() {
           <p className="mb-6 text-gray-600">
             {t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate.")}
           </p>
-          <div className="p-4 mb-6 bg-gray-100 rounded-lg">
-            <p className="text-lg font-semibold text-gray-800">
-              {t("courses.yourScore", "Your Score")}: <span className="text-red-600">{Math.round(percentage)}%</span>
-            </p>
-            <p className="mt-2 text-sm text-gray-600">
-              {t("courses.requiredScore", "Required Score")}: 65%
-            </p>
-          </div>
           <button
-            onClick={() => navigate(`/live-courses/${id}/lessons`)}
+            onClick={() => navigate(backPath)}
             className="px-6 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
           >
             {t("courses.backToLessons", "Back to Lessons")}
@@ -176,7 +217,7 @@ export default function LiveCourseCertificate() {
         <div className="text-center">
           <div className="mb-4 text-red-600">{error || t("common.error", "Error")}</div>
           <button
-            onClick={() => navigate(`/live-courses/${id}/lessons`)}
+            onClick={() => navigate(backPath)}
             className="px-4 py-2 text-white rounded bg-primary"
           >
             {t("common.back", "Back")}
@@ -192,7 +233,7 @@ export default function LiveCourseCertificate() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => navigate(`/live-courses/${id}/lessons`)}
+            onClick={() => navigate(backPath)}
             className="inline-flex items-center gap-2 text-primary hover:text-secondary"
           >
             <FaArrowLeft />
@@ -204,42 +245,85 @@ export default function LiveCourseCertificate() {
           <div className="w-10" />
         </div>
 
-        {/* Visual certificate image with overlay */}
+        {/* Certificate Container */}
         <div className="flex flex-col items-center justify-center min-h-[70vh] bg-surface rounded-2xl shadow-2xl border border-border p-4 sm:p-8">
+          {certificateInfo?.fromServer && (
+            <div className="flex items-center gap-2 p-2 mb-4 text-green-800 bg-green-100 rounded-lg">
+              <FaSync className="animate-spin" />
+              <span className="text-sm">{t("courses.verifiedServerResult", "Verified Server Result")}</span>
+            </div>
+          )}
+          
           <div className="relative w-full max-w-4xl aspect-[1.41/1]">
             <img
               src={certificateImage}
               alt={t("courses.certificateOfCompletion", "Certificate of Completion")}
               className="object-contain w-full h-full shadow-xl rounded-xl"
             />
+
+            {/* Overlay Data */}
             <div className="absolute inset-0 text-center text-[#0a0a0a] font-semibold">
+              {/* Student Name */}
               <p
                 className="absolute font-bold text-[7vw] sm:text-[2vw] text-[#c2a10d]"
-                style={{ top: "55%", left: "50%", transform: "translate(-50%, -50%)" }}
+                style={{
+                  top: "55%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
               >
                 {userName}
               </p>
+
+              {/* Course Title */}
               <p
                 className="absolute text-[4vw] sm:text-[1.5vw] text-[#333]"
-                style={{ top: "63%", left: "50%", transform: "translate(-50%, -50%)" }}
+                style={{
+                  top: "63%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
               >
                 {course?.title || "Course Title"}
               </p>
+
+              {/* Score */}
               <p
                 className="absolute text-[3.5vw] sm:text-[1.3vw] text-[#444]"
-                style={{ top: "70%", left: "50%", transform: "translate(-50%, -50%)" }}
+                style={{
+                  top: "70%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
               >
-                {t("courses.scoreLabel", "Score")}: {Math.round(percentage)}%
+                {t("courses.scoreLabel", "Score")}: {Math.round(finalPercentage)}%
               </p>
+
+              {/* Date */}
               <p
                 className="absolute text-[3vw] sm:text-[1vw] text-[#000]"
-                style={{ bottom: "13%", left: "15%" }}
+                style={{
+                  bottom: "13%",
+                  left: "15%",
+                }}
               >
-                {certDate}
+                 {certDate}
+              </p>
+
+              {/* Signature */}
+              <p
+                className="absolute text-[3vw] sm:text-[1vw] italic text-[#000]"
+                style={{
+                  bottom: "13%",
+                  right: "12%",
+                }}
+              >
+                 Dr. KROK Academy
               </p>
             </div>
           </div>
 
+          {/* Download Button */}
           <button
             onClick={downloadPDF}
             className="flex items-center gap-2 px-6 py-3 mt-8 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl"
@@ -248,9 +332,12 @@ export default function LiveCourseCertificate() {
             {t("courses.downloadPDF", "Download as PDF")}
           </button>
         </div>
+
+        <div className="mt-8 text-center text-text-muted">
+          <p>{t("courses.congratulations", "Congratulations on completing the course!")}</p>
+        </div>
       </div>
     </section>
   );
 }
-
 
