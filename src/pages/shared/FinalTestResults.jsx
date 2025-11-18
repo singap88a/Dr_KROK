@@ -21,7 +21,6 @@ export default function FinalTestResults() {
 
   // تحديد نوع الكورس من المسار
   const isLiveCourse = location.pathname.includes('/live-courses');
-  const courseType = isLiveCourse ? 'live' : 'video';
   const basePath = isLiveCourse ? '/live-courses' : '/courses';
   const backPath = `${basePath}/${id}/lessons`;
 
@@ -133,11 +132,18 @@ export default function FinalTestResults() {
       break;
 
     case 'final': {
+      // حساب عدد الأسئلة الحقيقي (سؤال التوصيل يعتبر سؤال واحد)
       totalQuestions = test?.quizzes?.length || 0;
-      const answered = Object.keys(results.answers || {}).length;
-      correctAnswers = answered;
-      wrongAnswers = totalQuestions - answered;
+      
+      // حساب النسبة المئوية
       percentage = results.percentage || 0;
+      
+      // حساب الإجابات الصحيحة بناءً على النسبة المئوية
+      correctAnswers = Math.round((percentage / 100) * totalQuestions);
+      
+      // حساب الإجابات الخاطئة
+      wrongAnswers = totalQuestions - correctAnswers;
+      
       passed = percentage >= 65;
       title = t("courses.finalTestResults", "Final Test Results");
       subtitle = t("courses.finalTest", "Final Test");
@@ -147,10 +153,9 @@ export default function FinalTestResults() {
     default:
       // Default to final if no scope specified
       totalQuestions = test?.quizzes?.length || 0;
-      const answered = Object.keys(results.answers || {}).length;
-      correctAnswers = answered;
-      wrongAnswers = totalQuestions - answered;
       percentage = results.percentage || 0;
+      correctAnswers = Math.round((percentage / 100) * totalQuestions);
+      wrongAnswers = totalQuestions - correctAnswers;
       passed = percentage >= 65;
       title = t("courses.finalTestResults", "Final Test Results");
       subtitle = t("courses.finalTest", "Final Test");
@@ -170,8 +175,8 @@ export default function FinalTestResults() {
 
   const handleViewCertificate = async () => {
     if (actualScope === 'final' && passed) {
+      // Save certificate data to localStorage immediately
       if (isLiveCourse) {
-        // Store certificate data for live courses
         const certificateData = {
           score: percentage,
           date: new Date().toISOString(),
@@ -179,11 +184,23 @@ export default function FinalTestResults() {
         };
         localStorage.setItem(`live_course_${id}_certificate`, JSON.stringify(certificateData));
         localStorage.setItem(`live_course_${id}_certificate_score`, percentage.toString());
+      } else {
+        const userSpecificKey = `course_${id}_certificate_${userData?.id || 'anonymous'}`;
+        const certificateData = {
+          score: percentage,
+          date: new Date().toISOString(),
+          passed: true
+        };
+        localStorage.setItem(userSpecificKey, JSON.stringify(certificateData));
+      }
+
+      // Navigate to certificate page
+      if (isLiveCourse) {
         navigate(`${basePath}/${id}/certificate`, {
           state: { finalTestPercentage: percentage }
         });
       } else {
-        // Save to server for video courses
+        // Save to server for video courses (optional, as localStorage is already set)
         await saveResultToServer(percentage, true);
         navigate(`${basePath}/${id}/certificate`, {
           state: {
@@ -259,22 +276,16 @@ export default function FinalTestResults() {
               </div>
               <div className="p-4 border rounded-lg bg-accent border-border">
                 <div className="text-2xl font-bold text-green-600">
-                  {actualScope === 'final' ? correctAnswers : correctAnswers}
+                  {correctAnswers}
                 </div>
                 <div className="text-sm text-text-muted">
-                  {actualScope === 'final' 
-                    ? t("courses.answered", "Answered")
-                    : t("courses.correctAnswers", "Correct Answers")
-                  }
+                  {t("courses.correctAnswers", "Correct Answers")}
                 </div>
               </div>
               <div className="p-4 border rounded-lg bg-accent border-border">
                 <div className="text-2xl font-bold text-red-600">{wrongAnswers}</div>
                 <div className="text-sm text-text-muted">
-                  {actualScope === 'final'
-                    ? t("courses.unanswered", "Unanswered")
-                    : t("courses.wrongAnswers", "Wrong Answers")
-                  }
+                  {t("courses.wrongAnswers", "Wrong Answers")}
                 </div>
               </div>
             </div>
