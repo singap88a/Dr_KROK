@@ -148,7 +148,7 @@ export default function LiveCourseDetails() {
       ? course.video
       : null;
   }, [course]);
-
+// ////
   const getLevelTranslation = (level) => {
     const levelMap = {
       'beginner': t('courses.beginner', 'Beginner'),
