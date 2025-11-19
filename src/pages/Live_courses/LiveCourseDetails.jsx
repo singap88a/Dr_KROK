@@ -326,7 +326,7 @@ export default function LiveCourseDetails() {
               onClick={() => navigate(`/live-courses/${id}/lessons`)}
               className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
             >
-              {t("courses.viewRecording", "View Recording")}
+              {userHasAccess ? t("courses.startCourse", "Start Course") : t("courses.viewRecording", "View Recording")}
             </button>
           </div>
         </div>

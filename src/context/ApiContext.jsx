@@ -107,7 +107,31 @@ export const useApi = () => {
 
 export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) => {
   const getAuthToken = useCallback(() => {
-    return localStorage.getItem("token") || localStorage.getItem("userToken");
+    const tokenData = localStorage.getItem("tokenData");
+    if (tokenData) {
+      try {
+        const parsed = JSON.parse(tokenData);
+        const now = Date.now();
+        if (parsed.expiresAt > now) {
+          return parsed.token;
+        } else {
+          // Token expired, clear it
+          localStorage.removeItem("tokenData");
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          localStorage.removeItem("userToken");
+          localStorage.removeItem("userName");
+          // Emit logout event
+          window.dispatchEvent(new CustomEvent('user-logout'));
+          return null;
+        }
+      } catch (error) {
+        console.error("Error parsing token data:", error);
+        localStorage.removeItem("tokenData");
+        return null;
+      }
+    }
+    return null;
   }, []);
 
   const buildUrl = useCallback(
