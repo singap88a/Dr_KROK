@@ -190,14 +190,14 @@ export default function Certificate() {
   if (!finalIsEligible) {
     return (
       <section className="flex items-center justify-center min-h-screen bg-background text-text">
-        <div className="max-w-md p-8 text-center bg-white rounded-lg shadow-lg">
+        <div className="max-w-md p-8 text-center border shadow-2xl bg-surface rounded-2xl border-border">
           <div className="flex justify-center mb-4">
             <FaExclamationTriangle className="w-16 h-16 text-yellow-500" />
           </div>
-          <h2 className="mb-4 text-2xl font-bold text-gray-800">
+          <h2 className="mb-4 text-2xl font-bold text-text">
             {t("courses.certificateNotAvailable", "Certificate Not Available")}
           </h2>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-text-muted">
             {t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate.")}
           </p>
           <button
