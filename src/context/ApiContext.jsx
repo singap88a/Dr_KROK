@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useCallback } from "react";
 import i18n from "../i18n";
+import axios from "axios";
 
 const ApiContext = createContext(null);
 
@@ -1345,7 +1346,110 @@ export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) =
           console.error('Failed to save final test result:', err);
           throw err;
         }
+      },
+
+      // Certificate API functions
+// Certificate API functions - إصلاح الدوال
+async uploadCertificate(token, formData) {
+  if (!token) throw new Error("Token is required");
+  if (!formData) throw new Error("FormData is required");
+
+  try {
+    // استخدام request العادية بدل axios
+    const response = await request("create_student_certificate", {
+      method: "POST",
+      body: formData,
+      auth: true,
+      isFormData: true
+    });
+    return response;
+  } catch (error) {
+    console.error('Failed to upload certificate:', error);
+    
+    // محاولة باستخدام axios كـ fallback
+    try {
+      const url = buildUrl("create_student_certificate");
+      const axiosResponse = await axios.post(url, formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        },
+        timeout: 30000
+      });
+      return axiosResponse.data;
+    } catch (axiosError) {
+      console.error('Axios upload also failed:', axiosError);
+      throw axiosError;
+    }
+  }
+},
+
+async getCertificateFile(token, courseId, courseType = 'video') {
+  if (!token) throw new Error("Token is required");
+  if (!courseId) throw new Error("Course id is required");
+
+  try {
+    // بناء الـ URL مع إضافة الـ type parameter
+    const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
+    console.log('🔍 Fetching certificate from:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/pdf, application/json"
       }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+    }
+
+    // محاولة parsing كـ JSON أولاً
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/json')) {
+      const jsonResponse = await response.json();
+      console.log('📄 JSON Response:', jsonResponse);
+      
+      // التحقق من الـ code الجديد (208 أو 200)
+      if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
+        if (jsonResponse.data && jsonResponse.data.certificate) {
+          // إذا كان فيه رابط للشهادة، نحمله
+          console.log('📥 Downloading certificate from URL:', jsonResponse.data.certificate);
+          const pdfResponse = await fetch(jsonResponse.data.certificate);
+          if (pdfResponse.ok) {
+            const pdfBlob = await pdfResponse.blob();
+            console.log('✅ Certificate downloaded successfully, size:', pdfBlob.size);
+            return pdfBlob;
+          } else {
+            throw new Error("Failed to download certificate from URL");
+          }
+        } else {
+          throw new Error("No certificate URL found in response");
+        }
+      } else {
+        throw new Error(jsonResponse.message || "Certificate not available");
+      }
+    } else if (contentType && contentType.includes('application/pdf')) {
+      // إذا كان الرد مباشرة PDF
+      const blob = await response.blob();
+      if (!blob || blob.size === 0) {
+        throw new Error("Empty certificate received from server");
+      }
+      console.log('✅ PDF received directly, size:', blob.size);
+      return blob;
+    } else {
+      throw new Error(`Unexpected content type: ${contentType}`);
+    }
+
+  } catch (error) {
+    console.error('❌ Failed to get certificate file:', error);
+    throw error;
+  }
+}
+
+ 
 
     }),
     [

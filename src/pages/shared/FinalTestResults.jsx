@@ -1,23 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
-import { FaArrowLeft, FaTrophy, FaRedo, FaCheckCircle, FaClipboardList, FaCertificate } from "react-icons/fa";
+import { FaArrowLeft, FaTrophy, FaRedo, FaCheckCircle, FaClipboardList, FaCertificate, FaSync } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import jsPDF from "jspdf";
 
 export default function FinalTestResults() {
   const { id, scope } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, saveFinalTestResult } = useApi();
+  const { getVideoCourseById, getLiveCourseById, saveFinalTestResult, uploadCertificate, getAuthToken } = useApi();
   const { userData } = useUser();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingResult, setSavingResult] = useState(false);
+  const [uploadingCertificate, setUploadingCertificate] = useState(false);
+  const [certificateUploaded, setCertificateUploaded] = useState(false);
+  const certificateImage = "/certificate.jpeg";
+  const hasUploadedRef = useRef(false);
 
   // تحديد نوع الكورس من المسار
   const isLiveCourse = location.pathname.includes('/live-courses');
@@ -52,6 +57,101 @@ export default function FinalTestResults() {
     loadCourse();
   }, [id, isLiveCourse, getLiveCourseById, getVideoCourseById, t]);
 
+  // Calculate percentage early using useMemo
+  const calculatedPercentage = useMemo(() => {
+    if (!results) return 0;
+    
+    switch (actualScope) {
+      case 'lesson':
+        const lessonTotal = results.total_questions || test?.quizzes?.length || 0;
+        return lessonTotal > 0 ? (results.student_score / results.total_score) * 100 : 0;
+      
+      case 'section':
+        const sectionTotal = results.total_questions || test?.quizzes?.length || 0;
+        return sectionTotal > 0 ? (results.student_score / results.total_score) * 100 : 0;
+      
+      case 'final':
+      default:
+        return results.percentage || 0;
+    }
+  }, [results, test, actualScope]);
+
+  // Calculate results based on scope - MUST be before early returns
+  const { totalQuestions, correctAnswers, wrongAnswers, percentage, passed, title, subtitle } = useMemo(() => {
+    let total = 0;
+    let correct = 0;
+    let wrong = 0;
+    let percent = calculatedPercentage;
+    let isPassed = percent >= 65;
+    let resultTitle = "";
+    let resultSubtitle = "";
+
+    if (!results) {
+      return {
+        totalQuestions: 0,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        percentage: 0,
+        passed: false,
+        title: "",
+        subtitle: ""
+      };
+    }
+
+    switch (actualScope) {
+      case 'lesson':
+        total = results?.total_questions || test?.quizzes?.length || 0;
+        correct = results?.questions?.filter(q => q.is_correct).length || 0;
+        wrong = total - correct;
+        percent = total > 0 ? (results?.student_score / results?.total_score) * 100 : 0;
+        isPassed = percent >= 65;
+        resultTitle = t("courses.lessonTestResults", "Lesson Test Results");
+        resultSubtitle = t("courses.lessonTest", "Lesson Test");
+        break;
+
+      case 'section':
+        total = results?.total_questions || test?.quizzes?.length || 0;
+        correct = results?.questions?.filter(q => q.is_correct).length || 0;
+        wrong = total - correct;
+        percent = total > 0 ? (results?.student_score / results?.total_score) * 100 : 0;
+        isPassed = percent >= 65;
+        resultTitle = t("courses.sectionTestResults", "Section Test Results");
+        resultSubtitle = t("courses.sectionTest", "Section Test");
+        break;
+
+      case 'final': {
+        total = test?.quizzes?.length || 0;
+        percent = results?.percentage || 0;
+        correct = Math.round((percent / 100) * total);
+        wrong = total - correct;
+        isPassed = percent >= 65;
+        resultTitle = t("courses.finalTestResults", "Final Test Results");
+        resultSubtitle = t("courses.finalTest", "Final Test");
+        break;
+      }
+
+      default:
+        total = test?.quizzes?.length || 0;
+        percent = results?.percentage || 0;
+        correct = Math.round((percent / 100) * total);
+        wrong = total - correct;
+        isPassed = percent >= 65;
+        resultTitle = t("courses.finalTestResults", "Final Test Results");
+        resultSubtitle = t("courses.finalTest", "Final Test");
+        break;
+    }
+
+    return {
+      totalQuestions: total,
+      correctAnswers: correct,
+      wrongAnswers: wrong,
+      percentage: percent,
+      passed: isPassed,
+      title: resultTitle,
+      subtitle: resultSubtitle
+    };
+  }, [actualScope, results, test, calculatedPercentage, t]);
+
   // دالة لحفظ نتيجة الاختبار في السيرفر (للفيديو كورس فقط)
   const saveResultToServer = async (percentage, passed) => {
     if (isLiveCourse || !saveFinalTestResult) return; // لا نحتاج لحفظ في السيرفر للايف كورس
@@ -81,6 +181,140 @@ export default function FinalTestResults() {
     }
   };
 
+  // دالة لإنشاء PDF الشهادة
+  const generateCertificatePDF = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      try {
+        const pdf = new jsPDF("landscape", "mm", "a4");
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = certificateImage;
+
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const imgData = canvas.toDataURL("image/jpeg");
+
+            const pdfWidth = 297;
+            const pdfHeight = 210;
+            const ratio = Math.min(pdfWidth / img.width, pdfHeight / img.height);
+            const scaledWidth = img.width * ratio;
+            const scaledHeight = img.height * ratio;
+
+            pdf.addImage(
+              imgData,
+              "JPEG",
+              (pdfWidth - scaledWidth) / 2,
+              (pdfHeight - scaledHeight) / 2,
+              scaledWidth,
+              scaledHeight
+            );
+
+            const certDate = new Date().toLocaleDateString();
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(26);
+            pdf.text(userName, 148, 115, { align: "center" });
+
+            pdf.setFontSize(18);
+            pdf.text(course?.title || t("courses.courseTitle", "Course Title"), 148, 130, { align: "center" });
+
+            pdf.setFontSize(16);
+            pdf.text(`${t("courses.scoreLabel", "Score")}: ${Math.round(calculatedPercentage)}%`, 148, 142, { align: "center" });
+
+            pdf.setFontSize(14);
+            pdf.text(`${t("courses.dateLabel", "Date")}: ${certDate}`, 40, 190);
+            pdf.text(t("courses.signatureLabel", "Signature: Dr. KROK Academy"), 240, 190, { align: "right" });
+
+            const pdfBlob = pdf.output("blob");
+            resolve(pdfBlob);
+          } catch (err) {
+            reject(err);
+          }
+        };
+
+        img.onerror = () => {
+          reject(new Error("Failed to load certificate image"));
+        };
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }, [course, calculatedPercentage, userName, t]);
+
+  // رفع الشهادة تلقائياً عند score >= 65
+  useEffect(() => {
+    const autoUploadCertificate = async () => {
+      // التحقق من الشروط
+      if (
+        !course ||
+        actualScope !== 'final' ||
+        calculatedPercentage < 65 ||
+        hasUploadedRef.current ||
+        uploadingCertificate
+      ) {
+        return;
+      }
+
+      const token = getAuthToken();
+      if (!token) {
+        console.warn("No token available for certificate upload");
+        return;
+      }
+
+      try {
+        setUploadingCertificate(true);
+        hasUploadedRef.current = true;
+
+        // إنشاء PDF الشهادة
+        const pdfBlob = await generateCertificatePDF();
+
+        // إنشاء FormData
+        const formData = new FormData();
+        formData.append("course_id", id.toString());
+        formData.append("type", isLiveCourse ? "live" : "video");
+        formData.append("certificate", pdfBlob, "certificate.pdf");
+
+        // رفع الشهادة للسيرفر
+        await uploadCertificate(token, formData);
+        setCertificateUploaded(true);
+        console.log("✅ Certificate uploaded successfully to server");
+        
+        // تنظيف اللوكال ستوريج القديم
+        if (isLiveCourse) {
+          localStorage.removeItem(`live_course_${id}_certificate`);
+          localStorage.removeItem(`live_course_${id}_certificate_score`);
+        } else {
+          localStorage.removeItem(`course_${id}_certificate_${userData?.id || 'anonymous'}`);
+        }
+        
+      } catch (error) {
+        console.error("❌ Failed to upload certificate:", error);
+        hasUploadedRef.current = false; // إعادة المحاولة في المرة القادمة
+        
+        // Fallback: حفظ في اللوكال ستوريج مؤقتاً
+        const fallbackData = {
+          score: calculatedPercentage,
+          date: new Date().toISOString(),
+          passed: true
+        };
+        
+        if (isLiveCourse) {
+          localStorage.setItem(`live_course_${id}_certificate`, JSON.stringify(fallbackData));
+        } else {
+          localStorage.setItem(`course_${id}_certificate_${userData?.id || 'anonymous'}`, JSON.stringify(fallbackData));
+        }
+      } finally {
+        setUploadingCertificate(false);
+      }
+    };
+
+    autoUploadCertificate();
+  }, [course, actualScope, calculatedPercentage, id, uploadCertificate, getAuthToken, userName, t, generateCertificatePDF, isLiveCourse, userData]);
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -101,67 +335,6 @@ export default function FinalTestResults() {
     );
   }
 
-  // Calculate results based on scope
-  let totalQuestions = 0;
-  let correctAnswers = 0;
-  let wrongAnswers = 0;
-  let percentage = 0;
-  let passed = false;
-  let title = "";
-  let subtitle = "";
-
-  switch (actualScope) {
-    case 'lesson':
-      totalQuestions = results.total_questions || test?.quizzes?.length || 0;
-      correctAnswers = results.questions?.filter(q => q.is_correct).length || 0;
-      wrongAnswers = totalQuestions - correctAnswers;
-      percentage = totalQuestions > 0 ? (results.student_score / results.total_score) * 100 : 0;
-      passed = percentage >= 65;
-      title = t("courses.lessonTestResults", "Lesson Test Results");
-      subtitle = t("courses.lessonTest", "Lesson Test");
-      break;
-
-    case 'section':
-      totalQuestions = results.total_questions || test?.quizzes?.length || 0;
-      correctAnswers = results.questions?.filter(q => q.is_correct).length || 0;
-      wrongAnswers = totalQuestions - correctAnswers;
-      percentage = totalQuestions > 0 ? (results.student_score / results.total_score) * 100 : 0;
-      passed = percentage >= 65;
-      title = t("courses.sectionTestResults", "Section Test Results");
-      subtitle = t("courses.sectionTest", "Section Test");
-      break;
-
-    case 'final': {
-      // حساب عدد الأسئلة الحقيقي (سؤال التوصيل يعتبر سؤال واحد)
-      totalQuestions = test?.quizzes?.length || 0;
-      
-      // حساب النسبة المئوية
-      percentage = results.percentage || 0;
-      
-      // حساب الإجابات الصحيحة بناءً على النسبة المئوية
-      correctAnswers = Math.round((percentage / 100) * totalQuestions);
-      
-      // حساب الإجابات الخاطئة
-      wrongAnswers = totalQuestions - correctAnswers;
-      
-      passed = percentage >= 65;
-      title = t("courses.finalTestResults", "Final Test Results");
-      subtitle = t("courses.finalTest", "Final Test");
-      break;
-    }
-
-    default:
-      // Default to final if no scope specified
-      totalQuestions = test?.quizzes?.length || 0;
-      percentage = results.percentage || 0;
-      correctAnswers = Math.round((percentage / 100) * totalQuestions);
-      wrongAnswers = totalQuestions - correctAnswers;
-      passed = percentage >= 65;
-      title = t("courses.finalTestResults", "Final Test Results");
-      subtitle = t("courses.finalTest", "Final Test");
-      break;
-  }
-
   // Find the relevant item (lesson/section)
   let itemName = "";
   if (actualScope === 'lesson' && lessonId) {
@@ -173,43 +346,32 @@ export default function FinalTestResults() {
     itemName = section?.title || "";
   }
 
+  // تعديل دالة عرض الشهادة
   const handleViewCertificate = async () => {
     if (actualScope === 'final' && passed) {
-      // Save certificate data to localStorage immediately
-      if (isLiveCourse) {
-        const certificateData = {
+      // حفظ بيانات مؤقتة فقط إذا كانت الشهادة لم ترفع بعد
+      if (!certificateUploaded) {
+        const tempData = {
           score: percentage,
           date: new Date().toISOString(),
           passed: true
         };
-        localStorage.setItem(`live_course_${id}_certificate`, JSON.stringify(certificateData));
-        localStorage.setItem(`live_course_${id}_certificate_score`, percentage.toString());
-      } else {
-        const userSpecificKey = `course_${id}_certificate_${userData?.id || 'anonymous'}`;
-        const certificateData = {
-          score: percentage,
-          date: new Date().toISOString(),
-          passed: true
-        };
-        localStorage.setItem(userSpecificKey, JSON.stringify(certificateData));
+        
+        if (isLiveCourse) {
+          localStorage.setItem(`live_course_${id}_certificate`, JSON.stringify(tempData));
+        } else {
+          localStorage.setItem(`course_${id}_certificate_${userData?.id || 'anonymous'}`, JSON.stringify(tempData));
+        }
       }
 
-      // Navigate to certificate page
-      if (isLiveCourse) {
-        navigate(`${basePath}/${id}/certificate`, {
-          state: { finalTestPercentage: percentage }
-        });
-      } else {
-        // Save to server for video courses (optional, as localStorage is already set)
-        await saveResultToServer(percentage, true);
-        navigate(`${basePath}/${id}/certificate`, {
-          state: {
-            finalTestPercentage: percentage,
-            userName,
-            fromServer: true
-          }
-        });
-      }
+      // الانتقال لصفحة الشهادة
+      navigate(`${basePath}/${id}/certificate`, {
+        state: { 
+          finalTestPercentage: percentage,
+          certificateUploaded: certificateUploaded,
+          fromServer: certificateUploaded // إشارة أن الشهادة موجودة في السيرفر
+        }
+      });
     }
   };
 
@@ -264,6 +426,23 @@ export default function FinalTestResults() {
               {actualScope !== 'final' && (
                 <div className="text-xl text-text-muted">
                   {passed ? t("courses.passed", "Passed") : t("courses.failed", "Failed")}
+                </div>
+              )}
+              {/* Certificate Upload Status */}
+              {actualScope === 'final' && passed && (
+                <div className="mt-4">
+                  {uploadingCertificate && (
+                    <div className="flex items-center justify-center gap-2 p-3 text-blue-600 bg-blue-100 rounded-lg">
+                      <FaSync className="animate-spin" />
+                      <span>{t("courses.uploadingCertificate", "Uploading certificate to server...")}</span>
+                    </div>
+                  )}
+                  {certificateUploaded && !uploadingCertificate && (
+                    <div className="flex items-center justify-center gap-2 p-3 text-green-600 bg-green-100 rounded-lg">
+                      <FaCheckCircle />
+                      <span>{t("courses.certificateUploaded", "Certificate uploaded successfully!")}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
