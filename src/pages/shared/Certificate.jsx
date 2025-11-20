@@ -12,7 +12,7 @@ export default function Certificate() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, getCertificateFile, getAuthToken, checkCertificateExists } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getCertificateFile, getAuthToken, checkCertificateExists, getCertificateUrl } = useApi();
   const { userData } = useUser();
 
   const [course, setCourse] = useState(null);
@@ -58,17 +58,16 @@ export default function Certificate() {
               setCertificateStatus('exists');
               console.log("✅ Certificate exists on server");
               
-              // محاولة جلب الشهادة مباشرة إذا كانت موجودة
+              // محاولة جلب رابط الشهادة مباشرة إذا كانت موجودة
               try {
-                const blob = await getCertificateFile(token, id, courseType);
-                if (blob && blob.size > 0) {
-                  const url = URL.createObjectURL(blob);
-                  setCertificatePdfUrl(url);
-                  console.log("📄 Certificate loaded successfully");
+                const certificateUrl = await getCertificateUrl(token, id, courseType);
+                if (certificateUrl) {
+                  setCertificatePdfUrl(certificateUrl);
+                  console.log("📄 Certificate URL loaded successfully:", certificateUrl);
                 }
               } catch (loadError) {
-                console.warn("⚠️ Certificate exists but couldn't load:", loadError.message);
-                // لا نعرض خطأ للمستخدم لأن الشهادة موجودة ولكن هناك مشكلة في التحميل
+                console.warn("⚠️ Certificate exists but couldn't get URL:", loadError.message);
+                // لا نعرض خطأ للمستخدم لأن الشهادة موجودة ولكن هناك مشكلة في جلب الرابط
               }
             } else {
               setCertificateEligible(false);
@@ -103,7 +102,7 @@ export default function Certificate() {
     };
     
     loadCourseAndCheckCertificate();
-  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getCertificateFile, checkCertificateExists, getAuthToken, t]);
+  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getCertificateFile, checkCertificateExists, getCertificateUrl, getAuthToken, t]);
 
   const downloadPDF = async () => {
     // منع تحميل الشهادة إذا لم يكن مؤهلاً
@@ -167,13 +166,13 @@ export default function Certificate() {
       );
 
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(26);
+      pdf.setFontSize(32);
       pdf.text(userName, 148, 115, { align: "center" });
 
-      pdf.setFontSize(18);
+      pdf.setFontSize(24);
       pdf.text(course?.title || t("courses.courseTitle", "Course Title"), 148, 130, { align: "center" });
 
-      pdf.setFontSize(14);
+      pdf.setFontSize(18);
       pdf.text(`${t("courses.dateLabel", "Date")}: ${certDate}`, 40, 190);
       pdf.text(t("courses.signatureLabel", "Signature: Dr. KROK Academy"), 240, 190, { align: "right" });
 
@@ -204,21 +203,19 @@ export default function Certificate() {
       // تحديد نوع الكورس
       const courseType = isLiveCourse ? 'live' : 'video';
       
-      // جلب الشهادة من السيرفر
-      const blob = await getCertificateFile(token, id, courseType);
+      // جلب رابط الشهادة من السيرفر
+      const certificateUrl = await getCertificateUrl(token, id, courseType);
       
-      if (!blob || blob.size === 0) {
-        throw new Error("CERTIFICATE_EMPTY");
+      if (!certificateUrl) {
+        throw new Error("CERTIFICATE_URL_NOT_FOUND");
       }
       
-      // إنشاء object URL من blob
-      const url = URL.createObjectURL(blob);
-      setCertificatePdfUrl(url);
+      setCertificatePdfUrl(certificateUrl);
       setCertificateEligible(true);
       setCertificateStatus('exists');
       
     } catch (error) {
-      console.error("Failed to get certificate file:", error);
+      console.error("Failed to get certificate URL:", error);
       
       // معالجة أنواع الأخطاء المختلفة
       if (error.message === 'CERTIFICATE_NOT_FOUND') {
@@ -229,9 +226,9 @@ export default function Certificate() {
         setCertificateError(
           t("courses.networkError", "Network error. Please check your connection and try again.")
         );
-      } else if (error.message === 'CERTIFICATE_EMPTY') {
+      } else if (error.message === 'CERTIFICATE_URL_NOT_FOUND') {
         setCertificateError(
-          t("courses.certificateEmpty", "Certificate file is empty. Please contact support.")
+          t("courses.certificateUrlNotFound", "Certificate URL not found. Please contact support.")
         );
       } else {
         setCertificateError(
@@ -255,7 +252,7 @@ export default function Certificate() {
   // تنظيف object URL عند unmount
   useEffect(() => {
     return () => {
-      if (certificatePdfUrl) {
+      if (certificatePdfUrl && certificatePdfUrl.startsWith('blob:')) {
         URL.revokeObjectURL(certificatePdfUrl);
       }
     };
@@ -381,15 +378,12 @@ export default function Certificate() {
                 <FaFilePdf />
                 <span>{t("courses.serverCertificate", "Server Certificate")}</span>
               </div>
-              <iframe
-                src={certificatePdfUrl}
-                className="w-full h-[600px] border rounded-lg border-border"
-                title={t("courses.certificateOfCompletion", "Certificate of Completion")}
-                onError={(e) => {
-                  console.error("Failed to load PDF in iframe");
-                  setCertificateError(t("courses.pdfLoadError", "Failed to display PDF. Please download instead."));
-                }}
-              />
+<iframe
+  src={`${certificatePdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+  className="w-full h-[636px] border rounded-lg border-border"
+  style={{ border: "none" }}
+/>
+
               <div className="mt-2 text-sm text-center text-text-muted">
                 {t("courses.pdfViewHint", "If the PDF doesn't display correctly, use the download button below")}
               </div>
@@ -415,9 +409,9 @@ export default function Certificate() {
                 <div className="absolute inset-0 text-center text-[#0a0a0a] font-semibold">
                   {/* Student Name */}
                   <p
-                    className="absolute font-bold text-[7vw] sm:text-[2vw] text-[#c2a10d]"
+                    className="absolute font-bold text-[9vw] sm:text-[3vw] text-[#c2a10d]"
                     style={{
-                      top: "55%",
+                      top: "54%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
                     }}
@@ -427,9 +421,9 @@ export default function Certificate() {
 
                   {/* Course Title */}
                   <p
-                    className="absolute text-[4vw] sm:text-[1.5vw] text-[#333]"
+                    className="absolute text-[6vw] sm:text-[2vw] text-[#333]"
                     style={{
-                      top: "63%",
+                      top: "62%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
                     }}
@@ -439,9 +433,9 @@ export default function Certificate() {
 
                   {/* Date */}
                   <p
-                    className="absolute text-[3vw] sm:text-[1vw] text-[#000]"
+                    className="absolute text-[4vw] sm:text-[1.5vw] text-[#000]"
                     style={{
-                      bottom: "13%",
+                      bottom: "12%",
                       left: "15%",
                     }}
                   >
@@ -450,9 +444,9 @@ export default function Certificate() {
 
                   {/* Signature */}
                   <p
-                    className="absolute text-[3vw] sm:text-[1vw] italic text-[#000]"
+                    className="absolute text-[4vw] sm:text-[1.5vw] italic text-[#000]"
                     style={{
-                      bottom: "13%",
+                      bottom: "12%",
                       right: "12%",
                     }}
                   >
