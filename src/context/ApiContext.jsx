@@ -1384,6 +1384,7 @@ async uploadCertificate(token, formData) {
   }
 },
 
+// Certificate API functions - الإصدار المحسن
 async getCertificateFile(token, courseId, courseType = 'video') {
   if (!token) throw new Error("Token is required");
   if (!courseId) throw new Error("Course id is required");
@@ -1397,18 +1398,25 @@ async getCertificateFile(token, courseId, courseType = 'video') {
       method: 'GET',
       headers: {
         "Authorization": `Bearer ${token}`,
-        "Accept": "application/pdf, application/json"
-      }
+        "Accept": "application/pdf, application/json, */*",
+        "Accept-Language": (i18n?.language || "en").split("-")[0]
+      },
+      // إضافة timeout لمنع التجميد
+      signal: AbortSignal.timeout(30000)
     });
 
     if (!response.ok) {
+      // إذا كان الرد 404، هذا يعني لا توجد شهادة
+      if (response.status === 404) {
+        throw new Error("CERTIFICATE_NOT_FOUND");
+      }
       throw new Error(`Server returned ${response.status}: ${response.statusText}`);
     }
 
     // محاولة parsing كـ JSON أولاً
-    const contentType = response.headers.get('content-type');
+    const contentType = response.headers.get('content-type') || '';
     
-    if (contentType && contentType.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       const jsonResponse = await response.json();
       console.log('📄 JSON Response:', jsonResponse);
       
@@ -1416,40 +1424,216 @@ async getCertificateFile(token, courseId, courseType = 'video') {
       if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
         if (jsonResponse.data && jsonResponse.data.certificate) {
           // إذا كان فيه رابط للشهادة، نحمله
-          console.log('📥 Downloading certificate from URL:', jsonResponse.data.certificate);
-          const pdfResponse = await fetch(jsonResponse.data.certificate);
-          if (pdfResponse.ok) {
-            const pdfBlob = await pdfResponse.blob();
-            console.log('✅ Certificate downloaded successfully, size:', pdfBlob.size);
-            return pdfBlob;
-          } else {
-            throw new Error("Failed to download certificate from URL");
+          const certificateUrl = jsonResponse.data.certificate;
+          console.log('📥 Downloading certificate from URL:', certificateUrl);
+          
+          try {
+            // محاولة تحميل الشهادة من الـ URL
+            const pdfResponse = await fetch(certificateUrl, {
+              method: 'GET',
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+              signal: AbortSignal.timeout(30000)
+            });
+            
+            if (pdfResponse.ok) {
+              const pdfBlob = await pdfResponse.blob();
+              if (pdfBlob && pdfBlob.size > 0) {
+                console.log('✅ Certificate downloaded successfully, size:', pdfBlob.size);
+                return pdfBlob;
+              } else {
+                console.warn('⚠️ Certificate blob is empty');
+                throw new Error("CERTIFICATE_EMPTY");
+              }
+            } else {
+              console.warn('⚠️ Failed to download certificate from URL:', pdfResponse.status);
+              throw new Error("CERTIFICATE_DOWNLOAD_FAILED");
+            }
+          } catch (fetchError) {
+            console.warn('⚠️ Error fetching certificate URL:', fetchError.message);
+            throw new Error("CERTIFICATE_URL_FETCH_FAILED");
           }
         } else {
-          throw new Error("No certificate URL found in response");
+          throw new Error("CERTIFICATE_URL_MISSING");
         }
       } else {
-        throw new Error(jsonResponse.message || "Certificate not available");
+        throw new Error(jsonResponse.message || "CERTIFICATE_NOT_AVAILABLE");
       }
-    } else if (contentType && contentType.includes('application/pdf')) {
+    } else if (contentType.includes('application/pdf')) {
       // إذا كان الرد مباشرة PDF
       const blob = await response.blob();
       if (!blob || blob.size === 0) {
-        throw new Error("Empty certificate received from server");
+        throw new Error("CERTIFICATE_EMPTY");
       }
       console.log('✅ PDF received directly, size:', blob.size);
       return blob;
     } else {
-      throw new Error(`Unexpected content type: ${contentType}`);
+      // إذا لم نعرف نوع المحتوى، نحاول كـ PDF
+      console.warn('⚠️ Unknown content type, trying as PDF:', contentType);
+      const blob = await response.blob();
+      if (blob && blob.size > 1000) { // حجم معقول للـ PDF
+        console.log('✅ PDF received (unknown type), size:', blob.size);
+        return blob;
+      }
+      throw new Error("UNKNOWN_CONTENT_TYPE");
     }
 
   } catch (error) {
     console.error('❌ Failed to get certificate file:', error);
+    
+    // إذا كان الخطأ بسبب timeout أو network
+    if (error.name === 'TimeoutError' || error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
+      throw new Error("NETWORK_ERROR");
+    }
+    
+    // إذا كان الخطأ معروفاً نرميه كما هو
+    if (error.message.startsWith('CERTIFICATE_') || error.message === 'CERTIFICATE_NOT_FOUND') {
+      throw error;
+    }
+    
+    // لأي خطأ آخر
+    throw new Error("CERTIFICATE_FETCH_ERROR");
+  }
+},
+
+// دالة مبسطة للتحقق من وجود الشهادة فقط
+async checkCertificateExists(token, courseId, courseType = 'video') {
+  if (!token) throw new Error("Token is required");
+  if (!courseId) throw new Error("Course id is required");
+
+  try {
+    // أولاً نحاول جلب الشهادة مباشرة
+    const blob = await this.getCertificateFile(token, courseId, courseType);
+    return !!(blob && blob.size > 0);
+  } catch (error) {
+    // إذا كان الخطأ أن الشهادة غير موجودة، نرجع false
+    if (error.message === 'CERTIFICATE_NOT_FOUND') {
+      return false;
+    }
+    
+    // لأي خطأ آخر، نحاول التحقق عبر API آخر
+    try {
+      const url = buildUrl(`check_certificate?course_id=${courseId}&type=${courseType}`);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return !!(data && data.exists);
+      }
+      return false;
+    } catch (secondError) {
+      console.error('Secondary certificate check failed:', secondError);
+      return false;
+    }
+  }
+},
+
+// دالة للتحقق من وجود الشهادة فقط (بدون تحميلها)
+async checkCertificateExists(token, courseId, courseType = 'video') {
+  if (!token) throw new Error("Token is required");
+  if (!courseId) throw new Error("Course id is required");
+
+  try {
+    const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
+    console.log('🔍 Checking if certificate exists:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/json')) {
+      const jsonResponse = await response.json();
+      console.log('📄 Certificate check response:', jsonResponse);
+      
+      // إذا كان الـ response فيه success: true و certificate URL، يعني الشهادة موجودة
+      if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
+        if (jsonResponse.data && jsonResponse.data.certificate) {
+          console.log('✅ Certificate exists on server');
+          return true;
+        }
+      }
+    } else if (contentType && contentType.includes('application/pdf')) {
+      // إذا كان الرد مباشرة PDF، يعني الشهادة موجودة
+      console.log('✅ Certificate exists (PDF response)');
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('❌ Failed to check certificate existence:', error);
+    return false;
+  }
+},
+
+// دالة للحصول على رابط الشهادة مباشرة من السيرفر
+async getCertificateUrl(token, courseId, courseType = 'video') {
+  if (!token) throw new Error("Token is required");
+  if (!courseId) throw new Error("Course id is required");
+
+  try {
+    const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
+    console.log('🔍 Getting certificate URL from:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/json')) {
+      const jsonResponse = await response.json();
+      console.log('📄 Certificate URL response:', jsonResponse);
+      
+      if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
+        if (jsonResponse.data && jsonResponse.data.certificate) {
+          const certificateUrl = jsonResponse.data.certificate;
+          console.log('✅ Certificate URL found:', certificateUrl);
+          return certificateUrl;
+        }
+      }
+      throw new Error(jsonResponse.message || "Certificate URL not found in response");
+    } else if (contentType && contentType.includes('application/pdf')) {
+      // إذا كان الرد مباشرة PDF، نرجع blob URL
+      const blob = await response.blob();
+      if (blob && blob.size > 0) {
+        const blobUrl = URL.createObjectURL(blob);
+        console.log('✅ PDF received directly, created blob URL');
+        return blobUrl;
+      }
+      throw new Error("Empty PDF received from server");
+    } else {
+      throw new Error(`Unexpected content type: ${contentType}`);
+    }
+  } catch (error) {
+    console.error('❌ Failed to get certificate URL:', error);
     throw error;
   }
 }
-
- 
 
     }),
     [

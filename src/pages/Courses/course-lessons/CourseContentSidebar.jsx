@@ -25,89 +25,55 @@ const CourseContentSidebar = ({
   navigate
 }) => {
   const { t } = useTranslation();
-  const { getFinalTestResult, getCertificateFile, getAuthToken } = useApi();
-  const { userData } = useUser();
+  const { getCertificateFile, getAuthToken, checkCertificateExists } = useApi();
   
   const [certificateEligible, setCertificateEligible] = useState(false);
   const [checkingCertificate, setCheckingCertificate] = useState(false);
 
-// في التحقق من أهلية الشهادة في CourseContentSidebar.js
-useEffect(() => {
-  const checkCertificateEligibility = async () => {
-    if (!isLoggedIn || !course?.id) return;
-    
-    try {
-      setCheckingCertificate(true);
-      
-      // 1. أولاً: التحقق من وجود الشهادة في السيرفر
-      const token = getAuthToken();
-      if (token) {
-        try {
-          // تحديد نوع الكورس (افتراضي video)
-          const courseType = 'video'; // بما إن ده للفيديو كورس فقط
-          const blob = await getCertificateFile(token, course.id, courseType);
-          if (blob && blob.size > 0) {
-            setCertificateEligible(true);
-            setCheckingCertificate(false);
-            return;
-          }
-        } catch (error) {
-          console.log("No certificate blob from server, but might still be eligible");
-          // نستمر في التحقق من الطرق الأخرى
-        }
+  // التحقق من وجود الشهادة في السيرفر فقط
+  useEffect(() => {
+    const checkCertificateEligibility = async () => {
+      if (!isLoggedIn || !course?.id) {
+        setCertificateEligible(false);
+        return;
       }
       
-      // 2. إذا وصلنا هنا، يبقى مفيش شهادة في السيرفر، نتحقق من الأهلية بطرق أخرى
-      const storageKey = `course_${course.id}_certificate_${userData?.id || 'anonymous'}`;
-      const stored = localStorage.getItem(storageKey);
-      
-      if (stored) {
-        try {
-          const certificateData = JSON.parse(stored);
-          if (certificateData.score >= 65 || certificateData.percentage >= 65) {
-            setCertificateEligible(true);
-            setCheckingCertificate(false);
-            return;
-          }
-        } catch (e) {
-          console.error("Error parsing stored certificate data:", e);
-        }
-      }
-      
-      // 3. التحقق من نتيجة الاختبار النهائي في السيرفر
       try {
-        const finalTestResult = await getFinalTestResult(course.id);
-        if (finalTestResult && (finalTestResult.score >= 65 || finalTestResult.percentage >= 65)) {
-          setCertificateEligible(true);
+        setCheckingCertificate(true);
+        
+        const token = getAuthToken();
+        if (!token) {
+          console.log("❌ No token available for certificate check");
+          setCertificateEligible(false);
           setCheckingCertificate(false);
           return;
         }
+        
+        // التحقق من وجود الشهادة في السيرفر فقط
+        const courseType = 'video'; // للفيديو كورس فقط
+        console.log(`🔍 Checking certificate for course ${course.id} (type: ${courseType})`);
+        
+        // استخدام checkCertificateExists للتحقق السريع من وجود الشهادة
+        const exists = await checkCertificateExists(token, course.id, courseType);
+        
+        if (exists) {
+          console.log(`✅ Certificate exists on server!`);
+          setCertificateEligible(true);
+        } else {
+          console.log("❌ Certificate not found on server");
+          setCertificateEligible(false);
+        }
       } catch (error) {
-        console.log("No final test result found");
-      }
-      
-      // 4. كحالة احتياطية: إذا كان progress 100%
-      if (courseProgress?.overall?.percentage >= 100) {
-        setCertificateEligible(true);
-      } else {
+        // إذا لم توجد الشهادة في السيرفر، يعني غير مؤهل
+        console.log("❌ Certificate check failed:", error?.message || error);
         setCertificateEligible(false);
+      } finally {
+        setCheckingCertificate(false);
       }
-      
-    } catch (error) {
-      console.error("Error checking certificate eligibility:", error);
-      // Fallback: إذا كان progress 100% يعتبر مؤهل
-      if (courseProgress?.overall?.percentage >= 100) {
-        setCertificateEligible(true);
-      } else {
-        setCertificateEligible(false);
-      }
-    } finally {
-      setCheckingCertificate(false);
-    }
-  };
+    };
 
-  checkCertificateEligibility();
-}, [isLoggedIn, course?.id, courseProgress?.overall?.percentage, getFinalTestResult, getCertificateFile, getAuthToken, userData]);
+    checkCertificateEligibility();
+  }, [isLoggedIn, course?.id, checkCertificateExists, getAuthToken]);
 
   const sortedSections = useMemo(() => {
     return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
@@ -227,12 +193,27 @@ useEffect(() => {
           </div>
         )}
 
-        {/* رسالة إذا كان غير مؤهل لكن عنده access */}
-        {isLoggedIn && hasAccess && !certificateEligible && !checkingCertificate && (
-          <div className="p-3 mt-4 text-center border border-yellow-200 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              {t("courses.takeFinalTest", "Take the final test to get your certificate")}
-            </p>
+        {/* رسالة إذا كان غير مؤهل - تظهر فقط إذا كان عنده final tests متاحة */}
+        {isLoggedIn && 
+         hasAccess && 
+         !certificateEligible && 
+         !checkingCertificate && 
+         course?.final_tests && 
+         course.final_tests.length > 0 && (
+          <div className="p-4 mt-4 border border-amber-200 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 dark:border-amber-700">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 p-2 bg-amber-100 rounded-full dark:bg-amber-800">
+                <FaAward className="text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="mb-1 text-sm font-semibold text-amber-900 dark:text-amber-200">
+                  {t("courses.certificateNotAvailable", "Certificate Not Available Yet")}
+                </h4>
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  {t("courses.takeFinalTest", "Complete the final test and score 65% or higher to unlock your certificate")}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

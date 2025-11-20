@@ -168,14 +168,6 @@ export default function FinalTestResults() {
       console.log('✅ Final test result saved to server');
     } catch (error) {
       console.error('❌ Failed to save final test result:', error);
-      // لو فشل الحفظ في السيرفر، نرجع للطريقة القديمة كـ fallback
-      const userSpecificKey = `course_${id}_certificate_${userData?.id || 'anonymous'}`;
-      const certificateData = {
-        score: percentage,
-        date: new Date().toISOString(),
-        passed: passed
-      };
-      localStorage.setItem(userSpecificKey, JSON.stringify(certificateData));
     } finally {
       setSavingResult(false);
     }
@@ -283,30 +275,9 @@ export default function FinalTestResults() {
         setCertificateUploaded(true);
         console.log("✅ Certificate uploaded successfully to server");
         
-        // تنظيف اللوكال ستوريج القديم
-        if (isLiveCourse) {
-          localStorage.removeItem(`live_course_${id}_certificate`);
-          localStorage.removeItem(`live_course_${id}_certificate_score`);
-        } else {
-          localStorage.removeItem(`course_${id}_certificate_${userData?.id || 'anonymous'}`);
-        }
-        
       } catch (error) {
         console.error("❌ Failed to upload certificate:", error);
         hasUploadedRef.current = false; // إعادة المحاولة في المرة القادمة
-        
-        // Fallback: حفظ في اللوكال ستوريج مؤقتاً
-        const fallbackData = {
-          score: calculatedPercentage,
-          date: new Date().toISOString(),
-          passed: true
-        };
-        
-        if (isLiveCourse) {
-          localStorage.setItem(`live_course_${id}_certificate`, JSON.stringify(fallbackData));
-        } else {
-          localStorage.setItem(`course_${id}_certificate_${userData?.id || 'anonymous'}`, JSON.stringify(fallbackData));
-        }
       } finally {
         setUploadingCertificate(false);
       }
@@ -349,29 +320,8 @@ export default function FinalTestResults() {
   // تعديل دالة عرض الشهادة
   const handleViewCertificate = async () => {
     if (actualScope === 'final' && passed) {
-      // حفظ بيانات مؤقتة فقط إذا كانت الشهادة لم ترفع بعد
-      if (!certificateUploaded) {
-        const tempData = {
-          score: percentage,
-          date: new Date().toISOString(),
-          passed: true
-        };
-        
-        if (isLiveCourse) {
-          localStorage.setItem(`live_course_${id}_certificate`, JSON.stringify(tempData));
-        } else {
-          localStorage.setItem(`course_${id}_certificate_${userData?.id || 'anonymous'}`, JSON.stringify(tempData));
-        }
-      }
-
       // الانتقال لصفحة الشهادة
-      navigate(`${basePath}/${id}/certificate`, {
-        state: { 
-          finalTestPercentage: percentage,
-          certificateUploaded: certificateUploaded,
-          fromServer: certificateUploaded // إشارة أن الشهادة موجودة في السيرفر
-        }
-      });
+      navigate(`${basePath}/${id}/certificate`);
     }
   };
 

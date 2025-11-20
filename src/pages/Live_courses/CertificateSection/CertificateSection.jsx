@@ -8,24 +8,48 @@ import { useApi } from "../../../context/ApiContext";
 export const CertificateSection = ({ id, isLoggedIn }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getLiveCourseProgressDetails } = useApi();
-  const [courseProgress, setCourseProgress] = React.useState(null);
+  const { getCertificateFile, getAuthToken } = useApi();
+  const [certificateEligible, setCertificateEligible] = React.useState(false);
+  const [checkingCertificate, setCheckingCertificate] = React.useState(false);
 
   React.useEffect(() => {
-    if (isLoggedIn) {
-      const loadProgress = async () => {
-        try {
-          const progress = await getLiveCourseProgressDetails(id);
-          setCourseProgress(progress);
-        } catch (error) {
-          console.error("Error loading course progress:", error);
+    const checkCertificateEligibility = async () => {
+      if (!isLoggedIn || !id) {
+        setCertificateEligible(false);
+        return;
+      }
+      
+      try {
+        setCheckingCertificate(true);
+        
+        const token = getAuthToken();
+        if (!token) {
+          setCertificateEligible(false);
+          setCheckingCertificate(false);
+          return;
         }
-      };
-      loadProgress();
-    }
-  }, [id, isLoggedIn, getLiveCourseProgressDetails]);
+        
+        // التحقق من وجود الشهادة في السيرفر
+        const courseType = 'live'; // للايف كورس
+        const blob = await getCertificateFile(token, id, courseType);
+        
+        if (blob && blob.size > 0) {
+          setCertificateEligible(true);
+        } else {
+          setCertificateEligible(false);
+        }
+      } catch {
+        console.log("No certificate found on server");
+        setCertificateEligible(false);
+      } finally {
+        setCheckingCertificate(false);
+      }
+    };
 
-  if (!isLoggedIn || !courseProgress?.overall?.percentage >= 100) {
+    checkCertificateEligibility();
+  }, [id, isLoggedIn, getCertificateFile, getAuthToken]);
+
+  if (!isLoggedIn || !certificateEligible || checkingCertificate) {
     return null;
   }
 
