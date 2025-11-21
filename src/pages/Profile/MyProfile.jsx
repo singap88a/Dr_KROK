@@ -70,7 +70,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
   const [imagePreview, setImagePreview] = useState("");
   const { t, i18n } = useTranslation();
 
-  const { request } = useApi();
+  const { request, getAuthToken } = useApi();
 
   // State for password change modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -245,7 +245,7 @@ const MyProfile = ({ user, onProfileUpdate }) => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+      const token = getAuthToken();
       if (!token) {
         toast.error(t('profile.toast.auth_missing'));
         setLoading(false);

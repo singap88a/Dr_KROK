@@ -435,7 +435,7 @@ export default function Certificate() {
                   <p
                     className="absolute text-[4vw] sm:text-[1.5vw] text-[#000]"
                     style={{
-                      bottom: "12%",
+                      bottom: "15%",
                       left: "15%",
                     }}
                   >
@@ -446,7 +446,7 @@ export default function Certificate() {
                   <p
                     className="absolute text-[4vw] sm:text-[1.5vw] italic text-[#000]"
                     style={{
-                      bottom: "12%",
+                      bottom: "15%",
                       right: "12%",
                     }}
                   >
