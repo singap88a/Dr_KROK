@@ -423,7 +423,7 @@ export default function Certificate() {
         {/* Certificate Container */}
         <div className="flex flex-col items-center justify-center min-h-[70vh] bg-surface rounded-2xl shadow-2xl border border-border p-4 sm:p-8">
           {/* Certificate Status */}
-          {certificateStatus === 'exists' && (
+          {/* {certificateStatus === 'exists' && (
             <div className="flex items-center gap-2 p-2 mb-4 text-green-800 bg-green-100 rounded-lg">
               <FaCheckCircle />
               <span className="text-sm">
@@ -433,7 +433,7 @@ export default function Certificate() {
                 }
               </span>
             </div>
-          )}
+          )} */}
           
           {certificateStatus === 'error' && (
             <div className="flex items-center gap-2 p-2 mb-4 text-yellow-800 bg-yellow-100 rounded-lg">

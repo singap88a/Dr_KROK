@@ -221,25 +221,23 @@ export default function FinalTestResults() {
             
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // النصوص الرئيسية
+            // استخدام خطوط مشابهة للصورة المرفقة
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
 
-            // اسم الطالب - باللون الأصفر المميز
+            // اسم الطالب - حجم أصغر مع تقليل المسافة
             ctx.fillStyle = studentNameColor;
-            ctx.font = "bold 42px 'Times New Roman', serif";
-            ctx.fillText(userName.toUpperCase(), canvas.width / 2, 230);
+            ctx.font = "bold 32px 'Times New Roman', serif";
+            ctx.fillText(userName.toUpperCase(), canvas.width / 2, 220);
 
-            // عنوان الكورس - أصغر حجماً وأكثر أناقة
+            // عنوان الكورس - حجم أصغر مع تقليل المسافة
             ctx.fillStyle = "#333333";
-            ctx.font = "bold 22px 'Times New Roman', serif";
+            ctx.font = "bold 16px 'Times New Roman', serif";
             
-            // تقسيم عنوان الكورس إذا كان طويلاً
             const courseTitle = course?.title || t("courses.courseTitle", "Course Title");
             const maxWidth = 400;
             
             if (ctx.measureText(courseTitle).width > maxWidth) {
-              // إذا كان النص طويلاً، نقسمه إلى سطرين
               const words = courseTitle.split(' ');
               let line1 = '';
               let line2 = '';
@@ -252,60 +250,63 @@ export default function FinalTestResults() {
                 }
               }
               
-              ctx.fillText(line1, canvas.width / 2, 275);
+              ctx.fillText(line1, canvas.width / 2, 260);
               if (line2) {
-                ctx.fillText(line2, canvas.width / 2, 295);
+                ctx.fillText(line2, canvas.width / 2, 275);
               }
             } else {
-              ctx.fillText(courseTitle, canvas.width / 2, 285);
+              ctx.fillText(courseTitle, canvas.width / 2, 265);
             }
 
-            // التقدير
+            // التقدير - إضافة التقدير مرة أخرى
             if (grade) {
               ctx.fillStyle = "#2c5aa0";
-              ctx.font = "italic 20px 'Times New Roman', serif";
-              ctx.fillText(`Grade: ${grade}`, canvas.width / 2, 315);
+              ctx.font = "italic 18px 'Times New Roman', serif";
+              ctx.fillText(`Grade: ${grade}`, canvas.width / 2, 295);
             }
 
-            // النسبة المئوية
-            ctx.fillStyle = "#444444";
+            // النسبة المئوية فقط بدون كلمة Score - بنفس لون اسم الطالب
+            ctx.fillStyle = studentNameColor;
             ctx.font = "bold 18px 'Times New Roman', serif";
-            ctx.fillText(`Score: ${Math.round(calculatedPercentage)}%`, canvas.width / 2, 340);
+            ctx.fillText(`${Math.round(calculatedPercentage)}%`, canvas.width / 2, 315);
 
-            // القسم السفلي - التاريخ والتوقيع بشكل منظم
+            // القسم السفلي - التاريخ والتوقيع بنفس تصميم الصورة
             const professionalDate = formatProfessionalDate();
             
-            // التاريخ في اليسار - تصميم منظم
-            ctx.textAlign = "left";
+            // التاريخ في اليسار - تصميم مطابق للصورة مع مسافات محسنة
+            ctx.textAlign = "center";
             ctx.fillStyle = "#000000";
-            ctx.font = "16px 'Times New Roman', serif";
+            ctx.font = "bold 14px 'Arial', 'Helvetica', sans-serif";
             
-            // تسمية التاريخ
-            ctx.fillText("Date:", 60, 375);
+            // التاريخ فوق الخط مع مسافة
+            ctx.fillText(professionalDate, 120, 360);
             // خط تحت التاريخ
             ctx.beginPath();
-            ctx.moveTo(95, 380);
-            ctx.lineTo(200, 380);
+            ctx.moveTo(80, 370);
+            ctx.lineTo(160, 370);
             ctx.strokeStyle = "#000000";
             ctx.lineWidth = 1;
             ctx.stroke();
-            // قيمة التاريخ
-            ctx.fillText(professionalDate, 100, 375);
+            // كلمة DATE تحت الخط مع مسافة
+            ctx.font = "12px 'Arial', 'Helvetica', sans-serif";
+            ctx.fillText("DATE", 120, 385);
 
-            // التوقيع في اليمين - تصميم منظم
-            ctx.textAlign = "right";
-            // تسمية التوقيع
-            ctx.fillText("Signature:", canvas.width - 200, 375);
+            // التوقيع في اليمين - تصميم مطابق للصورة مع مسافات محسنة
+            ctx.textAlign = "center";
+            ctx.font = "bold 14px 'Arial', 'Helvetica', sans-serif";
+            
+            // اسم الدكتور فوق الخط مع مسافة
+            ctx.fillText("Dr. KROK", canvas.width - 120, 360);
             // خط تحت التوقيع
             ctx.beginPath();
-            ctx.moveTo(canvas.width - 150, 380);
-            ctx.lineTo(canvas.width - 50, 380);
+            ctx.moveTo(canvas.width - 160, 370);
+            ctx.lineTo(canvas.width - 80, 370);
             ctx.strokeStyle = "#000000";
             ctx.lineWidth = 1;
             ctx.stroke();
-            // اسم الأكاديمية
-            ctx.font = "bold 14px 'Times New Roman', serif";
-            ctx.fillText("Dr. KROK Academy", canvas.width - 145, 395);
+            // كلمة SIGNATURE تحت الخط مع مسافة
+            ctx.font = "12px 'Arial', 'Helvetica', sans-serif";
+            ctx.fillText("SIGNATURE", canvas.width - 120, 385);
 
             const highResImage = canvas.toDataURL("image/jpeg", 1.0);
             
@@ -522,7 +523,7 @@ export default function FinalTestResults() {
               </div>
             </div>
 
-            {actualScope === 'final' && (
+            {/* {actualScope === 'final' && (
               <div className="p-4 mb-6 text-center bg-gray-100 rounded-lg">
                 <p className="text-sm text-gray-600">
                   <strong>Certificate Preview:</strong> 
@@ -537,7 +538,7 @@ export default function FinalTestResults() {
                   </span>
                 </p>
               </div>
-            )}
+            )} */}
 
             <div className="flex flex-col gap-4 md:flex-row md:justify-center">
               {passed ? (
