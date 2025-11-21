@@ -21,10 +21,12 @@ export default function FinalTestResults() {
   const [savingResult, setSavingResult] = useState(false);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
   const [certificateUploaded, setCertificateUploaded] = useState(false);
-  const certificateImage = "/certificate.jpeg";
+  const [studentNameColor, setStudentNameColor] = useState("#c2a10d");
+  const [grade, setGrade] = useState("");
+  
+  const certificateImage = "/certificate_1.jpg";
   const hasUploadedRef = useRef(false);
 
-  // تحديد نوع الكورس من المسار
   const isLiveCourse = location.pathname.includes('/live-courses');
   const basePath = isLiveCourse ? '/live-courses' : '/courses';
   const backPath = `${basePath}/${id}/lessons`;
@@ -35,10 +37,29 @@ export default function FinalTestResults() {
   const lessonId = passedState.lessonId || null;
   const sectionId = passedState.sectionId || null;
   
-  // إذا كان المسار final-results بدون scope، افترض أنه final
   const actualScope = scope || (location.pathname.includes('/final-results') ? 'final' : null);
-
   const userName = userData?.name || t("courses.student", "Student");
+
+  // دالة لتهيئة التاريخ بشكل احترافي (YYYY/MM/DD)
+  const formatProfessionalDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
+
+  const calculateGrade = (percentage) => {
+    if (percentage >= 90) return "Excellent";
+    if (percentage >= 80) return "Very Good";
+    if (percentage >= 70) return "Good";
+    if (percentage >= 65) return "Pass";
+    return "Fail";
+  };
+
+  const extractColorFromImage = () => {
+    return "#c2a10d";
+  };
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -48,6 +69,13 @@ export default function FinalTestResults() {
           ? await getLiveCourseById(id, true)
           : await getVideoCourseById(id, true);
         setCourse(courseData);
+
+        const extractedColor = extractColorFromImage();
+        setStudentNameColor(extractedColor);
+
+        const mockPercentage = calculatedPercentage;
+        setGrade(calculateGrade(mockPercentage));
+
       } catch (err) {
         setError(err?.message || t("courses.failedToLoadCourse", "Failed to load course"));
       } finally {
@@ -57,7 +85,6 @@ export default function FinalTestResults() {
     loadCourse();
   }, [id, isLiveCourse, getLiveCourseById, getVideoCourseById, t]);
 
-  // Calculate percentage early using useMemo
   const calculatedPercentage = useMemo(() => {
     if (!results) return 0;
     
@@ -76,7 +103,6 @@ export default function FinalTestResults() {
     }
   }, [results, test, actualScope]);
 
-  // Calculate results based on scope - MUST be before early returns
   const { totalQuestions, correctAnswers, wrongAnswers, percentage, passed, title, subtitle } = useMemo(() => {
     let total = 0;
     let correct = 0;
@@ -152,16 +178,17 @@ export default function FinalTestResults() {
     };
   }, [actualScope, results, test, calculatedPercentage, t]);
 
-  // دالة لحفظ نتيجة الاختبار في السيرفر (للفيديو كورس فقط)
   const saveResultToServer = async (percentage, passed) => {
-    if (isLiveCourse || !saveFinalTestResult) return; // لا نحتاج لحفظ في السيرفر للايف كورس
+    if (isLiveCourse || !saveFinalTestResult) return;
     
     try {
       setSavingResult(true);
       const testData = {
         score: percentage,
         percentage: percentage,
-        passed: passed
+        passed: passed,
+        grade: grade,
+        student_name_color: studentNameColor
       };
       
       await saveFinalTestResult(id, testData);
@@ -173,8 +200,8 @@ export default function FinalTestResults() {
     }
   };
 
-  // دالة لإنشاء PDF الشهادة
-  const generateCertificatePDF = useCallback(() => {
+  // دالة محسنة لإنشاء PDF الشهادة المحترف
+  const generateProfessionalCertificatePDF = useCallback(() => {
     return new Promise((resolve, reject) => {
       try {
         const pdf = new jsPDF("landscape", "mm", "a4");
@@ -186,40 +213,110 @@ export default function FinalTestResults() {
           try {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            const imgData = canvas.toDataURL("image/jpeg");
+            canvas.width = 297 * 2;
+            canvas.height = 210 * 2;
+            
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            const pdfWidth = 297;
-            const pdfHeight = 210;
-            const ratio = Math.min(pdfWidth / img.width, pdfHeight / img.height);
-            const scaledWidth = img.width * ratio;
-            const scaledHeight = img.height * ratio;
+            // النصوص الرئيسية
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
 
+            // اسم الطالب - باللون الأصفر المميز
+            ctx.fillStyle = studentNameColor;
+            ctx.font = "bold 42px 'Times New Roman', serif";
+            ctx.fillText(userName.toUpperCase(), canvas.width / 2, 230);
+
+            // عنوان الكورس - أصغر حجماً وأكثر أناقة
+            ctx.fillStyle = "#333333";
+            ctx.font = "bold 22px 'Times New Roman', serif";
+            
+            // تقسيم عنوان الكورس إذا كان طويلاً
+            const courseTitle = course?.title || t("courses.courseTitle", "Course Title");
+            const maxWidth = 400;
+            
+            if (ctx.measureText(courseTitle).width > maxWidth) {
+              // إذا كان النص طويلاً، نقسمه إلى سطرين
+              const words = courseTitle.split(' ');
+              let line1 = '';
+              let line2 = '';
+              
+              for (let word of words) {
+                if (ctx.measureText(line1 + ' ' + word).width <= maxWidth) {
+                  line1 += (line1 ? ' ' : '') + word;
+                } else {
+                  line2 += (line2 ? ' ' : '') + word;
+                }
+              }
+              
+              ctx.fillText(line1, canvas.width / 2, 275);
+              if (line2) {
+                ctx.fillText(line2, canvas.width / 2, 295);
+              }
+            } else {
+              ctx.fillText(courseTitle, canvas.width / 2, 285);
+            }
+
+            // التقدير
+            if (grade) {
+              ctx.fillStyle = "#2c5aa0";
+              ctx.font = "italic 20px 'Times New Roman', serif";
+              ctx.fillText(`Grade: ${grade}`, canvas.width / 2, 315);
+            }
+
+            // النسبة المئوية
+            ctx.fillStyle = "#444444";
+            ctx.font = "bold 18px 'Times New Roman', serif";
+            ctx.fillText(`Score: ${Math.round(calculatedPercentage)}%`, canvas.width / 2, 340);
+
+            // القسم السفلي - التاريخ والتوقيع بشكل منظم
+            const professionalDate = formatProfessionalDate();
+            
+            // التاريخ في اليسار - تصميم منظم
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#000000";
+            ctx.font = "16px 'Times New Roman', serif";
+            
+            // تسمية التاريخ
+            ctx.fillText("Date:", 60, 375);
+            // خط تحت التاريخ
+            ctx.beginPath();
+            ctx.moveTo(95, 380);
+            ctx.lineTo(200, 380);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            // قيمة التاريخ
+            ctx.fillText(professionalDate, 100, 375);
+
+            // التوقيع في اليمين - تصميم منظم
+            ctx.textAlign = "right";
+            // تسمية التوقيع
+            ctx.fillText("Signature:", canvas.width - 200, 375);
+            // خط تحت التوقيع
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 150, 380);
+            ctx.lineTo(canvas.width - 50, 380);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            // اسم الأكاديمية
+            ctx.font = "bold 14px 'Times New Roman', serif";
+            ctx.fillText("Dr. KROK Academy", canvas.width - 145, 395);
+
+            const highResImage = canvas.toDataURL("image/jpeg", 1.0);
+            
             pdf.addImage(
-              imgData,
+              highResImage,
               "JPEG",
-              (pdfWidth - scaledWidth) / 2,
-              (pdfHeight - scaledHeight) / 2,
-              scaledWidth,
-              scaledHeight
+              0,
+              0,
+              297,
+              210
             );
-
-            const certDate = new Date().toLocaleDateString();
-            pdf.setFont("helvetica", "bold");
-            pdf.setFontSize(26);
-            pdf.text(userName, 148, 115, { align: "center" });
-
-            pdf.setFontSize(18);
-            pdf.text(course?.title || t("courses.courseTitle", "Course Title"), 148, 130, { align: "center" });
-
-            pdf.setFontSize(16);
-            pdf.text(`${t("courses.scoreLabel", "Score")}: ${Math.round(calculatedPercentage)}%`, 148, 142, { align: "center" });
-
-            pdf.setFontSize(14);
-            pdf.text(`${t("courses.dateLabel", "Date")}: ${certDate}`, 40, 190);
-            pdf.text(t("courses.signatureLabel", "Signature: Dr. KROK Academy"), 240, 190, { align: "right" });
 
             const pdfBlob = pdf.output("blob");
             resolve(pdfBlob);
@@ -235,12 +332,10 @@ export default function FinalTestResults() {
         reject(err);
       }
     });
-  }, [course, calculatedPercentage, userName, t]);
+  }, [course, calculatedPercentage, userName, t, grade, studentNameColor]);
 
-  // رفع الشهادة تلقائياً عند score >= 65
   useEffect(() => {
     const autoUploadCertificate = async () => {
-      // التحقق من الشروط
       if (
         !course ||
         actualScope !== 'final' ||
@@ -261,30 +356,32 @@ export default function FinalTestResults() {
         setUploadingCertificate(true);
         hasUploadedRef.current = true;
 
-        // إنشاء PDF الشهادة
-        const pdfBlob = await generateCertificatePDF();
+        await saveResultToServer(calculatedPercentage, true);
 
-        // إنشاء FormData
+        const pdfBlob = await generateProfessionalCertificatePDF();
+
         const formData = new FormData();
         formData.append("course_id", id.toString());
         formData.append("type", isLiveCourse ? "live" : "video");
         formData.append("certificate", pdfBlob, "certificate.pdf");
+        formData.append("student_name_color", studentNameColor);
+        formData.append("grade", grade);
+        formData.append("percentage", calculatedPercentage.toString());
 
-        // رفع الشهادة للسيرفر
         await uploadCertificate(token, formData);
         setCertificateUploaded(true);
-        console.log("✅ Certificate uploaded successfully to server");
+        console.log("✅ Professional certificate uploaded successfully to server");
         
       } catch (error) {
         console.error("❌ Failed to upload certificate:", error);
-        hasUploadedRef.current = false; // إعادة المحاولة في المرة القادمة
+        hasUploadedRef.current = false;
       } finally {
         setUploadingCertificate(false);
       }
     };
 
     autoUploadCertificate();
-  }, [course, actualScope, calculatedPercentage, id, uploadCertificate, getAuthToken, userName, t, generateCertificatePDF, isLiveCourse, userData]);
+  }, [course, actualScope, calculatedPercentage, id, uploadCertificate, getAuthToken, userName, t, generateProfessionalCertificatePDF, isLiveCourse, userData, grade, studentNameColor]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -306,7 +403,6 @@ export default function FinalTestResults() {
     );
   }
 
-  // Find the relevant item (lesson/section)
   let itemName = "";
   if (actualScope === 'lesson' && lessonId) {
     const lesson = course.lessons?.find(l => l.id === parseInt(lessonId)) ||
@@ -317,18 +413,21 @@ export default function FinalTestResults() {
     itemName = section?.title || "";
   }
 
-  // تعديل دالة عرض الشهادة
   const handleViewCertificate = async () => {
     if (actualScope === 'final' && passed) {
-      // الانتقال لصفحة الشهادة
-      navigate(`${basePath}/${id}/certificate`);
+      navigate(`${basePath}/${id}/certificate`, {
+        state: {
+          studentNameColor: studentNameColor,
+          grade: grade,
+          percentage: calculatedPercentage
+        }
+      });
     }
   };
 
   return (
     <section className="min-h-screen py-10 bg-gradient-to-br from-primary/5 to-secondary/5 text-text">
       <div className="max-w-4xl px-4 mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigate(backPath)}
@@ -343,7 +442,6 @@ export default function FinalTestResults() {
           <div className="w-10" />
         </div>
 
-        {/* Results Card */}
         <div className="overflow-hidden border shadow-2xl rounded-2xl bg-surface border-border">
           <div className="p-8 text-center">
             <div className="mb-6">
@@ -364,7 +462,6 @@ export default function FinalTestResults() {
               )}
             </div>
 
-            {/* Score */}
             <div className="mb-8">
               <div className="mb-2 text-6xl font-bold text-secondary">{Math.round(percentage)}%</div>
               <div className="text-xl text-text-muted">
@@ -373,31 +470,37 @@ export default function FinalTestResults() {
                   : `${t("courses.score", "Score")}: ${results.student_score || 0}/${results.total_score || 0}`
                 }
               </div>
+              
+              {actualScope === 'final' && (
+                <div className="mt-2 text-lg font-semibold" style={{ color: studentNameColor }}>
+                  Grade: {grade}
+                </div>
+              )}
+
               {actualScope !== 'final' && (
                 <div className="text-xl text-text-muted">
                   {passed ? t("courses.passed", "Passed") : t("courses.failed", "Failed")}
                 </div>
               )}
-              {/* Certificate Upload Status */}
+              
               {actualScope === 'final' && passed && (
                 <div className="mt-4">
                   {uploadingCertificate && (
                     <div className="flex items-center justify-center gap-2 p-3 text-blue-600 bg-blue-100 rounded-lg">
                       <FaSync className="animate-spin" />
-                      <span>{t("courses.uploadingCertificate", "Uploading certificate to server...")}</span>
+                      <span>{t("courses.uploadingCertificate", "Uploading professional certificate to server...")}</span>
                     </div>
                   )}
                   {certificateUploaded && !uploadingCertificate && (
                     <div className="flex items-center justify-center gap-2 p-3 text-green-600 bg-green-100 rounded-lg">
                       <FaCheckCircle />
-                      <span>{t("courses.certificateUploaded", "Certificate uploaded successfully!")}</span>
+                      <span>{t("courses.certificateUploaded", "Professional certificate uploaded successfully!")}</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-3">
               <div className="p-4 border rounded-lg bg-accent border-border">
                 <div className="text-2xl font-bold text-primary">{totalQuestions}</div>
@@ -419,18 +522,34 @@ export default function FinalTestResults() {
               </div>
             </div>
 
-            {/* Actions */}
+            {actualScope === 'final' && (
+              <div className="p-4 mb-6 text-center bg-gray-100 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Certificate Preview:</strong> 
+                  <span style={{ color: studentNameColor, marginLeft: '8px' }}>
+                    Student Name Color: {studentNameColor}
+                  </span>
+                  <span style={{ marginLeft: '16px', color: '#2c5aa0' }}>
+                    Grade: {grade}
+                  </span>
+                  <span style={{ marginLeft: '16px', color: '#444' }}>
+                    Date Format: {formatProfessionalDate()}
+                  </span>
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-col gap-4 md:flex-row md:justify-center">
               {passed ? (
                 <div className="text-center">
                   {actualScope === 'final' ? (
                     <button
                       onClick={handleViewCertificate}
-                      disabled={savingResult}
+                      disabled={savingResult || uploadingCertificate}
                       className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <FaCertificate />
-                      {savingResult ? t("common.saving", "Saving...") : t("courses.viewCertificate", "View Certificate")}
+                      {savingResult || uploadingCertificate ? t("common.processing", "Processing...") : t("courses.viewCertificate", "View Professional Certificate")}
                     </button>
                   ) : (
                     <div className="flex items-center justify-center gap-2 mb-4 text-green-600">
@@ -461,7 +580,7 @@ export default function FinalTestResults() {
                   <button
                     onClick={() => navigate(backPath)}
                     className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-secondary hover:shadow-xl"
-                  >
+                    >
                     <FaRedo />
                     {t("courses.backToLessons", "Back to Lessons")}
                   </button>
