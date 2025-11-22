@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import jsPDF from "jspdf";
-import { FaArrowLeft, FaDownload, FaExclamationTriangle, FaSync } from "react-icons/fa";
+import { 
+  FaArrowLeft, 
+  FaDownload, 
+  FaExclamationTriangle, 
+  FaSync, 
+  FaCheckCircle, 
+  FaFilePdf,
+  FaAward
+} from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function Certificate() {
@@ -12,73 +20,52 @@ export default function Certificate() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, getFinalTestResult } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getCertificateFile, getAuthToken, checkCertificateExists, getCertificateUrl } = useApi();
   const { userData } = useUser();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [certificateInfo, setCertificateInfo] = useState(null);
-  const [checkingServer, setCheckingServer] = useState(false);
+  const [certificatePdfUrl, setCertificatePdfUrl] = useState(null);
+  const [loadingCertificate, setLoadingCertificate] = useState(false);
+  const [certificateError, setCertificateError] = useState("");
+  const [certificateEligible, setCertificateEligible] = useState(false);
+  const [certificateStatus, setCertificateStatus] = useState('checking');
+  const [grade, setGrade] = useState(""); // التقدير بالانجليزية
+  const [studentNameColor, setStudentNameColor] = useState("#c2a10d"); // اللون الأصفر الافتراضي
 
-  const certificateImage = "/certificate.jpeg";
+  const certificateImage = "/certificate_1.jpg";
+  const canvasRef = useRef(null);
 
   // تحديد نوع الكورس من المسار
   const isLiveCourse = location.pathname.includes('/live-courses');
   const basePath = isLiveCourse ? '/live-courses' : '/courses';
   const backPath = `${basePath}/${id}/lessons`;
+    
+  const userName = userData?.name || t("courses.student", "Student");
+  const certDate = new Date().toLocaleDateString();
 
-  const passedState = location.state || {};
-  
-  // Helper: normalize percentage from different result shapes
-  const getPercentage = (data) => {
-    if (!data) return null;
-    if (typeof data === 'number') return data;
-    if (typeof data.score === 'number') return data.score;
-    if (typeof data.percentage === 'number') return data.percentage;
-    if (typeof data.student_score === 'number' && typeof data.total_score === 'number' && data.total_score > 0) {
-      return (data.student_score / data.total_score) * 100;
-    }
-    if (typeof data.score === 'string') {
-      const n = parseFloat(data.score);
-      if (!Number.isNaN(n)) return n;
-    }
-    return null;
+  // دالة لتحديد التقدير بناءً على النسبة
+  const calculateGrade = (percentage) => {
+    if (percentage >= 90) return "Excellent";
+    if (percentage >= 80) return "Very Good";
+    if (percentage >= 70) return "Good";
+    if (percentage >= 65) return "Pass";
+    return "Fail";
   };
 
-  // جلب البيانات من مصادر متعددة
-  const storageKey = isLiveCourse 
-    ? `live_course_${id}_certificate`
-    : `course_${id}_certificate_${userData?.id || 'anonymous'}`;
-  
-  const stored = (() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  })();
-
-  const percentage = (
-    passedState.finalTestPercentage ??
-    getPercentage(stored) ??
-    getPercentage(certificateInfo) ??
-    0
-  );
-  
-  const certDate = stored?.date 
-    ? new Date(stored.date).toLocaleDateString() 
-    : certificateInfo?.date 
-    ? new Date(certificateInfo.date).toLocaleDateString()
-    : new Date().toLocaleDateString();
-    
-  const userName = passedState.userName || userData?.name || t("courses.student", "Student");
+  // استخراج اللون من الصورة (محاكاة - في الواقع سيأتي من السيرفر)
+  const extractColorFromImage = () => {
+    // في التطبيق الحقيقي، هذا سيكون من قاعدة البيانات
+    // هنا نستخدم اللون الأصفر كما طلبت
+    return "#c2a10d";
+  };
 
   useEffect(() => {
-    const loadCourseAndResult = async () => {
+    const loadCourseAndCheckCertificate = async () => {
       try {
         setLoading(true);
+        setCertificateStatus('checking');
         
         // جلب بيانات الكورس
         const courseData = isLiveCourse
@@ -86,126 +73,306 @@ export default function Certificate() {
           : await getVideoCourseById(id, true);
         setCourse(courseData);
 
-        // جلب نتيجة الاختبار النهائي من السيرفر (للفيديو كورس فقط)
-        if (!isLiveCourse && userData?.id && getFinalTestResult) {
-          setCheckingServer(true);
+        // استخراج اللون من الصورة (محاكاة)
+        const extractedColor = extractColorFromImage();
+        setStudentNameColor(extractedColor);
+
+        // حساب التقدير (محاكاة - في الواقع سيأتي من السيرفر)
+        const mockPercentage = 85; // هذا سيأتي من بيانات الطالب
+        setGrade(calculateGrade(mockPercentage));
+
+        // التحقق من وجود الشهادة في السيرفر
+        const token = getAuthToken();
+        if (token) {
           try {
-            const serverResult = await getFinalTestResult(id);
-            const normalized = getPercentage(serverResult);
-            if (serverResult && typeof normalized === 'number') {
-              setCertificateInfo({ ...serverResult, score: normalized, fromServer: true });
-              console.log('✅ Using server result:', { ...serverResult, score: normalized });
+            const courseType = isLiveCourse ? 'live' : 'video';
+            const exists = await checkCertificateExists(token, id, courseType);
+            
+            if (exists) {
+              setCertificateEligible(true);
+              setCertificateStatus('exists');
+              console.log("✅ Certificate exists on server");
+              
+              // محاولة جلب رابط الشهادة مباشرة إذا كانت موجودة
+              try {
+                const certificateUrl = await getCertificateUrl(token, id, courseType);
+                if (certificateUrl) {
+                  setCertificatePdfUrl(certificateUrl);
+                  console.log("📄 Certificate URL loaded successfully:", certificateUrl);
+                }
+              } catch (loadError) {
+                console.warn("⚠️ Certificate exists but couldn't get URL:", loadError.message);
+              }
+            } else {
+              setCertificateEligible(false);
+              setCertificateStatus('not_found');
+              console.log("❌ Certificate not found on server");
             }
-          } catch {
-            console.log('ℹ️ No server result available, using local storage');
-          } finally {
-            setCheckingServer(false);
+          } catch (error) {
+            console.log("⚠️ Error checking certificate:", error.message);
+            setCertificateEligible(false);
+            setCertificateStatus('error');
+            
+            if (error.message.includes('NETWORK_ERROR')) {
+              setCertificateError(t("courses.networkError", "Network error. Please check your connection."));
+            } else if (error.message.includes('CERTIFICATE_NOT_FOUND')) {
+              setCertificateError(t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate."));
+            } else {
+              setCertificateError(t("courses.certificateCheckError", "Error checking certificate availability."));
+            }
           }
+        } else {
+          setCertificateEligible(false);
+          setCertificateStatus('not_found');
         }
 
       } catch (err) {
         setError(err?.message || t("courses.failedToLoadCourse", "Failed to load course"));
+        setCertificateStatus('error');
       } finally {
         setLoading(false);
       }
     };
     
-    loadCourseAndResult();
-  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getFinalTestResult, userData, t]);
+    loadCourseAndCheckCertificate();
+  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, checkCertificateExists, getCertificateUrl, getAuthToken, t]);
 
-  // استخدام بيانات السيرفر إذا كانت متاحة
-  const finalPercentage = (typeof certificateInfo?.score === 'number') ? certificateInfo.score : percentage;
-  const finalIsEligible = finalPercentage >= 65;
+  // دالة لإنشاء PDF مع التصميم المحترف
+  const generateProfessionalPDF = async () => {
+    return new Promise((resolve, reject) => {
+      try {
+        const pdf = new jsPDF("landscape", "mm", "a4");
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = certificateImage;
+
+        img.onload = async () => {
+          try {
+            // استخدام canvas لرسم الصورة والنصوص بدقة عالية
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = 297 * 2; // دقة مضاعفة للوضوح
+            canvas.height = 210 * 2;
+            
+            // رسم خلفية بيضاء أولاً
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // رسم صورة الشهادة
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // إضافة النصوص بخطوط وألوان مختلفة
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // اسم الطالب - باللون الأصفر المميز
+            ctx.fillStyle = studentNameColor;
+            ctx.font = "bold 48px 'Times New Roman', serif";
+            ctx.fillText(userName.toUpperCase(), canvas.width / 2, 230);
+
+            // عنوان الكورس
+            ctx.fillStyle = "#333333";
+            ctx.font = "bold 28px 'Times New Roman', serif";
+            ctx.fillText(course?.title || t("courses.courseTitle", "Course Title"), canvas.width / 2, 280);
+
+            // التقدير
+            if (grade) {
+              ctx.fillStyle = "#2c5aa0";
+              ctx.font = "italic 24px 'Times New Roman', serif";
+              ctx.fillText(`Grade: ${grade}`, canvas.width / 2, 320);
+            }
+
+            // التاريخ والتوقيع
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#000000";
+            ctx.font = "18px 'Times New Roman', serif";
+            ctx.fillText(`Date ${certDate}`, 80, 380);
+
+            ctx.textAlign = "right";
+            ctx.fillText("Signature _________________", canvas.width - 80, 380);
+            ctx.font = "16px 'Times New Roman', serif";
+            ctx.fillText("Dr. KROK  ", canvas.width - 80, 400);
+
+            // تحويل Canvas إلى صورة وإضافتها للـ PDF
+            const highResImage = canvas.toDataURL("image/jpeg", 1.0);
+            
+            pdf.addImage(
+              highResImage,
+              "JPEG",
+              0,
+              0,
+              297,
+              210
+            );
+
+            const pdfBlob = pdf.output("blob");
+            resolve(pdfBlob);
+          } catch (err) {
+            reject(err);
+          }
+        };
+
+        img.onerror = () => {
+          reject(new Error("Failed to load certificate image"));
+        };
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
 
   const downloadPDF = async () => {
-    // منع تحميل الشهادة إذا لم يكن مؤهلاً
-    if (!finalIsEligible) {
+    if (!certificateEligible) {
       alert(t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate."));
       return;
     }
 
+    // إذا كانت الشهادة موجودة في السيرفر، نستخدمها مباشرة
+    if (certificatePdfUrl) {
+      try {
+        const link = document.createElement('a');
+        link.href = certificatePdfUrl;
+        link.download = `${course?.title || t("courses.certificateFileName", "certificate")}.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      } catch (error) {
+        console.error("Error downloading PDF:", error);
+      }
+    }
+
+    // Fallback: إنشاء PDF محلي محترف
     try {
-      const pdf = new jsPDF("landscape", "mm", "a4");
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = certificateImage;
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        const imgData = canvas.toDataURL("image/jpeg");
-
-        const pdfWidth = 297;
-        const pdfHeight = 210;
-        const ratio = Math.min(pdfWidth / img.width, pdfHeight / img.height);
-        const scaledWidth = img.width * ratio;
-        const scaledHeight = img.height * ratio;
-
-        pdf.addImage(
-          imgData,
-          "JPEG",
-          (pdfWidth - scaledWidth) / 2,
-          (pdfHeight - scaledHeight) / 2,
-          scaledWidth,
-          scaledHeight
-        );
-
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(26);
-        pdf.text(userName, 148, 115, { align: "center" });
-
-        pdf.setFontSize(18);
-        pdf.text(course?.title || t("courses.courseTitle", "Course Title"), 148, 130, { align: "center" });
-
-        pdf.setFontSize(16);
-        pdf.text(`${t("courses.scoreLabel", "Score")}: ${Math.round(finalPercentage)}%`, 148, 142, { align: "center" });
-
-        pdf.setFontSize(14);
-        pdf.text(`${t("courses.dateLabel", "Date")}: ${certDate}`, 40, 190);
-        pdf.text(t("courses.signatureLabel", "Signature: Dr. KROK Academy"), 240, 190, { align: "right" });
-
-        pdf.save(`${course?.title || t("courses.certificateFileName", "certificate")}.pdf`);
-      };
+      const pdfBlob = await generateProfessionalPDF();
+      const url = URL.createObjectURL(pdfBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${course?.title || t("courses.certificateFileName", "certificate")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // تنظيف الـ URL
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      
     } catch (err) {
       console.error("PDF generation error:", err);
-      alert(t("common.error", "Error") + ": " + t("courses.downloadPDF", "Download as PDF"));
+      alert(t("common.error", "Error") + ": " + t("courses.downloadFailed", "Failed to download certificate"));
     }
   };
 
-  if (loading || checkingServer) {
+  const handleShowCertificate = async () => {
+    if (!id) {
+      setCertificateError(t("courses.courseIdRequired", "Course ID is required"));
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setCertificateError(t("courses.tokenRequired", "Authentication token is required"));
+      return;
+    }
+
+    try {
+      setLoadingCertificate(true);
+      setCertificateError("");
+      
+      const courseType = isLiveCourse ? 'live' : 'video';
+      const certificateUrl = await getCertificateUrl(token, id, courseType);
+      
+      if (!certificateUrl) {
+        throw new Error("CERTIFICATE_URL_NOT_FOUND");
+      }
+      
+      setCertificatePdfUrl(certificateUrl);
+      setCertificateEligible(true);
+      setCertificateStatus('exists');
+      
+    } catch (error) {
+      console.error("Failed to get certificate URL:", error);
+      
+      if (error.message === 'CERTIFICATE_NOT_FOUND') {
+        setCertificateError(
+          t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate.")
+        );
+      } else if (error.message.includes('NETWORK_ERROR')) {
+        setCertificateError(
+          t("courses.networkError", "Network error. Please check your connection and try again.")
+        );
+      } else if (error.message === 'CERTIFICATE_URL_NOT_FOUND') {
+        setCertificateError(
+          t("courses.certificateUrlNotFound", "Certificate URL not found. Please contact support.")
+        );
+      } else {
+        setCertificateError(
+          t("courses.certificateLoadError", "Failed to load certificate. Please try again.")
+        );
+      }
+    } finally {
+      setLoadingCertificate(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setCertificateError("");
+    setCertificatePdfUrl(null);
+    setCertificateStatus('checking');
+    window.location.reload();
+  };
+
+  // تنظيف object URL عند unmount
+  useEffect(() => {
+    return () => {
+      if (certificatePdfUrl && certificatePdfUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(certificatePdfUrl);
+      }
+    };
+  }, [certificatePdfUrl]);
+
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <LoadingSpinner />
-        {checkingServer && (
-          <p className="mt-4 text-text-muted">{t("courses.checkingTestResults", "Checking test results...")}</p>
-        )}
+        <p className="mt-4 text-text-muted">
+          {certificateStatus === 'checking' 
+            ? t("courses.checkingServerCertificate", "Checking server for certificate...")
+            : t("courses.loadingCourse", "Loading course...")
+          }
+        </p>
       </div>
     );
   }
   
-  // إذا لم يكن مؤهلاً للشهادة، اعرض رسالة خطأ
-  if (!finalIsEligible) {
+  if (!certificateEligible && certificateStatus === 'not_found') {
     return (
       <section className="flex items-center justify-center min-h-screen bg-background text-text">
-        <div className="max-w-md p-8 text-center bg-white rounded-lg shadow-lg">
+        <div className="max-w-md p-8 text-center border shadow-2xl bg-surface rounded-2xl border-border">
           <div className="flex justify-center mb-4">
             <FaExclamationTriangle className="w-16 h-16 text-yellow-500" />
           </div>
-          <h2 className="mb-4 text-2xl font-bold text-gray-800">
+          <h2 className="mb-4 text-2xl font-bold text-text">
             {t("courses.certificateNotAvailable", "Certificate Not Available")}
           </h2>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-text-muted">
             {t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate.")}
           </p>
-          <button
-            onClick={() => navigate(backPath)}
-            className="px-6 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
-          >
-            {t("courses.backToLessons", "Back to Lessons")}
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate(backPath)}
+              className="flex-1 px-4 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+            >
+              {t("courses.backToLessons", "Back to Lessons")}
+            </button>
+            <button
+              onClick={handleRetry}
+              className="flex-1 px-4 py-3 text-white transition-colors bg-gray-600 rounded-lg hover:bg-gray-700"
+            >
+              {t("common.retry", "Retry")}
+            </button>
+          </div>
         </div>
       </section>
     );
@@ -216,12 +383,20 @@ export default function Certificate() {
       <section className="flex items-center justify-center min-h-screen bg-background text-text">
         <div className="text-center">
           <div className="mb-4 text-red-600">{error || t("common.error", "Error")}</div>
-          <button
-            onClick={() => navigate(backPath)}
-            className="px-4 py-2 text-white rounded bg-primary"
-          >
-            {t("common.back", "Back")}
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate(backPath)}
+              className="px-4 py-2 text-white rounded bg-primary"
+            >
+              {t("common.back", "Back")}
+            </button>
+            <button
+              onClick={handleRetry}
+              className="px-4 py-2 text-white bg-gray-600 rounded"
+            >
+              {t("common.retry", "Retry")}
+            </button>
+          </div>
         </div>
       </section>
     );
@@ -247,90 +422,221 @@ export default function Certificate() {
 
         {/* Certificate Container */}
         <div className="flex flex-col items-center justify-center min-h-[70vh] bg-surface rounded-2xl shadow-2xl border border-border p-4 sm:p-8">
-          {certificateInfo?.fromServer && (
+          {/* Certificate Status */}
+          {/* {certificateStatus === 'exists' && (
             <div className="flex items-center gap-2 p-2 mb-4 text-green-800 bg-green-100 rounded-lg">
-              <FaSync className="animate-spin" />
-              <span className="text-sm">{t("courses.verifiedServerResult", "Verified Server Result")}</span>
+              <FaCheckCircle />
+              <span className="text-sm">
+                {certificatePdfUrl 
+                  ? t("courses.certificateFromServer", "Certificate loaded from server")
+                  : t("courses.certificateAvailable", "Certificate available on server")
+                }
+              </span>
+            </div>
+          )} */}
+          
+          {certificateStatus === 'error' && (
+            <div className="flex items-center gap-2 p-2 mb-4 text-yellow-800 bg-yellow-100 rounded-lg">
+              <FaExclamationTriangle />
+              <span className="text-sm">
+                {t("courses.certificateCheckWarning", "Certificate check warning")}
+              </span>
             </div>
           )}
-          
-          <div className="relative w-full max-w-4xl aspect-[1.41/1]">
-            <img
-              src={certificateImage}
-              alt={t("courses.certificateOfCompletion", "Certificate of Completion")}
-              className="object-contain w-full h-full shadow-xl rounded-xl"
-            />
 
-            {/* Overlay Data */}
-            <div className="absolute inset-0 text-center text-[#0a0a0a] font-semibold">
-              {/* Student Name */}
-              <p
-                className="absolute font-bold text-[7vw] sm:text-[2vw] text-[#c2a10d]"
-                style={{
-                  top: "55%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                {userName}
-              </p>
-
-              {/* Course Title */}
-              <p
-                className="absolute text-[4vw] sm:text-[1.5vw] text-[#333]"
-                style={{
-                  top: "63%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                {course?.title || t("courses.courseTitle", "Course Title")}
-              </p>
-
-              {/* Score */}
-              <p
-                className="absolute text-[3.5vw] sm:text-[1.3vw] text-[#444]"
-                style={{
-                  top: "70%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                {t("courses.scoreLabel", "Score")}: {Math.round(finalPercentage)}%
-              </p>
-
-              {/* Date */}
-              <p
-                className="absolute text-[3vw] sm:text-[1vw] text-[#000]"
-                style={{
-                  bottom: "13%",
-                  left: "15%",
-                }}
-              >
-                 {certDate}
-              </p>
-
-              {/* Signature */}
-              <p
-                className="absolute text-[3vw] sm:text-[1vw] italic text-[#000]"
-                style={{
-                  bottom: "13%",
-                  right: "12%",
-                }}
-              >
-                 {t("courses.drKrokAcademy", "Dr. KROK Academy")}
-              </p>
+          {/* Certificate Display */}
+          {certificatePdfUrl ? (
+            <div className="w-full max-w-4xl">
+              <div className="flex items-center gap-2 mb-2 text-sm text-text-muted">
+                <FaFilePdf />
+                <span>{t("courses.serverCertificate", "Server Certificate")}</span>
+              </div>
+              <iframe
+                src={`${certificatePdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                className="w-full h-[636px] border rounded-lg border-border"
+                style={{ border: "none" }}
+              />
+              <div className="mt-2 text-sm text-center text-text-muted">
+                {t("courses.pdfViewHint", "If the PDF doesn't display correctly, use the download button below")}
+              </div>
             </div>
+          ) : (
+            <div className="w-full max-w-4xl">
+              <div className="flex items-center gap-2 mb-2 text-sm text-text-muted">
+                <FaAward />
+                <span>{t("courses.previewCertificate", "Preview Certificate")}</span>
+              </div>
+              <div className="relative w-full aspect-[1.41/1] bg-white shadow-2xl rounded-xl overflow-hidden">
+                <img
+                  src={certificateImage}
+                  alt={t("courses.certificateOfCompletion", "Certificate of Completion")}
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    console.error("Failed to load certificate image");
+                    e.target.src = "/fallback-certificate.jpg";
+                  }}
+                />
+
+                {/* Professional Overlay Data */}
+                <div className="absolute inset-0 text-center">
+                  
+                  {/* Student Name - باللون الأصفر المميز */}
+                  <div
+                    className="absolute font-bold transform -translate-x-1/2 left-1/2"
+                    style={{
+                      top: "52%",
+                      color: studentNameColor,
+                      fontSize: "clamp(1.5rem, 4vw, 3rem)",
+                      fontFamily: "'Times New Roman', serif",
+                      textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px"
+                    }}
+                  >
+                    {userName}
+                  </div>
+
+                  {/* Course Title */}
+                  <div
+                    className="absolute transform -translate-x-1/2 left-1/2"
+                    style={{
+                      top: "60%",
+                      color: "#333333",
+                      fontSize: "clamp(0.8rem, 2vw, 1.5rem)",
+                      fontFamily: "'Times New Roman', serif",
+                      fontWeight: "bold"
+                    }}
+                  >
+                    {course?.title || t("courses.courseTitle", "Course Title")}
+                  </div>
+
+                  {/* Grade - التقدير */}
+                  {grade && (
+                    <div
+                      className="absolute italic transform -translate-x-1/2 left-1/2"
+                      style={{
+                        top: "66%",
+                        color: "#2c5aa0",
+                        fontSize: "clamp(0.7rem, 1.8vw, 1.2rem)",
+                        fontFamily: "'Times New Roman', serif",
+                        fontWeight: "bold"
+                      }}
+                    >
+                      Grade: {grade}
+                    </div>
+                  )}
+
+                  {/* Date */}
+                  <div
+                    className="absolute"
+                    style={{
+                      bottom: "12%",
+                      left: "10%",
+                      color: "#000000",
+                      fontSize: "clamp(0.6rem, 1.5vw, 1rem)",
+                      fontFamily: "'Times New Roman', serif"
+                    }}
+                  >
+                    <div style={{ borderBottom: "1px solid #000", paddingBottom: "2px", marginBottom: "2px" }}>
+                      Date
+                    </div>
+                    <div>{certDate}</div>
+                  </div>
+
+                  {/* Signature */}
+                  <div
+                    className="absolute text-right"
+                    style={{
+                      bottom: "12%",
+                      right: "10%",
+                      color: "#000000",
+                      fontSize: "clamp(0.6rem, 1.5vw, 1rem)",
+                      fontFamily: "'Times New Roman', serif"
+                    }}
+                  >
+                    <div style={{ borderBottom: "1px solid #000", paddingBottom: "2px", marginBottom: "2px" }}>
+                      Signature
+                    </div>
+                    <div>Dr. KROK </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Information Display */}
+              <div className="p-4 mt-4 text-center bg-gray-100 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Student Name Color:</strong> 
+                  <span style={{ color: studentNameColor, marginLeft: '8px' }}>
+                    {studentNameColor}
+                  </span>
+                </p>
+                {grade && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Grade:</strong> {grade}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-4 mt-8 sm:flex-row">
+            {!certificatePdfUrl && certificateEligible && (
+              <button
+                onClick={handleShowCertificate}
+                disabled={loadingCertificate}
+                className="flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-primary/90 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingCertificate ? (
+                  <>
+                    <FaSync className="animate-spin" />
+                    {t("common.loading", "Loading...")}
+                  </>
+                ) : (
+                  <>
+                    <FaDownload />
+                    {t("courses.showCertificate", "Show Certificate")}
+                  </>
+                )}
+              </button>
+            )}
+            
+            <button
+              onClick={downloadPDF}
+              disabled={!certificateEligible}
+              className="flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FaDownload />
+              {certificatePdfUrl 
+                ? t("courses.downloadPDF", "Download as PDF") 
+                : t("courses.generatePDF", "Generate PDF")
+              }
+            </button>
+
+            <button
+              onClick={handleRetry}
+              className="flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white transition-all bg-gray-500 rounded-lg shadow-lg hover:bg-gray-600 hover:shadow-xl"
+            >
+              <FaSync />
+              {t("common.retry", "Retry")}
+            </button>
           </div>
 
-          {/* Download Button */}
-          <button
-            onClick={downloadPDF}
-            className="flex items-center gap-2 px-6 py-3 mt-8 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl"
-          >
-            <FaDownload />
-            {t("courses.downloadPDF", "Download as PDF")}
-          </button>
+          {/* Certificate Error Message */}
+          {certificateError && (
+            <div className="p-4 mt-4 text-red-600 bg-red-100 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span>{certificateError}</span>
+                <button 
+                  onClick={() => setCertificateError("")}
+                  className="ml-4 text-red-800 hover:text-red-900"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 text-center text-text-muted">
@@ -339,6 +645,7 @@ export default function Certificate() {
       </div>
     </section>
   );
-}
+ }
 
 // ظظظظ
+ 
