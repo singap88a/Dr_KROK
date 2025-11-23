@@ -15,10 +15,13 @@ export default function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+
   const [language, setLanguage] = useState(() => {
-    const saved = localStorage.getItem("i18nextLng") || localStorage.getItem("language");
-    return saved ? saved.split("-")[0] : "en";
+    const saved =
+      localStorage.getItem("i18nextLng") || localStorage.getItem("language");
+    return saved ? saved.toLowerCase().split("-")[0] : "en";
   });
+
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -30,12 +33,10 @@ export default function Navbar() {
     localStorage.setItem("language", language);
   }, [language, i18n]);
 
-  // Force LTR direction regardless of language
   useEffect(() => {
     document.documentElement.setAttribute("dir", "ltr");
   }, []);
 
-  // Fetch settings from API
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -46,7 +47,6 @@ export default function Navbar() {
         }
       } catch (error) {
         console.error("Failed to fetch settings:", error);
-        // Keep default logo on error
       } finally {
         setSettingsLoading(false);
       }
@@ -60,15 +60,16 @@ export default function Navbar() {
     { code: "ua", name: "UA", flag: "https://flagcdn.com/w20/ua.png" },
   ];
 
-  const currentLang = languages.find((l) => l.code === language);
+  const currentLang =
+    languages.find((l) => l.code === language) || languages[0];
 
   const navItems = [
-    { path: '/', label: 'navbar.home' },
-    { path: '/courses', label: 'navbar.courses' },
-    { path: '/articles', label: 'navbar.blogs' },
-    { path: '/books', label: 'navbar.books' },
-    { path: '/about', label: 'navbar.about' },
-    { path: '/contact', label: 'navbar.contact' },
+    { path: "/", label: "navbar.home" },
+    { path: "/courses", label: "navbar.courses" },
+    { path: "/articles", label: "navbar.blogs" },
+    { path: "/books", label: "navbar.books" },
+    { path: "/about", label: "navbar.about" },
+    { path: "/contact", label: "navbar.contact" },
   ];
 
   const handleLogout = () => {
@@ -78,7 +79,6 @@ export default function Navbar() {
   return (
     <nav className="fixed z-50 w-full border-b shadow-md bg-background border-border">
       <div className="container flex items-center justify-between px-4 py-4 mx-auto md:px-0 max-w-7xl">
-        {/* Logo */}
         <div className="relative group">
           {settingsLoading ? (
             <div className="w-10 h-10 bg-gray-300 rounded animate-pulse sm:h-12 sm:w-12"></div>
@@ -98,34 +98,42 @@ export default function Navbar() {
           </span>
         </div>
 
-        {/* Links (desktop) */}
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
           {navItems.map((item) => (
             <li key={item.path} className="group">
               <Link
                 to={item.path}
-                className={`relative transition hover:text-primary ${location.pathname === item.path ? 'font-bold text-primary' : ''}`}
+                className={`relative transition hover:text-primary ${
+                  location.pathname === item.path
+                    ? "font-bold text-primary"
+                    : ""
+                }`}
               >
                 {t(item.label)}
-                <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${location.pathname === item.path ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                <span
+                  className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                    location.pathname === item.path
+                      ? "w-full"
+                      : "w-0 group-hover:w-full"
+                  }`}
+                ></span>
               </Link>
             </li>
           ))}
         </ul>
-        {/* Icons and Buttons */}
+
         <div className="relative flex items-center space-x-4">
-          {/* Language Toggle */}
           <div className="relative">
             <button
               onClick={() => setLangMenuOpen(!langMenuOpen)}
               className="flex items-center px-3 py-2 text-sm border rounded-lg border-border hover:bg-surface"
             >
               <img
-                src={currentLang.flag}
-                alt={currentLang.name}
+                src={currentLang?.flag || "https://flagcdn.com/w20/gb.png"}
+                alt={currentLang?.name || "EN"}
                 className="w-5 h-5 mr-2 rounded-sm"
               />
-              {currentLang.name}
+              {currentLang?.name || "EN"}
               <FaGlobe className="ml-2" />
             </button>
 
@@ -152,7 +160,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* User Profile or Sign Up Button */}
           {isLoggedIn ? (
             <div className="relative group">
               <Link
@@ -160,14 +167,20 @@ export default function Navbar() {
                 className="flex items-center justify-center w-10 h-10 text-white transition rounded-full bg-primary hover:bg-primary-dark"
               >
                 <img
-                  src={(userData && (userData.imageprofile || userData.avatar)) || "/user.png"}
+                  src={
+                    (userData &&
+                      (userData.imageprofile || userData.avatar)) ||
+                    "/user.png"
+                  }
                   alt="Profile"
                   className="w-full h-full rounded-full"
-                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/user.png"; }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/user.png";
+                  }}
                 />
               </Link>
 
-              {/* Dropdown Menu */}
               <div className="absolute right-0 invisible w-48 mt-2 overflow-hidden transition-all duration-300 border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible bg-background border-border">
                 <div className="px-4 py-3 border-b border-border">
                   <p className="text-sm font-medium text-text">
@@ -181,14 +194,14 @@ export default function Navbar() {
                   to="/profile"
                   className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
                 >
-                  {t('navbar.profile')}
+                  {t("navbar.profile")}
                 </Link>
 
                 <button
                   onClick={handleLogout}
                   className="block w-full px-4 py-2 text-sm text-left transition hover:bg-surface text-text"
                 >
-                  {t('navbar.logout')}
+                  {t("navbar.logout")}
                 </button>
               </div>
             </div>
@@ -197,21 +210,19 @@ export default function Navbar() {
               to="/register"
               className="px-4 py-2 text-white transition rounded-lg bg-primary hover:bg-primary-dark"
             >
-              {t('navbar.signUp')}
+              {t("navbar.signUp")}
             </Link>
           )}
 
-          {/* Dark Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="text-xl transition text-textSecondary hover:text-primary focus:outline-none"
+            className="text-xl transition text-textSecondary hover:text-primary"
           >
             {darkMode ? <FaSun /> : <FaMoon />}
           </button>
 
-          {/* Mobile Menu Toggle */}
           <button
-            className="text-2xl transition md:hidden text-textSecondary hover:text-primary focus:outline-none"
+            className="text-2xl transition md:hidden text-textSecondary hover:text-primary"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? <FaTimes /> : <FaBars />}
@@ -219,12 +230,10 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <>
-          {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden top-20 "
+            className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden top-20"
             onClick={() => setMenuOpen(false)}
           ></div>
           <div className="relative z-50 px-4 py-4 space-y-4 border-t md:hidden bg-background border-border">
@@ -246,7 +255,7 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                   className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
                 >
-                  {t('navbar.profile')}
+                  {t("navbar.profile")}
                 </Link>
                 <button
                   onClick={() => {
@@ -255,7 +264,7 @@ export default function Navbar() {
                   }}
                   className="block w-full px-4 py-2 text-center text-white transition bg-red-600 rounded-lg hover:bg-red-700"
                 >
-                  {t('navbar.logout')}
+                  {t("navbar.logout")}
                 </button>
               </>
             ) : (
@@ -264,7 +273,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
               >
-                {t('navbar.signUp')}
+                {t("navbar.signUp")}
               </Link>
             )}
           </div>
