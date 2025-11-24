@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     // استخدام الـ Vercel URL مباشرة بدون localhost
-    const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
+    const callbackUrl = 'https://dr-krok.com/api/auth/callback';
     
     const googleAuthUrl = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
     
