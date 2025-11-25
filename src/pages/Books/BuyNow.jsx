@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiUser, FiPhone, FiMapPin, FiHome, FiCreditCard, FiRefreshCw } from "react-icons/fi";
 import { FaCcVisa, FaCcMastercard, FaCcPaypal } from "react-icons/fa";
@@ -14,9 +14,19 @@ import he from "he";
 export default function BuyNowPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { request } = useApi();
+  const { request, invalidateCache } = useApi();
   const { userData, isLoggedIn } = useUser();
   const { t } = useTranslation();
+
+  const invalidateOrdersCache = useCallback(() => {
+    if (typeof invalidateCache === "function") {
+      try {
+        invalidateCache(["orders", "profile/get-my-profile"]);
+      } catch (cacheError) {
+        console.warn("Failed to invalidate order caches:", cacheError);
+      }
+    }
+  }, [invalidateCache]);
 
   const book = state?.book;
   // استخرج نوع الكتاب من book.type مباشرة
@@ -124,7 +134,7 @@ export default function BuyNowPage() {
         })
         .finally(() => setTermsLoading(false));
     }
-  }, [showTerms, request]);
+  }, [showTerms, request, t]);
 
   // Fetch paint order data
   const fetchPaintOrderData = async () => {
@@ -194,7 +204,7 @@ export default function BuyNowPage() {
 
 
 
-  const handleDeliveryOrder = async (e) => {
+const handleDeliveryOrder = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -213,6 +223,14 @@ export default function BuyNowPage() {
       return;
     }
 
+    // Validate phone number format (+ optional, digits 1 to 15, no spaces or other characters)
+    const phoneRegex = /^\+?\d{1,15}$/;
+    if (!phoneRegex.test(formData.phone1)) {
+      setError(t('books.invalid_phone_error') || "The phone number is invalid; it must be between 1 and 15 digits only, without spaces or other symbols, and only a + sign is allowed at the beginning.");
+      setLoading(false);
+      return;
+    }
+
     if (!formData.city_id || !formData.city.trim()) {
       setError(t('books.select_city_error'));
       setLoading(false);
@@ -227,14 +245,26 @@ export default function BuyNowPage() {
 
     try {
       // Require authentication to place an order
-      const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+      // Use the token from request context or parse from tokenData instead of relying on 'token' or 'userToken' keys directly
+      let token = null;
+      try {
+        const tokenData = localStorage.getItem("tokenData");
+        if (tokenData) {
+          const parsed = JSON.parse(tokenData);
+          if (parsed.token) {
+            token = parsed.token;
+          }
+        }
+      } catch {
+        token = null;
+      }
+
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
         setTimeout(() => navigate('/Login'), 1200);
         return;
       }
-
       // Prepare form data for multipart/form-data
       const formDataToSend = new FormData();
       // Backend expects client_id as part of the payload
@@ -268,11 +298,13 @@ export default function BuyNowPage() {
           method: 'POST',
           body: formDataToSend,
           auth: true,
-          isFormData: true
+          isFormData: true,
+          invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
         });
 
         console.log('Order response:', response);
 
+        invalidateOrdersCache();
         setSuccess(t('books.order_placed_successfully'));
         // Redirect to order confirmation or profile
         setTimeout(() => {
@@ -314,6 +346,7 @@ export default function BuyNowPage() {
             console.log('No-cors response:', noCorsResponse);
 
             // If no-cors request doesn't throw, assume it succeeded
+            invalidateOrdersCache();
             setSuccess(t('books.order_submitted_success'));
             setTimeout(() => {
               navigate('/profile', { state: { activeTab: 'orders' } });
@@ -321,6 +354,7 @@ export default function BuyNowPage() {
           } catch (noCorsError) {
             console.warn('No-cors fallback also failed:', noCorsError);
             // Return success anyway since the server likely processed the request
+            invalidateOrdersCache();
             setSuccess("Order submitted successfully! Please check your profile for order status.");
             setTimeout(() => {
               navigate('/profile', { state: { activeTab: 'orders' } });
@@ -342,6 +376,7 @@ export default function BuyNowPage() {
       } else if (err.message.includes('opaqueredirect')) {
         errorMessage = "Order may have been processed despite the redirect. Please check your profile for order status.";
         // Don't show this as an error, show as success with warning
+        invalidateOrdersCache();
         setSuccess("Order submitted successfully! Please check your profile for order status.");
         setTimeout(() => {
           navigate('/profile', { state: { activeTab: 'orders' } });
@@ -362,7 +397,20 @@ export default function BuyNowPage() {
 
     try {
       // Require authentication to place an order
-      const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+      // Use the token from request context or parse from tokenData instead of relying on 'token' or 'userToken' keys directly
+      let token = null;
+      try {
+        const tokenData = localStorage.getItem("tokenData");
+        if (tokenData) {
+          const parsed = JSON.parse(tokenData);
+          if (parsed.token) {
+            token = parsed.token;
+          }
+        }
+      } catch {
+        token = null;
+      }
+
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
@@ -389,9 +437,11 @@ export default function BuyNowPage() {
           method: 'POST',
           body: formDataToSend,
           auth: true,
-          isFormData: true
+          isFormData: true,
+          invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
         });
 
+        invalidateOrdersCache();
         setSuccess(t('books.purchase_successful'));
         setTimeout(() => {
           navigate('/profile', { state: { activeTab: 'orders' } });
@@ -427,6 +477,7 @@ export default function BuyNowPage() {
             console.log('No-cors response:', noCorsResponse);
 
             // If no-cors request doesn't throw, assume it succeeded
+            invalidateOrdersCache();
             setSuccess("Purchase completed successfully! Please check your profile for order status.");
             setTimeout(() => {
               navigate('/profile', { state: { activeTab: 'orders' } });
@@ -434,6 +485,7 @@ export default function BuyNowPage() {
           } catch (noCorsError) {
             console.warn('No-cors fallback also failed:', noCorsError);
             // Return success anyway since the server likely processed the request
+            invalidateOrdersCache();
             setSuccess("Purchase completed successfully! Please check your profile for order status.");
             setTimeout(() => {
               navigate('/profile', { state: { activeTab: 'orders' } });
@@ -455,6 +507,7 @@ export default function BuyNowPage() {
       } else if (err.message.includes('opaqueredirect')) {
         errorMessage = "Purchase may have been processed despite the redirect. Please check your profile for order status.";
         // Don't show this as an error, show as success with warning
+        invalidateOrdersCache();
         setSuccess("Purchase completed successfully! Please check your profile for order status.");
         setTimeout(() => {
           navigate('/profile', { state: { activeTab: 'orders' } });

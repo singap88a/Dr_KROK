@@ -263,6 +263,7 @@
  
     "enter_name_error": "Please enter your name.",
     "enter_phone_error": "Please enter your phone number.",
+    "invalid_phone_error": "The phone number is invalid; it must contain 1-15 digits, no spaces or other symbols, and can only include an optional + at the start.",
     "select_city_error": "Please select a city.",
     "select_branch_error": "Please select a branch.",
     "login_required": "You must be logged in to place an order.",
