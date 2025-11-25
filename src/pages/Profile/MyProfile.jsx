@@ -414,7 +414,12 @@ const MyProfile = ({ user, onProfileUpdate }) => {
               src={imagePreview || "/user.png"}
               alt={localUser.name}
               className="object-cover w-full h-full rounded-full shadow-lg bg-primary"
-              onError={(e)=>{ e.currentTarget.onerror=null; e.currentTarget.src='/user.png'; }}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                if (!e.currentTarget.src.includes('/user.png')) {
+                  e.currentTarget.src = '/user.png';
+                }
+              }}
             />
             {isEditing && (
               <>

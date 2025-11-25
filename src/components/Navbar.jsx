@@ -176,7 +176,9 @@ export default function Navbar() {
                   className="w-full h-full rounded-full"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/user.png";
+                    if (!e.currentTarget.src.includes('/user.png')) {
+                      e.currentTarget.src = "/user.png";
+                    }
                   }}
                 />
               </Link>
