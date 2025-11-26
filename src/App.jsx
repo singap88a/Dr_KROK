@@ -34,7 +34,7 @@ import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import { UserProvider } from "./context/UserContext";
 import { ApiProvider } from "./context/ApiContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import WhatsAppIcon from "./components/WhatsAppIcon";
+import TelegramIcon from "./components/TelegramIcon";
 import Instructors from "./pages/Instructors/Instructors";
 import InstructorDetails from "./pages/Instructors/InstructorDetails";
 import LiveCourses from "./pages/Live_courses/LiveCourses";
@@ -97,7 +97,7 @@ export default function App() {
         </Routes>
       </main>
       <AI_Icon />
-      <WhatsAppIcon/>
+      <TelegramIcon/>
       <CTA />
 
         <Footer />
