@@ -1497,43 +1497,7 @@ async getCertificateFile(token, courseId, courseType = 'video') {
   }
 },
 
-// دالة مبسطة للتحقق من وجود الشهادة فقط
-async checkCertificateExists(token, courseId, courseType = 'video') {
-  if (!token) throw new Error("Token is required");
-  if (!courseId) throw new Error("Course id is required");
 
-  try {
-    // أولاً نحاول جلب الشهادة مباشرة
-    const blob = await this.getCertificateFile(token, courseId, courseType);
-    return !!(blob && blob.size > 0);
-  } catch (error) {
-    // إذا كان الخطأ أن الشهادة غير موجودة، نرجع false
-    if (error.message === 'CERTIFICATE_NOT_FOUND') {
-      return false;
-    }
-    
-    // لأي خطأ آخر، نحاول التحقق عبر API آخر
-    try {
-      const url = buildUrl(`check_certificate?course_id=${courseId}&type=${courseType}`);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Accept": "application/json"
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return !!(data && data.exists);
-      }
-      return false;
-    } catch (secondError) {
-      console.error('Secondary certificate check failed:', secondError);
-      return false;
-    }
-  }
-},
 
 // دالة للتحقق من وجود الشهادة فقط (بدون تحميلها)
 async checkCertificateExists(token, courseId, courseType = 'video') {
