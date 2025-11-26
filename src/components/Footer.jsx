@@ -3,6 +3,7 @@ import { FaFacebook, FaTwitter, FaLinkedin, FaYoutube, FaFacebookF, FaInstagram,
 import { useTranslation, Trans } from "react-i18next";
 import { useApi } from "../context/ApiContext";
 import he from 'he';
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   const { t, i18n } = useTranslation();
@@ -56,7 +57,9 @@ export default function Footer() {
         {/* Logo & Description */}
         <div>
           <div className="relative mb-4 group">
-            <img
+            <Link to="/">
+            
+                        <img
               src={logoUrl}
               alt="Dr KROK Logo"
               className="h-16 cursor-pointer"
@@ -65,9 +68,13 @@ export default function Footer() {
                 e.currentTarget.src = "/logo.png";
               }}
             />
-            <span className="w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
+            
+            
+            </Link>
+
+            {/* <span className="w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
               Dr KROK
-            </span>
+            </span> */}
           </div>
 
           {footerDescription ? (

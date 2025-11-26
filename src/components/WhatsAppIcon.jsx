@@ -1,53 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { FaWhatsapp } from "react-icons/fa";
-import { useApi } from "../context/ApiContext";
+import React from "react";
+import { FaTelegramPlane } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
-export default function WhatsAppIcon() {
-  const { request } = useApi();
+export default function TelegramIcon() {
   const { t } = useTranslation();
-  const [contactInfo, setContactInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchContactInfo = async () => {
-      try {
-        setLoading(true);
-        const response = await request("contact");
-        if (response.data && response.data.length > 0) {
-          setContactInfo(response.data[0]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch contact info:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // حط لينك التليجرام هنا
+  const telegramUrl = "https://t.me/YOUR_TELEGRAM_USERNAME";
 
-    fetchContactInfo();
-  }, [request]);
-
-  const openWhatsApp = () => {
-    if (contactInfo?.whatsapp) {
-      const phoneNumber = contactInfo.whatsapp.replace(/\D/g, ''); // Remove non-digits
-      const message = encodeURIComponent("Hello! I need support from Dr. KROK platform.");
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
-      window.open(whatsappUrl, '_blank');
-    }
+  const openTelegram = () => {
+    window.open(telegramUrl, "_blank");
   };
-
-  if (loading || !contactInfo?.whatsapp) {
-    return null;
-  }
 
   return (
     <div className="fixed z-50 cursor-pointer bottom-6 right-6 group">
       <div
-        onClick={openWhatsApp}
-        className="p-3 transition-all bg-green-500 rounded-full shadow-lg hover:shadow-xl hover:scale-110"
+        onClick={openTelegram}
+        className="p-3 transition-all bg-blue-500 rounded-full shadow-lg hover:shadow-xl hover:scale-110"
         title={t("common.support", "Support")}
       >
-        <FaWhatsapp className="w-8 h-8 text-white" />
+        <FaTelegramPlane className="w-8 h-8 text-white" />
       </div>
 
       {/* Tooltip */}

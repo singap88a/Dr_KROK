@@ -199,26 +199,17 @@ const SectionItem = ({
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h4
-                    className={`font-semibold text-base tracking-wide ${
-                      isActive ? "text-primary" : "text-text"
-                    }`}
-                  >
-                    {section.title
-                      .split(" ")
-                      .slice(0, 4)
-                      .join(" ")}
-                    {section.title.split(" ").length > 4 && "..."}
-                  </h4>
-
-                  {hasPremiumLessons && (
-                    <FaLock
-                      className="ml-2 text-sm text-text-muted"
-                      title="Premium"
-                    />
-                  )}
-                </div>
+                <h4
+                  className={`font-semibold text-base tracking-wide ${
+                    isActive ? "text-primary" : "text-text"
+                  }`}
+                >
+                  {section.title
+                    .split(" ")
+                    .slice(0, 4)
+                    .join(" ")}
+                  {section.title.split(" ").length > 4 && "..."}
+                </h4>
 
                 <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
                   <span>
@@ -232,6 +223,12 @@ const SectionItem = ({
                       ? t("courses.hasFree", "Has Free")
                       : t("courses.premium", "Premium")}
                   </span>
+                  {hasPremiumLessons && (
+                    <FaLock
+                      className="text-sm text-text-muted"
+                      title="Premium"
+                    />
+                  )}
                 </div>
 
                 {isLoggedIn && section.lessons && section.lessons.length > 0 && (

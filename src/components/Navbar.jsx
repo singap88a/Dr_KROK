@@ -83,7 +83,8 @@ export default function Navbar() {
           {settingsLoading ? (
             <div className="w-10 h-10 bg-gray-300 rounded animate-pulse sm:h-12 sm:w-12"></div>
           ) : (
-            <img
+            <Link to="/">
+                        <img
               src={logoUrl}
               alt="Dr KROK Logo"
               className="h-10 cursor-pointer sm:h-12"
@@ -92,10 +93,12 @@ export default function Navbar() {
                 e.currentTarget.src = "/logo.png";
               }}
             />
+            </Link>
+
           )}
-          <span className="absolute w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
+          {/* <span className="absolute w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
             Dr KROK
-          </span>
+          </span> */}
         </div>
 
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
