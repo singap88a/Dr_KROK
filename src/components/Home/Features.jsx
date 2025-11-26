@@ -142,11 +142,11 @@ export default function Features({ features }) {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 mt-6">
-                    <Link to="/about">
+                    {/* <Link to="/about">
                       <button className="px-4 py-2 text-sm transition border rounded-full border-border bg-primary/5 text-primary hover:bg-primary hover:text-white">
                         {t('features.learnMore')}
                       </button>
-                    </Link>
+                    </Link> */}
                   </div>
                 </article>
               </SwiperSlide>

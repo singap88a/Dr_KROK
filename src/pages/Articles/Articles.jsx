@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaFacebook, FaInstagram, FaYoutube, FaStar } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaYoutube, FaStar, FaUser } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -144,11 +145,14 @@ export default function TrainerArticlesPage() {
                     className="object-cover w-12 h-12 border-2 border-white rounded-full shadow-sm"
                     onError={handleImageError}
                   />
-                  <div className="flex-1 text-left">
-                    <div className="font-semibold leading-tight">{tr.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-300">
-                      {tr.blogs.length} {t('articles.articleCount', { count: tr.blogs.length })}
+                  <div className="flex items-start justify-between flex-1">
+                    <div>
+                      <div className="font-semibold leading-tight">{tr.name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-300">
+                        {tr.blogs.length} {t('articles.articleCount', { count: tr.blogs.length })}
+                      </div>
                     </div>
+ 
                   </div>
                 </button>
               ))}
@@ -262,6 +266,14 @@ export default function TrainerArticlesPage() {
                   <FaStar className="text-yellow-500" />
                   <span>{t('articles.instructorCard')}</span>
                 </div>
+
+                <Link
+                  to={`/instructors/${selectedInstructor.id}`}
+                  className="inline-flex items-center justify-center w-full gap-2 px-4 py-2 mt-4 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
+                >
+                  <FaUser />
+                  View Profile
+                </Link>
               </div>
             ) : (
               <div className="sticky p-6 text-sm text-gray-600 bg-white border border-gray-100 shadow-lg dark:bg-gray-800 rounded-2xl dark:border-gray-700 top-6">

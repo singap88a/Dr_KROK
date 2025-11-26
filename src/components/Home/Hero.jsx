@@ -133,9 +133,12 @@ export default function Hero() {
                     {t('hero.expert.title')}
                   </p>
                 </div>
-                <button className="px-3 py-1 ml-3 text-sm text-white rounded-full bg-primary hover:brightness-110">
+                <Link to="/contact">
+                                <button className="px-3 py-1 ml-3 text-sm text-white rounded-full bg-primary hover:brightness-110">
                   {t('hero.expert.message')}
                 </button>
+                </Link>
+
               </div>
             </div>
           </div>

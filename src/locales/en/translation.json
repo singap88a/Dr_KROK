@@ -141,7 +141,7 @@
       "startTest": "Start Level Tests Now"
     },
     "expert": {
-      "name": "Alex Albert",
+      "name": "Dr KROK",
       "title": "Medical Expert",
       "message": "Message"
     }
@@ -561,7 +561,8 @@
       "images": "Images",
       "previous": "Previous",
       "next": "Next Question",
-      "finish": "Finish Test"
+      "finish": "Finish Test",
+      "dragMe": "Drag me"
     },
     "results": {
       "title": "Test Results",
@@ -599,6 +600,8 @@
     "allArticles": "All Articles",
     "byInstructor": "Articles by {{name}}",
     "count": "Articles",
+    "articleCount_one": "  Article",
+    "articleCount_other": "  Articles",
     "showMore": "Show more",
     "showLess": "Show less",
     "readMore": "Read More",
