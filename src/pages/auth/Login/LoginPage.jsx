@@ -58,9 +58,9 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     // استخدام الـ Vercel URL مباشرة بدون localhost
-    const callbackUrl = 'https://dr-krok.com/api/auth/callback';
+    const callbackUrl = 'https://admin.dr-krok.com/api/auth/callback';
     
-    const googleAuthUrl = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
+    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
     
     console.log("Redirecting to Google OAuth:", googleAuthUrl);
     window.location.href = googleAuthUrl;
@@ -156,7 +156,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.com/api/auth/apple'}
+                onClick={() => window.location.href = 'https://admin.dr-krok.com/api/auth/apple'}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <AppleIcon className="w-5 h-5 mr-3" />

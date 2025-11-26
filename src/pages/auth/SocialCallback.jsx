@@ -29,7 +29,7 @@ const SocialCallback = () => {
           // Fetch user data using the token
           try {
             const userResponse = await axios.get(
-              "https://dr-krok.com/api/auth/me",
+              "https://admin.dr-krok.com/api/auth/me",
               {
                 headers: {
                   Authorization: `Bearer ${token}`,

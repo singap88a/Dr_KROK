@@ -107,7 +107,7 @@ export default function RegisterPage() {
     // استخدام الـ Vercel URL مباشرة للتسجيل بجوجل
     const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
     
-    const googleAuthUrl = `https://dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
     
     console.log("Redirecting to Google OAuth for registration:", googleAuthUrl);
     window.location.href = googleAuthUrl;
@@ -256,7 +256,7 @@ export default function RegisterPage() {
 
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://dr-krok.com/api/auth/apple?register=true'}
+                onClick={() => window.location.href = 'https://admin.dr-krok.com/api/auth/apple?register=true'}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <AppleIcon className="w-5 h-5 mr-3" />

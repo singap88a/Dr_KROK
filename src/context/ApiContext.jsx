@@ -106,7 +106,7 @@ export const useApi = () => {
   return ctx;
 };
 
-export const ApiProvider = ({ children, baseUrl = "https://dr-krok.com/api" }) => {
+export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api" }) => {
   const getAuthToken = useCallback(() => {
     const tokenData = localStorage.getItem("tokenData");
     if (tokenData) {
