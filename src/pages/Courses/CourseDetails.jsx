@@ -260,7 +260,7 @@ export default function CourseDetails() {
           <div className="flex items-center gap-3">
             {/* السعر بعد الخصم */}
             <span className="text-xl font-bold text-primary sm:text-2xl">
-              ${course.discount && Number(course.discount) > 0
+              ₴{course.discount && Number(course.discount) > 0
                 ? (Number(course.price) - Number(course.discount)).toFixed(2)
                 : Number(course.price).toFixed(2)}
             </span>
@@ -268,7 +268,7 @@ export default function CourseDetails() {
             {course.discount && Number(course.discount) > 0 && (
               <>
                 <span className="text-base line-through text-text-muted sm:text-lg">
-                  ${Number(course.price).toFixed(2)}
+                  ₴{Number(course.price).toFixed(2)}
                 </span>
                 {/* نسبة الخصم */}
                 <span className="px-2 py-1 text-xs font-semibold text-white bg-red-600 rounded">

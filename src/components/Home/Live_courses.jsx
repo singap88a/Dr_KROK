@@ -283,11 +283,11 @@ export default function Live_courses({ courses }) {
                       <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
                         <div className="flex items-center gap-2">
                           <span className="text-xl font-bold text-primary">
-                            ${finalPrice}
+                            ₴{finalPrice}
                           </span>
                           {hasDiscount && (
                             <span className="text-sm text-gray-400 line-through">
-                              ${course.price.toFixed(2)}
+                              ₴{course.price.toFixed(2)}
                             </span>
                           )}
                         </div>

@@ -861,7 +861,7 @@ const handleSectionClick = (section) => {
               <div className="text-right">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
-                    $
+                    ₴
                     {(
                       Number(course.discount) > 0
                         ? Number(course.price) - Number(course.discount)
@@ -871,7 +871,7 @@ const handleSectionClick = (section) => {
                   {Number(course.discount) > 0 && (
                     <>
                       <span className="text-lg line-through text-text-muted">
-                        ${Number(course.price).toFixed(2)}
+                        ₴{Number(course.price).toFixed(2)}
                       </span>
                       <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
                         {Math.round((Number(course.discount) / Number(course.price)) * 100)}%

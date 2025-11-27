@@ -173,10 +173,10 @@ export default function Books() {
                   <div className="mb-4">
                     {oldPrice && (
                       <span className="mr-2 text-gray-400 line-through">
-                        ${oldPrice}
+                        ₴{oldPrice}
                       </span>
                     )}
-                    <span className="font-semibold text-primary">${discountedPrice}</span>
+                    <span className="font-semibold text-primary">₴{discountedPrice}</span>
                   </div>
 
                   {/* Button */}

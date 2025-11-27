@@ -198,9 +198,9 @@ export default function CoursesPreview({ courses }) {
                             <span>{course.rating.toFixed(1)}</span>
                           </div>
                           <div className="flex items-center">
-                            <span className="text-xl font-bold text-primary">${finalPrice}</span>
+                            <span className="text-xl font-bold text-primary">₴{finalPrice}</span>
                             {hasDiscount && (
-                              <span className="ml-2 text-sm text-gray-400 line-through">${course.price.toFixed(2)}</span>
+                              <span className="ml-2 text-sm text-gray-400 line-through">₴{course.price.toFixed(2)}</span>
                             )}
                           </div>
                         </div>

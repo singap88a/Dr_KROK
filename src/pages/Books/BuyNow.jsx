@@ -608,11 +608,11 @@ const handleDeliveryOrder = async (e) => {
                   <div className="flex items-center gap-2">
                     {discountAmount > 0 && (
                       <span className="text-sm text-gray-400 line-through">
-                        ${priceNumber.toFixed(2)}
+                        ₴{priceNumber.toFixed(2)}
                       </span>
                     )}
                     <span className="text-lg font-semibold text-primary">
-                      ${finalPrice.toFixed(2)}
+                      ₴{finalPrice.toFixed(2)}
                     </span>
                   </div>
                   <div className="text-xs text-text-secondary">
@@ -699,17 +699,17 @@ const handleDeliveryOrder = async (e) => {
             <div className="p-4 mt-6 border rounded-lg bg-background/60 border-border">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-text-secondary">{book.name}</div>
-                <div className="font-semibold">${finalPrice.toFixed(2)}</div>
+                <div className="font-semibold">₴{finalPrice.toFixed(2)}</div>
               </div>
               {couponDiscount > 0 && (
                 <>
                   <div className="flex items-center justify-between mt-2 text-sm text-green-600">
                     <div>{t('books.coupon.discount_label', { percent: couponDiscount }) || `Coupon Discount (${couponDiscount}%)`}</div>
-                    <div>-${couponDiscountAmount.toFixed(2)}</div>
+                    <div>-₴{couponDiscountAmount.toFixed(2)}</div>
                   </div>
                   <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
                     <div>{t('books.original_total') || 'Original Total'}</div>
-                    <div className="line-through">${finalPrice.toFixed(2)}</div>
+                    <div className="line-through">₴{finalPrice.toFixed(2)}</div>
                   </div>
                 </>
               )}
@@ -721,7 +721,7 @@ const handleDeliveryOrder = async (e) => {
               )}
               <div className="flex items-center justify-between mt-4 text-lg font-semibold">
                 <div>{t('books.total')}</div>
-                <div className={couponDiscount > 0 ? "text-green-600" : ""}>${discountedPrice.toFixed(2)}</div>
+                <div className={couponDiscount > 0 ? "text-green-600" : ""}>₴{discountedPrice.toFixed(2)}</div>
               </div>
             </div>
 

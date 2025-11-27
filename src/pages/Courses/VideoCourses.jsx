@@ -55,9 +55,9 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
                   <span className="text-xs text-gray-500">({course.rating.toFixed(1)})</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-xl font-bold text-primary">${(course.price - course.discount).toFixed(2)}</span>
+                  <span className="text-xl font-bold text-primary">₴{(course.price - course.discount).toFixed(2)}</span>
                   {course.discount > 0 && (
-                    <span className="ml-2 text-sm text-gray-400 line-through">${course.price.toFixed(2)}</span>
+                    <span className="ml-2 text-sm text-gray-400 line-through">₴{course.price.toFixed(2)}</span>
                   )}
                 </div>
               </div>

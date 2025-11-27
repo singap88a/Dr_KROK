@@ -204,11 +204,11 @@ export default function BookDetails() {
             <div className="flex items-center gap-3 mt-6">
               {book.discount > 0 && (
                 <span className="text-lg text-gray-400 line-through">
-                  ${parseFloat(book.price).toFixed(2)}
+                  ₴{parseFloat(book.price).toFixed(2)}
                 </span>
               )}
               <span className="text-2xl font-semibold text-primary">
-                ${book.discount > 0
+                ₴{book.discount > 0
                   ? (parseFloat(book.price) - (parseFloat(book.price) * parseFloat(book.discount) / 100)).toFixed(2)
                   : parseFloat(book.price).toFixed(2)
                 }

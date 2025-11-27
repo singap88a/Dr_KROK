@@ -474,7 +474,7 @@ export default function CourseSubscription() {
                   {/* Original price */}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-text-secondary">{t('courses.coursePrice', 'Course Price')}</span>
-                    <span className="text-lg font-semibold">${priceNumber.toFixed(2)}</span>
+                    <span className="text-lg font-semibold">₴{priceNumber.toFixed(2)}</span>
                   </div>
 
                   {/* Platform discount as amount with percent badge */}
@@ -484,21 +484,21 @@ export default function CourseSubscription() {
                         {t('courses.discount', 'Discount')}
                         <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded">{discountPercent.toFixed(2)}%</span>
                       </span>
-                      <span className="text-green-600">-${discountAmount.toFixed(2)}</span>
+                      <span className="text-green-600">-₴{discountAmount.toFixed(2)}</span>
                     </div>
                   )}
 
                   {/* Subtotal after platform discount */}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-text-secondary">{t('courses.subtotal', 'Subtotal')}</span>
-                    <span className="font-semibold">${subtotalAfterDiscount.toFixed(2)}</span>
+                    <span className="font-semibold">₴{subtotalAfterDiscount.toFixed(2)}</span>
                   </div>
 
                   {/* Coupon discount */}
                   {couponDiscount > 0 && (
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-text-secondary">{t('courses.couponDiscount', 'Coupon Discount')}</span>
-                      <span className="text-green-600">-${couponDiscountAmount.toFixed(2)}</span>
+                      <span className="text-green-600">-₴{couponDiscountAmount.toFixed(2)}</span>
                     </div>
                   )}
 
@@ -506,7 +506,7 @@ export default function CourseSubscription() {
                   <div className="flex items-center justify-between pt-2 border-t border-border">
                     <span className="text-lg font-bold text-text">{t('courses.total', 'Total')}</span>
                     <span className={`text-2xl font-bold ${couponDiscount > 0 ? 'text-green-600' : 'text-primary'}`}>
-                      ${discountedPrice.toFixed(2)}
+                      ₴{discountedPrice.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -612,8 +612,8 @@ export default function CourseSubscription() {
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <FaShoppingCart />
-                      {useInstallment ? 
-                        `Pay $${installmentAmount} Installment` : 
+                      {useInstallment ?
+                        `Pay ₴${installmentAmount} Installment` :
                         t('courses.subscribeNow', 'Subscribe Now')
                       }
                     </div>
@@ -641,7 +641,7 @@ export default function CourseSubscription() {
                       <div className="flex items-center gap-2">
                         <FaCheck className="text-green-600" />
                         <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                          Paying in installments: ${installmentAmount}
+                          Paying in installments: ₴{installmentAmount}
                         </span>
                       </div>
                       <button
@@ -652,7 +652,7 @@ export default function CourseSubscription() {
                       </button>
                     </div>
                     <p className="mt-1 text-xs text-green-600 dark:text-green-300">
-                      Remaining balance: ${(discountedPrice - installmentAmount).toFixed(2)}
+                      Remaining balance: ₴{(discountedPrice - installmentAmount).toFixed(2)}
                     </p>
                   </div>
                 )}
@@ -712,7 +712,7 @@ export default function CourseSubscription() {
                 {t('installments.installmentModal.amountLabel', 'Installment Amount')}
               </label>
               <div className="relative">
-                <span className="absolute transform -translate-y-1/2 left-3 top-1/2 text-text-muted dark:text-gray-400">$</span>
+                <span className="absolute transform -translate-y-1/2 left-3 top-1/2 text-text-muted dark:text-gray-400">₴</span>
                 <input
                   type="number"
                   value={installmentAmount}

@@ -186,11 +186,11 @@ function BooksCarousel() {
                     <div className="flex items-center justify-between mt-4">
                       <div>
                         <span className="text-lg font-bold text-primary">
-                          ${discountedPrice}
+                          ₴{discountedPrice}
                         </span>
                         {oldPrice && (
                           <span className="ml-2 text-sm text-gray-400 line-through">
-                            ${oldPrice}
+                            ₴{oldPrice}
                           </span>
                         )}
                       </div>
