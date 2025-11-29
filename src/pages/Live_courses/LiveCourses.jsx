@@ -1,7 +1,7 @@
 import React from "react";
 import { FiHeart, FiCalendar, FiClock, FiUsers } from "react-icons/fi";
 
-export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, goToDetails, t }) {
+export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, goToDetails, t, isLoggedIn, navigate }) {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -138,11 +138,15 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (!isLoggedIn) {
+                      navigate("/login");
+                      return;
+                    }
                     onToggleFavorite(course.id, "live_course");
                   }}
                   className="p-2 transition-all duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FiHeart className={`text-lg ${favoriteIds.includes(course.id) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+                  <FiHeart className={`text-lg ${favoriteIds.includes(`live_course_${course.id}`) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
                 </button>
                 <button className="px-3 py-2 text-sm font-medium text-white rounded-lg bg-primary hover:shadow-md hover:brightness-110">
                   {new Date(course.started_at) > new Date() ? t("liveCourses.joinLive", "Join Live") : t("liveCourses.viewDetails", "View Details")}

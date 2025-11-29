@@ -112,10 +112,10 @@ export default function Courses() {
         if (!mounted) return;
         const videoFavs = (res.data || [])
           .filter((f) => f.type === "video_course")
-          .map((f) => f.table_id);
+          .map((f) => `video_course_${f.table_id}`);
         const liveFavs = (res.data || [])
           .filter((f) => f.type === "live_course")
-          .map((f) => f.table_id);
+          .map((f) => `live_course_${f.table_id}`);
         setFavoriteIds([...videoFavs, ...liveFavs]);
       })
       .catch(() => {});
@@ -127,15 +127,23 @@ export default function Courses() {
   const onToggleFavorite = async (courseId, courseType) => {
     if (!isLoggedIn) {
       toast.info(t("auth.login_required", "Please login to use favorites"));
+      navigate("/login");
       return;
     }
     try {
-      const type = courseType === "video" ? "video_course" : "live_course";
+      // Handle both old format ("video"/"live") and new format ("video_course"/"live_course")
+      let type;
+      if (courseType === "video_course" || courseType === "live_course") {
+        type = courseType;
+      } else {
+        type = courseType === "video" ? "video_course" : "live_course";
+      }
       const res = await toggleFavorite(courseId, type);
+      const favoriteKey = `${type}_${courseId}`;
       setFavoriteIds((prev) =>
         res.message === "Added to favorites"
-          ? [...new Set([...prev, courseId])]
-          : prev.filter((id) => id !== courseId)
+          ? [...new Set([...prev, favoriteKey])]
+          : prev.filter((key) => key !== favoriteKey)
       );
       toast.success(res.message);
     } catch {
@@ -280,6 +288,8 @@ export default function Courses() {
                   onToggleFavorite={onToggleFavorite}
                   goToDetails={goToDetails}
                   t={t}
+                  isLoggedIn={isLoggedIn}
+                  navigate={navigate}
                 />
               ) : (
                 <LiveCourses
@@ -288,6 +298,8 @@ export default function Courses() {
                   onToggleFavorite={onToggleFavorite}
                   goToDetails={goToDetails}
                   t={t}
+                  isLoggedIn={isLoggedIn}
+                  navigate={navigate}
                 />
               )}
             </>

@@ -6,7 +6,7 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
@@ -15,6 +15,7 @@ import LoadingSpinner from "../LoadingSpinner";
 
 export default function Live_courses({ courses }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { getLiveCourses, getFavorites, toggleFavorite } = useApi();
   const { isLoggedIn } = useUser();
   const [loading, setLoading] = useState(false);
@@ -57,7 +58,7 @@ export default function Live_courses({ courses }) {
         if (!mounted) return;
         const favs = (res.data || [])
           .filter((f) => f.type === "live_course")
-          .map((f) => f.table_id);
+          .map((f) => `live_course_${f.table_id}`);
         setFavoriteIds(favs);
       })
       .catch(() => {});
@@ -69,14 +70,16 @@ export default function Live_courses({ courses }) {
   const onToggleFavorite = async (courseId) => {
     if (!isLoggedIn) {
       toast.info(t("auth.login_required", "Please login to use favorites"));
+      navigate("/login");
       return;
     }
     try {
       const res = await toggleFavorite(courseId, "live_course");
+      const favoriteKey = `live_course_${courseId}`;
       setFavoriteIds((prev) =>
         res.message === "Added to favorites"
-          ? [...new Set([...prev, courseId])]
-          : prev.filter((id) => id !== courseId)
+          ? [...new Set([...prev, favoriteKey])]
+          : prev.filter((key) => key !== favoriteKey)
       );
       toast.success(res.message);
     } catch {
@@ -222,7 +225,7 @@ export default function Live_courses({ courses }) {
                       }}
                       className="absolute z-20 p-2 transition-all duration-300 bg-white rounded-full shadow-lg top-2 right-4 hover:bg-white/90"
                     >
-                      <FiHeart className={`text-lg ${favoriteIds.includes(course.id) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+                      <FiHeart className={`text-lg ${favoriteIds.includes(`live_course_${course.id}`) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
                     </button>
                       {/* Time Status Badge - Bottom */}
                       <div className="absolute z-10 bottom-4 left-4">
