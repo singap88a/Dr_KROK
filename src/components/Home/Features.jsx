@@ -9,13 +9,14 @@ import {
 } from "react-icons/fi";
 import "swiper/css";
 import "swiper/css/pagination";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 
 export default function Features({ features }) {
   const { t, i18n } = useTranslation();
   const { getSettings } = useApi();
+  const navigate = useNavigate();
 
   const [isDark, ] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -87,6 +88,25 @@ export default function Features({ features }) {
 
   const list = features && features.length ? features : defaultFeatures;
 
+  const handleFeatureClick = (itemId) => {
+    switch (itemId) {
+      case 1: // Video Courses
+        navigate("/courses");
+        break;
+      case 2: // Live Courses
+        navigate("/live_courses");
+        break;
+      case 3: // Books
+        navigate("/books");
+        break;
+      case 4: // Quizzes
+        navigate("/test");
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="px-4">
@@ -119,7 +139,10 @@ export default function Features({ features }) {
           >
             {list.map((item) => (
               <SwiperSlide key={item.id}>
-                <article className="flex flex-col justify-between h-full min-h-[24px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1">
+                <article 
+                  onClick={() => handleFeatureClick(item.id)}
+                  className="flex flex-col justify-between h-full min-h-[24px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                >
                   <div className="flex items-start gap-4">
                     <div className="flex items-center justify-center p-4 transition-transform duration-200 rounded-xl bg-accent text-primary group-hover:scale-105">
                       {item.icon ?? <FiCheckCircle size={24} />}
