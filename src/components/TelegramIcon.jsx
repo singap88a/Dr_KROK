@@ -1,15 +1,31 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaTelegramPlane } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import { useApi } from "../context/ApiContext";
 
 export default function TelegramIcon() {
   const { t } = useTranslation();
+  const { request } = useApi();
+  const [telegramUrl, setTelegramUrl] = useState("");
 
-  // حط لينك التليجرام هنا
-  const telegramUrl = "https://t.me/YOUR_TELEGRAM_USERNAME";
+  useEffect(() => {
+    const fetchContact = async () => {
+      try {
+        const response = await request("contact");
+        if (response.data && response.data.length > 0) {
+          setTelegramUrl(response.data[0].telegram);
+        }
+      } catch (error) {
+        console.error("Failed to fetch contact:", error);
+      }
+    };
+    fetchContact();
+  }, [request]);
 
   const openTelegram = () => {
-    window.open(telegramUrl, "_blank");
+    if (telegramUrl) {
+      window.open(telegramUrl, "_blank");
+    }
   };
 
   return (

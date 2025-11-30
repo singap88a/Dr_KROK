@@ -20,7 +20,9 @@ import { PDFPopup } from "./ContentModals/PDFPopup";
 import { VideoPopup } from "./ContentModals/VideoPopup";
 import { VideoPlayer } from "./LessonPlayer/VideoPlayer";
 import { LessonAttachments } from "./LessonPlayer/LessonAttachments";
+
 import { CertificateSection } from "./CertificateSection/CertificateSection";
+import PurchaseModal from "../Courses/Popups/PurchaseModal";
 
 // Icons
 import {
@@ -53,6 +55,7 @@ import {
   FaTimes,
   FaList,
   FaHourglassHalf,
+  FaBars,
 } from "react-icons/fa";
 
 export default function LiveCourseLessons() {
@@ -69,7 +72,7 @@ export default function LiveCourseLessons() {
     getLiveLessonProgress,
     getLiveCourseProgressDetails,
   } = useApi();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user } = useUser(); // 🔥 إضافة user من context
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -91,6 +94,7 @@ export default function LiveCourseLessons() {
   const [courseProgress, setCourseProgress] = useState(null);
   const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 🔥 حالة القائمة الجانبية
 
   // Quiz States
   const [quizModal, setQuizModal] = useState({
@@ -116,6 +120,45 @@ export default function LiveCourseLessons() {
 
   // Progress Hooks
   const { calculateTotalProgress, calculateSectionProgress: calcSectionProgress } = useLessonProgress();
+
+  // 🔥 دالة حفظ آخر درس في localStorage
+  const saveLastLesson = useCallback((courseId, lessonId) => {
+    if (courseId && lessonId) {
+      const storageKey = `last_live_lesson_${courseId}`;
+      localStorage.setItem(storageKey, lessonId.toString());
+      console.log(`💾 Saved last live lesson: ${lessonId} for course: ${courseId}`);
+    }
+  }, []);
+
+  // 🔥 دالة جلب آخر درس من localStorage
+  const getLastLesson = useCallback((courseId) => {
+    if (!courseId) return null;
+    
+    const storageKey = `last_live_lesson_${courseId}`;
+    const lastLesson = localStorage.getItem(storageKey);
+    console.log(`📖 Retrieved last live lesson: ${lastLesson} for course: ${courseId}`);
+    return lastLesson;
+  }, []);
+
+  // 🔥 دالة لفتح/غلق القائمة الجانبية
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // إغلاق القائمة الجانبية تلقائياً على الشاشات الصغيرة عند النقر على درس
+  const handleLessonClickWithClose = (lesson) => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+    handleLessonClick(lesson);
+  };
+
+  const handleSectionClickWithClose = (section) => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+    handleSectionClick(section);
+  };
 
   // Helper Functions
   const getPeriodicQuizzes = () => {
@@ -370,14 +413,64 @@ export default function LiveCourseLessons() {
         setLessons(courseData.lessons || []);
         setSections(courseData.sections || []);
 
-        // Expand all sections to show all lessons including locked ones
-        const allSectionIds = new Set();
-        if (courseData.sections) {
-          courseData.sections.forEach((section) => {
-            allSectionIds.add(section.id);
-          });
+        // 🔥 التعديل: كل السيكشنز مقفولة في البداية
+        setExpandedSections(new Set());
+        console.log("🔒 All sections locked by default");
+
+        // 🔥 التعديل: جلب آخر درس من localStorage
+        const lastLessonId = getLastLesson(id);
+        let targetLesson = null;
+        let targetSection = null;
+
+        // 🔥 البحث عن الدرس الأخير
+        if (lastLessonId && courseData.sections) {
+          // البحث عن الدرس الأخير في كل السيكشنز
+          for (const section of courseData.sections) {
+            if (section.lessons) {
+              const foundLesson = section.lessons.find(lesson => lesson.id.toString() === lastLessonId);
+              if (foundLesson) {
+                targetLesson = foundLesson;
+                targetSection = section;
+                // 🔥 فتح السيكشن اللي فيه الدرس الأخير فقط
+                setExpandedSections(prev => new Set(prev).add(section.id));
+                console.log(`🎯 Found last lesson: ${foundLesson.title} in section: ${section.title}`);
+                break;
+              }
+            }
+          }
         }
-        setExpandedSections(allSectionIds);
+
+        // إذا مفيش آخر درس محفوظ أو المستخدم غير مسجل دخوله، نفتح أول سيكشن فيه دروس مجانية
+        if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
+          const firstSectionWithFree = courseData.sections.find(section => 
+            section.lessons && section.lessons.some(lesson => 
+              lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
+            )
+          );
+          
+          if (firstSectionWithFree) {
+            setExpandedSections(prev => new Set(prev).add(firstSectionWithFree.id));
+            const firstFreeLesson = firstSectionWithFree.lessons.find(lesson => 
+              lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
+            );
+            if (firstFreeLesson) {
+              targetLesson = firstFreeLesson;
+              targetSection = firstSectionWithFree;
+              console.log(`📘 Using first free lesson for new user: ${firstFreeLesson.title}`);
+            }
+          }
+        }
+
+        // إذا مفيش دروس مجانية، نستخدم أول درس في أول سيكشن
+        if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
+          const firstSection = courseData.sections[0];
+          if (firstSection.lessons && firstSection.lessons.length > 0) {
+            targetLesson = firstSection.lessons[0];
+            targetSection = firstSection;
+            setExpandedSections(prev => new Set(prev).add(firstSection.id));
+            console.log(`📘 Using first lesson in first section: ${targetLesson.title}`);
+          }
+        }
 
         if (courseData?.lessons?.length) {
           const initialStatuses = {};
@@ -445,83 +538,33 @@ export default function LiveCourseLessons() {
           setHasAccess(false);
         }
 
-        if (courseData.sections && courseData.sections.length > 0) {
-          let firstFreeContent = null;
-          for (const section of courseData.sections) {
-            if (section.lessons && section.lessons.length > 0) {
-              const firstFreeLesson = section.lessons.find(
-                (lesson) => lesson.type === "free" || lesson.type === "Free"
-              );
-              if (firstFreeLesson) {
-                firstFreeContent = { type: "lesson", data: firstFreeLesson };
-                break;
+        // 🔥 التعديل: تحديد الدرس الحالي بناءً على الأخير (للمستخدم المسجل فقط)
+        if (targetLesson) {
+          setCurrentLesson(targetLesson);
+          if (isLoggedIn) {
+            try {
+              const res = await startLiveLessonProgress(id, targetLesson.id);
+              if (res?.course_progress) setCourseProgress(res.course_progress);
+              if (res?.lesson) {
+                setLessonStatuses((prev) => ({
+                  ...prev,
+                  [targetLesson.id]: {
+                    ...prev[targetLesson.id],
+                    ...res.lesson,
+                  },
+                }));
               }
+            } catch {
+              /* noop */
             }
           }
-
-          if (!firstFreeContent) {
-            const firstSectionWithFree = courseData.sections.find(
-              (section) =>
-                section.lessons &&
-                section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free")
-            );
-            if (firstSectionWithFree) {
-              firstFreeContent = { type: "section", data: firstSectionWithFree };
-            }
-          }
-
-          if (!firstFreeContent && courseData.sections[0]) {
-            firstFreeContent = { type: "section", data: courseData.sections[0] };
-          }
-
-          if (firstFreeContent) {
-            if (firstFreeContent.type === "lesson") {
-              setCurrentLesson(firstFreeContent.data);
-              if (isLoggedIn) {
-                try {
-                  const res = await startLiveLessonProgress(id, firstFreeContent.data.id);
-                  if (res?.course_progress) setCourseProgress(res.course_progress);
-                  if (res?.lesson) {
-                    setLessonStatuses((prev) => ({
-                      ...prev,
-                      [firstFreeContent.data.id]: {
-                        ...prev[firstFreeContent.data.id],
-                        ...res.lesson,
-                      },
-                    }));
-                  }
-                } catch {
-                  /* noop */
-                }
-              }
-            } else if (firstFreeContent.type === "section") {
-              setCurrentSection(firstFreeContent.data);
-            }
-          }
-        } else if (courseData.lessons && courseData.lessons.length > 0) {
-          const firstFreeLesson = courseData.lessons.find(
-            (lesson) => lesson.type === "free" || lesson.type === "Free"
-          );
-          if (firstFreeLesson) {
-            setCurrentLesson(firstFreeLesson);
-            if (isLoggedIn) {
-              try {
-                const res = await startLiveLessonProgress(id, firstFreeLesson.id);
-                if (res?.course_progress) setCourseProgress(res.course_progress);
-                if (res?.lesson) {
-                  setLessonStatuses((prev) => ({
-                    ...prev,
-                    [firstFreeLesson.id]: {
-                      ...prev[firstFreeLesson.id],
-                      ...res.lesson,
-                    },
-                  }));
-                }
-              } catch {
-                /* noop */
-              }
-            }
-          }
+          // حفظ الدرس الحالي كآخر درس
+          saveLastLesson(id, targetLesson.id);
+        } else if (targetSection) {
+          setCurrentSection(targetSection);
+        } else if (courseData.sections && courseData.sections.length > 0) {
+          // إذا مفيش دروس، نعرض أول سيكشن
+          setCurrentSection(courseData.sections[0]);
         }
       } catch (err) {
         if (!mounted) return;
@@ -552,6 +595,8 @@ export default function LiveCourseLessons() {
     getLiveLessonProgress,
     isLoggedIn,
     updateLessonStatus,
+    getLastLesson,
+    saveLastLesson,
   ]);
 
   useEffect(() => {
@@ -586,32 +631,32 @@ export default function LiveCourseLessons() {
     return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
   }, [sections]);
 
-const getSectionLessons = useMemo(() => {
-  return (sectionId) => {
-    const section = sections.find((s) => s.id === sectionId);
-    if (!section || !section.lessons) return [];
-    
-    const sectionLessons = [...section.lessons].sort((a, b) => {
-      const aFree = a.type === "free" || a.type === "Free" || a.is_free === true;
-      const bFree = b.type === "free" || b.type === "Free" || b.is_free === true;
-      if (aFree && !bFree) return -1;
-      if (!aFree && bFree) return 1;
-      return (a.id || 0) - (b.id || 0);
-    });
+  const getSectionLessons = useMemo(() => {
+    return (sectionId) => {
+      const section = sections.find((s) => s.id === sectionId);
+      if (!section || !section.lessons) return [];
+      
+      const sectionLessons = [...section.lessons].sort((a, b) => {
+        const aFree = a.type === "free" || a.type === "Free" || a.is_free === true;
+        const bFree = b.type === "free" || b.type === "Free" || b.is_free === true;
+        if (aFree && !bFree) return -1;
+        if (!aFree && bFree) return 1;
+        return (a.id || 0) - (b.id || 0);
+      });
 
-    return sectionLessons;
-  };
-}, [sections]);
+      return sectionLessons;
+    };
+  }, [sections]);
 
-const hasFreeLessons = useMemo(() => {
-  return (sectionId) => {
-    const section = sections.find((s) => s.id === sectionId);
-    if (!section || !section.lessons) return false;
-    return section.lessons.some((lesson) => 
-      lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
-    );
-  };
-}, [sections]);
+  const hasFreeLessons = useMemo(() => {
+    return (sectionId) => {
+      const section = sections.find((s) => s.id === sectionId);
+      if (!section || !section.lessons) return false;
+      return section.lessons.some((lesson) => 
+        lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
+      );
+    };
+  }, [sections]);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => {
@@ -625,55 +670,74 @@ const hasFreeLessons = useMemo(() => {
     });
   };
 
-const handleLessonClick = async (lesson) => {
-  const isFree = lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true;
-  
-  // If lesson is not free and user doesn't have access
-  if (!isFree && !hasAccess) {
-    if (!isLoggedIn) {
-      navigate("/login");
-      return;
-    }
-    setShowPurchaseModal(true);
-    return;
-  }
-
-  setCurrentLesson(lesson);
-  setCurrentSection(null);
-  if (isLoggedIn) {
-    try {
-      const res = await startLiveLessonProgress(id, lesson.id);
-      if (res?.course_progress) setCourseProgress(res.course_progress);
-      if (res?.lesson) {
-        setLessonStatuses((prev) => ({
-          ...prev,
-          [lesson.id]: {
-            ...prev[lesson.id],
-            ...res.lesson,
-          },
-        }));
+  // 🔥 التعديل: حفظ آخر درس عند النقر عليه + التمركز التلقائي
+  const handleLessonClick = async (lesson) => {
+    const isFree = lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true;
+    
+    // If lesson is not free and user doesn't have access
+    if (!isFree && !hasAccess) {
+      if (!isLoggedIn) {
+        navigate("/login");
+        return;
       }
-    } catch {
-      // ignore
-    }
-  }
-};
-
-const handleSectionClick = (section) => {
-  // If no free lessons in section and user doesn't have access
-  const hasFree = hasFreeLessons(section.id);
-  if (!hasFree && !hasAccess) {
-    if (!isLoggedIn) {
-      navigate("/login");
+      setShowPurchaseModal(true);
       return;
     }
-    setShowPurchaseModal(true);
-    return;
-  }
 
-  setCurrentSection(section);
-  setCurrentLesson(null);
-};
+    setCurrentLesson(lesson);
+    setCurrentSection(null);
+    
+    // 🔥 حفظ آخر درس تم النقر عليه
+    saveLastLesson(id, lesson.id);
+    
+    // 🔥 التمركز التلقائي للفيديو في الموبايل
+    if (window.innerWidth < 1024) {
+      setTimeout(() => {
+        const videoSection = document.getElementById("video-player-section");
+        if (videoSection) {
+          videoSection.scrollIntoView({ 
+            behavior: "smooth", 
+            block: "start" 
+          });
+          console.log("📱 Scrolled to video section on mobile");
+        }
+      }, 300);
+    }
+    
+    if (isLoggedIn) {
+      try {
+        const res = await startLiveLessonProgress(id, lesson.id);
+        if (res?.course_progress) setCourseProgress(res.course_progress);
+        if (res?.lesson) {
+          setLessonStatuses((prev) => ({
+            ...prev,
+            [lesson.id]: {
+              ...prev[lesson.id],
+              ...res.lesson,
+            },
+          }));
+        }
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const handleSectionClick = (section) => {
+    // If no free lessons in section and user doesn't have access
+    const hasFree = hasFreeLessons(section.id);
+    if (!hasFree && !hasAccess) {
+      if (!isLoggedIn) {
+        navigate("/login");
+        return;
+      }
+      setShowPurchaseModal(true);
+      return;
+    }
+
+    setCurrentSection(section);
+    setCurrentLesson(null);
+  };
 
   const closePurchaseModal = () => {
     setShowPurchaseModal(false);
@@ -782,12 +846,6 @@ const handleSectionClick = (section) => {
                     {course.sections?.reduce((acc, section) => acc + (section.lessons?.length || 0), 0) || 0} {t("courses.lessons", "Lessons")}
                   </span>
                 </div>
-                {/* <div className="flex items-center gap-2">
-                  <FaUsers className="text-primary" />
-                  <span>
-                    {course.enrolled_count || 0} {t("courses.students", "Students")}
-                  </span>
-                </div> */}
                 {isLoggedIn && (
                   <div className="flex items-center gap-2">
                     <FaClock className="text-primary" />
@@ -892,148 +950,190 @@ const handleSectionClick = (section) => {
           </div>
         </div>
 
-{/* Batch Info */}
-{course?.batch_info && (
-  <div className="p-6 mb-6 transition-all duration-300 border shadow-sm rounded-xl bg-gradient-to-br from-primary/10 via-background to-secondary/5 border-primary/20 hover:shadow-md dark:bg-gradient-to-br dark:from-primary/5 dark:via-background dark:to-secondary/5 dark:border-primary/10">
-    <div className="flex flex-col justify-between gap-4 mb-4 md:flex-row md:items-center">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg shadow-sm bg-gradient-to-r from-primary/20 to-secondary/20 dark:from-primary/10 dark:to-secondary/10">
-          <FaUsers className="text-lg text-primary" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-text dark:text-text">{t("liveCourses.batchInformation", "Batch Information")}</h3>
-          <p className="text-sm text-text-muted dark:text-text-muted">{t("liveCourses.batchInformationDescription", "Details about your course batch")}</p>
-        </div>
-      </div>
-      {course.batch_info.telegram_link && (
-        <a
-          href={course.batch_info.telegram_link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white transition-all rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-        >
-          <FaTelegram className="text-base" />
-          {t("liveCourses.joinTelegramGroup", "Join Telegram Group")}
-        </a>
-      )}
-    </div>
+        {/* Batch Info */}
+        {course?.batch_info && (
+          <div className="p-6 mb-6 transition-all duration-300 border shadow-sm rounded-xl bg-gradient-to-br from-primary/10 via-background to-secondary/5 border-primary/20 hover:shadow-md dark:bg-gradient-to-br dark:from-primary/5 dark:via-background dark:to-secondary/5 dark:border-primary/10">
+            <div className="flex flex-col justify-between gap-4 mb-4 md:flex-row md:items-center">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg shadow-sm bg-gradient-to-r from-primary/20 to-secondary/20 dark:from-primary/10 dark:to-secondary/10">
+                  <FaUsers className="text-lg text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-text dark:text-text">{t("liveCourses.batchInformation", "Batch Information")}</h3>
+                  <p className="text-sm text-text-muted dark:text-text-muted">{t("liveCourses.batchInformationDescription", "Details about your course batch")}</p>
+                </div>
+              </div>
+              {course.batch_info.telegram_link && (
+                <a
+                  href={course.batch_info.telegram_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white transition-all rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
+                  <FaTelegram className="text-base" />
+                  {t("liveCourses.joinTelegramGroup", "Join Telegram Group")}
+                </a>
+              )}
+            </div>
 
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
-        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
-          <FaGraduationCap className="text-primary" />
-        </div>
-        <div className="overflow-hidden">
-          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("liveCourses.batchName", "Batch Name")}</div>
-          <div className="font-semibold text-text dark:text-text">{course.batch_info.batch_name}</div>
-        </div>
-      </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+                <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
+                  <FaGraduationCap className="text-primary" />
+                </div>
+                <div className="overflow-hidden">
+                  <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("liveCourses.batchName", "Batch Name")}</div>
+                  <div className="font-semibold text-text dark:text-text">{course.batch_info.batch_name}</div>
+                </div>
+              </div>
 
-      <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
-        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
-          <FaUsers className="text-primary" />
-        </div>
-        <div>
-          <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.students", "Students")}</div>
-          <div className="font-semibold text-text dark:text-text">{course.batch_info.students_count}</div>
-        </div>
-      </div>
+              <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+                <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
+                  <FaUsers className="text-primary" />
+                </div>
+                <div>
+                  <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.students", "Students")}</div>
+                  <div className="font-semibold text-text dark:text-text">{course.batch_info.students_count}</div>
+                </div>
+              </div>
 
-      {course.batch_info.status && (
-        <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
-          <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
-            <FaClock className="text-primary" />
-          </div>
-          <div>
-            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.status", "Status")}</div>
-            <div className="flex items-center gap-1 font-semibold text-text dark:text-text">
-              <span className={`inline-block w-2 h-2 rounded-full ${course.batch_info.status === 'Active' ? 'bg-green-500' : course.batch_info.status === 'Completed' ? 'bg-blue-500' : 'bg-yellow-500'}`}></span>
-              {course.batch_info.status}
+              {course.batch_info.status && (
+                <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+                  <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
+                    <FaClock className="text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.status", "Status")}</div>
+                    <div className="flex items-center gap-1 font-semibold text-text dark:text-text">
+                      <span className={`inline-block w-2 h-2 rounded-full ${course.batch_info.status === 'Active' ? 'bg-green-500' : course.batch_info.status === 'Completed' ? 'bg-blue-500' : 'bg-yellow-500'}`}></span>
+                      {course.batch_info.status}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {course.batch_info.instructor && (
+                <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
+                  <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
+                    <FaUser className="text-primary" />
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.instructor", "Instructor")}</div>
+                  <div className="font-semibold text-text dark:text-text">{course.batch_info.instructor?.name || t("liveCourses.unknownInstructor", "Unknown Instructor")}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Info Section */}
+            <div className="pt-4 mt-4 border-t border-primary/10 dark:border-primary/5">
+              <div className="flex flex-wrap gap-2">
+                {course.batch_info.start_date && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-primary/5 text-primary border border-primary/10 dark:bg-primary/10 dark:border-primary/5">
+                    <FaCalendarAlt className="text-xs" />
+                    <span>{t("liveCourses.starts", "Starts")}: {course.batch_info.start_date}</span>
+                  </div>
+                )}
+                {course.batch_info.duration && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-secondary/5 text-secondary border border-secondary/10 dark:bg-secondary/10 dark:border-secondary/5">
+                    <FaHourglassHalf className="text-xs" />
+                    <span>{t("liveCourses.duration", "Duration")}: {course.batch_info.duration}</span>
+                  </div>
+                )}
+                {course.batch_info.language && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-green-500/5 text-green-600 border border-green-500/10 dark:bg-green-500/10 dark:border-green-500/5">
+                    <FaLanguage className="text-xs" />
+                    <span>{t("courses.language", "Language")}: {course.batch_info.language}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {course.batch_info.instructor && (
-        <div className="flex items-center gap-3 p-3 transition-colors border rounded-lg bg-white/50 backdrop-blur-sm border-primary/10 hover:bg-primary/5 dark:bg-gray-800/50 dark:border-primary/5 dark:hover:bg-primary/10">
-          <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/5">
-            <FaUser className="text-primary" />
-          </div>
-          <div className="overflow-hidden">
-            <div className="text-xs font-medium tracking-wide uppercase text-text-muted dark:text-text-muted">{t("courses.instructor", "Instructor")}</div>
-          <div className="font-semibold text-text dark:text-text">{course.batch_info.instructor?.name || t("liveCourses.unknownInstructor", "Unknown Instructor")}</div>
-          </div>
-        </div>
-      )}
-    </div>
-
-    {/* Additional Info Section */}
-    <div className="pt-4 mt-4 border-t border-primary/10 dark:border-primary/5">
-      <div className="flex flex-wrap gap-2">
-        {course.batch_info.start_date && (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-primary/5 text-primary border border-primary/10 dark:bg-primary/10 dark:border-primary/5">
-            <FaCalendarAlt className="text-xs" />
-            <span>{t("liveCourses.starts", "Starts")}: {course.batch_info.start_date}</span>
-          </div>
         )}
-        {course.batch_info.duration && (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-secondary/5 text-secondary border border-secondary/10 dark:bg-secondary/10 dark:border-secondary/5">
-            <FaHourglassHalf className="text-xs" />
-            <span>{t("liveCourses.duration", "Duration")}: {course.batch_info.duration}</span>
-          </div>
-        )}
-        {course.batch_info.language && (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-full bg-green-500/5 text-green-600 border border-green-500/10 dark:bg-green-500/10 dark:border-green-500/5">
-            <FaLanguage className="text-xs" />
-            <span>{t("courses.language", "Language")}: {course.batch_info.language}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
-
 
         {/* Main Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* 🔥 زر فتح القائمة الجانبية للشاشات الصغيرة */}
+          <div className="fixed z-50 lg:hidden top-24 right-4">
+            <button
+              onClick={toggleSidebar}
+              className="p-3 text-white transition-all duration-300 transform rounded-full shadow-lg bg-primary hover:bg-secondary hover:scale-110"
+            >
+              {isSidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+            </button>
+          </div>
+
           {/* Sections and Lessons List */}
-          <div className="space-y-3 lg:col-span-1">
-            <h3 className="text-lg font-semibold">
-              {t("courses.courseContent", "Course Content")}
-            </h3>
+          <div className={`
+            lg:col-span-1 space-y-3
+            fixed lg:static top-0 left-0 h-screen lg:h-auto
+            w-80 lg:w-auto bg-surface lg:bg-transparent
+            shadow-2xl lg:shadow-none z-40
+            transform transition-transform duration-300 ease-in-out
+            border-r border-border lg:border-r-0
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}>
+            
+            {/* 🔥 زر الإغلاق للشاشات الصغيرة داخل القائمة */}
+            <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
+              <h3 className="text-lg font-semibold text-text">
+                {t("courses.courseContent", "Course Content")}
+              </h3>
+              <button
+                onClick={toggleSidebar}
+                className="p-2 transition-colors text-text hover:text-primary"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
 
-            <div className="space-y-2">
-{sortedSections.map((section) => (
-  <SectionItem
-    key={`section-${section.id}`}
-    section={section}
-    lessons={getSectionLessons(section.id)}
-    isExpanded={expandedSections.has(section.id)}
-    isActive={currentSection?.id === section.id}
-    hasFree={hasFreeLessons(section.id)}
-    isAccessible={hasFreeLessons(section.id) || hasAccess}
-    lessonStatuses={lessonStatuses}
-    currentLesson={currentLesson}
-    sectionProgress={sectionProgress}
-    calculateTotalProgress={calculateTotalProgress}
-    calculateSectionProgress={calculateSectionProgress}
-    onSectionClick={handleSectionClick}
-    onLessonClick={handleLessonClick}
-    onToggleSection={toggleSection}
-    isLoggedIn={isLoggedIn}
-    navigate={navigate}
-    course={course}
-    hasAccess={hasAccess}
-  />
-))}
+            {/* محتوى القائمة */}
+            <div className="p-4 lg:p-0 h-[calc(100vh-80px)] lg:h-auto overflow-y-auto sidebar-content">
+              <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
+                {t("courses.courseContent", "Course Content")}
+              </h3>
 
-              {/* Final Tests */}
-              <FinalTestsSection course={course} courseProgress={courseProgress} id={id} />
+              <div className="space-y-2">
+                {sortedSections.map((section) => (
+                  <SectionItem
+                    key={`section-${section.id}`}
+                    section={section}
+                    lessons={getSectionLessons(section.id)}
+                    isExpanded={expandedSections.has(section.id)}
+                    isActive={currentSection?.id === section.id}
+                    hasFree={hasFreeLessons(section.id)}
+                    isAccessible={hasFreeLessons(section.id) || hasAccess}
+                    lessonStatuses={lessonStatuses}
+                    currentLesson={currentLesson}
+                    sectionProgress={sectionProgress}
+                    calculateTotalProgress={calculateTotalProgress}
+                    calculateSectionProgress={calculateSectionProgress}
+                    onSectionClick={handleSectionClickWithClose}
+                    onLessonClick={handleLessonClickWithClose}
+                    onToggleSection={toggleSection}
+                    isLoggedIn={isLoggedIn}
+                    navigate={navigate}
+                    course={course}
+                    hasAccess={hasAccess}
+                  />
+                ))}
 
-              {/* Certificate Section */}
-              <CertificateSection id={id} isLoggedIn={isLoggedIn} />
+                {/* Final Tests */}
+                <FinalTestsSection course={course} courseProgress={courseProgress} id={id} />
+
+                {/* Certificate Section */}
+                <CertificateSection id={id} isLoggedIn={isLoggedIn} />
+              </div>
             </div>
           </div>
+
+          {/* 🔥 overlay للشاشات الصغيرة */}
+          {isSidebarOpen && (
+            <div 
+              className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
 
           {/* Video Player & Content */}
           <div className="space-y-6 lg:col-span-2">
@@ -1121,8 +1221,6 @@ const handleSectionClick = (section) => {
                             </a>
                           </div>
                         )}
-
-
 
                         {/* Attachments */}
                         <LessonAttachments
@@ -1276,59 +1374,24 @@ const handleSectionClick = (section) => {
           </div>
         </div>
       </div>
-
       {/* Purchase Modal */}
-      {showPurchaseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="w-full max-w-md border rounded-lg shadow-xl bg-surface border-border">
-            <div className="p-6">
-              <div className="mb-6 text-center">
-                <FaShoppingCart className="mx-auto mb-4 text-4xl text-primary" />
-                <h3 className="mb-2 text-2xl font-semibold text-text">
-                  {t("courses.unlockPremium", "Unlock Premium Content")}
-                </h3>
-                <p className="text-text-muted">
-                  {t("courses.purchaseToAccess", "Purchase this course to access all premium lessons and materials")}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <Link
-                  to={`/live-courses/${id}/subscribe`}
-                  className="flex items-center justify-center w-full gap-2 px-6 py-3 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
-                >
-                  <FaShoppingCart />
-                  {t("courses.purchaseNow", "Purchase Now")}
-                </Link>
-                <button
-                  onClick={closePurchaseModal}
-                  className="w-full px-6 py-3 transition-colors bg-gray-200 rounded-lg text-text hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-                >
-                  {t("common.cancel", "Cancel")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Content Modals */}
-      <ImagePopup
-        showImagePopup={showImagePopup}
-        setShowImagePopup={setShowImagePopup}
-        selectedImage={selectedImage}
+      <PurchaseModal
+        show={showPurchaseModal}
+        onClose={closePurchaseModal}
+        courseId={id}
+        isLive={true}
       />
 
       <PDFPopup
-        showFilesPopup={showFilesPopup}
-        setShowFilesPopup={setShowFilesPopup}
-        selectedFile={selectedFile}
+        show={showFilesPopup}
+        file={selectedFile}
+        onClose={() => setShowFilesPopup(false)}
       />
 
       <VideoPopup
-        showVideoPopup={showVideoPopup}
-        setShowVideoPopup={setShowVideoPopup}
-        selectedVideo={selectedVideo}
+        show={showVideoPopup}
+        video={selectedVideo}
+        onClose={() => setShowVideoPopup(false)}
       />
     </section>
   );

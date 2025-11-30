@@ -2,7 +2,7 @@ import React from "react";
 import { FiHeart } from "react-icons/fi";
 import RatingStars from "./components/RatingStars";
 
-export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, goToDetails, t }) {
+export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, goToDetails, t, isLoggedIn, navigate }) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((course) => (
@@ -22,11 +22,15 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onToggleFavorite(course.id, "video");
+                if (!isLoggedIn) {
+                  navigate("/login");
+                  return;
+                }
+                onToggleFavorite(course.id, "video_course");
               }}
               className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
             >
-              <FiHeart className={`text-xl ${favoriteIds.includes(course.id) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+              <FiHeart className={`text-xl ${favoriteIds.includes(`video_course_${course.id}`) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
             </button>
             {course.discount > 0 && (
               <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 left-3">

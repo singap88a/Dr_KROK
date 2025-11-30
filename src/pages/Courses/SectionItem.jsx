@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next";
 import { 
   FaFolder, 
   FaFolderOpen, 
-  FaVideo, 
-  FaImage, 
-  FaFileAlt, 
   FaChevronDown, 
   FaChevronRight,
   FaLock,
   FaPaperclip,
+  FaFileAlt,
+  FaImage,
+  FaVideo,
   FaClipboardList,
   FaUnlock,
   FaCheckCircle
@@ -37,7 +37,18 @@ const SectionItem = ({
 }) => {
   const { t } = useTranslation();
 
-  // التحقق من وجود دروس مقفلة في السيكشن
+  // 🔥 التعديل: إزالة الفتح التلقائي وجعل السهم هو المسؤول عن الفتح
+  const handleSectionHeaderClick = (e) => {
+    // منع فتح السيكشن عند النقر على الهيدر، السهم فقط هو اللي يفتح
+    e.stopPropagation();
+  };
+
+  const handleArrowClick = (e) => {
+    e.stopPropagation();
+    onToggleSection(section.id);
+  };
+
+  // التحقق من وجود دروس مقفولة في السيكشن
   const hasPremiumLessons = lessons && lessons.some(lesson => lesson.type !== "free" && lesson.type !== "Free");
 
   // حساب نسبة إكمال السيكشن
@@ -164,7 +175,6 @@ const SectionItem = ({
                   )}
                 </div>
               </div>
-
             </div>
           ))}
         </div>
@@ -175,20 +185,21 @@ const SectionItem = ({
   return (
     <div className="border rounded-lg bg-surface border-border">
       <div
-        className={`p-4 transition-all group ${
+        className={`p-4 transition-all group cursor-default ${
           isActive
             ? "bg-primary/5 border-b border-primary/20"
             : ""
         }`}
+        onClick={handleSectionHeaderClick}
       >
         <div className="flex flex-col">
           <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center flex-1 min-w-0 gap-3">
               <div
                 className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
                   isActive
                     ? "bg-primary/20 text-primary scale-105"
-                    : "bg-accent text-text-muted hover:bg-primary/10 hover:text-primary"
+                    : "bg-accent text-text-muted"
                 }`}
               >
                 {isExpanded ? (
@@ -198,70 +209,66 @@ const SectionItem = ({
                 )}
               </div>
 
+              {/* 🔥 التعديل: إعادة تنظيم المحتوى بحيث يكون العنوان والمعلومات في عمود واحد */}
               <div className="flex-1 min-w-0">
-                <h4
-                  className={`font-semibold text-base tracking-wide ${
-                    isActive ? "text-primary" : "text-text"
-                  }`}
-                >
-                  {section.title
-                    .split(" ")
-                    .slice(0, 4)
-                    .join(" ")}
-                  {section.title.split(" ").length > 4 && "..."}
-                </h4>
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex-1 min-w-0 mr-2">
+                    <h4
+                      className={`font-semibold text-base tracking-wide truncate ${
+                        isActive ? "text-primary" : "text-text"
+                      }`}
+                      title={section.title}
+                    >
+                      {section.title}
+                    </h4>
 
-                <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
-                  <span>
-                    {section.lessons_count || 0} {t("courses.lessons", "Lessons")}
-                  </span>
-                  {section.video && <FaVideo />}
-                  {section.images && section.images.length > 0 && <FaImage />}
-                  {section.files && section.files.length > 0 && <FaFileAlt />}
-                  <span>
-                    {hasFree
-                      ? t("courses.hasFree", "Has Free")
-                      : t("courses.premium", "Premium")}
-                  </span>
-                  {hasPremiumLessons && (
-                    <FaLock
-                      className="text-sm text-text-muted"
-                      title="Premium"
-                    />
-                  )}
+                    <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-text-muted">
+                      <span>
+                        {section.lessons_count || 0} {t("courses.lessons", "Lessons")}
+                      </span>
+                      <span>
+                        {hasFree
+                          ? t("courses.hasFree", "Has Free")
+                          : t("courses.premium", "Premium")}
+                      </span>
+                      {!hasFree && (
+                        <FaLock
+                          className="flex-shrink-0 text-sm text-text-muted"
+                          title="Premium"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 🔥 نقل السهم إلى هنا بحيث يكون في نفس الصف مع العنوان */}
+                  <div className="flex-shrink-0">
+                    <button
+                      onClick={handleArrowClick}
+                      className={`relative p-2 rounded-full border transition-all duration-300 ease-in-out shadow-sm ${
+                        isExpanded
+                          ? "bg-primary text-white scale-105"
+                          : "bg-accent text-text-muted hover:bg-primary/10 hover:text-primary"
+                      }`}
+                    >
+                      {isExpanded ? (
+                        <FaChevronDown className="text-sm transition-transform duration-300" />
+                      ) : (
+                        <FaChevronRight className="text-sm transition-transform duration-300" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {isLoggedIn && section.lessons && section.lessons.length > 0 && (
-                  <SectionProgressBar 
-                    sectionId={section.id}
-                    sectionProgress={sectionProgress}
-                    calculateSectionProgress={calculateSectionProgress}
-                  />
+                  <div className="mt-2">
+                    <SectionProgressBar 
+                      sectionId={section.id}
+                      sectionProgress={sectionProgress}
+                      calculateSectionProgress={calculateSectionProgress}
+                    />
+                  </div>
                 )}
               </div>
-            </div>
-
-            <div className="absolute top-0 right-0">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleSection(section.id);
-                }}
-                className={`relative p-1 rounded-full border transition-all duration-300 ease-in-out shadow-sm ${
-                  isExpanded
-                    ? "bg-primary text-white rotate-180 scale-105"
-                    : "bg-accent text-text-muted hover:bg-primary/10 hover:text-primary"
-                }`}
-              >
-                {isExpanded ? (
-                  <FaChevronDown className="text-lg transition-transform duration-300" />
-                ) : (
-                  <FaChevronRight className="text-lg transition-transform duration-300" />
-                )}
-                {isExpanded && (
-                  <span className="absolute inset-0 border-2 rounded-full border-primary/40 animate-ping"></span>
-                )}
-              </button>
             </div>
           </div>
         </div>

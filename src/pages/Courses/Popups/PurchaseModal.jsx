@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaShoppingCart } from "react-icons/fa";
 
-const PurchaseModal = ({ show, onClose, courseId }) => {
+const PurchaseModal = ({ show, onClose, courseId, isLive = false }) => {
   const { t } = useTranslation();
 
   if (!show) return null;
@@ -27,7 +27,7 @@ const PurchaseModal = ({ show, onClose, courseId }) => {
 
           <div className="space-y-3">
             <Link
-              to={`/courses/${courseId}/subscribe`}
+              to={isLive ? `/live-courses/${courseId}/subscribe` : `/courses/${courseId}/subscribe`}
               className="flex items-center justify-center w-full gap-2 px-6 py-3 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
             >
               <FaShoppingCart />

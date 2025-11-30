@@ -118,7 +118,7 @@ export default function Footer() {
           <div className="flex space-x-4">
             {contactData ? (
               <>
-                {contactData.facebook && (
+                {/* {contactData.facebook && (
                   <a
                     href={contactData.facebook}
                     target="_blank"
@@ -137,7 +137,7 @@ export default function Footer() {
                   >
                     <FaTwitter />
                   </a>
-                )}
+                )} */}
                 {contactData.iniesta && (
                   <a
                     href={contactData.iniesta}
