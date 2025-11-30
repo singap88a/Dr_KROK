@@ -51,6 +51,22 @@ export default function CourseLessons() {
   const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
 
+  // 🔥 دالة حفظ آخر درس في localStorage
+  const saveLastLesson = useCallback((courseId, lessonId) => {
+    if (courseId && lessonId) {
+      localStorage.setItem(`last_lesson_${courseId}`, lessonId.toString());
+      console.log(`💾 Saved last lesson: ${lessonId} for course: ${courseId}`);
+    }
+  }, []);
+
+  // 🔥 دالة جلب آخر درس من localStorage
+  const getLastLesson = useCallback((courseId) => {
+    if (!courseId) return null;
+    const lastLesson = localStorage.getItem(`last_lesson_${courseId}`);
+    console.log(`📖 Retrieved last lesson: ${lastLesson} for course: ${courseId}`);
+    return lastLesson;
+  }, []);
+
   // دالة محسنة لحساب التقدم الكلي للدرس بناءً على النظام الجديد
   const calculateTotalProgress = useCallback((lesson, lessonStatus) => {
     if (!lessonStatus) return 0;
@@ -235,20 +251,52 @@ export default function CourseLessons() {
         setLessons(courseData.lessons || []);
         setSections(courseData.sections || []);
 
-        const sectionsWithFreeLessons = new Set();
-        if (courseData.sections) {
-          courseData.sections.forEach((section) => {
-            if (
-              section.lessons &&
-              section.lessons.some(
-                (lesson) => lesson.type === "free" || lesson.type === "Free"
-              )
-            ) {
-              sectionsWithFreeLessons.add(section.id);
+        // 🔥 التعديل الأول: كل السيكشنز مقفولة في البداية
+        setExpandedSections(new Set());
+        console.log("🔒 All sections locked by default");
+
+        // 🔥 التعديل الثاني: جلب آخر درس من localStorage
+        const lastLessonId = getLastLesson(id);
+        let targetLesson = null;
+        let targetSection = null;
+
+        if (lastLessonId && courseData.sections) {
+          // البحث عن الدرس الأخير في كل السيكشنز
+          for (const section of courseData.sections) {
+            if (section.lessons) {
+              const foundLesson = section.lessons.find(lesson => lesson.id.toString() === lastLessonId);
+              if (foundLesson) {
+                targetLesson = foundLesson;
+                targetSection = section;
+                // 🔥 فتح السيكشن اللي فيه الدرس الأخير فقط
+                setExpandedSections(prev => new Set(prev).add(section.id));
+                console.log(`🎯 Found last lesson: ${foundLesson.title} in section: ${section.title}`);
+                break;
+              }
             }
-          });
+          }
         }
-        setExpandedSections(sectionsWithFreeLessons);
+
+        // إذا مفيش آخر درس محفوظ، نفتح أول سيكشن فيه دروس مجانية
+        if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
+          const firstSectionWithFree = courseData.sections.find(section => 
+            section.lessons && section.lessons.some(lesson => 
+              lesson.type === "free" || lesson.type === "Free"
+            )
+          );
+          
+          if (firstSectionWithFree) {
+            setExpandedSections(prev => new Set(prev).add(firstSectionWithFree.id));
+            const firstFreeLesson = firstSectionWithFree.lessons.find(lesson => 
+              lesson.type === "free" || lesson.type === "Free"
+            );
+            if (firstFreeLesson) {
+              targetLesson = firstFreeLesson;
+              targetSection = firstSectionWithFree;
+              console.log(`📘 Using first free lesson: ${firstFreeLesson.title}`);
+            }
+          }
+        }
 
         if (courseData?.lessons?.length) {
           const initialStatuses = {};
@@ -317,97 +365,35 @@ export default function CourseLessons() {
           setHasAccess(false);
         }
 
-        if (courseData.sections && courseData.sections.length > 0) {
-          let firstFreeContent = null;
-          for (const section of courseData.sections) {
-            if (section.lessons && section.lessons.length > 0) {
-              const firstFreeLesson = section.lessons.find(
-                (lesson) => lesson.type === "free" || lesson.type === "Free"
-              );
-              if (firstFreeLesson) {
-                firstFreeContent = { type: "lesson", data: firstFreeLesson };
-                break;
+        // 🔥 التعديل الثالث: تحديد الدرس الحالي بناءً على الأخير
+        if (targetLesson) {
+          setCurrentLesson(targetLesson);
+          if (isLoggedIn) {
+            try {
+              const res = await startLessonProgress(id, targetLesson.id);
+              if (res?.course_progress) setCourseProgress(res.course_progress);
+              if (res?.lesson) {
+                setLessonStatuses((prev) => ({
+                  ...prev,
+                  [targetLesson.id]: {
+                    ...prev[targetLesson.id],
+                    ...res.lesson,
+                  },
+                }));
               }
+            } catch {
+              /* noop */
             }
           }
-
-          if (!firstFreeContent) {
-            const firstSectionWithFree = courseData.sections.find(
-              (section) =>
-                section.lessons &&
-                section.lessons.some(
-                  (lesson) => lesson.type === "free" || lesson.type === "Free"
-                )
-            );
-            if (firstSectionWithFree) {
-              firstFreeContent = {
-                type: "section",
-                data: firstSectionWithFree,
-              };
-            }
-          }
-
-          if (!firstFreeContent && courseData.sections[0]) {
-            firstFreeContent = {
-              type: "section",
-              data: courseData.sections[0],
-            };
-          }
-
-          if (firstFreeContent) {
-            if (firstFreeContent.type === "lesson") {
-              setCurrentLesson(firstFreeContent.data);
-              if (isLoggedIn) {
-                try {
-                  const res = await startLessonProgress(
-                    id,
-                    firstFreeContent.data.id
-                  );
-                  if (res?.course_progress)
-                    setCourseProgress(res.course_progress);
-                  if (res?.lesson) {
-                    setLessonStatuses((prev) => ({
-                      ...prev,
-                      [firstFreeContent.data.id]: {
-                        ...prev[firstFreeContent.data.id],
-                        ...res.lesson,
-                      },
-                    }));
-                  }
-                } catch {
-                  /* noop */
-                }
-              }
-            } else if (firstFreeContent.type === "section") {
-              setCurrentSection(firstFreeContent.data);
-            }
-          }
-        } else if (courseData.lessons && courseData.lessons.length > 0) {
-          const firstFreeLesson = courseData.lessons.find(
-            (lesson) => lesson.type === "free" || lesson.type === "Free"
-          );
-          if (firstFreeLesson) {
-            setCurrentLesson(firstFreeLesson);
-            if (isLoggedIn) {
-              try {
-                const res = await startLessonProgress(id, firstFreeLesson.id);
-                if (res?.course_progress)
-                  setCourseProgress(res.course_progress);
-                if (res?.lesson) {
-                  setLessonStatuses((prev) => ({
-                    ...prev,
-                    [firstFreeLesson.id]: {
-                      ...prev[firstFreeLesson.id],
-                      ...res.lesson,
-                    },
-                  }));
-                }
-              } catch {
-                /* noop */
-              }
-            }
-          }
+          // حفظ الدرس الحالي كآخر درس
+          saveLastLesson(id, targetLesson.id);
+        } else if (targetSection) {
+          setCurrentSection(targetSection);
+        } else if (courseData.sections && courseData.sections.length > 0) {
+          // إذا مفيش دروس، نعرض أول سيكشن
+          setCurrentSection(courseData.sections[0]);
         }
+
       } catch (err) {
         if (!mounted) return;
         setError(err?.message || "Failed to load course lessons");
@@ -437,6 +423,8 @@ export default function CourseLessons() {
     getLessonProgress,
     isLoggedIn,
     updateLessonStatus,
+    getLastLesson,
+    saveLastLesson,
   ]);
 
   useEffect(() => {
@@ -467,6 +455,7 @@ export default function CourseLessons() {
     updateLessonStatus,
   ]);
 
+  // 🔥 التعديل الرابع: حفظ آخر درس عند النقر عليه + التمركز التلقائي
   const handleLessonClick = async (lesson) => {
     const isFree = lesson.type === "free" || lesson.type === "Free";
     if (!isFree) {
@@ -480,6 +469,24 @@ export default function CourseLessons() {
 
     setCurrentLesson(lesson);
     setCurrentSection(null);
+    
+    // 🔥 حفظ آخر درس تم النقر عليه
+    saveLastLesson(id, lesson.id);
+    
+    // 🔥 التمركز التلقائي للفيديو في الموبايل
+    if (window.innerWidth < 1024) {
+      setTimeout(() => {
+        const videoSection = document.getElementById("video-player-section");
+        if (videoSection) {
+          videoSection.scrollIntoView({ 
+            behavior: "smooth", 
+            block: "start" 
+          });
+          console.log("📱 Scrolled to video section on mobile");
+        }
+      }, 300);
+    }
+    
     if (isLoggedIn) {
       try {
         const res = await startLessonProgress(id, lesson.id);
@@ -604,23 +611,26 @@ export default function CourseLessons() {
             navigate={navigate}
           />
 
-          <VideoPlayerSection
-            currentLesson={currentLesson}
-            currentSection={currentSection}
-            course={course}
-            courseProgress={courseProgress}
-            isLoggedIn={isLoggedIn}
-            lessonStatuses={lessonStatuses}
-            onLessonComplete={handleLessonComplete}
-            onFileClick={handleFileClick}
-            onVideoClick={handleVideoClick}
-            onImageClick={(image) => {
-              setSelectedImage(image);
-              setShowImagePopup(true);
-            }}
-            updateLessonStatus={updateLessonStatus}
-            navigate={navigate}
-          />
+          {/* 🔥 إضافة ID للفيديو سيكشن للتمركز التلقائي */}
+          <div id="video-player-section" className="lg:col-span-2">
+            <VideoPlayerSection
+              currentLesson={currentLesson}
+              currentSection={currentSection}
+              course={course}
+              courseProgress={courseProgress}
+              isLoggedIn={isLoggedIn}
+              lessonStatuses={lessonStatuses}
+              onLessonComplete={handleLessonComplete}
+              onFileClick={handleFileClick}
+              onVideoClick={handleVideoClick}
+              onImageClick={(image) => {
+                setSelectedImage(image);
+                setShowImagePopup(true);
+              }}
+              updateLessonStatus={updateLessonStatus}
+              navigate={navigate}
+            />
+          </div>
         </div>
       </div>
 
