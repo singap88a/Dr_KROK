@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import { FaRegCalendarAlt, FaUserCircle } from "react-icons/fa";
+import { FaRegCalendarAlt } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/pagination";
 import { Link } from "react-router-dom";
@@ -21,9 +21,13 @@ export default function FeaturedArticles({ articles }) {
       setLoading(true);
       setError("");
       try {
-        const res = await getBlogs({ page: 1, per_page: 3 });
+        const res = await getBlogs({ page: 1, per_page: 15 });
         if (!isMounted) return;
-        setFetched(Array.isArray(res.data) ? res.data.slice(0, 3) : []);
+
+        // Flatten blogs from instructors and sort by date
+        const allBlogs = (res.data || []).flatMap(instructor => instructor.blogs || []);
+        const sortedBlogs = allBlogs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        setFetched(sortedBlogs.slice(0, 3));
       } catch (e) {
         if (!isMounted) return;
         setError(e?.message || "");
@@ -42,10 +46,8 @@ export default function FeaturedArticles({ articles }) {
       id: b.id,
       title: b.name,
       description: stripHtml(b.description || ""),
-      date: "", // لو عندك تاريخ من الباك اند ضيفه هنا
+      date: b.created_at ? new Date(b.created_at).toLocaleDateString() : "",
       image: b.image,
-      trainerName: b.instructor_id?.name || "",
-      trainerImage: b.instructor_id?.image || "",
     }));
   }, [fetched]);
 
@@ -133,22 +135,6 @@ export default function FeaturedArticles({ articles }) {
                         <span>{item.date}</span>
                       </div>
                     ) : null}
-
-                    {/* Trainer Info */}
-                    <div className="flex items-center mb-4">
-                      {item.trainerImage ? (
-                        <img
-                          src={item.trainerImage}
-                          alt={item.trainerName}
-                          className="object-cover w-10 h-10 mr-3 rounded-full"
-                        />
-                      ) : (
-                        <FaUserCircle className="w-10 h-10 mr-3 text-gray-500" />
-                      )}
-                      <span className="text-sm font-medium">
-                        {item.trainerName}
-                      </span>
-                    </div>
 
                     {/* CTA Button */}
                     <Link
