@@ -187,7 +187,8 @@ const CourseContentSidebar = ({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {course.final_tests.map((test, idx) => {
-                    const locked = !hasAccess;
+                    const totalProgress = Math.round(courseProgress?.overall?.percentage || 0);
+                    const locked = !hasAccess || totalProgress < 100;
                     return (
                       <button
                         key={test.id || idx}
@@ -211,6 +212,11 @@ const CourseContentSidebar = ({
                     );
                   })}
                 </div>
+                {hasAccess && Math.round(courseProgress?.overall?.percentage || 0) < 100 && (
+                  <p className="mt-2 text-xs text-red-500">
+                    {t("courses.completeProgressToUnlockTests", "You must complete 100% of the course to unlock final tests.")}
+                  </p>
+                )}
               </div>
             )}
 
