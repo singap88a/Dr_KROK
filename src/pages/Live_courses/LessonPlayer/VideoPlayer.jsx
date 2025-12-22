@@ -34,6 +34,8 @@ export const VideoPlayer = ({
       poster={currentLesson?.image || currentSection?.images?.[0]}
       onTimeUpdate={handleVideoTimeUpdate}
       onEnded={handleVideoEnd}
+      controlsList="nodownload"
+      onContextMenu={(e) => e.preventDefault()}
     />
   );
 };

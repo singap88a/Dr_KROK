@@ -234,6 +234,8 @@ export default function CourseDetails() {
               playsInline
               controls={isPlaying}
               onEnded={handleVideoEnd}
+              controlsList="nodownload"
+              onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
             <img src={imageUrl} alt={course.title} className="object-cover w-full h-full" />

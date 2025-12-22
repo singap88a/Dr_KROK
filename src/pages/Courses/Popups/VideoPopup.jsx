@@ -38,6 +38,8 @@ const VideoPopup = ({ show, video, onClose }) => {
             controls
             className="w-full h-full rounded"
             autoPlay
+            controlsList="nodownload"
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
       </div>

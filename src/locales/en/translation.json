@@ -13,7 +13,7 @@
   },
   "contact": {
     "title_fallback": "Contact Us",
-     "phone_label": "Phone / WhatsApp",
+     "phone_label": "Phone / Telegram",
     "email_label": "Email",
     "address_label": "Address",
     "form": {
@@ -208,6 +208,11 @@
     "inactive": "Inactive",
     "created": "Created",
     "no_book_selected": "No book selected",
+    "pdf_load_error": "Failed to load PDF. Please check your connection or try again later.",
+    "fetching_pdf": "Downloading Preview...",
+    "preview_mode": "Preview Mode (First 3 Pages)",
+    "page": "Page",
+    "pdf_preview_limit": "You are viewing a preview. Purchase the book to access the full PDF.",
     "delivery_included": "Delivery included",
     "pdf_download": "PDF Download",
     "delivery_order": "Delivery Order",

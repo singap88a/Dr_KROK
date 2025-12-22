@@ -35,6 +35,8 @@ export const VideoPopup = ({ showVideoPopup, setShowVideoPopup, selectedVideo })
             controls
             className="w-full h-full rounded"
             autoPlay
+            controlsList="nodownload"
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
       </div>

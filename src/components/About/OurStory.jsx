@@ -144,7 +144,14 @@ export default function OurStory() {
         >
           <div className="w-full max-w-3xl bg-transparent" onClick={(e) => e.stopPropagation()}>
             <div className="relative overflow-hidden rounded-lg shadow-2xl">
-              <video controls autoPlay src={storyData?.video_page_about || "https://www.w3schools.com/html/mov_bbb.mp4"} className="w-full h-auto max-h-[80vh] bg-black">
+              <video 
+                controls 
+                autoPlay 
+                src={storyData?.video_page_about || "https://www.w3schools.com/html/mov_bbb.mp4"} 
+                className="w-full h-auto max-h-[80vh] bg-black"
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
+              >
                 Sorry, your browser doesn't support embedded videos.
               </video>
 

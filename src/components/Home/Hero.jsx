@@ -121,7 +121,7 @@ export default function Hero() {
               {/* Floating Card */}
               <div className="absolute flex items-center gap-3 px-4 py-3 border shadow-xl bg-surface border-border -bottom-8 -left-8 rounded-xl">
                 <img
-                  src="https://randomuser.me/api/portraits/men/32.jpg"
+                  src="logo.png"
                   alt="expert"
                   className="w-10 h-10 border-2 rounded-full border-primary"
                 />

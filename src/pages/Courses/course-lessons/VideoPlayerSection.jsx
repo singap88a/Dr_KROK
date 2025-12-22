@@ -678,6 +678,8 @@ const VideoPlayerSection = ({
                           muted
                           playsInline
                           preload="metadata"
+                          controlsList="nodownload"
+                          onContextMenu={(e) => e.preventDefault()}
                         />
                       )}
                       <div className="absolute inset-0 flex items-center justify-center transition-all bg-black/0 group-hover:bg-black/20">
@@ -874,6 +876,8 @@ const VideoPlayerSection = ({
                 poster={currentLesson.image}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleVideoEnd}
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
               <div className="flex items-center justify-center h-full bg-accent dark:bg-accent-dark">
@@ -959,6 +963,8 @@ const VideoPlayerSection = ({
                 controls
                 className="w-full h-full"
                 poster={currentSection.images?.[0]}
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
               <div className="flex items-center justify-center h-full bg-accent dark:bg-accent-dark">
