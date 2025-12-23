@@ -677,7 +677,7 @@ export default function CourseSubscription() {
                   <ul className="space-y-2 text-sm text-text-secondary">
                     <li className="flex items-center gap-2">
                       <FaCheck className="text-green-500" />
-                      <span>{t('courses.lifetimeAccess', 'Lifetime access to all content')}</span>
+                      <span>{t('courses.lifetimeAccess', '7 months access to all content')}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <FaCheck className="text-green-500" />
