@@ -14,12 +14,11 @@ export default function OurStory() {
   const { request } = useApi();
   const { isLoggedIn } = useUser();
   const [storyData, setStoryData] = useState(null);
-  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const fetchStoryData = async () => {
       try {
-        const result = await request('setting');
+        const result = await request("setting");
         if (result && result.data) {
           setStoryData(result.data);
         }
@@ -40,21 +39,25 @@ export default function OurStory() {
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-200">
               <FiCheckCircle className="w-5 h-5" />
             </div>
-            <span className="text-sm font-semibold text-cyan-800 dark:text-cyan-200">{t('ourStory.badge')}</span>
+            <span className="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
+              {t("ourStory.badge")}
+            </span>
           </div>
 
           <h2 className="text-3xl font-extrabold leading-tight sm:text-4xl text-cyan-900 dark:text-white">
-            {t('ourStory.title')}
+            {t("ourStory.title")}
           </h2>
 
           <p className="max-w-2xl text-lg text-cyan-800 dark:text-cyan-200">
-            {t('ourStory.subtitle')}
+            {t("ourStory.subtitle")}
           </p>
 
           <div
             className="max-w-2xl text-base leading-relaxed text-gray-700 dark:text-gray-300"
             dangerouslySetInnerHTML={{
-              __html: storyData?.description_about_us_Our_Story || t('ourStory.description')
+              __html:
+                storyData?.description_about_us_Our_Story ||
+                t("ourStory.description"),
             }}
           />
 
@@ -63,19 +66,25 @@ export default function OurStory() {
               <span className="mt-1 text-cyan-700 dark:text-cyan-300">
                 <FiCheckCircle className="w-5 h-5" />
               </span>
-              <span className="text-gray-800 dark:text-gray-200">{t('ourStory.features.expertInstructors')}</span>
+              <span className="text-gray-800 dark:text-gray-200">
+                {t("ourStory.features.expertInstructors")}
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 text-cyan-700 dark:text-cyan-300">
                 <FiCheckCircle className="w-5 h-5" />
               </span>
-              <span className="text-gray-800 dark:text-gray-200">{t('ourStory.features.handsOnProjects')}</span>
+              <span className="text-gray-800 dark:text-gray-200">
+                {t("ourStory.features.handsOnProjects")}
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 text-cyan-700 dark:text-cyan-300">
                 <FiCheckCircle className="w-5 h-5" />
               </span>
-              <span className="text-gray-800 dark:text-gray-200">{t('ourStory.features.communitySupport')}</span>
+              <span className="text-gray-800 dark:text-gray-200">
+                {t("ourStory.features.communitySupport")}
+              </span>
             </li>
           </ul>
 
@@ -85,80 +94,37 @@ export default function OurStory() {
                 to="/register"
                 className="inline-flex items-center gap-3 px-5 py-3 font-medium text-white transition transform rounded-lg shadow bg-cyan-700 hover:scale-105"
               >
-                {t('ourStory.buttons.getStarted')}
+                {t("ourStory.buttons.getStarted")}
               </Link>
             ) : (
               <Link
                 to="/courses"
                 className="inline-flex items-center gap-3 px-5 py-3 font-medium text-white transition transform rounded-lg shadow bg-cyan-700 hover:scale-105"
               >
-                {t('ourStory.buttons.goToCourses')}
+                {t("ourStory.buttons.goToCourses")}
               </Link>
             )}
-
-            <button
-              onClick={() => setOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-3 transition bg-white border border-transparent rounded-lg shadow-sm dark:bg-gray-800 hover:shadow-md text-cyan-800 dark:text-cyan-200"
-            >
-              {t('ourStory.buttons.watchVideo')}
-            </button>
           </div>
         </div>
 
-        {/* RIGHT: Video preview */}
+        {/* RIGHT: Video */}
         <div className="px-4 sm:px-6">
           <div className="relative overflow-hidden border shadow-xl rounded-xl bg-gradient-to-br from-white/80 to-cyan-50 border-white/50 dark:from-gray-800/60 dark:to-gray-900/60">
-            <img
-              src={storyData?.image_banner_page_about || "https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=2b8f2d6b6c9f8a3f6b3a2f4b1e2c3d4e"}
-              alt="Our story poster"
-              className="w-full h-[320px] sm:h-[420px] object-cover"
-              loading="lazy"
-            />
-
-            <button
-              onClick={() => setOpen(true)}
-              aria-label="Play video"
-              className="absolute inset-0 flex items-center justify-center w-full h-full m-auto text-white"
+            <video
+              controls
+              src={
+                storyData?.video_page_about ||
+                "https://www.w3schools.com/html/mov_bbb.mp4"
+              }
+              className="w-full h-[320px] sm:h-[420px] object-cover bg-black"
+              controlsList="nodownload"
+              onContextMenu={(e) => e.preventDefault()}
             >
-              <div className="flex items-center gap-4 px-6 py-3 transition rounded-full bg-black/40 hover:bg-black/50">
-                <FiPlay className="w-8 h-8 text-white" />
-                <span className="font-semibold text-white">{t('ourStory.video.playStory')}</span>
-              </div>
-            </button>
-
-            <div className="absolute flex items-center justify-between text-sm text-white bottom-4 left-4 right-4">
-              <div className="px-3 py-1 rounded-lg bg-black/40">{t('ourStory.video.duration')}</div>
-              <div className="px-3 py-1 rounded-lg bg-black/40">{t('ourStory.video.founded')}</div>
-            </div>
+              Sorry, your browser doesn't support embedded videos.
+            </video>
           </div>
         </div>
       </div>
-
-      {/* Modal: Video player (simple, accessible) */}
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-          onClick={() => setOpen(false)}
-        >
-          <div className="w-full max-w-3xl bg-transparent" onClick={(e) => e.stopPropagation()}>
-            <div className="relative overflow-hidden rounded-lg shadow-2xl">
-              <video controls autoPlay src={storyData?.video_page_about || "https://www.w3schools.com/html/mov_bbb.mp4"} className="w-full h-auto max-h-[80vh] bg-black">
-                Sorry, your browser doesn't support embedded videos.
-              </video>
-
-              <button
-                onClick={() => setOpen(false)}
-                aria-label="Close video"
-                className="absolute p-2 rounded-full shadow top-3 right-3 bg-white/80 dark:bg-gray-800/80"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

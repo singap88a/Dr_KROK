@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaFacebook, FaTwitter, FaLinkedin, FaYoutube, FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaLinkedin, FaYoutube, FaFacebookF, FaInstagram, FaTiktok, FaTelegramPlane } from "react-icons/fa";
 import { useTranslation, Trans } from "react-i18next";
 import { useApi } from "../context/ApiContext";
 import he from 'he';
@@ -156,6 +156,16 @@ export default function Footer() {
                     className="text-2xl transition hover:text-primary"
                   >
                     <FaTiktok />
+                  </a>
+                )}
+                {contactData.telegram && (
+                  <a
+                    href={contactData.telegram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-2xl transition hover:text-primary"
+                  >
+                    <FaTelegramPlane />
                   </a>
                 )}
                 {contactData.youtube && (
