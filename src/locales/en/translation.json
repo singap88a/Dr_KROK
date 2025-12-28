@@ -133,7 +133,7 @@
     "description": "Unlock your potential with structured online learning designed to match real-world needs, guided by expert mentors and interactive lessons.",
     "stats": {
       "users": "50K+ Users",
-      "rating": "5.0 Rating"
+      "rating": "{{rating}} Rating"
     },
     "cta": {
       "getStarted": "Get Started",
