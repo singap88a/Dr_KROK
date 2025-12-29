@@ -23,6 +23,7 @@ export default function BookDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [pdfLoadError, setPdfLoadError] = useState(false);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -41,6 +42,7 @@ export default function BookDetails() {
     };
     
     const checkFavoriteStatus = async () => {
+      if (!isLoggedIn) return;
       try {
         const response = await request("favorites", { auth: true });
         const favorites = response.data || [];
@@ -57,9 +59,10 @@ export default function BookDetails() {
       fetchBookDetails();
       checkFavoriteStatus();
     }
-  }, [id, request, i18n.language]);
+  }, [id, request, i18n.language, isLoggedIn, book]);
 
-  const handleViewPdf = () => {
+  const handleViewPdf = (url) => {
+    setCurrentPdfUrl(url);
     setShowPdf(true);
     setPdfLoadError(false);
   };
@@ -116,7 +119,8 @@ export default function BookDetails() {
 
   const images = Object.values(book.images || {});
   const pdfFiles = Object.values(book.book_pdf || {});
-  const pdfUrl = pdfFiles.length > 0 ? pdfFiles[0].original_url : null;
+  const fullPdfUrl = pdfFiles.length > 0 ? pdfFiles[0].original_url : null;
+  const previewPdfUrl = book.mini_book_pdf || null;
 
   return (
     <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">
@@ -232,12 +236,12 @@ export default function BookDetails() {
                 </button>
               </Link>
 
-              {pdfUrl && (
+              {previewPdfUrl && (
                 <button
-                  onClick={handleViewPdf}
+                  onClick={() => handleViewPdf(previewPdfUrl)}
                   className="px-8 py-3 font-medium transition border text-primary rounded-xl border-primary hover:bg-primary hover:text-white"
                 >
-                  {t('books.view_pdf')}
+                  {t('books.preview_pdf')}
                 </button>
               )}
             </div>
@@ -274,7 +278,7 @@ export default function BookDetails() {
                 </div>
               ) : (
 <iframe
-  src={`${pdfUrl}#toolbar=0`}
+  src={`${currentPdfUrl}#toolbar=0`}
   className="w-full h-full border-0"
   title="PDF Viewer"
 />
