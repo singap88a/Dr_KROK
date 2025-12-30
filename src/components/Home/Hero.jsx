@@ -11,13 +11,14 @@ import he from 'he';
 export default function Hero() {
   const { isLoggedIn } = useUser();
   const { t, i18n } = useTranslation();
-  const { getSettings } = useApi();
+  const { getSettings, request } = useApi();
 
   const [heroData, setHeroData] = useState({
     titleOne: "",
     titleTwo: "",
     description: "",
-    totalClients: null
+    totalClients: null,
+    clientsRates: 0
   });
 
   const formatUsers = (num) => {
@@ -28,13 +29,15 @@ export default function Hero() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await getSettings();
+        // Use request directly with useCache: false to bypass cache and get fresh data
+        const response = await request("setting", { useCache: false });
         if (response && response.data) {
           setHeroData({
             titleOne: response.data.title_one_section_one_home || "",
             titleTwo: response.data.title_tow_section_one_home || "",
-            description: response.data.description_about_us_Our_Story || "",
-            totalClients: response.data.total_clients || null
+            description: response.data.description_section_home || "",
+            totalClients: response.data.total_clients ? parseInt(response.data.total_clients) : null,
+            clientsRates: response.data.clients_rates ? parseInt(response.data.clients_rates) : 0
           });
         }
       } catch (error) {
@@ -88,10 +91,10 @@ export default function Hero() {
               </div>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <FaStar key={i} className="text-yellow-400" />
+                  <FaStar key={i} className={i < heroData.clientsRates ? "text-yellow-400" : "text-gray-300"} />
                 ))}
                 <span className="ml-2 text-text-secondary">
-                  {t('hero.stats.rating')}
+                  {t('hero.stats.rating', { rating: heroData.clientsRates ? Number(heroData.clientsRates).toFixed(1) : "0.0" })}
                 </span>
               </div>
             </div>

@@ -7,6 +7,7 @@ import he from 'he';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import LoadingSpinner from "../../components/LoadingSpinner";
+import PDFViewer from "../../components/Books/PDFViewer";
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function BookDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [pdfLoadError, setPdfLoadError] = useState(false);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -41,6 +43,7 @@ export default function BookDetails() {
     };
     
     const checkFavoriteStatus = async () => {
+      if (!isLoggedIn) return;
       try {
         const response = await request("favorites", { auth: true });
         const favorites = response.data || [];
@@ -57,9 +60,10 @@ export default function BookDetails() {
       fetchBookDetails();
       checkFavoriteStatus();
     }
-  }, [id, request, i18n.language]);
+  }, [id, request, i18n.language, isLoggedIn, book]);
 
-  const handleViewPdf = () => {
+  const handleViewPdf = (url) => {
+    setCurrentPdfUrl(url);
     setShowPdf(true);
     setPdfLoadError(false);
   };
@@ -116,7 +120,8 @@ export default function BookDetails() {
 
   const images = Object.values(book.images || {});
   const pdfFiles = Object.values(book.book_pdf || {});
-  const pdfUrl = pdfFiles.length > 0 ? pdfFiles[0].original_url : null;
+  const fullPdfUrl = pdfFiles.length > 0 ? pdfFiles[0].original_url : null;
+  const previewPdfUrl = book.mini_book_pdf || null;
 
   return (
     <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">
@@ -232,12 +237,12 @@ export default function BookDetails() {
                 </button>
               </Link>
 
-              {pdfUrl && (
+              {previewPdfUrl && (
                 <button
-                  onClick={handleViewPdf}
+                  onClick={() => handleViewPdf(previewPdfUrl)}
                   className="px-8 py-3 font-medium transition border text-primary rounded-xl border-primary hover:bg-primary hover:text-white"
                 >
-                  {t('books.view_pdf')}
+                  {t('books.preview_pdf')}
                 </button>
               )}
             </div>
@@ -245,49 +250,13 @@ export default function BookDetails() {
         </div>
       </div>
 
-      {/* Simple PDF Viewer Modal */}
-      {showPdf && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
-          <div className="relative w-full h-full max-w-6xl mx-4 overflow-hidden bg-white rounded-lg">
-            {/* Header with title and close button */}
-            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 text-white bg-gray-800">
-              <h3 className="text-lg font-medium">{book.name}</h3>
-              <button 
-                onClick={() => setShowPdf(false)}
-                className="p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
-              >
-                <FiX size={20} />
-              </button>
-            </div>
-            
-            {/* PDF Container */}
-            <div className="h-full pt-12 pb-4">
-              {pdfLoadError ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <p className="mb-4 text-red-500">{t('books.pdf_load_error')}</p>
-                  <button 
-                    onClick={() => setShowPdf(false)}
-                    className="px-4 py-2 text-white rounded-lg bg-primary"
-                  >
-                    {t('books.close')}
-                  </button>
-                </div>
-              ) : (
-<iframe
-  src={`${pdfUrl}#toolbar=0`}
-  className="w-full h-full border-0"
-  title="PDF Viewer"
-/>
-
-              )}
-            </div>
-            
-            {/* Warning message */}
-            <div className="absolute bottom-0 left-0 right-0 p-2 text-xs text-center text-white bg-gray-900">
-              {t('books.pdf_view_only')}
-            </div>
-          </div>
-        </div>
+      {/* PDF Viewer */}
+      {showPdf && currentPdfUrl && (
+        <PDFViewer 
+          url={currentPdfUrl} 
+          onClose={() => setShowPdf(false)} 
+          fileName={book.name}
+        />
       )}
     </section>
   );

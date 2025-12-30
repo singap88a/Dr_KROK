@@ -133,7 +133,7 @@
     "description": "Unlock your potential with structured online learning designed to match real-world needs, guided by expert mentors and interactive lessons.",
     "stats": {
       "users": "50K+ Users",
-      "rating": "5.0 Rating"
+      "rating": "{{rating}} Rating"
     },
     "cta": {
       "getStarted": "Get Started",
@@ -206,6 +206,7 @@
     "quantity": "Quantity",
     "buy_now": "Buy Now",
     "view_pdf": "View PDF",
+    "preview_pdf": "Preview PDF",
     "type": "Type",
     "delivery": "Delivery",
     "pdf_only": "PDF Only",
