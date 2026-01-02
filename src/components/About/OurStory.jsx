@@ -112,6 +112,10 @@ export default function OurStory() {
           <div className="relative overflow-hidden border shadow-xl rounded-xl bg-gradient-to-br from-white/80 to-cyan-50 border-white/50 dark:from-gray-800/60 dark:to-gray-900/60">
             <video
               controls
+              poster={
+                storyData?.image_banner_page_about ||
+                "https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=2b8f2d6b6c9f8a3f6b3a2f4b1e2c3d4e"
+              }
               src={
                 storyData?.video_page_about ||
                 "https://www.w3schools.com/html/mov_bbb.mp4"

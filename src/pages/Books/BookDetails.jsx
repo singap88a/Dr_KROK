@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiHeart, FiX } from "react-icons/fi";
+import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiHeart, FiX, FiGrid, FiTag } from "react-icons/fi";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import he from 'he';
@@ -195,10 +195,18 @@ export default function BookDetails() {
                 <FiGlobe className="text-primary" /> {t('books.language')}: {book.language}
               </div>
               <div className="flex items-center gap-2">
-                <FiGlobe className="text-primary" /> {t('books.category')}: {book.category?.name}
+                <FiGrid className="text-primary" /> {
+                  book.categories && book.categories.length > 1 
+                  ? t('books.categories') 
+                  : t('books.category')
+                }: {
+                  book.categories && book.categories.length > 0 
+                  ? book.categories.map(cat => cat.name).join(', ') 
+                  : (book.category?.name || t('books.no_category'))
+                }
               </div>
               <div className="flex items-center gap-2">
-                <FiGlobe className="text-primary" /> {t('books.type')}: {
+                <FiTag className="text-primary" /> {t('books.type')}: {
                   (book.type?.toLowerCase().trim() === "delivery" || book.type?.toLowerCase().trim() === t('books.delivery')?.toLowerCase().trim())
                     ? t('books.delivery') 
                     : t('books.pdf_only')
