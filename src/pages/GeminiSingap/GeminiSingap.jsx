@@ -16,9 +16,9 @@ const GeminiSingap = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Static user profile
-  const profileImage = "https://randomuser.me/api/portraits/men/45.jpg";
-  const API_KEY = "AIzaSyAnSFh2GFZN4UutuPIOwSgCsYVVm8rikXE";
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+  const profileImage = "logo.png";
+  const API_KEY = "AIzaSyBFjvboHJqB8ztXHcVbMghEIXjtm6wp6SE";
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
   // Suggestions
   const suggestions = [
