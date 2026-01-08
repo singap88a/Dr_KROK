@@ -22,9 +22,9 @@ import {
   FaLock,
   FaShoppingCart,
   FaCreditCard,
-  FaPaypal,
   FaCcVisa,
-  FaCcMastercard,
+  FaApplePay,
+  FaGooglePay,
   FaUser,
   FaFacebook,
   FaInstagram,
@@ -40,7 +40,7 @@ export default function CourseSubscription() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request, getAuthToken } = useApi();
   const { isLoggedIn } = useUser();
 
   const isLiveCourse = location.pathname.includes('live-courses');
@@ -215,37 +215,41 @@ export default function CourseSubscription() {
     setIsSubscribing(true);
     setError("");
 
+    const finalAmount = useInstallment ? installmentAmount : discountedPrice;
+    // getAuthToken is already destructured from useApi at the top of the component
+
     try {
-      console.log('Starting subscription with:', {
-        courseId: id,
-        paymentMethod: selectedPayment,
-        amount: useInstallment ? installmentAmount : discountedPrice, // هنا بنبعت مبلغ التقسيط أو المبلغ الكامل
-        couponId,
-        userData: JSON.parse(localStorage.getItem("user") || "{}"),
-        isInstallment: useInstallment // فلاج علشان نعرف في الباك اند إن ده تقسيط
+      // Create FormData as required by the backend (based on user screenshot)
+      const formData = new FormData();
+      formData.append('amount', finalAmount.toString());
+      formData.append('product_name', course?.title || 'Course Subscription');
+      formData.append('token', getAuthToken() || "");
+
+      // Use the new generate-invoice API with FormData
+      const response = await request('payment/generate-invoice', {
+        method: 'POST',
+        auth: true,
+        body: formData,
+        isFormData: true
       });
 
-      const finalAmount = useInstallment ? installmentAmount : discountedPrice;
+      console.log('Invoice generation response:', response);
 
-      const response = await (isLiveCourse ? 
-        subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId) : 
-        subscribeToCourse(id, selectedPayment, finalAmount, couponId)
-      );
-
-      console.log('Subscription response:', response);
-
-      if (response && (response.success || response.code === 200)) {
-        setOrderData(response.data);
+      if (response && response.success && response.data?.invoice_url) {
+        // Redirect to the bank's invoice URL from the data object
+        window.location.href = response.data.invoice_url;
+      } else if (response && (response.success || response.code === 200)) {
+        // Fallback or data handling
+        const dataToSet = response.data || response;
+        setOrderData(dataToSet);
         setSubscriptionSuccess(true);
-        // Reset installment state after successful subscription
         setUseInstallment(false);
-        setInstallmentAmount("");
       } else {
-        throw new Error(response?.message || 'Subscription failed');
+        throw new Error(response?.message || 'Failed to generate invoice');
       }
     } catch (err) {
-      console.error('Subscription error:', err);
-      setError(err.message || t('courses.subscription_failed') || 'Subscription failed');
+      console.error('Payment error:', err);
+      setError(err.message || t('courses.subscription_failed') || 'Payment initialization failed');
     } finally {
       setIsSubscribing(false);
     }
@@ -549,9 +553,9 @@ export default function CourseSubscription() {
                     </h4>
                     <div className="space-y-2">
                       {[
-                        { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' },
-                        { id: 'mastercard', name: 'Mastercard', icon: FaCcMastercard, color: 'text-red-500' },
-                        { id: 'paypal', name: 'PayPal', icon: FaPaypal, color: 'text-sky-500' }
+                        { id: 'apple-pay', name: 'Apple Pay', icon: FaApplePay, color: 'text-black dark:text-white' },
+                        { id: 'google-pay', name: 'Google Pay', icon: FaGooglePay, color: 'text-gray-900 dark:text-gray-100' },
+                        { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' }
                       ].map((method) => {
                         const IconComponent = method.icon;
                         return (
@@ -559,7 +563,7 @@ export default function CourseSubscription() {
                             key={method.id}
                             className="flex items-center w-full gap-3 p-3 border rounded-lg border-border bg-surface"
                           >
-                            <IconComponent className={`text-xl ${method.color}`} />
+                            <IconComponent className={`text-2xl ${method.color}`} />
                             <span className="font-medium">{method.name}</span>
                           </div>
                         );

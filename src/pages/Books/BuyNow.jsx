@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiUser, FiPhone, FiMapPin, FiHome, FiCreditCard, FiRefreshCw } from "react-icons/fi";
-import { FaCcVisa, FaCcMastercard, FaCcPaypal } from "react-icons/fa";
+import { FaCcVisa, FaApplePay, FaGooglePay } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
@@ -887,9 +887,9 @@ const handleDeliveryOrder = async (e) => {
                 <h3 className="mb-4 text-lg font-semibold">{t('books.select_payment_method')}</h3>
                 <div className="flex gap-4">
                   {[
-                    { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' },
-                    { id: 'mastercard', name: 'Mastercard', icon: FaCcMastercard, color: 'text-red-500' },
-                    { id: 'paypal', name: 'PayPal', icon: FaCcPaypal, color: 'text-sky-500' }
+                    { id: 'apple-pay', name: 'Apple Pay', icon: FaApplePay, color: 'text-black dark:text-white' },
+                    { id: 'google-pay', name: 'Google Pay', icon: FaGooglePay, color: 'text-gray-900 dark:text-gray-100' },
+                    { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' }
                   ].map((method) => {
                     const IconComponent = method.icon;
                     return (

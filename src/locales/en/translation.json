@@ -299,6 +299,8 @@
 "failed_to_load_paint_data": "Failed to load paint data",
     "googlepay": "Google Pay",
     "applepay": "Apple Pay",
+    "google-pay": "Google Pay",
+    "apple-pay": "Apple Pay",
     "visa": "Visa",
     "checkout": "Checkout",
     "close": "Close",
