@@ -273,7 +273,7 @@ function InstructorDetails() {
                     <img
                       src={course.image || "/placeholder-course.jpg"}
                       alt={course.title}
-                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                      className="  w-full h-64 transition-transform duration-500 group-hover:scale-105"
                       onError={(e) => {
                         e.target.src = "/placeholder-course.jpg";
                       }}

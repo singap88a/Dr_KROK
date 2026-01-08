@@ -192,11 +192,11 @@ export default function Live_courses({ courses }) {
                   <div className="relative overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-lg dark:bg-gray-800 rounded-2xl hover:shadow-xl dark:border-gray-700 group-hover:-translate-y-2">
                     
                     {/* Image Section */}
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-64 overflow-hidden">
                       <img
                         src={course.img}
                         alt={course.title}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        className="  w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
                       
                       {/* Live Badge - Top Left */}

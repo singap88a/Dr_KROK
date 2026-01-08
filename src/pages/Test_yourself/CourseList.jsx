@@ -69,9 +69,9 @@ const CourseList = ({
                 className="overflow-hidden transition-all duration-300 transform border shadow-lg cursor-pointer bg-surface rounded-2xl hover:shadow-xl hover:-translate-y-1 group border-border"
                 onClick={() => onCourseSelect(course)}
               >
-                <div className="relative overflow-hidden">
+                <div className="relative overflow-hidden bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
                   <img 
-                    className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105" 
+                    className="  w-full h-64 transition-transform duration-300 group-hover:scale-105" 
                     src={course.image} 
                     alt={course.title}
                   />

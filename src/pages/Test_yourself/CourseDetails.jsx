@@ -20,9 +20,9 @@ const CourseDetails = ({ selectedCourse, onBack, onTestSelect }) => {
         
         <div className="mb-8 overflow-hidden border shadow-xl bg-surface rounded-2xl border-border">
           <div className="md:flex">
-            <div className="md:flex-shrink-0 md:w-2/5">
+            <div className="md:flex-shrink-0 md:w-2/5 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
               <img 
-                className="object-cover w-full h-64 md:h-full" 
+                className="object-contain w-full h-64 md:h-80" 
                 src={selectedCourse.image} 
                 alt={selectedCourse.title}
               />

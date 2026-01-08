@@ -74,13 +74,36 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
     };
   };
 
-  // تحضير جميع أسئلة التوصل عند بداية الاختبار
+  // دالة لتحضير إجابات MCQ بشكل عشوائي
+  const prepareMCQAnswers = (question) => {
+    if (question.type !== 'mcq') return null;
+    
+    // جمع جميع الإجابات المتاحة
+    const availableAnswers = [];
+    for (let i = 1; i <= 4; i++) {
+      const answerKey = `answer_${i}`;
+      if (question[answerKey] || question[`${answerKey}_image`]) {
+        availableAnswers.push(answerKey);
+      }
+    }
+    
+    // خلط الإجابات عشوائياً
+    return shuffleArray(availableAnswers);
+  };
+
+  // تحضير جميع الأسئلة (Connect و MCQ) عند بداية الاختبار
   useEffect(() => {
     if (selectedTest) {
       const shuffled = {};
       selectedTest.quizzes.forEach((question) => {
         if (question.type === 'connect') {
           shuffled[question.id] = prepareConnectQuestion(question);
+        } else if (question.type === 'mcq') {
+          // تخزين ترتيب الإجابات المخلوط لأسئلة MCQ
+          shuffled[question.id] = {
+            ...question,
+            shuffledAnswers: prepareMCQAnswers(question)
+          };
         }
       });
       shuffledQuestionsRef.current = shuffled; // حفظ في useRef
@@ -323,6 +346,7 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
                 question={currentQuestion}
                 userAnswer={userAnswers[currentQuestion.id]}
                 onAnswerSelect={handleAnswerSelect}
+                shuffledAnswers={shuffledQuestionsRef.current[currentQuestion.id]?.shuffledAnswers}
               />
             ) : (
               <ConnectQuestion 

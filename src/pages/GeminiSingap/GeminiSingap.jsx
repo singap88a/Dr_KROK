@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaCopy, FaStop, FaTrash, FaRedo, FaPaperPlane, FaLightbulb, FaSearch, FaCode } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
+import axios from "axios";
 
 const GeminiSingap = () => {
   const typingIntervalsRef = useRef({});
@@ -18,8 +19,7 @@ const GeminiSingap = () => {
 
   // Static user profile
   const profileImage = "logo.png";
-  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+  const API_URL = 'https://dr-krok.com/api/chat/send';
 
   // Suggestions
   const suggestions = [
@@ -86,45 +86,30 @@ const GeminiSingap = () => {
     }
   }, []);
 
-  // Send message to Gemini API
+  // Send message to Backend API
   const sendToGemini = async (message) => {
     // Create a new AbortController for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
+      const response = await axios({
+        method: 'post',
+        url: API_URL,
+        data: { message: message },
+        signal: signal,
         headers: {
           'Content-Type': 'application/json',
-        },
-        signal, // Pass the signal to fetch
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: message
-                }
-              ]
-            }
-          ]
-        })
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest' 
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Response error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.candidates && data.candidates[0].content.parts[0].text) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error('No response received from Gemini');
-      }
+      // Extract response from backend format
+      const botResponse = response.data.candidates[0].content.parts[0].text;
+      return botResponse;
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
         console.log('Request was aborted');
         return null; // Return null if aborted
       }
@@ -292,10 +277,10 @@ const GeminiSingap = () => {
       {/* Header */}
       {showHeader && (
         <header className="flex flex-col items-center justify-center flex-1 w-full max-w-4xl px-4 mx-auto text-center animate-fade-in">
-          <div className="mb-8 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full">
+          <div className="p-4 mb-8 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10">
             <img src="logo.png" alt="Gemini" className="w-20 h-20 drop-shadow-2xl" />
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
+          <h1 className="mb-4 text-5xl font-bold tracking-tight md:text-6xl">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
               Hello, there
             </span>
@@ -305,7 +290,7 @@ const GeminiSingap = () => {
           </p>
 
           {/* Suggestions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16 w-full">
+          <div className="grid w-full grid-cols-1 gap-4 mt-16 md:grid-cols-3">
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
@@ -351,10 +336,10 @@ const GeminiSingap = () => {
             <div className={`group relative max-w-[80%] ${chat.role === "user" ? "items-end" : "items-start"}`}>
               {chat.loading ? (
                 <div className={`p-5 rounded-2xl ${darkMode ? 'bg-surface' : 'bg-white shadow-sm'} border ${darkMode ? 'border-border' : 'border-gray-100'}`}>
-                  <div className="flex flex-col w-48 md:w-80 gap-3">
-                    <div className="h-2 w-full rounded bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 animate-loading-bar"></div>
-                    <div className="h-2 w-3/4 rounded bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 animate-loading-bar opacity-75"></div>
-                    <div className="h-2 w-1/2 rounded bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 animate-loading-bar opacity-50"></div>
+                  <div className="flex flex-col w-48 gap-3 md:w-80">
+                    <div className="w-full h-2 rounded bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 animate-loading-bar"></div>
+                    <div className="w-3/4 h-2 rounded opacity-75 bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 animate-loading-bar"></div>
+                    <div className="w-1/2 h-2 rounded opacity-50 bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 animate-loading-bar"></div>
                   </div>
                 </div>
               ) : (

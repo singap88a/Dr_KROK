@@ -158,11 +158,11 @@ export default function CoursesPreview({ courses }) {
                     style={{ textDecoration: "none" }}
                     className="block"
                   >
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-64 overflow-hidden">
                       <img
                         src={course.img}
                         alt={course.title}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        className="  w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
               
                       <button

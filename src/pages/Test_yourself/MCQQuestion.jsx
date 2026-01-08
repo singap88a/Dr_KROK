@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-const MCQQuestion = ({ question, userAnswer, onAnswerSelect }) => {
+const MCQQuestion = ({ question, userAnswer, onAnswerSelect, shuffledAnswers }) => {
+  // استخدام الإجابات المخلوطة الممررة من الكومبوننت الأب
+  const answersToDisplay = shuffledAnswers || ['answer_1', 'answer_2', 'answer_3', 'answer_4'];
+
   return (
     <>
       <div dangerouslySetInnerHTML={{ __html: question.title }} />
       
       <div className="space-y-4">
-        {['answer_1', 'answer_2', 'answer_3', 'answer_4'].map((answerKey) => {
+        {answersToDisplay.map((answerKey) => {
           const answerText = question[answerKey];
           const answerImage = question[`${answerKey}_image`];
           
@@ -36,7 +39,7 @@ const MCQQuestion = ({ question, userAnswer, onAnswerSelect }) => {
                     <img 
                       src={answerImage} 
                       alt="Answer" 
-                      className="mx-auto mt-3 rounded-lg shadow-sm max-h-48"
+                      className="mx-auto mt-3 rounded-lg shadow-sm w-full object-contain"
                     />
                   )}
                 </div>

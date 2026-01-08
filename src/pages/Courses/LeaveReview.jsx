@@ -107,17 +107,19 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, typ
 
   const renderStars = () => {
     return Array.from({ length: 5 }).map((_, i) => (
-      <FaStar
-        key={i}
-        className={`text-3xl cursor-pointer transition-all duration-200 ${
-          i < rating
-            ? 'text-yellow-400'
-            : hasReviewed
-              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-              : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'
-        } ${hasReviewed ? 'cursor-not-allowed' : 'hover:scale-110'}`}
-        onClick={() => handleRatingClick(i + 1)}
-      />
+      <div key={i} className="flex flex-col items-center gap-1">
+        <FaStar
+          className={`text-3xl cursor-pointer transition-all duration-200 ${
+            i < rating
+              ? 'text-yellow-400'
+              : hasReviewed
+                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'
+          } ${hasReviewed ? 'cursor-not-allowed' : 'hover:scale-110'}`}
+          onClick={() => handleRatingClick(i + 1)}
+        />
+        <span className="text-xs font-medium text-text-muted">{i + 1}</span>
+      </div>
     ));
   };
 

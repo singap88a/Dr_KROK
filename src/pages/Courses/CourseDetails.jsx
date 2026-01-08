@@ -224,7 +224,7 @@ export default function CourseDetails() {
     <section className="min-h-screen px-4 py-8 bg-background sm:px-6 md:px-12 text-text">
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
-        <div className="relative w-full overflow-hidden shadow-lg rounded-2xl lg:mx-0">
+        <div className="relative w-full h-[500px] overflow-hidden shadow-lg rounded-2xl lg:mx-0">
           {videoUrl ? (
             <video
               ref={videoRef}
@@ -309,7 +309,16 @@ export default function CourseDetails() {
               <FaBook className="text-primary" /> {t("courses.lectures", "Lectures")} <span className="font-medium">{course.lessons_count || 0}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FaCalendarAlt className="text-primary" /> {t("courses.courseDate", "Course Date")} <span className="font-medium">{course.instructor?.created_at ? parseDate(course.instructor.created_at).toLocaleDateString() : ''}</span>
+              <FaCalendarAlt className="text-primary" /> {t("courses.courseDate", "Course Date")} <span className="font-medium">
+                {course.instructor?.created_at ? (() => {
+                  const date = parseDate(course.instructor.created_at);
+                  if (!date) return '';
+                  const year = date.getFullYear();
+                  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                  const day = date.getDate().toString().padStart(2, '0');
+                  return `${year}-${month}-${day}`;
+                })() : ''}
+              </span>
             </div>
 
             {course.avg_rating && (
@@ -363,6 +372,43 @@ export default function CourseDetails() {
             <h3 className="text-lg font-semibold sm:text-xl">
               {t('courses.reviews') || 'Reviews'} ({reviews.length})
             </h3>
+            
+            {/* Rating Distribution */}
+            {reviews.length > 0 && (
+              <div className="p-4 mb-6 border rounded-lg border-border bg-surface">
+                <h4 className="mb-4 text-base font-semibold">{t('courses.ratingDistribution', 'Rating Distribution')}</h4>
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((starCount) => {
+                    const count = reviews.filter(r => Math.round(r.rate_number) === starCount).length;
+                    const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                    return (
+                      <div key={starCount} className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-sm">
+                            {Array.from({ length: starCount }).map((_, i) => (
+                              <FaStar key={i} className="text-yellow-400" size={14} />
+                            ))}
+                          </div>
+                          <div className="flex-1 h-3 overflow-hidden bg-gray-200 rounded-full">
+                            <div 
+                              className="h-full transition-all duration-300 bg-yellow-400"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-text-muted w-14 text-right">
+                            {count} ({percentage.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="text-xs text-center text-text-muted ml-1">
+                          {starCount} {starCount === 1 ? t('courses.star', 'Star') : t('courses.stars', 'Stars')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
             {reviews.length === 0 && (
               <p className="text-text-muted">
                 {t('courses.noReviews') || 'No reviews yet.'}

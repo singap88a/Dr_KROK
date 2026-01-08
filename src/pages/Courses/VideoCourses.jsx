@@ -11,11 +11,11 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
           className="relative flex flex-col overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 group"
           onClick={() => goToDetails(course)}
         >
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-64 overflow-hidden">
             <img
               src={course.img}
               alt={course.title}
-              className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+              className="  w-full h-64 transition-transform duration-500 group-hover:scale-105"
             />
             <button
               aria-label="toggle favorite"

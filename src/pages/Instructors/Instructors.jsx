@@ -137,7 +137,7 @@ function Instructors() {
                     <img
                       src={instructor.image || "/logo.png"}
                       alt={instructor.name}
-                      className="object-cover w-full h-56"
+                      className="   mx-auto h-64 w-[250px]   "
                       onError={(e) => {
                         e.target.src = "/logo.png";
                       }}
