@@ -6,10 +6,6 @@ import {
   FaChevronDown, 
   FaChevronRight,
   FaLock,
-  FaPaperclip,
-  FaFileAlt,
-  FaImage,
-  FaVideo,
   FaClipboardList,
   FaUnlock,
   FaCheckCircle
@@ -37,13 +33,14 @@ const SectionItem = ({
 }) => {
   const { t } = useTranslation();
 
-  // 🔥 التعديل: إزالة الفتح التلقائي وجعل السهم هو المسؤول عن الفتح
-  const handleSectionHeaderClick = (e) => {
-    // منع فتح السيكشن عند النقر على الهيدر، السهم فقط هو اللي يفتح
+  // Click handler for opening section content in main area
+  const handleContentClick = (e) => {
     e.stopPropagation();
+    onSectionClick(section);
   };
 
-  const handleArrowClick = (e) => {
+  // Click handler for toggling accordion in sidebar
+  const handleToggleClick = (e) => {
     e.stopPropagation();
     onToggleSection(section.id);
   };
@@ -66,38 +63,7 @@ const SectionItem = ({
   const sectionCompletionPercentage = calculateSectionCompletion();
   const isSectionCompleted = sectionCompletionPercentage >= 100;
 
-  // عرض ملحقات السيكشن
-  const renderSectionAttachments = () => {
-    if (!section.images && !section.files && !section.video_related) return null;
 
-    return (
-      <div className="p-4 border-t border-border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-        <button
-          onClick={() => onSectionClick(section)}
-          className="flex items-center justify-center w-full gap-3 p-4 transition-all duration-300 transform border-2 border-dashed border-primary/30 rounded-xl hover:border-primary hover:bg-primary/5 hover:scale-105 group"
-        >
-          <div className="flex-shrink-0 p-3 transition-all duration-300 rounded-full bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110">
-            <FaPaperclip className="text-lg text-primary group-hover:text-primary" />
-          </div>
-          <div className="flex-1 text-left">
-            <h4 className="font-semibold text-primary group-hover:text-primary">
-              {t("courses.sectionAttachments", "Section Resources")}
-            </h4>
-            <p className="text-sm text-text-muted group-hover:text-text">
-              {t("courses.viewSectionMaterials", "View section resources")}
-            </p>
-          </div>
-          <div className="flex-shrink-0">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              {section.images && section.images.length > 0 && <FaImage />}
-              {section.files && section.files.length > 0 && <FaFileAlt />}
-              {section.video_related && <FaVideo />}
-            </div>
-          </div>
-        </button>
-      </div>
-    );
-  };
 
   // عرض اختبارات السيكشن
   const renderSectionTests = () => {
@@ -185,12 +151,12 @@ const SectionItem = ({
   return (
     <div className="border rounded-lg bg-surface border-border">
       <div
-        className={`p-4 transition-all group cursor-default ${
+        className={`p-4 transition-all group cursor-pointer ${
           isActive
             ? "bg-primary/5 border-b border-primary/20"
             : ""
         }`}
-        onClick={handleSectionHeaderClick}
+        onClick={handleContentClick}
       >
         <div className="flex flex-col">
           <div className="relative flex items-start justify-between">
@@ -243,7 +209,7 @@ const SectionItem = ({
                   {/* 🔥 نقل السهم إلى هنا بحيث يكون في نفس الصف مع العنوان */}
                   <div className="flex-shrink-0">
                     <button
-                      onClick={handleArrowClick}
+                      onClick={handleToggleClick}
                       className={`relative p-2 rounded-full border transition-all duration-300 ease-in-out shadow-sm ${
                         isExpanded
                           ? "bg-primary text-white scale-105"
@@ -290,8 +256,7 @@ const SectionItem = ({
             />
           ))}
           
-          {/* عرض ملحقات السيكشن واختباراته تحت آخر درس */}
-          {renderSectionAttachments()}
+          {/* عرض اختبارات السيكشن تحت آخر درس */}
           {renderSectionTests()}
         </div>
       )}

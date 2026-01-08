@@ -9,7 +9,6 @@ import CourseHeader from "./CourseHeader";
 import CourseContentSidebar from "./CourseContentSidebar";
 import VideoPlayerSection from "./VideoPlayerSection";
 import ImagePopup from "../Popups/ImagePopup";
-import PDFPopup from "../Popups/PDFPopup";
 import VideoPopup from "../Popups/VideoPopup";
 import PurchaseModal from "../Popups/PurchaseModal";
 
@@ -43,8 +42,6 @@ export default function CourseLessons() {
   const [lessonStatuses, setLessonStatuses] = useState({});
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [showFilesPopup, setShowFilesPopup] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [showVideoPopup, setShowVideoPopup] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [courseProgress, setCourseProgress] = useState(null);
@@ -548,8 +545,9 @@ export default function CourseLessons() {
   };
 
   const handleFileClick = (file) => {
-    setSelectedFile(file);
-    setShowFilesPopup(true);
+    if (file) {
+      window.open(file, "_blank");
+    }
   };
 
   const handleVideoClick = (video) => {
@@ -646,11 +644,7 @@ export default function CourseLessons() {
         onClose={() => setShowImagePopup(false)}
       />
 
-      <PDFPopup
-        show={showFilesPopup}
-        file={selectedFile}
-        onClose={() => setShowFilesPopup(false)}
-      />
+
 
       <VideoPopup
         show={showVideoPopup}

@@ -20,6 +20,7 @@ import {
   FaTrophy,
   FaAward
 } from "react-icons/fa";
+import InlinePDFViewer from "../Popups/InlinePDFViewer";
 
 const VideoPlayerSection = ({
   currentLesson,
@@ -66,6 +67,10 @@ const VideoPlayerSection = ({
     correctAnswers: 0,
     score: 0
   });
+
+  // State for expandable descriptions
+  const [isLessonDescExpanded, setIsLessonDescExpanded] = useState(false);
+  const [isSectionDescExpanded, setIsSectionDescExpanded] = useState(false);
 
   // Track video time for periodic quizzes
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
@@ -724,26 +729,46 @@ const VideoPlayerSection = ({
               <FaFileAlt className="text-primary dark:text-primary-dark" />
               {t("courses.files", "Study Materials")}
             </h5>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {content.files.map((file, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onFileClick(file.url || file)}
-                  className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-primary dark:hover:border-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 hover:shadow-md group dark:border-gray-600"
-                >
-                  <div className="flex-shrink-0 p-3 transition-colors rounded-lg bg-primary/10 group-hover:bg-primary/20 dark:bg-primary-dark/10">
-                    <FaFileAlt className="text-xl text-primary dark:text-primary-dark" />
+            <div className="grid grid-cols-1 gap-6">
+              {content.files.map((file, idx) => {
+                const fileUrl = file.url || file;
+                const fileName = file.name || `${t("courses.file", "File")} ${idx + 1}`;
+                
+                // Check if file is PDF (you can expand this logic as needed)
+                const isPDF = typeof fileUrl === 'string' && fileUrl.toLowerCase().endsWith('.pdf');
+                
+                return (
+                  <div key={idx}>
+                    {isPDF ? (
+                      // Display PDF inline
+                      <div>
+                        <h6 className="mb-3 text-base font-semibold text-text dark:text-text-dark">
+                          {fileName}
+                        </h6>
+                        <InlinePDFViewer url={fileUrl} fileName={fileName} />
+                      </div>
+                    ) : (
+                      // Display other file types as download button
+                      <button
+                        onClick={() => onFileClick(fileUrl)}
+                        className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-primary dark:hover:border-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 hover:shadow-md group dark:border-gray-600"
+                      >
+                        <div className="flex-shrink-0 p-3 transition-colors rounded-lg bg-primary/10 group-hover:bg-primary/20 dark:bg-primary-dark/10">
+                          <FaFileAlt className="text-xl text-primary dark:text-primary-dark" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="block text-sm font-medium text-text dark:text-text-dark">
+                            {fileName}
+                          </span>
+                          <span className="block mt-1 text-xs text-text-muted dark:text-text-muted-dark">
+                            {t("courses.clickToDownload", "Click to download")}
+                          </span>
+                        </div>
+                      </button>
+                    )}
                   </div>
-                  <div className="flex-1 text-left">
-                    <span className="block text-sm font-medium text-text dark:text-text-dark">
-                      {file.name || `${t("courses.file", "File")} ${idx + 1}`}
-                    </span>
-                    <span className="block mt-1 text-xs text-text-muted dark:text-text-muted-dark">
-                      {t("courses.clickToDownload", "Click to download")}
-                    </span>
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1022,9 +1047,17 @@ const VideoPlayerSection = ({
             )}
             {currentLesson.description && (
               <div className="mt-2 text-sm text-text-secondary dark:text-text-secondary-dark">
-                <p className="leading-relaxed line-clamp-2">
+                <p className={`leading-relaxed ${isLessonDescExpanded ? '' : 'line-clamp-3'}`}>
                   {currentLesson.description}
                 </p>
+                {currentLesson.description.length > 150 && (
+                  <button
+                    onClick={() => setIsLessonDescExpanded(!isLessonDescExpanded)}
+                    className="mt-1 text-sm font-medium underline text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 cursor-pointer"
+                  >
+                    {isLessonDescExpanded ? "Show Less" : "Show More"}
+                  </button>
+                )}
               </div>
             )}
 
@@ -1095,9 +1128,17 @@ const VideoPlayerSection = ({
             </h3>
             {currentSection.description && (
               <div className="mt-2 text-sm text-text-secondary dark:text-text-secondary-dark">
-                <p className="leading-relaxed line-clamp-3">
+                <p className={`leading-relaxed ${isSectionDescExpanded ? '' : 'line-clamp-3'}`}>
                   {currentSection.description}
                 </p>
+                {currentSection.description.length > 150 && (
+                  <button
+                    onClick={() => setIsSectionDescExpanded(!isSectionDescExpanded)}
+                    className="mt-1 text-sm font-medium underline text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 cursor-pointer"
+                  >
+                    {isSectionDescExpanded ? "Show Less" : "Show More"}
+                  </button>
+                )}
               </div>
             )}
 
