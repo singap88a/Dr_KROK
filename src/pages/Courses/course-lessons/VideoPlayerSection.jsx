@@ -20,6 +20,7 @@ import {
   FaTrophy,
   FaAward
 } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import InlinePDFViewer from "../Popups/InlinePDFViewer";
 
 const VideoPlayerSection = ({
@@ -361,7 +362,7 @@ const VideoPlayerSection = ({
     );
   };
 
-  // Quiz Modal for periodic quizzes - positioned exactly over video
+  // Quiz Modal for periodic quizzes - positioned over entire screen
   const QuizModal = () => {
     if (!quizModal.isOpen || !quizModal.currentQuiz) return null;
 
@@ -370,175 +371,164 @@ const VideoPlayerSection = ({
     const isCorrect = showFeedback && selectedAnswer === correctAnswerIndex;
 
     return (
-      <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]">
-        <div className="flex items-center justify-center w-full h-full p-4">
-          <div className="w-full max-w-lg overflow-hidden transition-all transform shadow-xl bg-surface dark:bg-surface-dark rounded-2xl">
-            {/* Header */}
-            <div className="p-4 text-white bg-primary dark:from-primary-dark dark:to-primary-dark/80">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-full bg-opacity-20">
-                    <FaChartLine className="text-sm" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold">
-                      {t("courses.quickQuiz", "Quick Quiz")}
-                    </h3>
-                    <p className="text-xs text-white text-opacity-90">
-                      {t("courses.atTime", "At")} {currentQuiz.show_at_time}s
-                    </p>
-                  </div>
+      <div className="absolute inset-0 z-40 flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-lg h-full max-h-[95%] overflow-hidden flex flex-col transition-all transform shadow-2xl bg-surface dark:bg-surface-dark rounded-xl border border-white/10"
+        >
+          {/* Header - Fixed at top */}
+          <div className="p-3 text-white bg-gradient-to-r from-primary to-primary/80 dark:from-primary-dark dark:to-primary-dark/80 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white rounded-lg bg-opacity-20 backdrop-blur-sm">
+                  <FaChartLine className="text-sm" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-xs bg-white rounded-full bg-opacity-20">
-                    {currentQuestionIndex + 1}
-                  </span>
+                <div>
+                  <h3 className="text-base font-bold tracking-tight">
+                    Quick Quiz
+                  </h3>
+                  <p className="text-[10px] text-white text-opacity-80">
+                    Question {currentQuestionIndex + 1} • {currentQuiz.show_at_time}s
+                  </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 bg-surface dark:bg-surface-dark">
-              {/* Question */}
-              <div className="mb-4">
-                <h4 className="mb-3 text-sm font-semibold leading-relaxed text-text dark:text-text-dark">
-                  <div 
-                    dangerouslySetInnerHTML={{ 
-                      __html: currentQuiz.title || t("courses.question", "Question") 
-                    }} 
-                  />
-                </h4>
-                
-                {/* Answers */}
-                <div className="space-y-2">
-                  {[1, 2, 3, 4].map((index) => {
-                    const answer = currentQuiz[`answer_${index}`];
-                    if (!answer) return null;
-
-                    const answerIndex = index - 1;
-                    const isSelected = selectedAnswer === answerIndex;
-                    const isCorrectAnswer = answerIndex === correctAnswerIndex;
-                    
-                    // Determine button styling
-                    let buttonClass = "w-full p-3 text-sm text-left transition-all border rounded-lg ";
-                    
-                    if (showFeedback) {
-                      // After submission - show feedback
-                      if (isCorrectAnswer) {
-                        buttonClass += "border-green-500 bg-green-50 dark:bg-green-900/30 dark:border-green-400";
-                      } else if (isSelected && !isCorrect) {
-                        buttonClass += "border-red-500 bg-red-50 dark:bg-red-900/30 dark:border-red-400";
-                      } else {
-                        buttonClass += "border-border bg-surface dark:border-border-dark dark:bg-surface-dark opacity-60";
-                      }
-                    } else {
-                      // Before submission - allow selection
-                      if (isSelected) {
-                        buttonClass += "border-primary bg-primary/10 dark:border-primary-dark dark:bg-primary-dark/10 cursor-pointer";
-                      } else {
-                        buttonClass += "border-border bg-surface dark:border-border-dark dark:bg-surface-dark hover:border-primary dark:hover:border-primary-dark hover:bg-primary/5 dark:hover:bg-primary-dark/5 cursor-pointer";
-                      }
-                    }
-
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => !showFeedback && handleAnswerSelect(answerIndex)}
-                        disabled={showFeedback}
-                        className={buttonClass}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-medium rounded-full border ${
-                            showFeedback && isCorrectAnswer
-                              ? "bg-green-500 text-white border-green-500 dark:bg-green-400 dark:border-green-400"
-                              : showFeedback && isSelected && !isCorrect
-                              ? "bg-red-500 text-white border-red-500 dark:bg-red-400 dark:border-red-400"
-                              : isSelected
-                              ? "bg-primary text-white border-primary dark:bg-primary-dark dark:border-primary-dark"
-                              : "text-gray-500 border-gray-300 dark:text-gray-400 dark:border-gray-500"
-                          }`}>
-                            {showFeedback && isCorrectAnswer ? <FaCheck className="text-xs" /> : String.fromCharCode(64 + index)}
-                          </div>
-                          <span className={`text-sm font-medium ${
-                            showFeedback && isCorrectAnswer
-                              ? "text-green-700 dark:text-green-300"
-                              : showFeedback && isSelected && !isCorrect
-                              ? "text-red-700 dark:text-red-300"
-                              : "text-text dark:text-text-dark"
-                          }`}>{answer}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Feedback Message */}
-              {showFeedback && (
-                <div className={`mb-4 p-3 rounded-lg border ${
-                  isCorrect
-                    ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
-                    : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-                }`}>
-                  <div className="flex items-center gap-2">
-                    {isCorrect ? (
-                      <>
-                        <FaCheck className="text-green-600 dark:text-green-400" />
-                        <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                          {t("courses.correctAnswer", "Correct Answer! Well done")}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <FaTimes className="text-red-600 dark:text-red-400" />
-                        <span className="text-sm font-medium text-red-700 dark:text-red-300">
-                          {t("courses.incorrectAnswer", "Incorrect Answer. The correct answer is shown above")}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                {!showFeedback ? (
-                  <>
-                    <button
-                      onClick={handleContinueAfterQuiz}
-                      className="flex-1 px-3 py-2 text-xs font-medium transition-colors rounded-lg text-text dark:text-text-dark bg-accent dark:bg-accent-dark hover:bg-accent/80 dark:hover:bg-accent-dark/80"
-                    >
-                      {t("common.skip", "Skip")}
-                    </button>
-                    <button
-                      onClick={handleAnswerConfirm}
-                      disabled={selectedAnswer === null}
-                      className={`flex-1 px-3 py-2 text-xs font-medium text-white transition-all rounded-lg ${
-                        selectedAnswer === null
-                          ? "bg-gray-400 cursor-not-allowed dark:bg-gray-600"
-                          : "bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
-                      }`}
-                    >
-                      {t("common.submit", "Submit Answer")}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={handleContinueAfterQuiz}
-                    className="w-full px-3 py-2 text-xs font-medium text-white transition-all rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
-                  >
-                    {t("common.continue", "Continue")}
-                  </button>
-                )}
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Content - Scrollable if too long */}
+          <div className="p-4 flex-1 overflow-y-auto bg-surface dark:bg-surface-dark scrollbar-hide">
+            {/* Question */}
+            <div className="mb-4">
+              <div 
+                className="text-sm font-semibold leading-relaxed text-text dark:text-text-dark"
+                dangerouslySetInnerHTML={{ 
+                  __html: currentQuiz.title || "Question" 
+                }} 
+              />
+              
+              {/* Answers */}
+              <div className="mt-4 space-y-2">
+                {[1, 2, 3, 4].map((index) => {
+                  const answer = currentQuiz[`answer_${index}`];
+                  if (!answer) return null;
+
+                  const answerIndex = index - 1;
+                  const isSelected = selectedAnswer === answerIndex;
+                  const isCorrectAnswer = answerIndex === correctAnswerIndex;
+                  
+                  // Determine button styling
+                  let buttonClass = "w-full p-3 text-left transition-all duration-200 border-2 rounded-xl flex items-center gap-3 ";
+                  
+                  if (showFeedback) {
+                    if (isCorrectAnswer) {
+                      buttonClass += "border-green-500 bg-green-500/10 dark:bg-green-500/20";
+                    } else if (isSelected && !isCorrect) {
+                      buttonClass += "border-red-500 bg-red-500/10 dark:bg-red-500/20";
+                    } else {
+                      buttonClass += "border-border bg-surface dark:border-border-dark opacity-40";
+                    }
+                  } else {
+                    if (isSelected) {
+                      buttonClass += "border-primary bg-primary/5 dark:border-primary-dark cursor-pointer shadow-sm";
+                    } else {
+                      buttonClass += "border-border bg-surface dark:border-border-dark dark:bg-surface-dark hover:border-primary/50 dark:hover:border-primary-dark/50 hover:bg-primary/5 cursor-pointer";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => !showFeedback && handleAnswerSelect(answerIndex)}
+                      disabled={showFeedback}
+                      className={buttonClass}
+                    >
+                      <div className={`flex items-center justify-center flex-shrink-0 w-7 h-7 text-xs font-bold rounded-lg border-2 transition-colors ${
+                        showFeedback && isCorrectAnswer
+                          ? "bg-green-500 text-white border-green-500"
+                          : showFeedback && isSelected && !isCorrect
+                          ? "bg-red-500 text-white border-red-500"
+                          : isSelected
+                          ? "bg-primary text-white border-primary dark:bg-primary-dark"
+                          : "text-gray-400 border-gray-200 dark:border-gray-700"
+                      }`}>
+                        {showFeedback && isCorrectAnswer ? <FaCheck size={12} /> : String.fromCharCode(64 + index)}
+                      </div>
+                      <span className={`text-sm font-medium ${
+                        showFeedback && isCorrectAnswer
+                          ? "text-green-600 dark:text-green-400"
+                          : showFeedback && isSelected && !isCorrect
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-text dark:text-text-dark"
+                      }`}>{answer}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Feedback Message */}
+            <AnimatePresence>
+              {showFeedback && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className={`mb-4 p-3 rounded-xl border-2 flex items-center gap-3 ${
+                    isCorrect
+                      ? "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400"
+                      : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-full ${isCorrect ? "bg-green-500" : "bg-red-500"}`}>
+                    {isCorrect ? <FaCheck className="text-white text-[10px]" /> : <FaTimes className="text-white text-[10px]" />}
+                  </div>
+                  <span className="text-xs font-bold">
+                    {isCorrect ? "Correct! Well done." : "Incorrect. See the correct answer above."}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Action Buttons - Fixed at bottom */}
+          <div className="p-4 border-t border-border dark:border-border-dark bg-surface/50 dark:bg-surface-dark/50 shrink-0">
+            <div className="flex gap-2">
+              {!showFeedback ? (
+                <>
+                  <button
+                    onClick={handleContinueAfterQuiz}
+                    className="flex-1 px-4 py-2.5 text-xs font-bold transition-all rounded-xl text-text-muted hover:bg-gray-100 dark:hover:bg-white/5"
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={handleAnswerConfirm}
+                    disabled={selectedAnswer === null}
+                    className={`flex-1 px-4 py-2.5 text-xs font-bold text-white transition-all rounded-xl shadow-lg shadow-primary/20 ${
+                      selectedAnswer === null
+                        ? "bg-gray-300 cursor-not-allowed dark:bg-gray-700"
+                        : "bg-primary dark:bg-primary-dark hover:scale-[1.02] active:scale-[0.98]"
+                    }`}
+                  >
+                    Submit Answer
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleContinueAfterQuiz}
+                  className="w-full px-4 py-2.5 text-xs font-bold text-white transition-all rounded-xl bg-primary dark:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+                >
+                  Continue
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   };
 
-  // Results Modal for showing final quiz results - positioned exactly over video
+  // Results Modal for showing final quiz results - positioned over entire screen
   const ResultsModal = () => {
     if (!resultsModal.isOpen) return null;
 
@@ -549,31 +539,31 @@ const VideoPlayerSection = ({
 
     const getPerformanceMessage = () => {
       if (isExcellent) return { 
-        message: t("courses.excellentMessage", "Outstanding! You've mastered this lesson completely."),
+        message: "Outstanding! You've mastered this lesson completely.",
         color: "text-green-600 dark:text-green-400",
-        bgColor: "bg-green-50 dark:bg-green-900",
-        borderColor: "border-green-200 dark:border-green-800",
+        bgColor: "bg-green-500/10",
+        borderColor: "border-green-500/20",
         icon: "🏆"
       };
       if (isGood) return { 
-        message: t("courses.goodMessage", "Great job! You have a solid understanding of the material."),
+        message: "Great job! You have a solid understanding of the material.",
         color: "text-blue-600 dark:text-blue-400",
-        bgColor: "bg-blue-50 dark:bg-blue-900",
-        borderColor: "border-blue-200 dark:border-blue-800",
+        bgColor: "bg-blue-500/10",
+        borderColor: "border-blue-500/20",
         icon: "⭐"
       };
       if (isAverage) return { 
-        message: t("courses.averageMessage", "Good effort! You understand the main concepts."),
+        message: "Good effort! You understand the main concepts.",
         color: "text-yellow-600 dark:text-yellow-400",
-        bgColor: "bg-yellow-50 dark:bg-yellow-900",
-        borderColor: "border-yellow-200 dark:border-yellow-800",
+        bgColor: "bg-yellow-500/10",
+        borderColor: "border-yellow-500/20",
         icon: "📚"
       };
       return { 
-        message: t("courses.poorMessage", "Keep practicing! Review the material and try again."),
+        message: "Keep practicing! Review the material and try again.",
         color: "text-orange-600 dark:text-orange-400",
-        bgColor: "bg-orange-50 dark:bg-orange-900",
-        borderColor: "border-orange-200 dark:border-orange-800",
+        bgColor: "bg-orange-500/10",
+        borderColor: "border-orange-500/20",
         icon: "💪"
       };
     };
@@ -581,97 +571,82 @@ const VideoPlayerSection = ({
     const performance = getPerformanceMessage();
 
     return (
-<div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]">
-  <div className="flex items-center justify-center w-full h-full p-4">
-    <div className="w-full max-w-xs overflow-hidden transition-all transform shadow-xl bg-surface dark:bg-surface-dark rounded-xl">
-      {/* Header */}
-      <div className="p-3 text-white bg-primary dark:bg-primary-dark">
-        <div className="text-center">
-          <div className="flex justify-center mb-1">
-            <div className="p-1 bg-white rounded-full bg-opacity-20">
-              <FaTrophy className="text-sm" />
+      <div className="absolute inset-0 z-40 flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm h-full max-h-[90%] overflow-hidden flex flex-col transition-all transform shadow-2xl bg-surface dark:bg-surface-dark rounded-xl border border-white/10"
+        >
+          {/* Header - Fixed at top */}
+          <div className="p-5 text-white text-center bg-gradient-to-br from-primary to-primary/80 dark:from-primary-dark dark:to-primary-dark/80 shrink-0">
+            <div className="inline-flex items-center justify-center w-12 h-12 mb-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <FaTrophy className="text-2xl" />
             </div>
+            <h3 className="text-lg font-bold tracking-tight">
+              Quiz Completed!
+            </h3>
+            <p className="mt-0.5 text-[10px] text-white/70">
+              Video Session Finished
+            </p>
           </div>
-          <h3 className="text-sm font-bold">
-            {t("courses.quizCompleted", "Quiz Completed!")}
-          </h3>
-          <p className="mt-0.5 text-[10px] text-white text-opacity-90">
-            {t("courses.videoCompleted", "Video Completed")}
-          </p>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-3 bg-surface dark:bg-surface-dark">
-        {/* Score Circle */}
-        <div className="flex justify-center mb-3">
-          <div className="relative">
-            <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center ${
-              isExcellent ? "border-green-500 dark:border-green-400" :
-              isGood ? "border-blue-500 dark:border-blue-400" :
-              isAverage ? "border-yellow-500 dark:border-yellow-400" : "border-orange-500 dark:border-orange-400"
-            }`}>
-              <div className="text-center">
-                <div className="text-lg font-bold text-text dark:text-text-dark">{score}%</div>
-                <div className="text-[9px] text-text-muted dark:text-text-muted-dark">{t("courses.score", "Score")}</div>
+          {/* Content - Scrollable if too long */}
+          <div className="p-5 flex-1 overflow-y-auto bg-surface dark:bg-surface-dark scrollbar-hide">
+            {/* Score Circle/Stats */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-center flex-1">
+                <div className="text-2xl font-black text-text dark:text-text-dark">{score}%</div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-text-muted mt-0.5">Total Score</div>
+              </div>
+              <div className="h-8 w-px bg-border mx-3"></div>
+              <div className="text-center flex-1">
+                <div className="text-2xl font-black text-green-500">{correctAnswers}</div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-text-muted mt-0.5">Correct</div>
+              </div>
+            </div>
+
+            {/* Performance Message */}
+            <div className={`p-3 mb-5 rounded-xl border-2 ${performance.bgColor} ${performance.borderColor}`}>
+              <div className="flex items-center gap-3">
+                <span className="text-xl">{performance.icon}</span>
+                <p className={`text-xs font-bold leading-snug ${performance.color}`}>
+                  {performance.message}
+                </p>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-text-muted">Mastery Progress</span>
+                <span className="text-[10px] font-black text-text">{correctAnswers}/{totalQuestions}</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-accent dark:bg-accent-dark overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(correctAnswers / totalQuestions) * 100}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className={`h-full rounded-full ${
+                    isExcellent ? "bg-green-500" :
+                    isGood ? "bg-blue-500" :
+                    isAverage ? "bg-yellow-500" : "bg-orange-500"
+                  }`}
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="p-2 text-center border rounded-lg bg-background dark:bg-background-dark border-border dark:border-border-dark">
-            <div className="text-base font-bold text-green-600 dark:text-green-400">{correctAnswers}</div>
-            <div className="text-[10px] text-text-muted dark:text-text-muted-dark">{t("courses.correct", "Correct")}</div>
+          {/* Action Button - Fixed at bottom */}
+          <div className="p-4 border-t border-border dark:border-border-dark bg-surface/50 dark:bg-surface-dark/50 shrink-0">
+            <button
+              onClick={() => setResultsModal({ ...resultsModal, isOpen: false })}
+              className="w-full py-3 text-sm font-bold text-white transition-all transform rounded-xl bg-primary dark:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+            >
+              Continue to Lesson
+            </button>
           </div>
-          <div className="p-2 text-center border rounded-lg bg-background dark:bg-background-dark border-border dark:border-border-dark">
-            <div className="text-base font-bold text-red-600 dark:text-red-400">{totalQuestions - correctAnswers}</div>
-            <div className="text-[10px] text-text-muted dark:text-text-muted-dark">{t("courses.incorrect", "Incorrect")}</div>
-          </div>
-        </div>
-
-        {/* Performance Message */}
-        <div className={`p-2 mb-3 rounded-lg ${performance.bgColor} ${performance.borderColor} border`}>
-          <div className="flex items-center gap-1">
-            <span className="text-base">{performance.icon}</span>
-            <div>
-              <p className={`text-[11px] font-medium ${performance.color} leading-tight`}>
-                {performance.message}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-text-muted dark:text-text-muted-dark">{t("courses.progress", "Progress")}</span>
-            <span className="text-[10px] font-bold text-text dark:text-text-dark">{correctAnswers}/{totalQuestions}</span>
-          </div>
-          <div className="w-full h-1.5 rounded-full bg-accent dark:bg-accent-dark">
-            <div
-              className={`h-1.5 transition-all duration-500 rounded-full ${
-                isExcellent ? "bg-green-500 dark:bg-green-400" :
-                isGood ? "bg-blue-500 dark:bg-blue-400" :
-                isAverage ? "bg-yellow-500 dark:bg-yellow-400" : "bg-orange-500 dark:bg-orange-400"
-              }`}
-              style={{ width: `${(correctAnswers / totalQuestions) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <button
-          onClick={() => setResultsModal({ ...resultsModal, isOpen: false })}
-          className="w-full px-3 py-2 text-xs font-medium text-white transition-all transform rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90 hover:scale-105 active:scale-95"
-        >
-          {t("common.continue", "Continue")}
-        </button>
+        </motion.div>
       </div>
-    </div>
-  </div>
-</div>
     );
   };
 
