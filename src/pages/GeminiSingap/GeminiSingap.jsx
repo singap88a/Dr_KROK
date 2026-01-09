@@ -19,7 +19,7 @@ const GeminiSingap = () => {
 
   // Static user profile
   const profileImage = "logo.png";
-  const API_URL = 'https://dr-krok.com/api/chat/send';
+  const API_URL = 'https://admin.dr-krok.com/api/chat/send';
 
   // Suggestions
   const suggestions = [
@@ -106,7 +106,7 @@ const GeminiSingap = () => {
       });
 
       // Extract response from backend format
-      const botResponse = response.data.candidates[0].content.parts[0].text;
+      const botResponse = response.data.message;
       return botResponse;
     } catch (error) {
       if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
