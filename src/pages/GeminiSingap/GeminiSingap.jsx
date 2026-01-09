@@ -18,7 +18,7 @@ const GeminiSingap = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Static user profile
-  const profileImage = "logo.png";
+  const profileImage = "user.png";
   const API_URL = 'https://admin.dr-krok.com/api/chat/send';
 
   // Suggestions
