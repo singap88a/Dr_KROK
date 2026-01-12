@@ -29,6 +29,11 @@
       "success": "Your message has been sent successfully!",
       "fail": "Failed to send message!",
       "error": "Something went wrong!"
+    },
+    "legal_info": {
+      "title": "Legal Information",
+      "fop": "FOP Kasteero Deya’aldeen",
+      "edrpou": "EDRPOU 3666209931"
     }
   },
   "profile": {
@@ -121,6 +126,8 @@
     "about": "About Us",
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
+    "termsConditions": "Terms and Conditions",
+    "refundPolicy": "Refund Policy",
     "resources": "Resources",
     "blogs": "Blogs",
     "instructors": "Instructors",
@@ -420,6 +427,13 @@
     "loading": "Loading...",
     "error": "Error",
     "noData": "No privacy policy data available."
+  },
+  "refund": {
+    "title": "Refund Policy",
+    "description": "Please read our refund policy carefully to understand your rights regarding refunds and cancellations.",
+    "loading": "Loading...",
+    "error": "Error",
+    "noData": "No refund policy data available."
   },
   "cta": {
     "title": "Start Your Journey with",

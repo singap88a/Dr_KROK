@@ -321,11 +321,11 @@ export default function CourseDetails() {
               </span>
             </div>
 
-            {course.avg_rating && (
+            {/* {course.avg_rating && (
               <div className="flex items-center gap-2">
                 <FaStar className="text-primary" /> {t("courses.averageRating", "Average Rating")} <span className="font-medium">{course.avg_rating.toFixed(1)} / 5.0</span>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="flex gap-3">

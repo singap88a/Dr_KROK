@@ -3,6 +3,7 @@ import {
   FiPhone,
   FiMail,
   FiMapPin,
+  FiFileText,
 } from "react-icons/fi";
 import {
   FaFacebookF,
@@ -148,6 +149,18 @@ export default function ContactUs() {
                       <p className="text-text-secondary">
                         {contactData.address}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Legal Info */}
+                  <div className="flex items-start gap-4">
+                    <FiFileText className="w-8 h-8 mt-1 text-primary shrink-0" />
+                    <div>
+                      <h4 className="font-semibold">{t('contact.legal_info.title')}</h4>
+                      <div className="space-y-1 text-text-secondary">
+                         <p>{t('contact.legal_info.fop')}</p>
+                         <p>{t('contact.legal_info.edrpou')}</p>
+                      </div>
                     </div>
                   </div>
 
