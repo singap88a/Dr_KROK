@@ -184,7 +184,10 @@ export default function CoursesPreview({ courses }) {
                     </div>
                     <div className="flex flex-col flex-1 px-6 pt-6">
                       <h3 className="mb-2 text-lg font-bold text-primary line-clamp-1">{course.title}</h3>
-                      <p className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{course.description}</p>
+                      <div 
+                        className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3"
+                        dangerouslySetInnerHTML={{ __html: course.description }}
+                      />
                       <div className="mb-3 space-y-2 text-xs text-gray-500 dark:text-gray-400">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">

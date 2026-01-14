@@ -246,7 +246,10 @@ export default function LiveCourseDetails() {
         {/* تفاصيل الكورس */}
         <div className="flex flex-col justify-between space-y-4 sm:space-y-6">
           <h1 className="text-2xl font-bold sm:text-3xl">{course.title}</h1>
-          <p className="text-sm text-text-secondary sm:text-base">{course.description}</p>
+          <div 
+            className="text-sm text-text-secondary sm:text-base"
+            dangerouslySetInnerHTML={{ __html: course.description }}
+          />
 
           {/* Rating */}
           <div className="flex items-center gap-2">

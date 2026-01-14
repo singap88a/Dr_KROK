@@ -87,9 +87,10 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
               {course.title}
             </h3>
 
-            <p className="flex-1 mb-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-              {course.description}
-            </p>
+            <div 
+              className="flex-1 mb-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2"
+              dangerouslySetInnerHTML={{ __html: course.description }}
+            />
 
             {/* Live Session Info */}
             <div className="p-2 mb-2 border border-blue-100 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">

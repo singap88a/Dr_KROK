@@ -382,7 +382,10 @@ export default function CourseSubscription() {
                 {/* Course Info */}
                 <div className="flex-1">
                   <h2 className="mb-3 text-2xl font-bold text-text">{course.title}</h2>
-                  <p className="mb-4 text-text-secondary line-clamp-3">{course.description}</p>
+                  <div 
+                    className="mb-4 text-text-secondary line-clamp-3"
+                    dangerouslySetInnerHTML={{ __html: course.description }}
+                  />
 
                   {/* Course Stats */}
                   <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
