@@ -296,10 +296,10 @@ export default function CourseSubscription() {
     );
   }
 
-  // Calculate pricing (match CourseDetails): discount is an amount, not percent
+  // Calculate pricing (match CourseDetails): discount is a percentage
   const priceNumber = Number(course.price) || 0;
-  const discountAmount = Number(course.discount) || 0; // absolute amount
-  const discountPercent = priceNumber > 0 ? ((discountAmount / priceNumber) * 100) : 0;
+  const discountPercentage = Number(course.discount) || 0;
+  const discountAmount = priceNumber * (discountPercentage / 100);
   const subtotalAfterDiscount = Math.max(0, priceNumber - discountAmount);
   const couponDiscountAmount = subtotalAfterDiscount * (couponDiscount / 100);
   const discountedPrice = Math.max(0, subtotalAfterDiscount - couponDiscountAmount);
@@ -486,7 +486,7 @@ export default function CourseSubscription() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="flex items-center gap-2 text-text-secondary">
                         {t('courses.discount', 'Discount')}
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded">{discountPercent.toFixed(2)}%</span>
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded">{discountPercentage.toFixed(2)}%</span>
                       </span>
                       <span className="text-green-600">-₴{discountAmount.toFixed(2)}</span>
                     </div>

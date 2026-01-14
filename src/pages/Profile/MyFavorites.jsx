@@ -190,7 +190,7 @@ export default function MyFavorites() {
             const price = c.price ? Number(c.price) : 0;
             const discount = c.discount ? Number(c.discount) : 0;
             const hasDiscount = discount > 0 && price > 0;
-            const finalPrice = hasDiscount ? (price - discount).toFixed(2) : price.toFixed(2);
+            const finalPrice = hasDiscount ? (price - (price * discount / 100)).toFixed(2) : price.toFixed(2);
 
             return (
               <div

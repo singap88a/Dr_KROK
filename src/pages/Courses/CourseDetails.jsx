@@ -263,7 +263,7 @@ export default function CourseDetails() {
             {/* السعر بعد الخصم */}
             <span className="text-xl font-bold text-primary sm:text-2xl">
               ₴{course.discount && Number(course.discount) > 0
-                ? (Number(course.price) - Number(course.discount)).toFixed(2)
+                ? (Number(course.price) - (Number(course.price) * Number(course.discount) / 100)).toFixed(2)
                 : Number(course.price).toFixed(2)}
             </span>
             {/* السعر الأصلي */}
@@ -274,7 +274,7 @@ export default function CourseDetails() {
                 </span>
                 {/* نسبة الخصم */}
                 <span className="px-2 py-1 text-xs font-semibold text-white bg-red-600 rounded">
-                 {Math.round((Number(course.discount) / Number(course.price)) * 100)}%
+                 {Math.round(Number(course.discount))}%
                 </span>
               </>
             )}

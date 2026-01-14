@@ -145,10 +145,10 @@ export default function CoursesPreview({ courses }) {
           {list.map((course) => {
             const hasDiscount = course.discount && course.discount > 0;
             const finalPrice = hasDiscount
-              ? (course.price - course.discount).toFixed(2)
+              ? (course.price - (course.price * course.discount / 100)).toFixed(2)
               : course.price.toFixed(2);
             const discountPercent = hasDiscount
-              ? Math.round((course.discount / course.price) * 100)
+              ? Math.round(course.discount)
               : 0;
             return (
               <SwiperSlide key={course.id}>

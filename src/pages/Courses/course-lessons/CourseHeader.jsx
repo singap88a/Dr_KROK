@@ -156,9 +156,9 @@ const CourseHeader = ({
               <span className="text-2xl font-bold">
                 ₴
                 {(Number(course.discount) > 0
-                  ? Number(course.price) - Number(course.discount)
-                  : Number(course.price)
-                ).toFixed(2)}
+                  ? (Number(course.price) - (Number(course.price) * Number(course.discount) / 100)).toFixed(2)
+                  : Number(course.price).toFixed(2)
+                )}
               </span>
               {Number(course.discount) > 0 && (
                 <>
@@ -166,9 +166,7 @@ const CourseHeader = ({
                     ₴{Number(course.price).toFixed(2)}
                   </span>
                   <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
-                    {Math.round(
-                      (Number(course.discount) / Number(course.price)) * 100
-                    )}
+                    {Math.round(Number(course.discount))}
                     %
                   </span>
                 </>

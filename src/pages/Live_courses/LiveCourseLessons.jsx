@@ -922,7 +922,7 @@ export default function LiveCourseLessons() {
                     ₴
                     {(
                       Number(course.discount) > 0
-                        ? Number(course.price) - Number(course.discount)
+                        ? Number(course.price) - (Number(course.price) * Number(course.discount) / 100)
                         : Number(course.price)
                     ).toFixed(2)}
                   </span>
@@ -932,7 +932,7 @@ export default function LiveCourseLessons() {
                         ₴{Number(course.price).toFixed(2)}
                       </span>
                       <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
-                        {Math.round((Number(course.discount) / Number(course.price)) * 100)}%
+                        {Math.round(Number(course.discount))}%
                       </span>
                     </>
                   )}

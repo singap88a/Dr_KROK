@@ -78,7 +78,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
               {/* التعديل الثاني: نقل الخصم إلى اليمين واستبدال مكان القلب */}
               {course.discount > 0 && (
                 <div className="px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full shadow">
-                  {Math.round((course.discount / course.price) * 100)}% OFF
+                  {Math.round(course.discount)}% OFF
                 </div>
               )}
             </div>
@@ -124,7 +124,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
             <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-primary">
-                  ₴{(course.price - course.discount).toFixed(2)}
+                  ₴{(course.price - (course.price * course.discount / 100)).toFixed(2)}
                 </span>
                 {course.discount > 0 && (
                   <span className="text-sm text-gray-400 line-through">
