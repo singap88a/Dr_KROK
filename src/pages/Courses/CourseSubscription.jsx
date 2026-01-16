@@ -219,33 +219,32 @@ export default function CourseSubscription() {
     // getAuthToken is already destructured from useApi at the top of the component
 
     try {
-      // Create FormData as required by the backend (based on user screenshot)
-      const formData = new FormData();
-      formData.append('amount', finalAmount.toString());
-      formData.append('product_name', course?.title || 'Course Subscription');
-      formData.append('token', getAuthToken() || "");
-
-      // Use the new generate-invoice API with FormData
-      const response = await request('payment/generate-invoice', {
-        method: 'POST',
-        auth: true,
-        body: formData,
-        isFormData: true
-      });
-
-      console.log('Invoice generation response:', response);
-
-      if (response && response.success && response.data?.invoice_url) {
-        // Redirect to the bank's invoice URL from the data object
-        window.location.href = response.data.invoice_url;
-      } else if (response && (response.success || response.code === 200)) {
-        // Fallback or data handling
-        const dataToSet = response.data || response;
-        setOrderData(dataToSet);
-        setSubscriptionSuccess(true);
-        setUseInstallment(false);
+      let response;
+      
+      if (isLiveCourse) {
+        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId);
       } else {
-        throw new Error(response?.message || 'Failed to generate invoice');
+        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId);
+      }
+
+      console.log('Subscription response:', response);
+
+      if (response && response.success) {
+        if (response.data?.payment_url) {
+          // Redirect to the payment URL from the response
+          window.location.href = response.data.payment_url;
+        } else if (response.data?.invoice_url) {
+           // Fallback for invoice_url if that's still used in some cases
+           window.location.href = response.data.invoice_url;
+        } else {
+          // If no payment URL, assume direct success (e.g. free course or 100% discount)
+          const dataToSet = response.data || response;
+          setOrderData(dataToSet);
+          setSubscriptionSuccess(true);
+          setUseInstallment(false);
+        }
+      } else {
+        throw new Error(response?.message || 'Failed to create subscription');
       }
     } catch (err) {
       console.error('Payment error:', err);
