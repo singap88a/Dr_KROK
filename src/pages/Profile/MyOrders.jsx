@@ -463,7 +463,7 @@ const MyOrders = ({ orders }) => {
                         : t(`orders.${order.type}`) || order.type}
                     </td>
                     <td className="px-6 py-4 font-medium">
-                      ${Number(order.price).toFixed(2)}
+                      ₴{Number(order.price).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge 
@@ -536,7 +536,7 @@ const MyOrders = ({ orders }) => {
                     : t(`orders.${order.type}`) || order.type}
                 </p>
                 <p>
-                  <span className="font-medium">{t("orders.price")}:</span> $
+                  <span className="font-medium">{t("orders.price")}:</span> ₴
                   {Number(order.price).toFixed(2)}
                 </p>
                 <p>

@@ -119,7 +119,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by <strong>Icode Teck</strong> software company.",
+    "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by <developer>iCode Tech</developer> software company.",
     "quickLinks": "Quick Links",
     "home": "Home",
     "courses": "Courses",

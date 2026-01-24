@@ -635,12 +635,7 @@ const handleDeliveryOrder = async (e) => {
                    dangerouslySetInnerHTML={{ __html: book.description }} />
             </div>
 
-            {/* Coupon Input */}
-            <CouponInput
-              onApply={handleCouponApply}
-              t={t}
-              initialDiscount={couponDiscount}
-            />
+
           </div>
         </aside>
 
@@ -653,6 +648,15 @@ const handleDeliveryOrder = async (e) => {
             <p className="mt-1 text-text-secondary">
               {bookType === 1 ? t('books.fill_delivery_info') : t('books.select_payment_method')}
             </p>
+
+            {/* Coupon Input */}
+            <div className="mt-4">
+              <CouponInput
+                onApply={handleCouponApply}
+                t={t}
+                initialDiscount={couponDiscount}
+              />
+            </div>
 
             {/* Error/Success Messages */}
             {error && (

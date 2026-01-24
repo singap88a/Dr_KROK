@@ -13,6 +13,7 @@ export default function Hero() {
   const { t, i18n } = useTranslation();
   const { getSettings, request } = useApi();
 
+  const [loading, setLoading] = useState(true);
   const [heroData, setHeroData] = useState({
     titleOne: "",
     titleTwo: "",
@@ -42,6 +43,9 @@ export default function Hero() {
         }
       } catch (error) {
         console.error("Failed to fetch hero settings:", error);
+      } finally {
+        // Ensure loading is set to false after fetch (success or failure)
+        setLoading(false);
       }
     };
 
@@ -55,65 +59,92 @@ export default function Hero() {
 
           {/* Left Content */}
           <div className="space-y-6">
-            <span className="inline-block px-4 py-1 text-sm font-medium rounded-full bg-accent text-primary">
-              {t('hero.badge')}
-            </span>
+            {loading ? (
+              <div className="max-w-xl space-y-6 animate-pulse">
+                {/* Badge Skeleton */}
+                <div className="w-32 h-8 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                
+                {/* Title Skeleton */}
+                <div className="space-y-3">
+                  <div className="w-3/4 h-12 bg-gray-200 rounded-lg dark:bg-gray-700"></div>
+                  <div className="w-1/2 h-12 bg-gray-200 rounded-lg dark:bg-gray-700"></div>
+                </div>
 
-            <h1 className="text-4xl font-extrabold leading-tight text-text md:text-5xl">
-              {heroData.titleOne && heroData.titleTwo ? (
-                <>
-                  {heroData.titleOne}{" "}
-                  <span className="text-primary">{heroData.titleTwo}</span>
-                </>
-              ) : (
-                <>
-                  {t('hero.titleOne')}{" "}
-                  <span className="text-primary">{t('hero.titleTwo')}</span>
-                </>
-              )}
-            </h1>
+                {/* Description Skeleton */}
+                <div className="space-y-2">
+                  <div className="w-full h-4 bg-gray-200 rounded dark:bg-gray-700"></div>
+                  <div className="w-5/6 h-4 bg-gray-200 rounded dark:bg-gray-700"></div>
+                  <div className="w-4/6 h-4 bg-gray-200 rounded dark:bg-gray-700"></div>
+                </div>
 
-            <p className="max-w-lg text-lg leading-relaxed text-text-secondary">
-              {heroData.description ? (
-                <div dangerouslySetInnerHTML={{ __html: he.decode(heroData.description) }} />
-              ) : (
-                t('hero.description')
-              )}
-            </p>
+                {/* Stats Skeleton */}
+                <div className="flex gap-8">
+                  <div className="w-32 h-6 bg-gray-200 rounded dark:bg-gray-700"></div>
+                  <div className="w-32 h-6 bg-gray-200 rounded dark:bg-gray-700"></div>
+                </div>
 
-            {/* Stats + Rating */}
-            <div className="flex flex-wrap items-center gap-8">
-              <div className="flex items-center gap-2">
-                <FaUserFriends className="text-xl text-primary" />
-                <span className="font-semibold text-text">
-                  {heroData.totalClients ? formatUsers(heroData.totalClients) : t('hero.stats.users')}
-                </span>
+                {/* Buttons Skeleton */}
+                <div className="flex gap-4 pt-2">
+                  <div className="w-32 h-12 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                  <div className="w-32 h-12 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <FaStar key={i} className={i < heroData.clientsRates ? "text-yellow-400" : "text-gray-300"} />
-                ))}
-                <span className="ml-2 text-text-secondary">
-                  {t('hero.stats.rating', { rating: heroData.clientsRates ? Number(heroData.clientsRates).toFixed(1) : "0.0" })}
+            ) : (
+              <>
+                <span className="inline-block px-4 py-1 text-sm font-medium rounded-full bg-accent text-primary">
+                  {t('hero.badge')}
                 </span>
-              </div>
-            </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4">
-              {!isLoggedIn ? (
-                <Link to="/register" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
-                  {t('hero.cta.getStarted')}
-                </Link>
-              ) : (
-                <Link to="/courses" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
-                  {t('hero.cta.goToCourses')}
-                </Link>
-              )}
-              <Link to="/test" className="px-6 py-3 font-medium transition border rounded-full text-text border-border hover:bg-accent">
-                {t('hero.cta.startTest')}
-              </Link>
-            </div>
+                <h1 className="text-4xl font-extrabold leading-tight text-text md:text-5xl min-h-[3rem]">
+                  {heroData.titleOne && heroData.titleTwo ? (
+                    <>
+                      {heroData.titleOne}{" "}
+                      <span className="text-primary">{heroData.titleTwo}</span>
+                    </>
+                  ) : null}
+                </h1>
+
+                <p className="max-w-lg text-lg leading-relaxed text-text-secondary min-h-[1.5rem]">
+                  {heroData.description ? (
+                    <div dangerouslySetInnerHTML={{ __html: he.decode(heroData.description) }} />
+                  ) : null}
+                </p>
+
+                {/* Stats + Rating */}
+                <div className="flex flex-wrap items-center gap-8">
+                  <div className="flex items-center gap-2">
+                    <FaUserFriends className="text-xl text-primary" />
+                    <span className="font-semibold text-text">
+                      {heroData.totalClients ? formatUsers(heroData.totalClients) : "0 Users"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar key={i} className={i < heroData.clientsRates ? "text-yellow-400" : "text-gray-300"} />
+                    ))}
+                    <span className="ml-2 text-text-secondary">
+                      {heroData.clientsRates ? Number(heroData.clientsRates).toFixed(1) : "0.0"} Rating
+                    </span>
+                  </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-wrap gap-4">
+                  {!isLoggedIn ? (
+                    <Link to="/register" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
+                      {t('hero.cta.getStarted')}
+                    </Link>
+                  ) : (
+                    <Link to="/courses" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
+                      {t('hero.cta.goToCourses')}
+                    </Link>
+                  )}
+                  <Link to="/test" className="px-6 py-3 font-medium transition border rounded-full text-text border-border hover:bg-accent">
+                    {t('hero.cta.startTest')}
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Right Animation */}

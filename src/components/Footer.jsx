@@ -196,13 +196,28 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="pt-6 mt-10 text-sm text-center border-t border-border text-text-muted">
-        <Trans
-          i18nKey="footer.copyright"
-          values={{ year: new Date().getFullYear() }}
-          components={{
-            strong: <strong style={{ color: '#0891b2', fontWeight: '900' }} />
-          }}
-        />
+          <div className="text-center">
+              <div className="text-gray-600 dark:text-gray-400 text-sm md:text-base leading-relaxed">
+                <Trans
+                  i18nKey="footer.copyright"
+                  values={{ year: new Date().getFullYear() }}
+                  components={{
+                    developer: (
+                      <a 
+                        href="https://www.facebook.com/share/1APKTJ2EMB/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="icode-teck-container group inline-flex items-center mx-1 font-black text-sm md:text-base bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent hover:scale-110 transition-all duration-300 cursor-pointer pointer-events-auto"
+                      >
+                        <span className="sparkle-icon sparkle-1">✦</span>
+                        <span className="sparkle-icon sparkle-2">★</span>
+                        <span className="sparkle-icon sparkle-3">✧</span>
+                      </a>
+                    )
+                  }}
+                />
+              </div>
+          </div>
       </div>
     </footer>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { FaCopy, FaStop, FaTrash, FaRedo, FaPaperPlane, FaLightbulb, FaSearch, FaCode } from "react-icons/fa";
+import { FaCopy, FaStop, FaTrash, FaRedo, FaPaperPlane, FaTooth, FaTeeth, FaNotesMedical } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import axios from "axios";
 
@@ -24,16 +24,16 @@ const GeminiSingap = () => {
   // Suggestions
   const suggestions = [
     {
-      text: "What are the best tips to improve my public speaking skills?",
-      icon: <FaLightbulb className="text-xl" />,
+      text: "What are the stages of dental caries development?",
+      icon: <FaTooth className="text-xl" />,
     },
     {
-      text: "Can you help me find the latest news on web development?",
-      icon: <FaSearch className="text-xl" />,
+      text: "Explain the anatomy of the periodontium.",
+      icon: <FaTeeth className="text-xl" />,
     },
     {
-      text: "Write JavaScript code to sum all elements in an array.",
-      icon: <FaCode className="text-xl" />,
+      text: "What are the indications for root canal treatment?",
+      icon: <FaNotesMedical className="text-xl" />,
     },
   ];
 

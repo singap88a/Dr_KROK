@@ -119,7 +119,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} Dr KROK. Всі права захищені. Розроблено та розроблено компанією <strong>Icode Teck</strong>.",
+    "copyright": "© {{year}} Dr KROK. Всі права захищені. Розроблено та розроблено компанією <developer>iCode Tech</developer>.",
     "quickLinks": "Швидкі посилання",
     "home": "Головна",
     "courses": "Курси",
