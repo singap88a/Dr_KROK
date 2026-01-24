@@ -181,7 +181,7 @@ export default function LiveCourseDetails() {
     const diffTime = courseDate.getTime() - now.getTime();
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
 
-    if (diffHours < 0) return { status: 'ended', text: 'ENDED', color: 'bg-gray-500' };
+    if (diffHours < 0) return null; // Don't show anything if ended
     if (diffHours <= 24) return { status: 'liveToday', text: 'LIVE TODAY', color: 'bg-red-500' };
     if (diffHours <= 168) return { status: 'comingSoon', text: 'COMING SOON', color: 'bg-orange-500' };
     return { status: 'upcoming', text: 'UPCOMING', color: 'bg-blue-500' };
@@ -236,11 +236,13 @@ export default function LiveCourseDetails() {
             </div>
           </div>
           {/* Time Status Badge */}
-          <div className="absolute z-10 bottom-4 left-4">
-            <div className={`px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
-              {t(`liveCourses.${timeStatus.status}`, timeStatus.text)}
+          {timeStatus && (
+            <div className="absolute z-10 bottom-4 left-4">
+              <div className={`px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
+                {t(`liveCourses.${timeStatus.status}`, timeStatus.text)}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* تفاصيل الكورس */}
