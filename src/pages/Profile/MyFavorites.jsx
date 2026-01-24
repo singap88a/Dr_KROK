@@ -239,11 +239,11 @@ export default function MyFavorites() {
                   {/* Price */}
                   <div className="mb-4">
                     <span className="text-xl font-semibold text-primary">
-                      ${finalPrice}
+                      ₴{finalPrice}
                     </span>
                     {hasDiscount && (
                       <span className="ml-2 text-sm text-gray-400 line-through">
-                        ${price.toFixed(2)}
+                        ₴{price.toFixed(2)}
                       </span>
                     )}
                   </div>

@@ -122,7 +122,7 @@ export default function FeaturedArticles({ articles }) {
 
                   {/* Content */}
                   <div className="flex flex-col h-full p-5">
-                    <h3 className="mb-2 text-lg font-semibold line-clamp-2">
+                    <h3 className="mb-2 text-lg font-semibold line-clamp-1">
                       {item.title}
                     </h3>
                     <p className="mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
