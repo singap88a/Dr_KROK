@@ -14,6 +14,7 @@ export default function OurStory() {
   const { request } = useApi();
   const { isLoggedIn } = useUser();
   const [storyData, setStoryData] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const fetchStoryData = async () => {
@@ -53,13 +54,21 @@ export default function OurStory() {
           </p>
 
           <div
-            className="max-w-2xl text-base leading-relaxed text-gray-700 dark:text-gray-300"
+            className={`max-w-2xl text-base leading-relaxed text-gray-700 dark:text-gray-300 ${!isExpanded ? 'line-clamp-4' : ''}`}
             dangerouslySetInnerHTML={{
               __html:
                 storyData?.description_about_us_Our_Story ||
                 t("ourStory.description"),
             }}
           />
+          {(storyData?.description_about_us_Our_Story || t("ourStory.description"))?.length > 200 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-2 font-medium underline text-primary hover:text-primary/80"
+            >
+              {isExpanded ? "Show Less" : "Read More"}
+            </button>
+          )}
 
           <ul className="grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-2">
             <li className="flex items-start gap-3">

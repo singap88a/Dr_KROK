@@ -173,7 +173,7 @@ function BooksCarousel() {
 
                   {/* Content */}
                   <div className="flex flex-col flex-grow p-5">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h4 className="text-lg font-semibold text-gray-900 truncate dark:text-white">
                       {b.name}
                     </h4>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">

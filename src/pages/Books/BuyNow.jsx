@@ -67,6 +67,7 @@ export default function BuyNowPage() {
   const [showTerms, setShowTerms] = useState(false);
   const [termsText, setTermsText] = useState("");
   const [termsLoading, setTermsLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (book?.images) {
@@ -631,8 +632,17 @@ const handleDeliveryOrder = async (e) => {
                 <p><strong>{t('books.type')}:</strong> {bookType === 1 ? t('books.delivery') : t('books.pdf_only')}</p>
               </div>
 
-              <div className="mt-4 leading-relaxed text-text-secondary"
+              <div 
+                   className={`mt-4 leading-relaxed text-text-secondary ${!isExpanded ? 'line-clamp-4' : ''}`}
                    dangerouslySetInnerHTML={{ __html: book.description }} />
+              {book.description && book.description.length > 200 && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-2 font-medium underline text-primary hover:text-primary/80"
+                >
+                  {isExpanded ? "Show Less" : "Read More"}
+                </button>
+              )}
             </div>
 
 

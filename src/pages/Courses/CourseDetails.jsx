@@ -49,6 +49,8 @@ export default function CourseDetails() {
   const [userHasReviewed, setUserHasReviewed] = useState(false);
   const [userHasAccess, setUserHasAccess] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isInstructorExpanded, setIsInstructorExpanded] = useState(false);
   const videoRef = useRef(null);
 
 
@@ -251,9 +253,17 @@ export default function CourseDetails() {
         <div className="flex flex-col justify-between space-y-4 sm:space-y-6">
           <h1 className="text-2xl font-bold sm:text-3xl">{course.title}</h1>
           <div 
-            className="text-sm text-text-secondary sm:text-base"
+            className={`text-sm text-text-secondary sm:text-base ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
             dangerouslySetInnerHTML={{ __html: course.description }}
           />
+          {course.description && course.description.length > 200 && (
+            <button
+              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              className="mt-1 font-medium underline text-primary hover:text-primary/80 text-start"
+            >
+              {isDescriptionExpanded ? "Show Less" : "Read More"}
+            </button>
+          )}
 
           {/* Rating */}
           <div className="flex items-center gap-2">
@@ -483,7 +493,20 @@ export default function CourseDetails() {
               )}
               {course.instructor?.bio && (
                 <li className="flex items-start gap-2">
-                  <FaUserGraduate className="mt-1 text-primary" /> {course.instructor.bio}
+                  <FaUserGraduate className="mt-1 flex-shrink-0 text-primary" />
+                  <div className="flex-1">
+                    <div className={`${!isInstructorExpanded ? 'line-clamp-3' : ''}`}>
+                      {course.instructor.bio}
+                    </div>
+                    {course.instructor.bio && course.instructor.bio.length > 100 && (
+                      <button
+                        onClick={() => setIsInstructorExpanded(!isInstructorExpanded)}
+                        className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80"
+                      >
+                        {isInstructorExpanded ? "Show Less" : "Read More"}
+                      </button>
+                    )}
+                  </div>
                 </li>
               )}
               {course.university?.name && (

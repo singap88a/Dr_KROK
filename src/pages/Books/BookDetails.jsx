@@ -25,6 +25,7 @@ export default function BookDetails() {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [pdfLoadError, setPdfLoadError] = useState(false);
   const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -181,7 +182,18 @@ export default function BookDetails() {
           {/* Details */}
           <div>
             <h1 className="text-3xl font-bold">{book.name}</h1>
-            <div className="mt-3 text-lg text-text-secondary" dangerouslySetInnerHTML={{ __html: book.description }} />
+            <div 
+              className={`mt-3 text-lg text-text-secondary ${!isExpanded ? 'line-clamp-4' : ''}`}
+              dangerouslySetInnerHTML={{ __html: book.description }} 
+            />
+            {book.description && book.description.length > 200 && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-2 font-medium underline text-primary hover:text-primary/80"
+              >
+                {isExpanded ? "Show Less" : "Read More"}
+              </button>
+            )}
 
             {/* Book Information */}
             <div className="grid grid-cols-1 gap-4 mt-6 text-sm text-text-secondary md:grid-cols-2">
