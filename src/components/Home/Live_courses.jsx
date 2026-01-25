@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import he from "he";
 import { FiHeart, FiCalendar, FiClock, FiUsers, FiPlay } from "react-icons/fi";
 import { MdLiveTv } from "react-icons/md";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -34,7 +35,11 @@ export default function Live_courses({ courses }) {
     getLiveCourses({ per_page: 10, page: 1 })
       .then((res) => {
         if (!isMounted) return;
-        setApiCourses(Array.isArray(res.data) ? res.data : []);
+        const decoded = (Array.isArray(res.data) ? res.data : []).map(c => ({
+          ...c,
+          description: c.description ? he.decode(c.description) : ""
+        }));
+        setApiCourses(decoded);
         setInitialLoadDone(true);
       })
       .catch((e) => {
@@ -258,9 +263,10 @@ export default function Live_courses({ courses }) {
                       </h3>
                       
                       {/* Description */}
-                      <p className="mb-4 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                        {course.description}
-                      </p>
+                      <div 
+                        className="mb-4 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 prose prose-sm dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: course.description }}
+                      />
                       
                       {/* Live Session Info */}
                       <div className="p-3 mb-4 border border-blue-100 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">

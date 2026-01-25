@@ -38,20 +38,25 @@ export default function Mission_Vision() {
         {/* Mission & Vision Cards */}
         <div className="grid max-w-6xl grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2">
           <div className="p-6 transition-all duration-300 border border-gray-200 shadow-lg sm:p-8 rounded-2xl bg-surface hover:shadow-2xl hover:transform hover:scale-105">
+           <div className="flex items-center   gap-3">
             <FiTarget size={40} className="mb-4 text-primary animate-pulse" />
             <h3 className="mb-3 text-xl font-semibold sm:text-2xl text-cyan-900 dark:text-white">
               {t('missionVision.mission.title')}
             </h3>
+            </div>
             <p className="text-sm leading-relaxed text-text-secondary sm:text-base">
               {missionVisionData?.description_our_mission || t('missionVision.mission.description')}
             </p>
           </div>
 
           <div className="p-6 transition-all duration-300 border border-gray-200 shadow-lg sm:p-8 rounded-2xl bg-surface hover:shadow-2xl hover:transform hover:scale-105">
+           <div className="flex items-center   gap-3">
             <FiEye size={40} className="mb-4 text-primary animate-pulse" />
+           
             <h3 className="mb-3 text-xl font-semibold sm:text-2xl text-cyan-900 dark:text-white">
               {t('missionVision.vision.title')}
             </h3>
+            </div>
             <p className="text-sm leading-relaxed text-text-secondary sm:text-base">
               {missionVisionData?.description_our_vision || t('missionVision.vision.description')}
             </p>

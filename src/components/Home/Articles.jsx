@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import he from "he";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { FaRegCalendarAlt } from "react-icons/fa";
@@ -27,7 +28,11 @@ export default function FeaturedArticles({ articles }) {
         // Flatten blogs from instructors and sort by date
         const allBlogs = (res.data || []).flatMap(instructor => instructor.blogs || []);
         const sortedBlogs = allBlogs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-        setFetched(sortedBlogs.slice(0, 3));
+        const decodedBlogs = sortedBlogs.slice(0, 3).map(b => ({
+          ...b,
+          description: b.description ? he.decode(b.description) : ""
+        }));
+        setFetched(decodedBlogs);
       } catch (e) {
         if (!isMounted) return;
         setError(e?.message || "");
@@ -45,7 +50,7 @@ export default function FeaturedArticles({ articles }) {
     return (fetched || []).map((b) => ({
       id: b.id,
       title: b.name,
-      description: stripHtml(b.description || ""),
+      description: b.description,
       date: b.created_at ? new Date(b.created_at).toLocaleDateString() : "",
       image: b.image,
     }));
@@ -53,12 +58,6 @@ export default function FeaturedArticles({ articles }) {
 
   // استخدم فقط البيانات الجاية من الـ props أو الباك
   const list = (articles && articles.length ? articles : apiMapped);
-
-  function stripHtml(html) {
-    const div = document.createElement("div");
-    div.innerHTML = html;
-    return div.textContent || div.innerText || "";
-  }
 
   return (
     <section className="relative py-16 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -125,9 +124,10 @@ export default function FeaturedArticles({ articles }) {
                     <h3 className="mb-2 text-lg font-semibold line-clamp-1">
                       {item.title}
                     </h3>
-                    <p className="mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                      {item.description}
-                    </p>
+                    <div 
+                      className="mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3 prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: item.description }}
+                    />
 
                     {item.date ? (
                       <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 dark:text-gray-400">

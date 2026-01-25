@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import he from "he";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { FiHeart } from "react-icons/fi";
@@ -27,7 +28,11 @@ function BooksCarousel() {
     const fetchBooks = async () => {
       try {
         const response = await request("books");
-        setBooks(response.data || []);
+        const decodedBooks = (response.data || []).map(b => ({
+          ...b,
+          description: b.description ? he.decode(b.description) : ""
+        }));
+        setBooks(decodedBooks);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -176,9 +181,10 @@ function BooksCarousel() {
                     <h4 className="text-lg font-semibold text-gray-900 truncate dark:text-white">
                       {b.name}
                     </h4>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                      {b.description}
-                    </p>
+                    <div 
+                      className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: b.description }}
+                    />
 
 
 

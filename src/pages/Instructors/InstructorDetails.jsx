@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import he from "he";
 import { useParams, Link } from "react-router-dom";
 import {
   FaFacebookF,
@@ -29,7 +30,18 @@ function InstructorDetails() {
       try {
         setLoading(true);
         const data = await getInstructorById(id);
-        setInstructor(data);
+        
+        // Decode HTML entities in bio, expertise and course descriptions
+        const decoded = {
+          ...data,
+          bio: data.bio ? he.decode(data.bio) : "",
+          expertise: data.expertise ? he.decode(data.expertise) : "",
+          courses: (data.courses || []).map(c => ({
+            ...c,
+            description: c.description ? he.decode(c.description) : ""
+          }))
+        };
+        setInstructor(decoded);
       } catch (err) {
         console.error("Error fetching instructor details:", err);
         setError(err.message);
@@ -148,9 +160,10 @@ function InstructorDetails() {
                 <h2 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
                   {t("instructors.details.bio")}
                 </h2>
-                <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300">
-                  {bio || t("instructors.details.noBio")}
-                </p>
+                <div 
+                  className="text-base leading-relaxed text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: bio || t("instructors.details.noBio") }}
+                />
               </div>
 
               {/* Expertise */}
@@ -159,9 +172,10 @@ function InstructorDetails() {
                   <h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">
                     {t("instructors.details.expertise")}
                   </h3>
-                  <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300">
-                    {expertise}
-                  </p>
+                  <div 
+                    className="text-base leading-relaxed text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: expertise }}
+                  />
                 </div>
               )}
 
@@ -284,9 +298,10 @@ function InstructorDetails() {
                     <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white line-clamp-2 group-hover:text-primary">
                       {course.title}
                     </h3>
-                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
-                      {course.description}
-                    </p>
+                    <div 
+                      className="mb-4 text-sm text-gray-600 dark:text-gray-400 line-clamp-3 prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: course.description }}
+                    />
                     <div className="flex items-center justify-between">
                       <div className="text-lg font-semibold text-primary">
                         {course.discount > 0 ? (

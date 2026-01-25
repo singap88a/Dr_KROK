@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser } from "react-icons/fa";
+import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../context/ApiContext";
@@ -186,28 +186,32 @@ export default function Navbar() {
                 />
               </Link>
 
-              <div className="absolute right-0 invisible w-48 mt-2 overflow-hidden transition-all duration-300 border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible bg-background border-border">
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-medium text-text">
+              <div className="absolute right-0 invisible min-w-48 max-w-xs mt-2 overflow-hidden transition-all duration-300 border rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 group-hover:visible bg-background border-border backdrop-blur-sm">
+                <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+                  <p className="text-sm font-semibold text-text truncate">
                     {userData ? userData.name : "User"}
                   </p>
-                  <p className="text-xs text-textSecondary">
+                  <p className="text-xs text-textSecondary truncate">
                     {userData ? userData.email : ""}
                   </p>
                 </div>
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-sm transition hover:bg-surface text-text"
-                >
-                  {t("navbar.profile")}
-                </Link>
+                <div className="py-1">
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-surface text-text group/item"
+                  >
+                    <FaUser className="text-primary group-hover/item:scale-110 transition-transform" />
+                    <span>{t("navbar.profile")}</span>
+                  </Link>
 
-                <button
-                  onClick={handleLogout}
-                  className="block w-full px-4 py-2 text-sm text-left transition hover:bg-surface text-text"
-                >
-                  {t("navbar.logout")}
-                </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 group/item"
+                  >
+                    <FaSignOutAlt className="group-hover/item:scale-110 transition-transform" />
+                    <span>{t("navbar.logout")}</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : (

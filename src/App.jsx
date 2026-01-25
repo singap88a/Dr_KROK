@@ -43,6 +43,7 @@ import LiveCourses from "./pages/Live_courses/LiveCourses";
 import LiveCourseDetails from "./pages/Live_courses/LiveCourseDetails";
 // import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
 import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
+import NotFound from "./pages/NotFound/NotFound";
 
 export default function App() {
   return (
@@ -98,6 +99,8 @@ export default function App() {
           <Route path="/instructors" element={<Instructors />} />
           <Route path="/instructors/:id" element={<InstructorDetails />} />
 
+          {/* NotFound Catch-all Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <AI_Icon />
