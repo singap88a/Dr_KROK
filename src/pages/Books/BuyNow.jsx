@@ -290,81 +290,33 @@ const handleDeliveryOrder = async (e) => {
         city: formData.city,
         book_id: formData.book_id,
         city_id: formData.city_id,
-        region_id: formData.region_id
+        region_id: formData.branch_id
       });
 
-      // First try with normal CORS mode
-      try {
-        const response = await request('place_order_book', {
-          method: 'POST',
-          body: formDataToSend,
-          auth: true,
-          isFormData: true,
-          invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
-        });
+      const response = await request('place_order_book', {
+        method: 'POST',
+        body: formDataToSend,
+        auth: true,
+        isFormData: true,
+        invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
+      });
 
-        console.log('Order response:', response);
+      console.log('Order response:', response);
 
-        invalidateOrdersCache();
-        setSuccess(t('books.order_placed_successfully'));
-        // Redirect to order confirmation or profile
+      if (response?.data?.payment_url) {
+        setSuccess(t('books.order_placed_successfully_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
-          navigate('/profile', { state: { activeTab: 'orders' } });
-        }, 2000);
-      } catch (error) {
-        // Handle CORS issues - if the API actually succeeded but we got a CORS error
-        if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
-          console.warn('CORS error detected, trying no-cors fallback:', error);
-
-          // Try with no-cors mode as fallback
-          try {
-            const url = request.baseUrl ? `${request.baseUrl}/place_order_book` : 'https://dr-krok.hudurly.com/api/place_order_book';
-            const headers = {
-              'Authorization': `Bearer ${token}`,
-              'Accept-Language': 'en'
-            };
-
-            console.log('No-cors request data:', {
-              url,
-              client_id: formData.client_id,
-              client_name: formData.client_name,
-              phone1: formData.phone1,
-              phone2: formData.phone2,
-              city: formData.city,
-              book_id: formData.book_id,
-              city_id: formData.city_id,
-              region_id: formData.region_id,
-              coupon_id: couponId
-            });
-
-            const noCorsResponse = await fetch(url, {
-              method: 'POST',
-              headers,
-              body: formDataToSend,
-              mode: 'no-cors'
-            });
-
-            console.log('No-cors response:', noCorsResponse);
-
-            // If no-cors request doesn't throw, assume it succeeded
-            invalidateOrdersCache();
-            setSuccess(t('books.order_submitted_success'));
-            setTimeout(() => {
-              navigate('/profile', { state: { activeTab: 'orders' } });
-            }, 2000);
-          } catch (noCorsError) {
-            console.warn('No-cors fallback also failed:', noCorsError);
-            // Return success anyway since the server likely processed the request
-            invalidateOrdersCache();
-            setSuccess("Order submitted successfully! Please check your profile for order status.");
-            setTimeout(() => {
-              navigate('/profile', { state: { activeTab: 'orders' } });
-            }, 2000);
-          }
-        } else {
-          throw error;
-        }
+          window.location.href = response.data.payment_url;
+        }, 1500);
+        return;
       }
+
+      invalidateOrdersCache();
+      setSuccess(t('books.order_placed_successfully'));
+      // Redirect to order confirmation or profile
+      setTimeout(() => {
+        navigate('/profile', { state: { activeTab: 'orders' } });
+      }, 2000);
 
     } catch (err) {
       console.error('Order error:', err);
@@ -372,18 +324,7 @@ const handleDeliveryOrder = async (e) => {
 
       if (err.message.includes('CORS') || err.message.includes('Failed to fetch')) {
         errorMessage = "Network error. Please check your connection and try again.";
-      } else if (err.message.includes('redirected')) {
-        errorMessage = "Server redirected the request. This may be a server configuration issue.";
-      } else if (err.message.includes('opaqueredirect')) {
-        errorMessage = "Order may have been processed despite the redirect. Please check your profile for order status.";
-        // Don't show this as an error, show as success with warning
-        invalidateOrdersCache();
-        setSuccess("Order submitted successfully! Please check your profile for order status.");
-        setTimeout(() => {
-          navigate('/profile', { state: { activeTab: 'orders' } });
-        }, 2000);
-        return;
-      }
+      } 
 
       setError(errorMessage);
     } finally {
@@ -432,70 +373,27 @@ const handleDeliveryOrder = async (e) => {
         formDataToSend.append('client_id', userData.id.toString());
       }
 
-      // First try with normal CORS mode
-      try {
-        await request('place_order_book', {
-          method: 'POST',
-          body: formDataToSend,
-          auth: true,
-          isFormData: true,
-          invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
-        });
+      const response = await request('place_order_book', {
+        method: 'POST',
+        body: formDataToSend,
+        auth: true,
+        isFormData: true,
+        invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
+      });
 
-        invalidateOrdersCache();
-        setSuccess(t('books.purchase_successful'));
+      if (response?.data?.payment_url) {
+        setSuccess(t('books.purchase_successful_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
-          navigate('/profile', { state: { activeTab: 'orders' } });
-        }, 2000);
-      } catch (error) {
-        // Handle CORS issues - if the API actually succeeded but we got a CORS error
-        if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
-          console.warn('CORS error detected, trying no-cors fallback:', error);
-
-          // Try with no-cors mode as fallback
-          try {
-            const url = request.baseUrl ? `${request.baseUrl}/place_order_book` : 'https://dr-krok.hudurly.com/api/place_order_book';
-            const headers = {
-              'Authorization': `Bearer ${token}`,
-              'Accept-Language': 'en'
-            };
-
-            console.log('No-cors request data:', {
-              url,
-              book_id: book.id,
-              quantity: 1,
-              coupon_id: couponId,
-              client_id: userData?.id
-            });
-
-            const noCorsResponse = await fetch(url, {
-              method: 'POST',
-              headers,
-              body: formDataToSend,
-              mode: 'no-cors'
-            });
-
-            console.log('No-cors response:', noCorsResponse);
-
-            // If no-cors request doesn't throw, assume it succeeded
-            invalidateOrdersCache();
-            setSuccess("Purchase completed successfully! Please check your profile for order status.");
-            setTimeout(() => {
-              navigate('/profile', { state: { activeTab: 'orders' } });
-            }, 2000);
-          } catch (noCorsError) {
-            console.warn('No-cors fallback also failed:', noCorsError);
-            // Return success anyway since the server likely processed the request
-            invalidateOrdersCache();
-            setSuccess("Purchase completed successfully! Please check your profile for order status.");
-            setTimeout(() => {
-              navigate('/profile', { state: { activeTab: 'orders' } });
-            }, 2000);
-          }
-        } else {
-          throw error;
-        }
+          window.location.href = response.data.payment_url;
+        }, 1500);
+        return;
       }
+
+      invalidateOrdersCache();
+      setSuccess(t('books.purchase_successful'));
+      setTimeout(() => {
+        navigate('/profile', { state: { activeTab: 'orders' } });
+      }, 2000);
 
     } catch (err) {
       console.error('Purchase error:', err);
@@ -503,18 +401,7 @@ const handleDeliveryOrder = async (e) => {
 
       if (err.message.includes('CORS') || err.message.includes('Failed to fetch')) {
         errorMessage = "Network error. Please check your connection and try again.";
-      } else if (err.message.includes('redirected')) {
-        errorMessage = "Server redirected the request. This may be a server configuration issue.";
-      } else if (err.message.includes('opaqueredirect')) {
-        errorMessage = "Purchase may have been processed despite the redirect. Please check your profile for order status.";
-        // Don't show this as an error, show as success with warning
-        invalidateOrdersCache();
-        setSuccess("Purchase completed successfully! Please check your profile for order status.");
-        setTimeout(() => {
-          navigate('/profile', { state: { activeTab: 'orders' } });
-        }, 2000);
-        return;
-      }
+      } 
 
       setError(errorMessage);
     } finally {
@@ -847,6 +734,29 @@ const handleDeliveryOrder = async (e) => {
                     </select>
                   </div>
                 )}
+
+                {/* Payment Methods Style Selection */}
+                <div className="mt-8 border-t pt-6">
+                  <h3 className="mb-4 text-lg font-semibold">{t('books.select_payment_method')}</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {[
+                      { id: 'apple-pay', name: 'Apple Pay', icon: FaApplePay, color: 'text-black dark:text-white' },
+                      { id: 'google-pay', name: 'Google Pay', icon: FaGooglePay, color: 'text-gray-900 dark:text-gray-100' },
+                      { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' }
+                    ].map((method) => {
+                      const IconComponent = method.icon;
+                      return (
+                        <div
+                          key={method.id}
+                          className="flex flex-col items-center flex-1 min-w-[100px] p-4 border rounded-xl border-border bg-background/60 hover:border-primary transition-colors cursor-pointer group"
+                        >
+                          <IconComponent className={`text-3xl mb-2 ${method.color} group-hover:scale-110 transition-transform`} />
+                          <span className="text-sm font-medium">{t(`books.${method.id}`)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
 
 

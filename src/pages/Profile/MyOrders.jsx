@@ -274,7 +274,7 @@ const normalizeOrders = (orders) => {
         item: o.title || "Order item",
         type,
         price: parseFloat(o.total_price) || 0,
-        status: (o.status || "").toLowerCase(),
+        status: String(o.status || "").toLowerCase(),
         date: o.created_at || new Date().toISOString(),
         image: o.image,
         file: o.file,
@@ -288,7 +288,7 @@ const normalizeOrders = (orders) => {
         item: o.client_name || "Book order",
         type: "book",
         price: parseFloat(o.total_price) || 0,
-        status: (o.status || "").toLowerCase(),
+        status: String(o.status || "").toLowerCase(),
         date: o.created_at || new Date().toISOString(),
       };
     }
@@ -297,7 +297,7 @@ const normalizeOrders = (orders) => {
       item: o.item,
       type: o.type || "book",
       price: o.price,
-      status: (o.status || "").toLowerCase(),
+      status: String(o.status || "").toLowerCase(),
       date: o.date,
       file: o.file,
       city: o.city,

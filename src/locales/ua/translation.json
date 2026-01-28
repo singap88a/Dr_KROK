@@ -252,10 +252,12 @@
     "place_order": "Зробити замовлення",
     "placing_order": "Оформлення замовлення...",
     "order_placed_successfully": "Замовлення успішно оформлено!",
+    "order_placed_successfully_redirecting": "Замовлення успішно створено! Перенаправлення на оплату...",
     "order_failed": "Не вдалося оформити замовлення. Спробуйте ще раз.",
     "purchase_now": "Купити зараз",
     "processing": "Обробка...",
     "purchase_successful": "Покупка успішна!",
+    "purchase_successful_redirecting": "Купівля успішна! Перенаправлення на оплату...",
     "purchase_failed": "Не вдалося здійснити покупку. Спробуйте ще раз.",
     "select_payment_method": "Будь ласка, оберіть спосіб оплати",
     "coupon": {

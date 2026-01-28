@@ -342,7 +342,7 @@ export default function CourseSubscription() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            to={`/courses/${id}`}
+            to={isLiveCourse ? `/live-courses/${id}` : `/courses/${id}`}
             className="inline-flex items-center gap-2 mb-6 transition-colors text-primary hover:text-secondary"
           >
             <FaArrowLeft />

@@ -66,7 +66,7 @@ export default function CourseDetails() {
         setCourse(data);
         
         // Set reviews from course data
-        if (data.ratings && Array.isArray(data.ratings)) {
+        if (data && data.ratings && Array.isArray(data.ratings)) {
           setReviews(data.ratings);
         }
 
@@ -139,7 +139,7 @@ export default function CourseDetails() {
 
   const imageUrl = useMemo(() => {
     if (!course) return "/logo.png";
-    const img = Array.isArray(course.image) ? course.image[0] : course.image;
+    const img = course.image && Array.isArray(course.image) ? course.image[0] : course.image;
     if (typeof img === "string" && img.length > 0) return img;
     return "/logo.png";
   }, [course]);
@@ -300,7 +300,7 @@ export default function CourseDetails() {
             </div>
 
             <div className="flex items-center gap-2">
-              <FaLayerGroup className="text-primary" /> {t("courses.level", "Level")} <span className="font-medium">{getLevelTranslation(course.level)}</span>
+              <FaLayerGroup className="text-primary" /> {t("courses.level", "Level")} <span className="font-medium">{getLevelTranslation(course?.level)}</span>
             </div>
             <div className="flex items-center gap-2">
               <FaCertificate className="text-primary" /> {t("courses.category", "Category")} <span className="font-medium">
@@ -316,7 +316,7 @@ export default function CourseDetails() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <FaGlobe className="text-primary" /> {t("courses.language", "Language")} <span className="font-medium">{course.language}</span>
+              <FaGlobe className="text-primary" /> {t("courses.language", "Language")} <span className="font-medium">{course?.language || ""}</span>
             </div>
             <div className="flex items-center gap-2">
               <FaBook className="text-primary" /> {t("courses.lectures", "Lectures")} <span className="font-medium">{course.lessons_count || 0}</span>

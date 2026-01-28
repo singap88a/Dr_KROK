@@ -252,10 +252,12 @@
     "place_order": "Place Order",
     "placing_order": "Placing Order...",
     "order_placed_successfully": "Order placed successfully!",
+    "order_placed_successfully_redirecting": "Order created successfully! Redirecting to payment...",
     "order_failed": "Order failed. Please try again.",
     "purchase_now": "Purchase Now",
     "processing": "Processing...",
     "purchase_successful": "Purchase successful!",
+    "purchase_successful_redirecting": "Purchase successful! Redirecting to payment...",
     "purchase_failed": "Purchase failed. Please try again.",
     "select_payment_method": "Please select a payment method",
     "coupon": {

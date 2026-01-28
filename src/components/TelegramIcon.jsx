@@ -32,7 +32,7 @@ export default function TelegramIcon() {
     <div className="fixed z-50 cursor-pointer bottom-6 right-6 group">
       <div
         onClick={openTelegram}
-        className="p-3 transition-all bg-blue-500 rounded-full shadow-lg hover:shadow-xl hover:scale-110"
+        className="p-3 transition-all bg-primary rounded-full shadow-lg hover:shadow-xl hover:scale-110"
         title={t("common.support", "Support")}
       >
         <FaTelegramPlane className="w-8 h-8 text-white" />
