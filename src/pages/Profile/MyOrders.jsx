@@ -254,6 +254,14 @@ const StatusModal = ({ isOpen, onClose, status, orderType, order }) => {
   );
 };
 
+const mapStatusFromBackend = (status) => {
+  const s = String(status);
+  // Map numeric statuses from backend to frontend string statuses
+  if (s === "1") return "completed";
+  if (s === "0") return "pending";
+  return s.toLowerCase();
+};
+
 const normalizeOrders = (orders) => {
   if (!Array.isArray(orders)) return [];
   return orders.map((o) => {
@@ -274,7 +282,7 @@ const normalizeOrders = (orders) => {
         item: o.title || "Order item",
         type,
         price: parseFloat(o.total_price) || 0,
-        status: String(o.status || "").toLowerCase(),
+        status: mapStatusFromBackend(o.status),
         date: o.created_at || new Date().toISOString(),
         image: o.image,
         file: o.file,
@@ -288,7 +296,7 @@ const normalizeOrders = (orders) => {
         item: o.client_name || "Book order",
         type: "book",
         price: parseFloat(o.total_price) || 0,
-        status: String(o.status || "").toLowerCase(),
+        status: mapStatusFromBackend(o.status),
         date: o.created_at || new Date().toISOString(),
       };
     }
@@ -297,7 +305,7 @@ const normalizeOrders = (orders) => {
       item: o.item,
       type: o.type || "book",
       price: o.price,
-      status: String(o.status || "").toLowerCase(),
+      status: mapStatusFromBackend(o.status),
       date: o.date,
       file: o.file,
       city: o.city,

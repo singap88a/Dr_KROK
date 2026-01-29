@@ -95,6 +95,8 @@ export default function LiveCourseLessons() {
   const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 🔥 حالة القائمة الجانبية
+  const [isLessonDescExpanded, setIsLessonDescExpanded] = useState(false);
+  const [isSectionDescExpanded, setIsSectionDescExpanded] = useState(false);
 
   // Quiz States
   const [quizModal, setQuizModal] = useState({
@@ -104,6 +106,8 @@ export default function LiveCourseLessons() {
     currentQuestionIndex: 0,
     userAnswers: [],
     showResult: false,
+    selectedAnswer: null,
+    showFeedback: false,
   });
 
   const [resultsModal, setResultsModal] = useState({
@@ -164,7 +168,7 @@ export default function LiveCourseLessons() {
   const getPeriodicQuizzes = () => {
     if (!currentLesson || !currentLesson.lesson_end_tests) return [];
     return currentLesson.lesson_end_tests.filter(
-      (test) => test.test_type === "Periodic Quiz (Live Session)"
+      (test) => test.test_type === "Periodic Quiz (Live Session)" || test.test_type === "Periodic Quiz (Video Session)"
     );
   };
 
@@ -625,7 +629,9 @@ export default function LiveCourseLessons() {
     setProcessedQuizzes(new Set());
     setAnsweredQuizzes(new Set());
     setQuizResults({});
-  }, [currentLesson?.id]);
+    setIsLessonDescExpanded(false);
+    setIsSectionDescExpanded(false);
+  }, [currentLesson?.id, currentSection?.id]);
 
   const sortedSections = useMemo(() => {
     return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
@@ -1141,7 +1147,7 @@ export default function LiveCourseLessons() {
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
               {currentLesson || currentSection ? (
                 <div className="relative">
-                  {currentLesson && currentLesson.status === "active" ? (
+                  {currentLesson && (currentLesson.status === "active" || currentLesson.type === "Free" || currentLesson.type === "free" || currentLesson.is_free) ? (
                     // Active status - show ALL content normally
                     <>
                       <div className="relative aspect-video">
@@ -1190,9 +1196,17 @@ export default function LiveCourseLessons() {
                         {/* Session description */}
                         {currentLesson?.description && (
                           <div className="mt-3 text-sm text-text-secondary">
-                            <p className="leading-relaxed">
+                            <p className={`leading-relaxed ${isLessonDescExpanded ? "" : "line-clamp-3"}`}>
                               {currentLesson.description}
                             </p>
+                            {currentLesson.description.length > 150 && (
+                              <button
+                                onClick={() => setIsLessonDescExpanded(!isLessonDescExpanded)}
+                                className="mt-1 text-sm font-medium underline text-primary hover:text-secondary cursor-pointer"
+                              >
+                                {isLessonDescExpanded ? "Show Less" : "Show More"}
+                              </button>
+                            )}
                           </div>
                         )}
 
@@ -1246,8 +1260,40 @@ export default function LiveCourseLessons() {
                         )}
                       </div>
                     </>
+                    ) : currentSection ? (
+                    // Section View - show section details similar to Video Courses
+                    <div className="p-4 bg-surface">
+                      <h3 className="text-lg font-semibold text-text mb-3">
+                        {currentSection.title}
+                      </h3>
+                      {currentSection.description && (
+                        <div className="mt-2 text-sm text-text-secondary">
+                          <p className={`leading-relaxed ${isSectionDescExpanded ? '' : 'line-clamp-3'}`}>
+                            {currentSection.description}
+                          </p>
+                          {currentSection.description.length > 150 && (
+                            <button
+                              onClick={() => setIsSectionDescExpanded(!isSectionDescExpanded)}
+                              className="mt-1 text-sm font-medium underline text-primary hover:text-secondary cursor-pointer"
+                            >
+                              {isSectionDescExpanded ? "Show Less" : "Show More"}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Attachments for Section */}
+                      <LessonAttachments
+                        content={currentSection}
+                        setSelectedImage={setSelectedImage}
+                        setShowImagePopup={setShowImagePopup}
+                        handleFileClick={handleFileClick}
+                        handleVideoClick={handleVideoClick}
+                        type="section"
+                      />
+                    </div>
                   ) : (
-                    // Inactive status - show professional message
+                    // Inactive status for lesson or nothing selected
                     <div className="p-8 text-center aspect-video bg-accent">
                       <div className="max-w-lg mx-auto">
                         <div className="mb-4 text-3xl">
@@ -1392,6 +1438,12 @@ export default function LiveCourseLessons() {
         show={showVideoPopup}
         video={selectedVideo}
         onClose={() => setShowVideoPopup(false)}
+      />
+
+      <ImagePopup
+        show={showImagePopup}
+        image={selectedImage}
+        onClose={() => setShowImagePopup(false)}
       />
     </section>
   );
