@@ -43,6 +43,8 @@ import LiveCourses from "./pages/Live_courses/LiveCourses";
 import LiveCourseDetails from "./pages/Live_courses/LiveCourseDetails";
 // import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
 import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
+import PaymentSuccess from "./pages/Payment/PaymentSuccess";
+import PaymentFailed from "./pages/Payment/PaymentFailed";
 import NotFound from "./pages/NotFound/NotFound";
 
 export default function App() {
@@ -98,6 +100,10 @@ export default function App() {
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/instructors" element={<Instructors />} />
           <Route path="/instructors/:id" element={<InstructorDetails />} />
+
+          {/* Payment Routes */}
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failed" element={<PaymentFailed />} />
 
           {/* NotFound Catch-all Route */}
           <Route path="*" element={<NotFound />} />
