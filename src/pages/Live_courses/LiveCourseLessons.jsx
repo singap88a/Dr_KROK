@@ -95,8 +95,6 @@ export default function LiveCourseLessons() {
   const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 🔥 حالة القائمة الجانبية
-  const [isLessonDescExpanded, setIsLessonDescExpanded] = useState(false);
-  const [isSectionDescExpanded, setIsSectionDescExpanded] = useState(false);
 
   // Quiz States
   const [quizModal, setQuizModal] = useState({
@@ -106,8 +104,6 @@ export default function LiveCourseLessons() {
     currentQuestionIndex: 0,
     userAnswers: [],
     showResult: false,
-    selectedAnswer: null,
-    showFeedback: false,
   });
 
   const [resultsModal, setResultsModal] = useState({
@@ -168,7 +164,7 @@ export default function LiveCourseLessons() {
   const getPeriodicQuizzes = () => {
     if (!currentLesson || !currentLesson.lesson_end_tests) return [];
     return currentLesson.lesson_end_tests.filter(
-      (test) => test.test_type === "Periodic Quiz (Live Session)" || test.test_type === "Periodic Quiz (Video Session)"
+      (test) => test.test_type === "Periodic Quiz (Live Session)"
     );
   };
 
@@ -629,9 +625,7 @@ export default function LiveCourseLessons() {
     setProcessedQuizzes(new Set());
     setAnsweredQuizzes(new Set());
     setQuizResults({});
-    setIsLessonDescExpanded(false);
-    setIsSectionDescExpanded(false);
-  }, [currentLesson?.id, currentSection?.id]);
+  }, [currentLesson?.id]);
 
   const sortedSections = useMemo(() => {
     return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
@@ -789,22 +783,38 @@ export default function LiveCourseLessons() {
     }
   };
 
-  // Helper: format session start time like "02 Nov 2025 - 06:43 PM"
+  // 🔥 دالة تنسيق الوقت بشكل احترافي
   const formatSessionTime = (dateString) => {
     if (!dateString) return null;
     try {
       const d = new Date(dateString.replace(" ", "T"));
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = d.toLocaleString(undefined, { month: "short" });
+      const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(d);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(d);
       const year = d.getFullYear();
-      let hours = d.getHours();
-      const minutes = d.getMinutes().toString().padStart(2, "0");
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12;
-      const hourStr = hours.toString().padStart(2, "0");
-      return `${day} ${month} ${year} - ${hourStr}:${minutes} ${ampm}`;
+      const time = d.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+      
+      return `${weekday} • ${month} ${day}, ${year} • ${time}`;
     } catch {
       return dateString;
+    }
+  };
+
+  // 🔥 دالة التحقق من تفعيل الرابط (قبل المحاضرة بساعة)
+  const isLinkActive = (startTime) => {
+    if (!startTime) return false;
+    try {
+      const start = new Date(startTime.replace(" ", "T")).getTime();
+      const now = new Date().getTime();
+      const oneHour = 60 * 60 * 1000;
+      // متاح إذا كان الوقت الحالي بعد (وقت البداية - ساعة)
+      return now >= (start - oneHour);
+    } catch {
+      return false;
     }
   };
 
@@ -1147,16 +1157,26 @@ export default function LiveCourseLessons() {
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
               {currentLesson || currentSection ? (
                 <div className="relative">
-                  {currentLesson && (currentLesson.status === "active" || currentLesson.type === "Free" || currentLesson.type === "free" || currentLesson.is_free) ? (
-                    // Active status - show ALL content normally
+                  {(currentLesson && (
+                    // 1. If not purchased: show if lesson is free
+                    (!hasAccess && (currentLesson.type === "free" || currentLesson.type === "Free" || currentLesson.is_free === true)) ||
+                    // 2. If purchased: show if status is active
+                    (hasAccess && currentLesson.status === "active")
+                  )) || (currentSection && (
+                    // 3. For sections: show if purchased or has free lessons
+                    hasAccess || hasFreeLessons(currentSection.id)
+                  )) ? (
+                    // Show ALL content
                     <>
                       <div className="relative aspect-video">
-                        <VideoPlayer
-                          currentLesson={currentLesson}
-                          currentSection={currentSection}
-                          handleVideoTimeUpdate={handleVideoTimeUpdate}
-                          handleVideoEnd={handleVideoEnd}
-                        />
+                        {currentLesson && (
+                          <VideoPlayer
+                            currentLesson={currentLesson}
+                            currentSection={currentSection}
+                            handleVideoTimeUpdate={handleVideoTimeUpdate}
+                            handleVideoEnd={handleVideoEnd}
+                          />
+                        )}
 
                         {/* Quiz Modals */}
                         <QuizModal
@@ -1196,17 +1216,9 @@ export default function LiveCourseLessons() {
                         {/* Session description */}
                         {currentLesson?.description && (
                           <div className="mt-3 text-sm text-text-secondary">
-                            <p className={`leading-relaxed ${isLessonDescExpanded ? "" : "line-clamp-3"}`}>
+                            <p className="leading-relaxed">
                               {currentLesson.description}
                             </p>
-                            {currentLesson.description.length > 150 && (
-                              <button
-                                onClick={() => setIsLessonDescExpanded(!isLessonDescExpanded)}
-                                className="mt-1 text-sm font-medium underline text-primary hover:text-secondary cursor-pointer"
-                              >
-                                {isLessonDescExpanded ? "Show Less" : "Show More"}
-                              </button>
-                            )}
                           </div>
                         )}
 
@@ -1223,16 +1235,34 @@ export default function LiveCourseLessons() {
 
                         {/* Zoom link - ALWAYS show if available */}
                         {currentLesson?.zoom_link && (
-                          <div className="mt-3">
-                            <a
-                              href={currentLesson.zoom_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
-                            >
-                              <FaVideo />
-                              {t("liveCourses.joinLiveSession", "Join Live Session")}
-                            </a>
+                          <div className="mt-4">
+                            {(() => {
+                              const active = isLinkActive(currentLesson.started_at);
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  <a
+                                    href={active ? currentLesson.zoom_link : undefined}
+                                    target={active ? "_blank" : undefined}
+                                    rel={active ? "noopener noreferrer" : undefined}
+                                    onClick={(e) => !active && e.preventDefault()}
+                                    className={`inline-flex items-center justify-center gap-2 px-6 py-3 w-[200px] font-bold text-white transition-all duration-300 rounded-xl shadow-md ${
+                                      active 
+                                      ? "bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer" 
+                                      : "bg-gray-400 cursor-not-allowed opacity-70"
+                                    }`}
+                                  >
+                                    <FaVideo />
+                                    {t("liveCourses.joinLiveSession", "Join Live Session")}
+                                  </a>
+                                  {!active && (
+                                    <p className="flex items-center gap-1 text-xs font-medium text-red-500">
+                                      <FaClock className="animate-pulse" />
+                                      {t("liveCourses.linkOpensSoon", "The link will be active exactly 1 hour before the session starts.")}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
 
@@ -1260,40 +1290,8 @@ export default function LiveCourseLessons() {
                         )}
                       </div>
                     </>
-                    ) : currentSection ? (
-                    // Section View - show section details similar to Video Courses
-                    <div className="p-4 bg-surface">
-                      <h3 className="text-lg font-semibold text-text mb-3">
-                        {currentSection.title}
-                      </h3>
-                      {currentSection.description && (
-                        <div className="mt-2 text-sm text-text-secondary">
-                          <p className={`leading-relaxed ${isSectionDescExpanded ? '' : 'line-clamp-3'}`}>
-                            {currentSection.description}
-                          </p>
-                          {currentSection.description.length > 150 && (
-                            <button
-                              onClick={() => setIsSectionDescExpanded(!isSectionDescExpanded)}
-                              className="mt-1 text-sm font-medium underline text-primary hover:text-secondary cursor-pointer"
-                            >
-                              {isSectionDescExpanded ? "Show Less" : "Show More"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Attachments for Section */}
-                      <LessonAttachments
-                        content={currentSection}
-                        setSelectedImage={setSelectedImage}
-                        setShowImagePopup={setShowImagePopup}
-                        handleFileClick={handleFileClick}
-                        handleVideoClick={handleVideoClick}
-                        type="section"
-                      />
-                    </div>
                   ) : (
-                    // Inactive status for lesson or nothing selected
+                    // Inactive status - show professional message
                     <div className="p-8 text-center aspect-video bg-accent">
                       <div className="max-w-lg mx-auto">
                         <div className="mb-4 text-3xl">
@@ -1319,16 +1317,36 @@ export default function LiveCourseLessons() {
 
                         {/* ALWAYS show zoom link if available */}
                         {currentLesson?.zoom_link && (
-                          <div className="mt-4">
-                            <a
-                              href={currentLesson.zoom_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded text-primary hover:bg-primary/5"
-                            >
-                              <FaVideo />
-                              {t("liveCourses.viewMeetingLink", "View Meeting Link")}
-                            </a>
+                          <div className="flex flex-col items-center gap-3 mt-6">
+                            {(() => {
+                              const active = isLinkActive(currentLesson.started_at);
+                              return (
+                                <>
+                                  <a
+                                    href={active ? currentLesson.zoom_link : undefined}
+                                    target={active ? "_blank" : undefined}
+                                    rel={active ? "noopener noreferrer" : undefined}
+                                    onClick={(e) => !active && e.preventDefault()}
+                                    className={`inline-flex items-center justify-center gap-3 px-8 py-3.5 font-bold text-white transition-all duration-300 rounded-xl shadow-lg ${
+                                      active 
+                                      ? "bg-gradient-to-r from-primary to-secondary hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer" 
+                                      : "bg-gray-400 cursor-not-allowed opacity-80"
+                                    }`}
+                                  >
+                                    <FaVideo className="text-lg" />
+                                    {t("liveCourses.viewMeetingLink", "View Meeting Link")}
+                                  </a>
+                                  {!active && (
+                                    <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-800/20">
+                                      <FaClock className="text-red-500 animate-pulse" />
+                                      <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 1 hour before the session starts.")}
+                                      </span>
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
 
@@ -1428,22 +1446,22 @@ export default function LiveCourseLessons() {
         isLive={true}
       />
 
+      <ImagePopup
+        showImagePopup={showImagePopup}
+        selectedImage={selectedImage}
+        setShowImagePopup={setShowImagePopup}
+      />
+
       <PDFPopup
-        show={showFilesPopup}
-        file={selectedFile}
-        onClose={() => setShowFilesPopup(false)}
+        showFilesPopup={showFilesPopup}
+        selectedFile={selectedFile}
+        setShowFilesPopup={setShowFilesPopup}
       />
 
       <VideoPopup
-        show={showVideoPopup}
-        video={selectedVideo}
-        onClose={() => setShowVideoPopup(false)}
-      />
-
-      <ImagePopup
-        show={showImagePopup}
-        image={selectedImage}
-        onClose={() => setShowImagePopup(false)}
+        showVideoPopup={showVideoPopup}
+        selectedVideo={selectedVideo}
+        setShowVideoPopup={setShowVideoPopup}
       />
     </section>
   );

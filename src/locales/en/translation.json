@@ -999,9 +999,9 @@
     "applyInstallment": "Apply Installment",
     "payingInInstallments": "Paying in installments",
     "remainingBalance": "Remaining balance",
-    "minimumInstallment": "Minimum installment: $100",
+    "minimumInstallment": "Minimum installment: ₴{{min}}",
     "totalPrice": "Total price",
-    "installmentErrorMin": "Minimum installment amount is $100",
+    "installmentErrorMin": "Minimum installment amount is ₴{{min}}",
     "installmentErrorMax": "Installment amount cannot exceed the total price",
     "payInstallment": "Pay ${{amount}} Installment",
     "installmentModal": {
@@ -1010,9 +1010,9 @@
       "amountPlaceholder": "Enter installment amount",
       "apply": "Apply Installment",
       "cancel": "Cancel",
-      "errorMin": "Minimum installment amount is $100",
-      "errorMax": "Installment amount cannot exceed the total price (${{price}})",
-      "helpText": "Minimum installment: $100 | Total price: ${{price}}"
+      "errorMin": "Minimum installment amount is ₴{{min}}",
+      "errorMax": "Installment amount cannot exceed the total price (₴{{price}})",
+      "helpText": "Minimum installment: ₴{{min}} | Total price: ₴{{price}}"
     }
   },
     "video_courses": {

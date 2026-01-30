@@ -164,16 +164,18 @@ export default function CourseSubscription() {
   };
 
   // دالة التحقق من مبلغ التقسيط
+  // دالة التحقق من مبلغ التقسيط
   const validateInstallmentAmount = (amount) => {
-    const minAmount = 100; // أقل مبلغ 100 دولار
+    // Calculate minimum amount (50% of total price)
+    const minAmount = discountedPrice * 0.5;
     const numericAmount = Number(amount);
 
     if (numericAmount < minAmount) {
-      return t('installments.installmentModal.errorMin', 'Minimum installment amount is $100');
+      return t('installments.installmentModal.errorMin', { min: minAmount.toFixed(2) }, `Minimum installment amount is ₴${minAmount.toFixed(2)}`);
     }
 
     if (numericAmount > discountedPrice) {
-      return t('installments.installmentModal.errorMax', { price: discountedPrice.toFixed(2) }, 'Installment amount cannot exceed the total price (${{price}})');
+      return t('installments.installmentModal.errorMax', { price: discountedPrice.toFixed(2) }, `Installment amount cannot exceed the total price (₴${discountedPrice.toFixed(2)})`);
     }
 
     return null;
@@ -725,7 +727,7 @@ export default function CourseSubscription() {
                   onChange={(e) => setInstallmentAmount(e.target.value)}
                   placeholder={t('installments.installmentModal.amountPlaceholder', 'Enter installment amount')}
                   className="w-full py-2 pl-8 pr-4 bg-white border rounded-lg border-border text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                  min="100"
+                  min={discountedPrice * 0.5}
                   max={discountedPrice}
                 />
               </div>
@@ -733,7 +735,7 @@ export default function CourseSubscription() {
                 <p className="mt-2 text-sm text-red-600">{installmentError}</p>
               )}
               <p className="mt-2 text-xs text-text-muted dark:text-gray-400">
-                {t('installments.installmentModal.helpText', { price: discountedPrice.toFixed(2) }, 'Minimum installment: $100 | Total price: ${{price}}')}
+                {t('installments.installmentModal.helpText', { min: (discountedPrice * 0.5).toFixed(2), price: discountedPrice.toFixed(2) }, `Minimum installment: ₴${(discountedPrice * 0.5).toFixed(2)} | Total price: ₴${discountedPrice.toFixed(2)}`)}
               </p>
             </div>
 

@@ -234,9 +234,10 @@ export default function Books() {
                   <h3 className="mb-2 text-lg font-semibold transition group-hover:text-primary">
                     {book.name}
                   </h3>
-                  <p className="mb-3 text-sm text-text-secondary line-clamp-3">
-                    {book.description}
-                  </p>
+                    <div 
+                      className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: book.description }}
+                    />
 
                   {/* Price Section */}
                   <div className="mb-4">
