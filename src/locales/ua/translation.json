@@ -862,18 +862,7 @@
     "installmentErrorMin": "Мінімальна сума внеску - 100$",
     "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну"
   },
-  "video_courses": {
-    "coupon": {
-      "label": "Код купона",
-      "placeholder": "Введіть код купона",
-      "apply": "Застосувати",
-      "invalid": "Купон недійсний",
-      "applied": "Купон успішно застосовано!",
-      "discount": "Знижка: {{percent}}%",
-      "discount_label": "Знижка купона ({{percent}}%)",
-      "required": "Будь ласка, введіть код купона"
-    }
-  },
+
   "orders": {
     "title": "Мої замовлення",
     "totalOrders": "{{count}} загалом замовлень",
@@ -1071,5 +1060,29 @@
     "unanswered": "Без відповіді",
     "viewCertificate": "Переглянути сертифікат",
     "retakeRequired": "Потрібно перескласти тест, щоб пройти."
+  },
+  "video_courses": {
+    "coupon": {
+      "label": "Код купона",
+      "placeholder": "Введіть код купона",
+      "apply": "Застосувати",
+      "invalid": "Купон недійсний",
+      "applied": "Купон успішно застосовано!",
+      "discount": "Знижка: {{percent}}%",
+      "discount_label": "Знижка купона ({{percent}}%)",
+      "required": "Будь ласка, введіть код купона"
+    }
+  },
+  "live_courses": {
+    "coupon": {
+      "label": "Код купона",
+      "placeholder": "Введіть код купона",
+      "apply": "Застосувати",
+      "invalid": "Купон недійсний",
+      "applied": "Купон успішно застосовано!",
+      "discount": "Знижка: {{percent}}%",
+      "discount_label": "Знижка купона ({{percent}}%)",
+      "required": "Будь ласка, введіть код купона"
+    }
   }
 }

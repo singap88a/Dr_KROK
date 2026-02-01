@@ -463,7 +463,7 @@ export default function CourseSubscription() {
                   onApply={handleCouponApply}
                   t={t}
                   initialDiscount={couponDiscount}
-                  type="video_course"
+                  type={isLiveCourse ? "live_course" : "video_course"}
                 />
               </div>
             </div>

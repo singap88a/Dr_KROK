@@ -1015,16 +1015,30 @@
       "helpText": "Minimum installment: ₴{{min}} | Total price: ₴{{price}}"
     }
   },
-    "video_courses": {
-    "coupon": {
-      "label": "Coupon Code",
-      "placeholder": "Enter coupon code",
-      "apply": "Apply",
-      "invalid": "The coupon is not valid",
-      "applied": "Coupon applied successfully!",
-      "discount": "Discount: {{percent}}%",
-      "discount_label": "Coupon Discount ({{percent}}%)",
-      "required": "Please enter a coupon code"
-    }
+"video_courses": {
+  "coupon": {
+    "label": "Coupon Code",
+    "placeholder": "Enter coupon code",
+    "apply": "Apply",
+    "invalid": "Invalid coupon",
+    "applied": "Coupon applied successfully!",
+    "discount": "Discount: {{percent}}%",
+    "discount_label": "Coupon discount ({{percent}}%)",
+    "required": "Please enter a coupon code"
+  }
+},
+"live_courses": {
+  "coupon": {
+    "label": "Coupon Code",
+    "placeholder": "Enter coupon code",
+    "apply": "Apply",
+    "invalid": "Invalid coupon",
+    "applied": "Coupon applied successfully!",
+    "discount": "Discount: {{percent}}%",
+    "discount_label": "Coupon discount ({{percent}}%)",
+    "required": "Please enter a coupon code"
   }
 }
+}
+
+

@@ -1022,15 +1022,16 @@ const VideoPlayerSection = ({
             )}
             {currentLesson.description && (
               <div className="mt-2 text-sm text-text-secondary dark:text-text-secondary-dark">
-                <p className={`leading-relaxed ${isLessonDescExpanded ? '' : 'line-clamp-3'}`}>
-                  {currentLesson.description}
-                </p>
+                <div 
+                  className={`leading-relaxed ${!isLessonDescExpanded ? 'line-clamp-4' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: currentLesson.description }} 
+                />
                 {currentLesson.description.length > 150 && (
                   <button
                     onClick={() => setIsLessonDescExpanded(!isLessonDescExpanded)}
                     className="mt-1 text-sm font-medium underline text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 cursor-pointer"
                   >
-                    {isLessonDescExpanded ? "Show Less" : "Show More"}
+                    {isLessonDescExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
                   </button>
                 )}
               </div>
@@ -1103,15 +1104,16 @@ const VideoPlayerSection = ({
             </h3>
             {currentSection.description && (
               <div className="mt-2 text-sm text-text-secondary dark:text-text-secondary-dark">
-                <p className={`leading-relaxed ${isSectionDescExpanded ? '' : 'line-clamp-3'}`}>
-                  {currentSection.description}
-                </p>
+                <div 
+                  className={`leading-relaxed ${!isSectionDescExpanded ? 'line-clamp-4' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: currentSection.description }} 
+                />
                 {currentSection.description.length > 150 && (
                   <button
                     onClick={() => setIsSectionDescExpanded(!isSectionDescExpanded)}
                     className="mt-1 text-sm font-medium underline text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 cursor-pointer"
                   >
-                    {isSectionDescExpanded ? "Show Less" : "Show More"}
+                    {isSectionDescExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
                   </button>
                 )}
               </div>
