@@ -44,7 +44,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
             <img
               src={course.img}
               alt={course.title}
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-[300px]"
             />
 
             {/* Live Badge */}

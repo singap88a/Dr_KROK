@@ -51,6 +51,7 @@ export default function LiveCourseDetails() {
   const [userHasReviewed, setUserHasReviewed] = useState(false);
   const [userHasAccess, setUserHasAccess] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -204,15 +205,15 @@ export default function LiveCourseDetails() {
   const isUpcoming = new Date(course.started_at) > new Date();
 
   return (
-    <section className="min-h-screen px-4 py-8 bg-background sm:px-6 md:px-12 text-text">
+    <section className="min-h-screen px-4 py-20 bg-background sm:px-6 md:px-12 text-text">
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
-        <div className="relative w-full overflow-hidden shadow-lg rounded-2xl lg:mx-0">
+        <div className="relative w-full overflow-hidden shadow-lg rounded-2xl lg:mx-0 h-fit lg:self-start">
           {videoUrl ? (
             <video
               ref={videoRef}
               src={videoUrl}
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-[400px]"
               muted
               playsInline
               controls={isPlaying}
@@ -221,7 +222,7 @@ export default function LiveCourseDetails() {
               onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
-            <img src={imageUrl} alt={course.title} className="object-cover w-full h-full" />
+            <img src={imageUrl} alt={course.title} className="object-cover w-full h-[300px]" />
           )}
           {!isPlaying && videoUrl && (
             <div className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/50" onClick={handlePlay}>
@@ -237,7 +238,7 @@ export default function LiveCourseDetails() {
           </div>
           {/* Time Status Badge */}
           {timeStatus && (
-            <div className="absolute z-10 bottom-4 left-4">
+            <div className="absolute z-10 top-4 right-4">
               <div className={`px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
                 {t(`liveCourses.${timeStatus.status}`, timeStatus.text)}
               </div>
@@ -248,10 +249,20 @@ export default function LiveCourseDetails() {
         {/* تفاصيل الكورس */}
         <div className="flex flex-col justify-between space-y-4 sm:space-y-6">
           <h1 className="text-2xl font-bold sm:text-3xl">{course.title}</h1>
-          <div 
-            className="text-sm text-text-secondary sm:text-base"
-            dangerouslySetInnerHTML={{ __html: course.description }}
-          />
+          <div className="text-sm text-text-secondary sm:text-base">
+            <div 
+              className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}
+              dangerouslySetInnerHTML={{ __html: course.description }}
+            />
+            {course.description && course.description.length > 150 && (
+              <button
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80 cursor-pointer"
+              >
+                {isDescriptionExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
+              </button>
+            )}
+          </div>
 
           {/* Rating */}
           <div className="flex items-center gap-2">

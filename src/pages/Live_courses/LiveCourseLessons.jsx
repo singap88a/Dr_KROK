@@ -94,7 +94,9 @@ export default function LiveCourseLessons() {
   const [courseProgress, setCourseProgress] = useState(null);
   const [progressLoading] = useState(false);
   const [sectionProgress, setSectionProgress] = useState({});
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 🔥 حالة القائمة الجانبية
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // Quiz States
   const [quizModal, setQuizModal] = useState({
@@ -1216,9 +1218,18 @@ export default function LiveCourseLessons() {
                         {/* Session description */}
                         {currentLesson?.description && (
                           <div className="mt-3 text-sm text-text-secondary">
-                            <p className="leading-relaxed">
-                              {currentLesson.description}
-                            </p>
+                            <p 
+                              className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
+                              dangerouslySetInnerHTML={{ __html: currentLesson.description }}
+                            />
+                            {currentLesson.description.length > 150 && (
+                              <button
+                                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80 cursor-pointer"
+                              >
+                                {isDescriptionExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
+                              </button>
+                            )}
                           </div>
                         )}
 
