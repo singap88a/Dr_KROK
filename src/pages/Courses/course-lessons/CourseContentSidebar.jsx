@@ -175,6 +175,7 @@ const CourseContentSidebar = ({
                 onLessonClick={handleLessonClickWithClose}
                 onToggleSection={onToggleSection}
                 isLoggedIn={isLoggedIn}
+                hasAccess={hasAccess}
                 navigate={navigate}
                 course={course}
               />

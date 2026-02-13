@@ -504,8 +504,8 @@ export default function CourseLessons() {
   };
 
   const handleSectionClick = (section) => {
-    const hasFree = hasFreeLessons(section.id);
-    if (!hasFree && !hasAccess) {
+    const isFree = section.type === "free" || section.type === "Free" || hasFreeLessons(section.id);
+    if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
         navigate("/login");
         return;
@@ -533,7 +533,13 @@ export default function CourseLessons() {
   const hasFreeLessons = useMemo(() => {
     return (sectionId) => {
       const section = sections.find((s) => s.id === sectionId);
-      if (!section || !section.lessons) return false;
+      if (!section) return false;
+      
+      // ✅ التعديل: نعتمد أولاً على الـ type الخاص بالسيكشن نفسه
+      if (section.type === "free" || section.type === "Free") return true;
+
+      // ثم نتحقق من الدروس إذا كان السيكشن ليس فري
+      if (!section.lessons) return false;
       return section.lessons.some(
         (lesson) => lesson.type === "free" || lesson.type === "Free"
       );

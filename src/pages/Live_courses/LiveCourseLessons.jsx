@@ -445,9 +445,10 @@ export default function LiveCourseLessons() {
         // إذا مفيش آخر درس محفوظ أو المستخدم غير مسجل دخوله، نفتح أول سيكشن فيه دروس مجانية
         if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
           const firstSectionWithFree = courseData.sections.find(section => 
-            section.lessons && section.lessons.some(lesson => 
+            section.type === "free" || section.type === "Free" ||
+            (section.lessons && section.lessons.some(lesson => 
               lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
-            )
+            ))
           );
           
           if (firstSectionWithFree) {
@@ -653,7 +654,12 @@ export default function LiveCourseLessons() {
   const hasFreeLessons = useMemo(() => {
     return (sectionId) => {
       const section = sections.find((s) => s.id === sectionId);
-      if (!section || !section.lessons) return false;
+      if (!section) return false;
+
+      // ✅ التعديل: نعتمد أولاً على الـ type الخاص بالسيكشن نفسه
+      if (section.type === "free" || section.type === "Free") return true;
+
+      if (!section.lessons) return false;
       return section.lessons.some((lesson) => 
         lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
       );
@@ -726,9 +732,9 @@ export default function LiveCourseLessons() {
   };
 
   const handleSectionClick = (section) => {
-    // If no free lessons in section and user doesn't have access
-    const hasFree = hasFreeLessons(section.id);
-    if (!hasFree && !hasAccess) {
+    // If section is free or has free lessons and user doesn't have access
+    const isFree = section.type === "free" || section.type === "Free" || hasFreeLessons(section.id);
+    if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
         navigate("/login");
         return;

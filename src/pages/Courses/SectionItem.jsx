@@ -8,7 +8,8 @@ import {
   FaLock,
   FaClipboardList,
   FaUnlock,
-  FaCheckCircle
+  FaCheckCircle,
+  FaVideo
 } from "react-icons/fa";
 import LessonItem from "./LessonItem";
 import SectionProgressBar from "./Progress/SectionProgressBar";
@@ -28,6 +29,7 @@ const SectionItem = ({
   onLessonClick,
   onToggleSection,
   isLoggedIn,
+  hasAccess,
   navigate,
   course
 }) => {
@@ -193,11 +195,19 @@ const SectionItem = ({
                         {section.lessons_count || 0} {t("courses.lessons", "Lessons")}
                       </span>
                       <span>
-                        {hasFree
+                        {hasFree || section.type === "Free" || section.type === "free"
                           ? t("courses.hasFree", "Has Free")
                           : t("courses.premium", "Premium")}
                       </span>
-                      {!hasFree && (
+
+                      {/* {(section.video || section.video_related || section.zoom_link) && (
+                        // <div className="flex items-center gap-1 text-primary">
+                        //   <FaVideo size={10} />
+                        //   <span>{t("courses.video", "Video")}</span>
+                        // </div>
+                      )} */}
+                  
+                      {!hasFree && section.type !== "Free" && section.type !== "free" && !hasAccess && (
                         <FaLock
                           className="flex-shrink-0 text-sm text-text-muted"
                           title="Premium"

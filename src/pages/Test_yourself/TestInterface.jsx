@@ -78,13 +78,12 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
   const prepareMCQAnswers = (question) => {
     if (question.type !== 'mcq') return null;
     
-    // جمع جميع الإجابات المتاحة
+    // جمع جميع الإجابات المتاحة من الباك إند بشكل ديناميكي
     const availableAnswers = [];
-    for (let i = 1; i <= 4; i++) {
-      const answerKey = `answer_${i}`;
-      if (question[answerKey] || question[`${answerKey}_image`]) {
-        availableAnswers.push(answerKey);
-      }
+    let i = 1;
+    while (question[`answer_${i}`] || question[`answer_${i}_image`]) {
+      availableAnswers.push(`answer_${i}`);
+      i++;
     }
     
     // خلط الإجابات عشوائياً
@@ -114,32 +113,35 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
 
   // Timer effect for placement tests
   useEffect(() => {
-    if (selectedTest && timeLeft !== null) {
-      timerRef.current = setInterval(() => {
+    let interval = null;
+    if (selectedTest && timeLeft !== null && timeLeft > 0) {
+      interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            clearInterval(timerRef.current);
-            nextQuestion();
+            clearInterval(interval);
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
+    } else if (timeLeft === 0) {
+      nextQuestion();
     }
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      if (interval) {
+        clearInterval(interval);
       }
     };
-  }, [selectedTest, timeLeft]);
+  }, [selectedTest, timeLeft === null, timeLeft === 0]); // Stable dependencies
 
   // Set timer for current question
   useEffect(() => {
     if (selectedTest && currentQuestionIndex >= 0) {
       const question = selectedTest.quizzes[currentQuestionIndex];
-      if (question && question.answer_duration) {
-        setTimeLeft(parseInt(question.answer_duration));
+      const duration = parseInt(question?.answer_duration);
+      if (question && !isNaN(duration) && duration > 0) {
+        setTimeLeft(duration);
       } else {
         setTimeLeft(null);
       }

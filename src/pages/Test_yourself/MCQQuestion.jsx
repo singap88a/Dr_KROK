@@ -1,8 +1,18 @@
 import React, { useMemo } from 'react';
 
 const MCQQuestion = ({ question, userAnswer, onAnswerSelect, shuffledAnswers }) => {
-  // استخدام الإجابات المخلوطة الممررة من الكومبوننت الأب
-  const answersToDisplay = shuffledAnswers || ['answer_1', 'answer_2', 'answer_3', 'answer_4'];
+  // استخدام الإجابات المخلوطة الممررة من الكومبوننت الأب، أو استخراجها ديناميكياً
+  const answersToDisplay = useMemo(() => {
+    if (shuffledAnswers) return shuffledAnswers;
+    
+    const dynamicAnswers = [];
+    let i = 1;
+    while (question[`answer_${i}`] || question[`answer_${i}_image`]) {
+      dynamicAnswers.push(`answer_${i}`);
+      i++;
+    }
+    return dynamicAnswers;
+  }, [shuffledAnswers, question]);
 
   return (
     <>
