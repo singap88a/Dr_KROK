@@ -322,19 +322,28 @@ export default function CourseTestRunner() {
 
       if (q.type === "match") {
         let correct = 0;
-        for (let n = 1; n <= 4; n++) {
+        let matchCount = 0;
+        let n = 1;
+        while (q[`match_${n}`]) {
+          matchCount++;
           if (
             answers[`${q.id}_${n}`] &&
             answers[`${q.id}_${n}`] === q[`match_${n}`]
           )
             correct++;
+          n++;
         }
-        isCorrect = correct === 4;
+        isCorrect = correct === matchCount && matchCount > 0;
         studentAnswer = Object.keys(answers)
           .filter((k) => k.startsWith(`${q.id}_`))
           .map((k) => answers[k])
           .join(", ");
-        correctAnswer = [1, 2, 3, 4].map(n => q[`match_${n}`]).join(", ");
+        
+        const matchCorrectList = [];
+        for (let i = 1; i <= matchCount; i++) {
+          matchCorrectList.push(q[`match_${i}`]);
+        }
+        correctAnswer = matchCorrectList.join(", ");
       } else if (q.type === "connect") {
         const userAnswer = answers[q.id];
         const pairs = extractAnswerPairs(q);
@@ -362,7 +371,7 @@ export default function CourseTestRunner() {
         correctAnswer = pairs.map(pair => `${pair.key}:${pair.key}`).join(", ");
       } else {
         studentAnswer = answers[q.id] || "";
-        const correctAnswerKey = ["answer_1", "answer_2", "answer_3", "answer_4"][q.correct_answer_index];
+        const correctAnswerKey = `answer_${parseInt(q.correct_answer_index) + 1}`;
         isCorrect = answers[q.id] === correctAnswerKey;
         correctAnswer = q[correctAnswerKey] || "";
 
@@ -715,7 +724,15 @@ export default function CourseTestRunner() {
             {currentQuestion?.type === "match" ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-3">
-                  {["answer_1", "answer_2", "answer_3", "answer_4"].map(
+                  {(() => {
+                      const keys = [];
+                      let i = 1;
+                      while (currentQuestion[`answer_${i}`] || currentQuestion[`answer_${i}_image`]) {
+                        keys.push(`answer_${i}`);
+                        i++;
+                      }
+                      return keys;
+                    })().map(
                     (key, index) => {
                       const text = currentQuestion[key];
                       const img = currentQuestion[`${key}_image`];
@@ -1008,7 +1025,15 @@ export default function CourseTestRunner() {
               </div>
             ) : (
               <div className="space-y-4">
-                {["answer_1", "answer_2", "answer_3", "answer_4"].map((key) => {
+                {(() => {
+                    const keys = [];
+                    let i = 1;
+                    while (currentQuestion[`answer_${i}`] || currentQuestion[`answer_${i}_image`]) {
+                      keys.push(`answer_${i}`);
+                      i++;
+                    }
+                    return keys;
+                  })().map((key) => {
                   const text = currentQuestion[key];
                   const img = currentQuestion[`${key}_image`];
                   if (!text && !img) return null;

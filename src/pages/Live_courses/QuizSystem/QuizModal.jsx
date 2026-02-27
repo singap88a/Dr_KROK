@@ -106,7 +106,15 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
 
               {/* Answers */}
               <div className="space-y-2">
-                {[1, 2, 3, 4].map((index) => {
+                {(() => {
+                  const indices = [];
+                  let idx = 1;
+                  while (currentQuiz[`answer_${idx}`]) {
+                    indices.push(idx);
+                    idx++;
+                  }
+                  return indices;
+                })().map((index) => {
                   const answer = currentQuiz[`answer_${index}`];
                   if (!answer) return null;
 

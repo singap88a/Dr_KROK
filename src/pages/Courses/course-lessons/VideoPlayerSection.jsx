@@ -409,7 +409,15 @@ const VideoPlayerSection = ({
               
               {/* Answers */}
               <div className="mt-4 space-y-2">
-                {[1, 2, 3, 4].map((index) => {
+                {(() => {
+                  const indices = [];
+                  let i = 1;
+                  while (currentQuiz[`answer_${i}`]) {
+                    indices.push(i);
+                    i++;
+                  }
+                  return indices;
+                })().map((index) => {
                   const answer = currentQuiz[`answer_${index}`];
                   if (!answer) return null;
 
