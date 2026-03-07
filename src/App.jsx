@@ -32,7 +32,7 @@ import RegisterPage from "./pages/auth/Register/RegisterPage";
 import SocialCallback from "./pages/auth/SocialCallback";
 import Privacypolicy from "./pages/Privacypolicy/Privacypolicy";
 import TermsAndConditions from "./pages/TermsAndConditions/TermsAndConditions";
-import RefundPolicy from "./pages/RefundPolicy/RefundPolicy";
+import PurchasePolicy from "./pages/PurchasePolicy/PurchasePolicy";
 import { UserProvider } from "./context/UserContext";
 import { ApiProvider } from "./context/ApiContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -97,7 +97,7 @@ export default function App() {
           <Route path="/test" element={<TestYourself />} />
           <Route path="/privacypolicy" element={<Privacypolicy />} />
           <Route path="/termsandconditions" element={<TermsAndConditions />} />
-          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/purchase-policy" element={<PurchasePolicy />} />
           <Route path="/instructors" element={<Instructors />} />
           <Route path="/instructors/:id" element={<InstructorDetails />} />
 

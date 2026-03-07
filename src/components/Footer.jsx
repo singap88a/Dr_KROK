@@ -109,7 +109,7 @@ export default function Footer() {
             <li><a href="/articles" className="transition hover:text-primary">{t('footer.blogs')}</a></li>
             <li><a href="/privacypolicy" className="transition hover:text-primary">{t('footer.privacyPolicy')}</a></li>
             <li><a href="/termsandconditions" className="transition hover:text-primary">{t('footer.termsConditions')}</a></li>
-            <li><a href="/refund-policy" className="transition hover:text-primary">{t('footer.refundPolicy')}</a></li>
+            <li><a href="/purchase-policy" className="transition hover:text-primary">{t('footer.purchasePolicy')}</a></li>
             <li><a href="/instructors" className="transition hover:text-primary">{t('footer.instructors')}</a></li>
           </ul>
         </div>

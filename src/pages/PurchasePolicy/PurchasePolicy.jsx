@@ -4,23 +4,23 @@ import { useApi } from '../../context/ApiContext'
 import { useTranslation } from 'react-i18next'
 import LoadingSpinner from '../../components/LoadingSpinner'
 
-export default function RefundPolicy() {
+export default function PurchasePolicy() {
   const { request } = useApi()
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
+
   const [bannerImage, setBannerImage] = useState("https://www.pivoi.com/wp-content/uploads/2021/02/termscondition.jpg")
 
   useEffect(() => {
-    const fetchRefundPolicy = async () => {
+    const fetchPurchasePolicy = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        const result = await request('refund_policy')
-        
+        const result = await request('purchase_policy')
+
         if (result && result.data && result.data.length > 0) {
           const decoded = result.data.map(item => ({
             ...item,
@@ -32,11 +32,11 @@ export default function RefundPolicy() {
         try {
           const settingsResult = await request('setting')
           if (settingsResult && settingsResult.data) {
-             if (settingsResult.data.image_refund_policy) {
-                 setBannerImage(settingsResult.data.image_refund_policy)
-             } else if (settingsResult.data.image_terms_conditions) {
-                setBannerImage(settingsResult.data.image_terms_conditions)
-             }
+            if (settingsResult.data.image_purchase_policy) {
+              setBannerImage(settingsResult.data.image_purchase_policy)
+            } else if (settingsResult.data.image_terms_conditions) {
+              setBannerImage(settingsResult.data.image_terms_conditions)
+            }
           }
         } catch (settingsError) {
           console.error("Failed to fetch settings for banner:", settingsError)
@@ -49,7 +49,7 @@ export default function RefundPolicy() {
       }
     }
 
-    fetchRefundPolicy()
+    fetchPurchasePolicy()
   }, [request])
 
   if (loading) {
@@ -75,11 +75,10 @@ export default function RefundPolicy() {
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white sm:p-6">
           <h1 className="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl lg:text-6xl animate-fade-in">
-             {t('footer.refundPolicy')}
+            {t('footer.purchasePolicy')}
           </h1>
-
           <p className="max-w-2xl text-base leading-relaxed sm:text-lg md:text-xl lg:text-2xl">
-             {t('refund.description')}
+            {t('purchasePolicy.description')}
           </p>
         </div>
       </div>
@@ -93,7 +92,7 @@ export default function RefundPolicy() {
         </div>
       ) : (
         <div className="py-8 text-center text-gray-500">
-          {t('refund.noData')}
+          {t('purchasePolicy.noData')}
         </div>
       )}
     </div>

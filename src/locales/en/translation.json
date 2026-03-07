@@ -127,7 +127,7 @@
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
     "termsConditions": "Terms and Conditions",
-    "refundPolicy": "Refund Policy",
+    "purchasePolicy": "Purchase Policy",
     "resources": "Resources",
     "blogs": "Blogs",
     "instructors": "Instructors",
@@ -273,6 +273,7 @@
     "original_total": "Original Total",
     "agree_terms": "I agree to the",
     "terms_conditions": "Terms and Conditions",
+    "purchase_policy": "Purchase Policy",
     "terms": {
       "title": "Terms and Conditions",
       "loading": "Loading...",
@@ -280,6 +281,14 @@
       "agree": "I Agree",
       "unable_to_load": "⚠️ Unable to load Terms and Conditions.",
       "error_fetching": "⚠️ Error fetching Terms and Conditions."
+    },
+    "purchasePolicy": {
+      "title": "Purchase Policy",
+      "loading": "Loading...",
+      "close": "Close",
+      "agree": "I Agree",
+      "unable_to_load": "⚠️ Unable to load Purchase Policy.",
+      "error_fetching": "⚠️ Error fetching Purchase Policy."
     },
     "select_city_branch_instruction": "Choose the city and the branch affiliated with the shipping company that will deliver the book to you.",
  
@@ -436,6 +445,13 @@
     "loading": "Loading...",
     "error": "Error",
     "noData": "No refund policy data available."
+  },
+  "purchasePolicy": {
+    "title": "Purchase Policy",
+    "description": "Please read our purchase policy carefully before completing your purchase.",
+    "loading": "Loading...",
+    "error": "Error",
+    "noData": "No purchase policy data available."
   },
   "cta": {
     "title": "Start Your Journey with",
@@ -775,6 +791,17 @@
     "enrollment_required": "Enrollment Required",
     "enrollment_required_message": "You must be enrolled in this course to leave a review. Please subscribe to the course first.",
     "subscribe_to_review": "Subscribe to Leave Review",
+    "agree_to_terms_start": "I agree to the",
+    "terms_conditions": "terms and conditions",
+    "purchase_policy": "purchase policy",
+    "must_agree_to_terms": "You must agree to the terms and conditions to subscribe.",
+    "must_agree_to_purchase_policy": "You must agree to the purchase policy to subscribe.",
+    "purchasePolicy": {
+      "title": "Purchase Policy",
+      "close": "Close",
+      "unable_to_load": "⚠️ Unable to load purchase policy.",
+      "error_fetching": "⚠️ Error fetching purchase policy."
+    },
     "coupon": {
       "label": "Coupon Code",
       "placeholder": "Enter coupon code",

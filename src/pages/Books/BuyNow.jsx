@@ -117,21 +117,21 @@ export default function BuyNowPage() {
 
 
 
-  // Fetch terms and conditions when modal is opened
+  // Fetch purchase policy when modal is opened
   useEffect(() => {
     if (showTerms) {
       setTermsLoading(true);
-      request("termsandcondition")
+      request("purchase_policy")
         .then((result) => {
           if (result.data && result.data.length > 0) {
             const decoded = he.decode(result.data[0].description);
             setTermsText(decoded);
           } else {
-            setTermsText(t('books.terms.unable_to_load'));
+            setTermsText(t('books.purchasePolicy.unable_to_load'));
           }
         })
         .catch(() => {
-          setTermsText(t('books.terms.error_fetching'));
+          setTermsText(t('books.purchasePolicy.error_fetching'));
         })
         .finally(() => setTermsLoading(false));
     }
@@ -784,7 +784,7 @@ const handleDeliveryOrder = async (e) => {
                         onClick={() => setShowTerms(true)}
                         className="text-primary hover:underline"
                       >
-                        {t('books.terms_conditions')}
+                        {t('books.purchase_policy')}
                       </button>
                     </label>
                   </div>
@@ -845,7 +845,7 @@ const handleDeliveryOrder = async (e) => {
                         onClick={() => setShowTerms(true)}
                         className="text-primary hover:underline"
                       >
-                        {t('books.terms_conditions')}
+                        {t('books.purchase_policy')}
                       </button>
                     </label>
                   </div>
@@ -874,7 +874,7 @@ const handleDeliveryOrder = async (e) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-2xl max-h-[80vh] p-6 mx-4 bg-white rounded-lg shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">{t('books.terms.title')}</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('books.purchasePolicy.title')}</h3>
               <button
                 onClick={() => setShowTerms(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -898,7 +898,7 @@ const handleDeliveryOrder = async (e) => {
                 onClick={() => setShowTerms(false)}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                {t('books.terms.close')}
+                {t('books.purchasePolicy.close')}
               </button>
             </div>
           </div>

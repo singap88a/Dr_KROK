@@ -114,22 +114,22 @@ export default function CourseSubscription() {
     };
   }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getCourseAccess, isLoggedIn]);
 
-  // Fetch terms and conditions when modal is opened
+  // Fetch purchase policy when modal is opened
   useEffect(() => {
     if (showTerms) {
       setTermsLoading(true);
-      request("termsandcondition")
+      request("purchase_policy")
         .then((result) => {
           if (result.data && result.data.length > 0) {
             // Use he.decode if you have HTML entities, otherwise use directly
             const decoded = result.data[0].description;
             setTermsText(decoded);
           } else {
-            setTermsText(t('courses.terms.unable_to_load', 'Unable to load terms and conditions.'));
+            setTermsText(t('courses.purchasePolicy.unable_to_load', 'Unable to load purchase policy.'));
           }
         })
         .catch(() => {
-          setTermsText(t('courses.terms.error_fetching', 'Error fetching terms and conditions.'));
+          setTermsText(t('courses.purchasePolicy.error_fetching', 'Error fetching purchase policy.'));
         })
         .finally(() => setTermsLoading(false));
     }
@@ -208,9 +208,9 @@ export default function CourseSubscription() {
       return;
     }
 
-    // Check if user agreed to terms
+    // Check if user agreed to purchase policy
     if (!agreeToTerms) {
-      setError(t('courses.must_agree_to_terms', 'You must agree to the terms and conditions to subscribe.'));
+      setError(t('courses.must_agree_to_purchase_policy', 'You must agree to the purchase policy to subscribe.'));
       return;
     }
 
@@ -594,13 +594,13 @@ export default function CourseSubscription() {
                           onClick={() => setShowTerms(true)}
                           className="text-primary hover:underline"
                         >
-                          {t('courses.terms_conditions', 'terms and conditions')}
+                          {t('courses.purchase_policy', 'purchase policy')}
                         </button>
                       </label>
                     </div>
                     {!agreeToTerms && (
                       <p className="mt-2 text-sm text-red-500">
-                        {t('courses.must_agree_to_terms', 'You must agree to the terms and conditions to subscribe.')}
+                        {t('courses.must_agree_to_purchase_policy', 'You must agree to the purchase policy to subscribe.')}
                       </p>
                     )}
                   </div>
@@ -762,7 +762,7 @@ export default function CourseSubscription() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-2xl max-h-[80vh] p-6 mx-4 bg-white rounded-lg shadow-xl dark:bg-surface dark:text-text">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-text">{t('courses.terms.title', 'Terms and Conditions')}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-text">{t('courses.purchasePolicy.title', 'Purchase Policy')}</h3>
               <button
                 onClick={() => setShowTerms(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -786,7 +786,7 @@ export default function CourseSubscription() {
                 onClick={() => setShowTerms(false)}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-text dark:border-gray-600 dark:hover:bg-gray-700"
               >
-                {t('courses.terms.close', 'Close')}
+                {t('courses.purchasePolicy.close', 'Close')}
               </button>
             </div>
           </div>
