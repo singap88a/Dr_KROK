@@ -79,7 +79,7 @@ export default function Navbar() {
   return (
     <nav className="fixed z-50 w-full border-b shadow-md bg-background border-border">
       <div className="container flex items-center justify-between px-4 py-4 mx-auto md:px-0 max-w-7xl">
-        <div className="relative group">
+        <div className="relative flex-shrink-0 group">
           {settingsLoading ? (
             <div className="w-10 h-10 bg-gray-300 rounded animate-pulse sm:h-12 sm:w-12"></div>
           ) : (
@@ -125,7 +125,7 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="relative flex items-center space-x-4">
+        <div className="relative flex items-center space-x-2 md:space-x-4">
           <div className="relative">
             <button
               onClick={() => setLangMenuOpen(!langMenuOpen)}
@@ -217,7 +217,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/register"
-              className="px-4 py-2 text-white transition rounded-lg bg-primary hover:bg-primary-dark"
+              className="px-4 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base text-white transition rounded-lg bg-primary hover:bg-primary-dark whitespace-nowrap"
             >
               {t("navbar.signUp")}
             </Link>
