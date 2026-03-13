@@ -1177,7 +1177,7 @@ export default function LiveCourseLessons() {
                     // Show ALL content
                     <>
                       <div className="relative aspect-video">
-                        {currentLesson && (
+                        {(currentLesson || currentSection) && (
                           <VideoPlayer
                             currentLesson={currentLesson}
                             currentSection={currentSection}
@@ -1222,13 +1222,13 @@ export default function LiveCourseLessons() {
                         )}
 
                         {/* Session description */}
-                        {currentLesson?.description && (
+                        {(currentLesson?.description || currentSection?.description) && (
                           <div className="mt-3 text-sm text-text-secondary">
                             <p 
                               className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
-                              dangerouslySetInnerHTML={{ __html: currentLesson.description }}
+                              dangerouslySetInnerHTML={{ __html: currentLesson?.description || currentSection?.description }}
                             />
-                            {currentLesson.description.length > 150 && (
+                            {(currentLesson?.description || currentSection?.description || "").length > 150 && (
                               <button
                                 onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                                 className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80 cursor-pointer"
@@ -1240,25 +1240,26 @@ export default function LiveCourseLessons() {
                         )}
 
                         {/* Session start time - ALWAYS show if available */}
-                        {currentLesson?.started_at && (
+                        {(currentLesson?.started_at || currentSection?.started_at) && (
                           <div className="flex items-center gap-2 p-3 mt-3 text-sm border rounded bg-surface-2 border-border-2">
                             <FaCalendarAlt className="text-primary" />
                             <span className="font-medium">{t("liveCourses.sessionDate", "Session Date")}:</span>
                             <span className="text-text-muted">
-                              {formatSessionTime(currentLesson.started_at)}
+                              {formatSessionTime(currentLesson?.started_at || currentSection?.started_at)}
                             </span>
                           </div>
                         )}
 
                         {/* Zoom link - ALWAYS show if available */}
-                        {currentLesson?.zoom_link && (
+                        {(currentLesson?.zoom_link || currentSection?.zoom_link) && (
                           <div className="mt-4">
                             {(() => {
-                              const active = isLinkActive(currentLesson.started_at);
+                              const active = isLinkActive(currentLesson?.started_at || currentSection?.started_at);
+                              const link = currentLesson?.zoom_link || currentSection?.zoom_link;
                               return (
                                 <div className="flex flex-col gap-2">
                                   <a
-                                    href={active ? currentLesson.zoom_link : undefined}
+                                    href={active ? link : undefined}
                                     target={active ? "_blank" : undefined}
                                     rel={active ? "noopener noreferrer" : undefined}
                                     onClick={(e) => !active && e.preventDefault()}
@@ -1320,27 +1321,28 @@ export default function LiveCourseLessons() {
                         </div>
 
                         {/* ALWAYS show session date if available */}
-                        {currentLesson?.started_at && (
+                        {(currentLesson?.started_at || currentSection?.started_at) && (
                           <div className="p-3 mb-4 text-sm border rounded bg-surface-2 border-border-2">
                             <div className="flex items-center justify-center gap-2">
                               <FaCalendarAlt className="text-primary" />
                               <span className="font-medium">{t("liveCourses.sessionDate", "Session Date")}:</span>
                               <span className="text-text-muted">
-                                {formatSessionTime(currentLesson.started_at)}
+                                {formatSessionTime(currentLesson?.started_at || currentSection?.started_at)}
                               </span>
                             </div>
                           </div>
                         )}
 
                         {/* ALWAYS show zoom link if available */}
-                        {currentLesson?.zoom_link && (
+                        {(currentLesson?.zoom_link || currentSection?.zoom_link) && (
                           <div className="flex flex-col items-center gap-3 mt-6">
                             {(() => {
-                              const active = isLinkActive(currentLesson.started_at);
+                              const active = isLinkActive(currentLesson?.started_at || currentSection?.started_at);
+                              const link = currentLesson?.zoom_link || currentSection?.zoom_link;
                               return (
                                 <>
                                   <a
-                                    href={active ? currentLesson.zoom_link : undefined}
+                                    href={active ? link : undefined}
                                     target={active ? "_blank" : undefined}
                                     rel={active ? "noopener noreferrer" : undefined}
                                     onClick={(e) => !active && e.preventDefault()}
