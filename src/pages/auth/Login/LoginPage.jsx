@@ -45,7 +45,7 @@ export default function LoginPage() {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
         setTimeout(() => {
-          window.location.href = "/profile";
+          window.location.href = "/";
         }, 1500);
       } else {
         toast.error("❌ Login failed: " + data.message, { position: "top-right" });
@@ -59,6 +59,7 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = () => {
+    localStorage.setItem('auth_flow', 'login');
     // استخدام الـ Vercel URL مباشرة بدون localhost
     const callbackUrl = 'https://admin.dr-krok.com/api/auth/callback';
     

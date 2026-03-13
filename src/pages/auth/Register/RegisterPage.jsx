@@ -108,6 +108,7 @@ export default function RegisterPage() {
   }
 
   const handleGoogleRegister = () => {
+    localStorage.setItem('auth_flow', 'register');
     // استخدام الـ Vercel URL مباشرة للتسجيل بجوجل
     const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
     

@@ -48,9 +48,13 @@ const SocialCallback = () => {
                 position: 'top-right',
               });
               
-              // Navigate to profile page
+              // Navigate based on auth flow
+              const authFlow = localStorage.getItem('auth_flow');
+              const redirectPath = authFlow === 'register' ? "/profile" : "/";
+              localStorage.removeItem('auth_flow');
+
               setTimeout(() => {
-                navigate("/profile", { replace: true });
+                navigate(redirectPath, { replace: true });
               }, 1500);
             } else {
               throw new Error("Failed to get user data");
@@ -71,8 +75,12 @@ const SocialCallback = () => {
               position: 'top-right',
             });
             
+            const authFlow = localStorage.getItem('auth_flow');
+            const redirectPath = authFlow === 'register' ? "/profile" : "/";
+            localStorage.removeItem('auth_flow');
+
             setTimeout(() => {
-              navigate("/profile", { replace: true });
+              navigate(redirectPath, { replace: true });
             }, 1500);
           }
         } else {
