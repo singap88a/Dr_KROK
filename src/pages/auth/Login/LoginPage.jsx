@@ -59,7 +59,7 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = () => {
-    localStorage.setItem('auth_flow', 'login');
+    localStorage.setItem('DR_KROK_auth_flow', 'login');
     // استخدام الـ Vercel URL مباشرة بدون localhost
     const callbackUrl = 'https://admin.dr-krok.com/api/auth/callback';
     

@@ -86,7 +86,7 @@ export default function RegisterPage() {
 
       if (data.success) {
         userRegister(data.data.token, data.data);
-        localStorage.setItem('show_completion_modal', 'true');
+        localStorage.setItem('DR_KROK_show_completion_modal', 'true');
         toast.success("🎉 Account created successfully!", {
           position: "top-right",
         });
@@ -109,7 +109,7 @@ export default function RegisterPage() {
   }
 
   const handleGoogleRegister = () => {
-    localStorage.setItem('auth_flow', 'register');
+    localStorage.setItem('DR_KROK_auth_flow', 'register');
     // استخدام الـ Vercel URL مباشرة للتسجيل بجوجل
     const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
     

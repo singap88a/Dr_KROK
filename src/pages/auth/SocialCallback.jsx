@@ -49,12 +49,12 @@ const SocialCallback = () => {
               });
               
               // Navigate based on auth flow
-              const authFlow = localStorage.getItem('auth_flow');
+              const authFlow = localStorage.getItem('DR_KROK_auth_flow');
               if (authFlow === 'register') {
-                localStorage.setItem('show_completion_modal', 'true');
+                localStorage.setItem('DR_KROK_show_completion_modal', 'true');
               }
               const redirectPath = authFlow === 'register' ? "/profile" : "/";
-              localStorage.removeItem('auth_flow');
+              localStorage.removeItem('DR_KROK_auth_flow');
 
               setTimeout(() => {
                 navigate(redirectPath, { replace: true });
@@ -78,12 +78,12 @@ const SocialCallback = () => {
               position: 'top-right',
             });
             
-            const authFlow = localStorage.getItem('auth_flow');
+            const authFlow = localStorage.getItem('DR_KROK_auth_flow');
             if (authFlow === 'register') {
-              localStorage.setItem('show_completion_modal', 'true');
+              localStorage.setItem('DR_KROK_show_completion_modal', 'true');
             }
             const redirectPath = authFlow === 'register' ? "/profile" : "/";
-            localStorage.removeItem('auth_flow');
+            localStorage.removeItem('DR_KROK_auth_flow');
 
             setTimeout(() => {
               navigate(redirectPath, { replace: true });

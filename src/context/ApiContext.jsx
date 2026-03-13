@@ -108,7 +108,7 @@ export const useApi = () => {
 
 export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api" }) => {
   const getAuthToken = useCallback(() => {
-    const tokenData = localStorage.getItem("tokenData");
+    const tokenData = localStorage.getItem("DR_KROK_tokenData");
     if (tokenData) {
       try {
         const parsed = JSON.parse(tokenData);
@@ -117,18 +117,18 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           return parsed.token;
         } else {
           // Token expired, clear it
-          localStorage.removeItem("tokenData");
-          localStorage.removeItem("user");
-          localStorage.removeItem("token");
-          localStorage.removeItem("userToken");
-          localStorage.removeItem("userName");
+          localStorage.removeItem("DR_KROK_tokenData");
+          localStorage.removeItem("DR_KROK_user");
+          localStorage.removeItem("DR_KROK_token");
+          localStorage.removeItem("DR_KROK_userToken");
+          localStorage.removeItem("DR_KROK_userName");
           // Emit logout event
           window.dispatchEvent(new CustomEvent('user-logout'));
           return null;
         }
       } catch (error) {
         console.error("Error parsing token data:", error);
-        localStorage.removeItem("tokenData");
+        localStorage.removeItem("DR_KROK_tokenData");
         return null;
       }
     }
@@ -148,7 +148,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   // Generate cache key for requests
   const generateCacheKey = useCallback((path, options = {}) => {
     const authToken = getAuthToken();
-    const lang = (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0];
+    const lang = (i18n?.language || localStorage.getItem("DR_KROK_i18nextLng") || "en").split("-")[0];
     
     return JSON.stringify({
       path,
@@ -194,7 +194,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       const isPalceOrder = path === 'place_order_book';
 
       // Attach Accept-Language from current i18n language (map ua -> uk for backend)
-      const currentLng = (i18n?.language || localStorage.getItem("i18nextLng") || "en").split("-")[0];
+      const currentLng = (i18n?.language || localStorage.getItem("DR_KROK_i18nextLng") || "en").split("-")[0];
       const backendLng = currentLng === "ua" ? "uk" : currentLng;
       if (!finalHeaders["Accept-Language"]) {
         finalHeaders["Accept-Language"] = backendLng;
@@ -273,10 +273,10 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         let message = data?.message || `Request failed: ${res.status}`;
 
         if (res.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("userToken");
-          localStorage.removeItem("user");
-          localStorage.removeItem("userName");
+          localStorage.removeItem("DR_KROK_token");
+          localStorage.removeItem("DR_KROK_userToken");
+          localStorage.removeItem("DR_KROK_user");
+          localStorage.removeItem("DR_KROK_userName");
           window.dispatchEvent(new CustomEvent('user-logout'));
           message = "Session expired. Please login again.";
         } else if (res.status === 302) {

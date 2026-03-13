@@ -13,8 +13,8 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     // التحقق من وجود توكن المستخدم عند تحميل التطبيق
-    const tokenData = localStorage.getItem("tokenData");
-    const user = localStorage.getItem("user");
+    const tokenData = localStorage.getItem("DR_KROK_tokenData");
+    const user = localStorage.getItem("DR_KROK_user");
 
     if (tokenData) {
       try {
@@ -29,20 +29,20 @@ export const UserProvider = ({ children }) => {
           }
         } else {
           // Token expired, clear it
-          localStorage.removeItem("tokenData");
-          localStorage.removeItem("user");
-          localStorage.removeItem("token");
-          localStorage.removeItem("userToken");
-          localStorage.removeItem("userName");
+          localStorage.removeItem("DR_KROK_tokenData");
+          localStorage.removeItem("DR_KROK_user");
+          localStorage.removeItem("DR_KROK_token");
+          localStorage.removeItem("DR_KROK_userToken");
+          localStorage.removeItem("DR_KROK_userName");
         }
       } catch (error) {
         console.error("Error parsing token data:", error);
         // Clear corrupted data
-        localStorage.removeItem("tokenData");
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        localStorage.removeItem("userToken");
-        localStorage.removeItem("userName");
+        localStorage.removeItem("DR_KROK_tokenData");
+        localStorage.removeItem("DR_KROK_user");
+        localStorage.removeItem("DR_KROK_token");
+        localStorage.removeItem("DR_KROK_userToken");
+        localStorage.removeItem("DR_KROK_userName");
       }
     }
   }, []);
@@ -66,8 +66,8 @@ export const UserProvider = ({ children }) => {
       token: token,
       expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours in milliseconds
     };
-    localStorage.setItem("tokenData", JSON.stringify(tokenData));
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("DR_KROK_tokenData", JSON.stringify(tokenData));
+    localStorage.setItem("DR_KROK_user", JSON.stringify(user));
     setIsLoggedIn(true);
     setUserData(user);
   };
@@ -78,18 +78,18 @@ export const UserProvider = ({ children }) => {
       token: token,
       expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours in milliseconds
     };
-    localStorage.setItem("tokenData", JSON.stringify(tokenData));
-    localStorage.setItem("userName", user.name);
+    localStorage.setItem("DR_KROK_tokenData", JSON.stringify(tokenData));
+    localStorage.setItem("DR_KROK_userName", user.name);
     setIsLoggedIn(true);
     setUserData(user);
   };
 
   const logout = () => {
-    localStorage.removeItem("tokenData");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("userName");
+    localStorage.removeItem("DR_KROK_tokenData");
+    localStorage.removeItem("DR_KROK_token");
+    localStorage.removeItem("DR_KROK_userToken");
+    localStorage.removeItem("DR_KROK_user");
+    localStorage.removeItem("DR_KROK_userName");
     setIsLoggedIn(false);
     setUserData(null);
   };
@@ -98,7 +98,7 @@ export const UserProvider = ({ children }) => {
     setUserData((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       if (next) {
-        localStorage.setItem("user", JSON.stringify(next));
+        localStorage.setItem("DR_KROK_user", JSON.stringify(next));
       }
       return next;
     });

@@ -19,6 +19,7 @@ i18n
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
+      lookupLocalStorage: "DR_KROK_i18nextLng",
     },
     interpolation: { escapeValue: false },
   });

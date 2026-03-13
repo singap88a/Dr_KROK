@@ -76,12 +76,12 @@ export default function Profile() {
           setUser(full);
           updateUser((prev) => ({ ...(prev || {}), ...full }));
           
-          const shouldShowModal = localStorage.getItem('show_completion_modal') === 'true';
+          const shouldShowModal = localStorage.getItem('DR_KROK_show_completion_modal') === 'true';
           if (shouldShowModal && isProfileIncomplete(full)) {
             setShowCompletionModal(true);
           }
           // Clear the flag immediately so it doesn't show again on refresh or revisit
-          localStorage.removeItem('show_completion_modal');
+          localStorage.removeItem('DR_KROK_show_completion_modal');
         } else {
           setError(data.message || "Failed to load profile");
           toast.error(data.message || "Failed to load profile");
