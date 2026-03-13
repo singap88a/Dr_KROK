@@ -50,6 +50,9 @@ const SocialCallback = () => {
               
               // Navigate based on auth flow
               const authFlow = localStorage.getItem('auth_flow');
+              if (authFlow === 'register') {
+                localStorage.setItem('show_completion_modal', 'true');
+              }
               const redirectPath = authFlow === 'register' ? "/profile" : "/";
               localStorage.removeItem('auth_flow');
 
@@ -76,6 +79,9 @@ const SocialCallback = () => {
             });
             
             const authFlow = localStorage.getItem('auth_flow');
+            if (authFlow === 'register') {
+              localStorage.setItem('show_completion_modal', 'true');
+            }
             const redirectPath = authFlow === 'register' ? "/profile" : "/";
             localStorage.removeItem('auth_flow');
 

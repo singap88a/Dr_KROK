@@ -86,6 +86,7 @@ export default function RegisterPage() {
 
       if (data.success) {
         userRegister(data.data.token, data.data);
+        localStorage.setItem('show_completion_modal', 'true');
         toast.success("🎉 Account created successfully!", {
           position: "top-right",
         });

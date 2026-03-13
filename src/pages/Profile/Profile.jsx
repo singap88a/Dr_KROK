@@ -76,9 +76,12 @@ export default function Profile() {
           setUser(full);
           updateUser((prev) => ({ ...(prev || {}), ...full }));
           
-          if (isProfileIncomplete(full)) {
+          const shouldShowModal = localStorage.getItem('show_completion_modal') === 'true';
+          if (shouldShowModal && isProfileIncomplete(full)) {
             setShowCompletionModal(true);
           }
+          // Clear the flag immediately so it doesn't show again on refresh or revisit
+          localStorage.removeItem('show_completion_modal');
         } else {
           setError(data.message || "Failed to load profile");
           toast.error(data.message || "Failed to load profile");
