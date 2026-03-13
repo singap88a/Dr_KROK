@@ -17,28 +17,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
   FaUser,
-  FaBook,
   FaShoppingCart,
   FaSignOutAlt,
-  FaPlay,
   FaStar,
-  FaClock,
-  FaCheckCircle,
-  FaTimesCircle,
   FaExclamationTriangle,
-  FaBars,
   FaTimes,
-  FaEdit,
-  FaSave,
-  FaCamera,
-  FaSun,
-  FaMoon,
   FaGraduationCap,
-  FaCalendarAlt,
-  FaMapMarkerAlt,
-  FaPhone,
-  FaEnvelope,
-  FaGlobe,
   FaHeart,
 } from "react-icons/fa";
 
@@ -51,6 +35,7 @@ import MyRatings from "./MyRatings";
 import LogoutConfirmModal from "../../components/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import ProfileCompletionModal from "./ProfileCompletionModal";
 
 export default function Profile() {
   const location = useLocation();
@@ -66,6 +51,12 @@ export default function Profile() {
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [forceEdit, setForceEdit] = useState(false);
+
+  const isProfileIncomplete = (u) => {
+    return !u?.phone || !u?.university_id || !u?.college_year;
+  };
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -84,6 +75,10 @@ export default function Profile() {
           };
           setUser(full);
           updateUser((prev) => ({ ...(prev || {}), ...full }));
+          
+          if (isProfileIncomplete(full)) {
+            setShowCompletionModal(true);
+          }
         } else {
           setError(data.message || "Failed to load profile");
           toast.error(data.message || "Failed to load profile");
@@ -124,7 +119,7 @@ export default function Profile() {
     const loadOrders = async () => {
       try {
         const ordersData = await getOrders();
-        setOrders(ordersData.orders || ordersData); // handle response shape with orders array
+        setOrders(ordersData.orders || ordersData);
       } catch (e) {
         console.warn("Failed to load orders", e);
       }
@@ -164,7 +159,7 @@ export default function Profile() {
   };
 
   const Sidebar = () => (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       {/* Close Button for Mobile */}
       <div className="flex justify-end p-4 lg:hidden">
         <button
@@ -211,7 +206,7 @@ export default function Profile() {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="p-4">
+      <nav className="p-4 flex-1 overflow-y-auto">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -317,13 +312,14 @@ export default function Profile() {
           }));
         }} />;
       case "profile":
-        return <MyProfile user={user} onProfileUpdate={(updated)=>{
+        return <MyProfile user={user} initialIsEditing={forceEdit} onProfileUpdate={(updated)=>{
           const merged = {
             ...updated,
             stats: user?.stats || { courses: 0, orders: 0, rating: 0 },
           };
           setUser(merged);
           updateUser((prev)=>({ ...(prev||{}), ...merged }));
+          setForceEdit(false);
         }} />;
       default:
         return coursesLoading ? (
@@ -340,29 +336,25 @@ export default function Profile() {
     <div className="flex min-h-screen bg-background text-text">
       <ToastContainer />
       {/* Mobile Menu Button */}
-<button
-  onClick={() => setIsMobileMenuOpen(true)}
-  className="fixed left-0 z-30 flex items-center justify-center w-12 h-12 text-white transition-all duration-300 shadow-lg top-20 rounded-br-2xl bg-gradient-to-r from-primary to-primary hover:scale-105 hover:shadow-2xl lg:hidden backdrop-blur-md bg-opacity-80"
->
-  {/* أيقونة تدل على القائمة الجانبية */}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    className="w-6 h-6"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M4 6h16M4 12h10M4 18h16"
-    />
-  </svg>
-</button>
-
-
-
+      <button
+        onClick={() => setIsMobileMenuOpen(true)}
+        className="fixed left-0 z-30 flex items-center justify-center w-12 h-12 text-white transition-all duration-300 shadow-lg top-20 rounded-br-2xl bg-gradient-to-r from-primary to-primary hover:scale-105 hover:shadow-2xl lg:hidden backdrop-blur-md bg-opacity-80"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4 6h16M4 12h10M4 18h16"
+          />
+        </svg>
+      </button>
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
@@ -393,6 +385,15 @@ export default function Profile() {
         onConfirm={() => {
           logout();
           window.location.href = "/";
+        }}
+      />
+
+      <ProfileCompletionModal 
+        isOpen={showCompletionModal}
+        onEdit={() => {
+          setForceEdit(true);
+          setShowCompletionModal(false);
+          setActiveTab("profile");
         }}
       />
     </div>

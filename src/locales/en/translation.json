@@ -116,6 +116,15 @@
       "courses": "Courses",
       "orders": "Orders",
       "rating": "Rating"
+    },
+    "completion": {
+      "title": "Profile Incomplete",
+      "subtitle": "Essential information is missing from your profile.",
+      "description": "To provide you with the best experience and ensure your account is fully verified, please take a moment to complete your profile details.",
+      "submit": "Complete Profile Now",
+      "required": "Required for platform access",
+      "warning": "Please update your information to continue.",
+      "success": "Profile has been successfully updated!"
     }
   },
   "footer": {

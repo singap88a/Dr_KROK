@@ -47,9 +47,15 @@ const formatDateForDisplay = (dateString) => {
   return dateString;
 };
 
-const MyProfile = ({ user, onProfileUpdate }) => {
-  const [isEditing, setIsEditing] = useState(false);
+const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
+  const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialIsEditing) {
+      setIsEditing(true);
+    }
+  }, [initialIsEditing]);
   const [universities, setUniversities] = useState([]);
   const [collegeYears, setCollegeYears] = useState([]);
   const [localUser, setLocalUser] = useState(user);

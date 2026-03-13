@@ -9,6 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import he from "he";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -23,6 +24,9 @@ export default function RegisterPage() {
     confirm: "",
     university: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -169,15 +173,24 @@ export default function RegisterPage() {
               {/* Password */}
               <div>
                 <label className="text-sm font-medium">{t('auth.register.password')}</label>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder={t('auth.register.password')}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
+                    placeholder={t('auth.register.password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="mt-1 text-xs text-red-500">{errors.password}</p>
                 )}
@@ -186,15 +199,24 @@ export default function RegisterPage() {
               {/* Confirm Password */}
               <div>
                 <label className="text-sm font-medium">{t('auth.register.confirm_password')}</label>
-                <input
-                  type="password"
-                  value={form.confirm}
-                  onChange={(e) =>
-                    setForm({ ...form, confirm: e.target.value })
-                  }
-                  className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder={t('auth.register.confirm_password')}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={form.confirm}
+                    onChange={(e) =>
+                      setForm({ ...form, confirm: e.target.value })
+                    }
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
+                    placeholder={t('auth.register.confirm_password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  </button>
+                </div>
                 {errors.confirm && (
                   <p className="mt-1 text-xs text-red-500">{errors.confirm}</p>
                 )}

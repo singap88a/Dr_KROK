@@ -8,12 +8,14 @@ import loginAnimation from "../../../components/animations/Login_animation.json"
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginPage() {
   const { t } = useTranslation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login: userLogin } = useUser();
   const { login: apiLogin } = useApi();
 
@@ -104,15 +106,24 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">{t('auth.login.password')}</label>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder={t('auth.login.password')}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
+                    placeholder={t('auth.login.password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="mt-1 text-xs text-red-500">{errors.password}</p>
                 )}
