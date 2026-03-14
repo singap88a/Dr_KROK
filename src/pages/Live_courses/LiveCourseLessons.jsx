@@ -1165,15 +1165,16 @@ export default function LiveCourseLessons() {
             <div className="overflow-hidden border rounded-lg bg-surface border-border">
               {currentLesson || currentSection ? (
                 <div className="relative">
-                  {(currentLesson && (
+                  {((currentLesson && (
                     // 1. If not purchased: show if lesson is free
                     (!hasAccess && (currentLesson.type === "free" || currentLesson.type === "Free" || currentLesson.is_free === true)) ||
                     // 2. If purchased: show if status is active
-                    (hasAccess && currentLesson.status === "active")
+                    (hasAccess && (currentLesson.status === "active" || currentLesson.status === "Active"))
                   )) || (currentSection && (
-                    // 3. For sections: show if purchased or has free lessons
-                    hasAccess || hasFreeLessons(currentSection.id)
-                  )) ? (
+                    // 3. For sections: show if not purchased and has free lessons, or if purchased and active
+                    (!hasAccess && hasFreeLessons(currentSection.id)) ||
+                    (hasAccess && (currentSection.status === "active" || currentSection.status === "Active"))
+                  ))) ? (
                     // Show ALL content
                     <>
                       <div className="relative aspect-video">
@@ -1254,29 +1255,50 @@ export default function LiveCourseLessons() {
                         {(currentLesson?.zoom_link || currentSection?.zoom_link) && (
                           <div className="mt-4">
                             {(() => {
+                              const statusRaw = currentLesson?.status || currentSection?.status;
+                              // API could return status as "active" or "Active"
+                              const isLectureEnded = statusRaw && statusRaw.toString().toLowerCase() === "active";
                               const active = isLinkActive(currentLesson?.started_at || currentSection?.started_at);
                               const link = currentLesson?.zoom_link || currentSection?.zoom_link;
                               return (
                                 <div className="flex flex-col gap-2">
-                                  <a
-                                    href={active ? link : undefined}
-                                    target={active ? "_blank" : undefined}
-                                    rel={active ? "noopener noreferrer" : undefined}
-                                    onClick={(e) => !active && e.preventDefault()}
-                                    className={`inline-flex items-center justify-center gap-2 px-6 py-3 w-[200px] font-bold text-white transition-all duration-300 rounded-xl shadow-md ${
-                                      active 
-                                      ? "bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer" 
-                                      : "bg-gray-400 cursor-not-allowed opacity-70"
-                                    }`}
-                                  >
-                                    <FaVideo />
-                                    {t("liveCourses.joinLiveSession", "Join Live Session")}
-                                  </a>
-                                  {!active && (
-                                    <p className="flex items-center gap-1 text-xs font-medium text-red-500">
-                                      <FaClock className="animate-pulse" />
-                                      {t("liveCourses.linkOpensSoon", "The link will be active exactly 1 hour before the session starts.")}
-                                    </p>
+                                  {isLectureEnded ? (
+                                    <>
+                                      <button
+                                        disabled
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 w-[200px] font-bold text-white transition-all duration-300 rounded-xl shadow-md bg-gray-400 cursor-not-allowed opacity-70"
+                                      >
+                                        <FaVideo />
+                                        {t("liveCourses.joinLiveSession", "Join Live Session")}
+                                      </button>
+                                      <p className="flex items-center gap-1 text-sm font-medium text-text-muted mt-1">
+                                        <FaVideo className="text-gray-400" />
+                                        {t("liveCourses.sessionEnded", "The session has concluded. You can watch the recorded lecture below.")}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <a
+                                        href={active ? link : undefined}
+                                        target={active ? "_blank" : undefined}
+                                        rel={active ? "noopener noreferrer" : undefined}
+                                        onClick={(e) => !active && e.preventDefault()}
+                                        className={`inline-flex items-center justify-center gap-2 px-6 py-3 w-[200px] font-bold text-white transition-all duration-300 rounded-xl shadow-md ${
+                                          active 
+                                          ? "bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer" 
+                                          : "bg-gray-400 cursor-not-allowed opacity-70"
+                                        }`}
+                                      >
+                                        <FaVideo />
+                                        {t("liveCourses.joinLiveSession", "Join Live Session")}
+                                      </a>
+                                      {!active && (
+                                        <p className="flex items-center gap-1 text-xs font-medium text-red-500">
+                                          <FaClock className="animate-pulse" />
+                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 1 hour before the session starts.")}
+                                        </p>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               );
