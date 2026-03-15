@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
-import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaChartBar, FaHandPointer, FaArrowsAlt, FaTimes } from "react-icons/fa";
+import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaChartBar, FaHandPointer, FaArrowsAlt, FaTimes, FaAward } from "react-icons/fa";
 
 export default function CourseTestRunner() {
   const { id, scope, testId } = useParams();
@@ -642,11 +642,15 @@ export default function CourseTestRunner() {
                   {t("common.goBack", "Go Back")}
                 </button>
                 <button
-                  onClick={() => navigate(`/courses/${id}/lessons`)}
+                  onClick={() => {
+                    const basePath = location.pathname.includes('live-courses') ? '/live-courses' : '/courses';
+                    navigate(`${basePath}/${id}/lessons`);
+                  }}
                   className="px-6 py-3 transition-colors border rounded-lg border-primary text-primary hover:bg-primary hover:text-white"
                 >
                   {t("courses.returnToLessons", "Return to Lessons")}
                 </button>
+
               </div>
             </div>
           </div>

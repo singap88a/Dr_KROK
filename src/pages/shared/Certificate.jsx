@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
@@ -43,7 +43,16 @@ export default function Certificate() {
   const backPath = `${basePath}/${id}/lessons`;
     
   const userName = userData?.name || t("courses.student", "Student");
-  const certDate = new Date().toLocaleDateString();
+  // دالة لتهيئة التاريخ بشكل احترافي (YYYY/MM/DD)
+  const formatProfessionalDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
+
+  const certDate = formatProfessionalDate();
 
   // دالة لتحديد التقدير بناءً على النسبة
   const calculateGrade = (percentage) => {
@@ -54,10 +63,8 @@ export default function Certificate() {
     return "Fail";
   };
 
-  // استخراج اللون من الصورة (محاكاة - في الواقع سيأتي من السيرفر)
+  // استخراج اللون من الصورة (محاكاة)
   const extractColorFromImage = () => {
-    // في التطبيق الحقيقي، هذا سيكون من قاعدة البيانات
-    // هنا نستخدم اللون الأصفر كما طلبت
     return "#c2a10d";
   };
 
@@ -78,52 +85,51 @@ export default function Certificate() {
         setStudentNameColor(extractedColor);
 
         // حساب التقدير (محاكاة - في الواقع سيأتي من السيرفر)
-        const mockPercentage = 85; // هذا سيأتي من بيانات الطالب
+        const mockPercentage = location.state?.percentage || 85; // هذا سيأتي من بيانات الطالب
         setGrade(calculateGrade(mockPercentage));
 
         // التحقق من وجود الشهادة في السيرفر
         const token = getAuthToken();
-        if (token) {
+        const courseType = isLiveCourse ? 'live' : 'video';
+        
+        let serverUrl = null;
+
+        if (token && !location.state?.bypassServerCheck) {
           try {
-            const courseType = isLiveCourse ? 'live' : 'video';
             const exists = await checkCertificateExists(token, id, courseType);
-            
             if (exists) {
-              setCertificateEligible(true);
-              setCertificateStatus('exists');
+              serverUrl = await getCertificateUrl(token, id, courseType);
               console.log("✅ Certificate exists on server");
-              
-              // محاولة جلب رابط الشهادة مباشرة إذا كانت موجودة
-              try {
-                const certificateUrl = await getCertificateUrl(token, id, courseType);
-                if (certificateUrl) {
-                  setCertificatePdfUrl(certificateUrl);
-                  console.log("📄 Certificate URL loaded successfully:", certificateUrl);
-                }
-              } catch (loadError) {
-                console.warn("⚠️ Certificate exists but couldn't get URL:", loadError.message);
-              }
-            } else {
-              setCertificateEligible(false);
-              setCertificateStatus('not_found');
-              console.log("❌ Certificate not found on server");
             }
           } catch (error) {
             console.log("⚠️ Error checking certificate:", error.message);
-            setCertificateEligible(false);
-            setCertificateStatus('error');
-            
-            if (error.message.includes('NETWORK_ERROR')) {
-              setCertificateError(t("courses.networkError", "Network error. Please check your connection."));
-            } else if (error.message.includes('CERTIFICATE_NOT_FOUND')) {
-              setCertificateError(t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate."));
-            } else {
-              setCertificateError(t("courses.certificateCheckError", "Error checking certificate availability."));
-            }
           }
+        }
+
+        if (serverUrl) {
+          setCertificatePdfUrl(serverUrl);
+          setCertificateEligible(true);
+          setCertificateStatus('exists');
+        } else if (location.state?.bypassServerCheck || mockPercentage >= 65) {
+          // جينيريشن محلي إذا كان مسموح بالتجاوز أو النسبة كافية
+          setCertificateEligible(true);
+          setCertificateStatus('exists');
+          console.log("🎨 Generating local certificate preview...");
+          
+          // تأخير بسيط للتأكد من تحميل بيانات الكورس
+          setTimeout(async () => {
+            try {
+              const localBlob = await generateProfessionalPDF();
+              const localUrl = URL.createObjectURL(localBlob);
+              setCertificatePdfUrl(localUrl);
+            } catch (genError) {
+              console.error("❌ Failed to generate local preview:", genError);
+            }
+          }, 500);
         } else {
           setCertificateEligible(false);
           setCertificateStatus('not_found');
+          setCertificateError(t("courses.certificateRequirement", "You need to score 65% or higher in the final test to unlock your certificate."));
         }
 
       } catch (err) {
@@ -135,10 +141,10 @@ export default function Certificate() {
     };
     
     loadCourseAndCheckCertificate();
-  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, checkCertificateExists, getCertificateUrl, getAuthToken, t]);
+  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, checkCertificateExists, getCertificateUrl, getAuthToken, t, location.state]);
 
-  // دالة لإنشاء PDF مع التصميم المحترف
-  const generateProfessionalPDF = async () => {
+  // دالة محسنة لإنشاء PDF الشهادة المحترف
+  const generateProfessionalPDF = useCallback(() => {
     return new Promise((resolve, reject) => {
       try {
         const pdf = new jsPDF("landscape", "mm", "a4");
@@ -146,80 +152,111 @@ export default function Certificate() {
         img.crossOrigin = "anonymous";
         img.src = certificateImage;
 
-        img.onload = async () => {
+        img.onload = () => {
           try {
-            // استخدام canvas لرسم الصورة والنصوص بدقة عالية
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
-            canvas.width = 297 * 2; // دقة مضاعفة للوضوح
+            canvas.width = 297 * 2;
             canvas.height = 210 * 2;
             
-            // رسم خلفية بيضاء أولاً
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // رسم صورة الشهادة
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // إضافة النصوص بخطوط وألوان مختلفة
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
 
-            // اسم الطالب - باللون الأصفر المميز
+            // اسم الطالب
             ctx.fillStyle = studentNameColor;
-            ctx.font = "bold 48px 'Times New Roman', serif";
-            ctx.fillText(userName.toUpperCase(), canvas.width / 2, 230);
+            ctx.font = "bold 32px 'Times New Roman', serif";
+            ctx.fillText(userName.toUpperCase(), canvas.width / 2, 220);
 
             // عنوان الكورس
             ctx.fillStyle = "#333333";
-            ctx.font = "bold 28px 'Times New Roman', serif";
-            ctx.fillText(course?.title || t("courses.courseTitle", "Course Title"), canvas.width / 2, 280);
+            ctx.font = "bold 16px 'Times New Roman', serif";
+            
+            const courseTitle = course?.title || t("courses.courseTitle", "Course Title");
+            const maxWidth = 400;
+            
+            if (ctx.measureText(courseTitle).width > maxWidth) {
+              const words = courseTitle.split(' ');
+              let line1 = '';
+              let line2 = '';
+              
+              for (let word of words) {
+                if (ctx.measureText(line1 + ' ' + word).width <= maxWidth) {
+                  line1 += (line1 ? ' ' : '') + word;
+                } else {
+                  line2 += (line2 ? ' ' : '') + word;
+                }
+              }
+              
+              ctx.fillText(line1, canvas.width / 2, 260);
+              if (line2) {
+                ctx.fillText(line2, canvas.width / 2, 275);
+              }
+            } else {
+              ctx.fillText(courseTitle, canvas.width / 2, 265);
+            }
 
             // التقدير
             if (grade) {
               ctx.fillStyle = "#2c5aa0";
-              ctx.font = "italic 24px 'Times New Roman', serif";
-              ctx.fillText(`Grade: ${grade}`, canvas.width / 2, 320);
+              ctx.font = "italic 18px 'Times New Roman', serif";
+              ctx.fillText(`Grade: ${grade}`, canvas.width / 2, 295);
             }
 
+            // النسبة المئوية
+            const percentageValue = location.state?.percentage || 85;
+            ctx.fillStyle = studentNameColor;
+            ctx.font = "bold 18px 'Times New Roman', serif";
+            ctx.fillText(`${Math.round(percentageValue)}%`, canvas.width / 2, 315);
+
             // التاريخ والتوقيع
-            ctx.textAlign = "left";
+            const professionalDate = formatProfessionalDate();
+            
+            ctx.textAlign = "center";
             ctx.fillStyle = "#000000";
-            ctx.font = "18px 'Times New Roman', serif";
-            ctx.fillText(`Date ${certDate}`, 80, 380);
+            ctx.font = "bold 14px 'Arial', 'Helvetica', sans-serif";
+            
+            ctx.fillText(professionalDate, 120, 360);
+            ctx.beginPath();
+            ctx.moveTo(80, 370);
+            ctx.lineTo(160, 370);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.font = "12px 'Arial', 'Helvetica', sans-serif";
+            ctx.fillText("DATE", 120, 385);
 
-            ctx.textAlign = "right";
-            ctx.fillText("Signature _________________", canvas.width - 80, 380);
-            ctx.font = "16px 'Times New Roman', serif";
-            ctx.fillText("Dr. KROK  ", canvas.width - 80, 400);
+            ctx.textAlign = "center";
+            ctx.font = "bold 14px 'Arial', 'Helvetica', sans-serif";
+            ctx.fillText("Dr. KROK", canvas.width - 120, 360);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 160, 370);
+            ctx.lineTo(canvas.width - 80, 370);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.font = "12px 'Arial', 'Helvetica', sans-serif";
+            ctx.fillText("SIGNATURE", canvas.width - 120, 385);
 
-            // تحويل Canvas إلى صورة وإضافتها للـ PDF
             const highResImage = canvas.toDataURL("image/jpeg", 1.0);
             
-            pdf.addImage(
-              highResImage,
-              "JPEG",
-              0,
-              0,
-              297,
-              210
-            );
-
-            const pdfBlob = pdf.output("blob");
-            resolve(pdfBlob);
+            pdf.addImage(highResImage, "JPEG", 0, 0, 297, 210);
+            resolve(pdf.output("blob"));
           } catch (err) {
             reject(err);
           }
         };
 
-        img.onerror = () => {
-          reject(new Error("Failed to load certificate image"));
-        };
+        img.onerror = () => reject(new Error("Failed to load certificate image"));
       } catch (err) {
         reject(err);
       }
     });
-  };
+  }, [course, location.state, userName, t, grade, studentNameColor]);
 
   const downloadPDF = async () => {
     if (!certificateEligible) {
@@ -463,119 +500,14 @@ export default function Certificate() {
           ) : (
             <div className="w-full max-w-4xl">
               <div className="flex items-center gap-2 mb-2 text-sm text-text-muted">
-                <FaAward />
-                <span>{t("courses.previewCertificate", "Preview Certificate")}</span>
+                <FaAward className="text-secondary" />
+                <span>{t("courses.generatingPreview", "Generating professional preview...")}</span>
               </div>
-              <div className="relative w-full aspect-[1.41/1] bg-white shadow-2xl rounded-xl overflow-hidden">
-                <img
-                  src={certificateImage}
-                  alt={t("courses.certificateOfCompletion", "Certificate of Completion")}
-                  className="object-cover w-full h-full"
-                  onError={(e) => {
-                    console.error("Failed to load certificate image");
-                    e.target.src = "/fallback-certificate.jpg";
-                  }}
-                />
-
-                {/* Professional Overlay Data */}
-                <div className="absolute inset-0 text-center">
-                  
-                  {/* Student Name - باللون الأصفر المميز */}
-                  <div
-                    className="absolute font-bold transform -translate-x-1/2 left-1/2"
-                    style={{
-                      top: "52%",
-                      color: studentNameColor,
-                      fontSize: "clamp(1.5rem, 4vw, 3rem)",
-                      fontFamily: "'Times New Roman', serif",
-                      textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px"
-                    }}
-                  >
-                    {userName}
-                  </div>
-
-                  {/* Course Title */}
-                  <div
-                    className="absolute transform -translate-x-1/2 left-1/2"
-                    style={{
-                      top: "60%",
-                      color: "#333333",
-                      fontSize: "clamp(0.8rem, 2vw, 1.5rem)",
-                      fontFamily: "'Times New Roman', serif",
-                      fontWeight: "bold"
-                    }}
-                  >
-                    {course?.title || t("courses.courseTitle", "Course Title")}
-                  </div>
-
-                  {/* Grade - التقدير */}
-                  {grade && (
-                    <div
-                      className="absolute italic transform -translate-x-1/2 left-1/2"
-                      style={{
-                        top: "66%",
-                        color: "#2c5aa0",
-                        fontSize: "clamp(0.7rem, 1.8vw, 1.2rem)",
-                        fontFamily: "'Times New Roman', serif",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      Grade: {grade}
-                    </div>
-                  )}
-
-                  {/* Date */}
-                  <div
-                    className="absolute"
-                    style={{
-                      bottom: "12%",
-                      left: "10%",
-                      color: "#000000",
-                      fontSize: "clamp(0.6rem, 1.5vw, 1rem)",
-                      fontFamily: "'Times New Roman', serif"
-                    }}
-                  >
-                    <div style={{ borderBottom: "1px solid #000", paddingBottom: "2px", marginBottom: "2px" }}>
-                      Date
-                    </div>
-                    <div>{certDate}</div>
-                  </div>
-
-                  {/* Signature */}
-                  <div
-                    className="absolute text-right"
-                    style={{
-                      bottom: "12%",
-                      right: "10%",
-                      color: "#000000",
-                      fontSize: "clamp(0.6rem, 1.5vw, 1rem)",
-                      fontFamily: "'Times New Roman', serif"
-                    }}
-                  >
-                    <div style={{ borderBottom: "1px solid #000", paddingBottom: "2px", marginBottom: "2px" }}>
-                      Signature
-                    </div>
-                    <div>Dr. KROK </div>
-                  </div>
+              <div className="flex items-center justify-center w-full aspect-[1.41/1] bg-surface-variant rounded-xl border border-dashed border-border">
+                <div className="text-center">
+                  <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary" />
+                  <p className="text-text-muted">{t("courses.pleaseWait", "Please wait while we prepare your certificate...")}</p>
                 </div>
-              </div>
-
-              {/* Color Information Display */}
-              <div className="p-4 mt-4 text-center bg-gray-100 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <strong>Student Name Color:</strong> 
-                  <span style={{ color: studentNameColor, marginLeft: '8px' }}>
-                    {studentNameColor}
-                  </span>
-                </p>
-                {grade && (
-                  <p className="text-sm text-gray-600">
-                    <strong>Grade:</strong> {grade}
-                  </p>
-                )}
               </div>
             </div>
           )}

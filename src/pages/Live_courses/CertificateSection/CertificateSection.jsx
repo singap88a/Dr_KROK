@@ -8,7 +8,7 @@ import { useApi } from "../../../context/ApiContext";
 export const CertificateSection = ({ id, isLoggedIn }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getCertificateFile, getAuthToken } = useApi();
+  const { checkCertificateExists, getAuthToken } = useApi();
   const [certificateEligible, setCertificateEligible] = React.useState(false);
   const [checkingCertificate, setCheckingCertificate] = React.useState(false);
 
@@ -31,14 +31,10 @@ export const CertificateSection = ({ id, isLoggedIn }) => {
         
         // التحقق من وجود الشهادة في السيرفر
         const courseType = 'live'; // للايف كورس
-        const blob = await getCertificateFile(token, id, courseType);
+        const exists = await checkCertificateExists(token, id, courseType);
         
-        if (blob && blob.size > 0) {
-          setCertificateEligible(true);
-        } else {
-          setCertificateEligible(false);
-        }
-      } catch {
+        setCertificateEligible(exists);
+      } catch (error) {
         console.log("No certificate found on server");
         setCertificateEligible(false);
       } finally {
@@ -47,7 +43,7 @@ export const CertificateSection = ({ id, isLoggedIn }) => {
     };
 
     checkCertificateEligibility();
-  }, [id, isLoggedIn, getCertificateFile, getAuthToken]);
+  }, [id, isLoggedIn, checkCertificateExists, getAuthToken]);
 
   if (!isLoggedIn || !certificateEligible || checkingCertificate) {
     return null;

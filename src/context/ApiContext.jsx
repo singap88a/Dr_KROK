@@ -1310,15 +1310,23 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       // Final Test Results API
       async getFinalTestResult(courseId) {
         if (!courseId) throw new Error("Course id is required");
-        try {
-          const response = await request(`courses/${courseId}/final-test-result`, { auth: true });
-          return response?.data || null;
-        } catch (err) {
-          if (err?.status === 404) {
-            return null;
+        
+        const candidates = [
+          `live_courses/${courseId}/final-test-result`,
+          `courses/${courseId}/final-test-result`
+        ];
+        
+        for (const path of candidates) {
+          try {
+            const response = await request(path, { auth: true });
+            if (response && response.data) return response.data;
+          } catch (err) {
+            if (err?.status !== 404) {
+              console.warn(`Failed with endpoint ${path}:`, err);
+            }
           }
-          throw err;
         }
+        return null;
       },
 
       async saveFinalTestResult(courseId, testData) {
@@ -1330,18 +1338,34 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           formData.append('percentage', testData.percentage?.toString() || '0');
           formData.append('passed', testData.passed ? '1' : '0');
 
-          const response = await request(`courses/${courseId}/final-test-result`, {
-            method: 'POST',
-            body: formData,
-            auth: true,
-            isFormData: true,
-            invalidateCacheOnSuccess: [
-              `courses/${courseId}`,
-              `video_course/${courseId}`,
-              `final-test-result`
-            ]
-          });
-          return response?.data || null;
+          const candidates = [
+            `live_courses/${courseId}/final-test-result`,
+            `courses/${courseId}/final-test-result`
+          ];
+
+          for (const path of candidates) {
+            try {
+              const response = await request(path, {
+                method: 'POST',
+                body: formData,
+                auth: true,
+                isFormData: true,
+                invalidateCacheOnSuccess: [
+                  `courses/${courseId}`,
+                  `video_course/${courseId}`,
+                  `live_courses/${courseId}`,
+                  `live_course/${courseId}`,
+                  `final-test-result`
+                ]
+              });
+              return response?.data || null;
+            } catch (err) {
+              if (err?.status !== 404) {
+                console.warn(`Failed saving final test result with endpoint ${path}:`, err);
+              }
+            }
+          }
+          throw new Error('Failed to save final test result for both paths');
         } catch (err) {
           console.error('Failed to save final test result:', err);
           throw err;

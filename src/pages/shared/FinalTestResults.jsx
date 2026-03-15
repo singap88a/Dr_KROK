@@ -179,7 +179,7 @@ export default function FinalTestResults() {
   }, [actualScope, results, test, calculatedPercentage, t]);
 
   const saveResultToServer = async (percentage, passed) => {
-    if (isLiveCourse || !saveFinalTestResult) return;
+    if (!saveFinalTestResult) return;
     
     try {
       setSavingResult(true);
@@ -414,17 +414,7 @@ export default function FinalTestResults() {
     itemName = section?.title || "";
   }
 
-  const handleViewCertificate = async () => {
-    if (actualScope === 'final' && passed) {
-      navigate(`${basePath}/${id}/certificate`, {
-        state: {
-          studentNameColor: studentNameColor,
-          grade: grade,
-          percentage: calculatedPercentage
-        }
-      });
-    }
-  };
+
 
   return (
     <section className="min-h-screen py-10 bg-gradient-to-br from-primary/5 to-secondary/5 text-text">
@@ -544,14 +534,21 @@ export default function FinalTestResults() {
               {passed ? (
                 <div className="text-center">
                   {actualScope === 'final' ? (
-                    <button
-                      onClick={handleViewCertificate}
-                      disabled={savingResult || uploadingCertificate}
-                      className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-secondary hover:bg-primary hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <FaCertificate />
-                      {savingResult || uploadingCertificate ? t("common.processing", "Processing...") : t("courses.viewCertificate", "View Professional Certificate")}
-                    </button>
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex items-center justify-center gap-2 text-green-600">
+                        <FaCheckCircle className="text-2xl" />
+                        <span className="text-xl font-bold">
+                          {t("courses.finalTestPassed", "Congratulations! You have passed the final test.")}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => navigate(backPath)}
+                        className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-primary/90 hover:shadow-xl"
+                      >
+                        <FaClipboardList />
+                        {t("courses.backToLessons", "Back to Lessons")}
+                      </button>
+                    </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2 mb-4 text-green-600">
                       <FaCheckCircle />
