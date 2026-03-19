@@ -190,14 +190,20 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       const url = buildUrl(path);
       const finalHeaders = { ...headers };
 
-      // Special handling for place_order_book endpoint
-      const isPalceOrder = path === 'place_order_book';
+      // Special handling for payment endpoints to prevent 302 redirects in fetch
+      const isPaymentOrder = ['place_order_book', 'place_video_course', 'place_live_course'].includes(path);
 
       // Attach Accept-Language from current i18n language (map ua -> uk for backend)
       const currentLng = (i18n?.language || localStorage.getItem("DR_KROK_i18nextLng") || "en").split("-")[0];
       const backendLng = currentLng === "ua" ? "uk" : currentLng;
       if (!finalHeaders["Accept-Language"]) {
         finalHeaders["Accept-Language"] = backendLng;
+      }
+      if (!finalHeaders["Accept"]) {
+        finalHeaders["Accept"] = "application/json";
+      }
+      if (!finalHeaders["X-Requested-With"]) {
+        finalHeaders["X-Requested-With"] = "XMLHttpRequest";
       }
       if (auth) {
         const token = getAuthToken();
@@ -215,7 +221,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           method,
           headers: finalHeaders,
           body: isFormData ? body : body ? JSON.stringify(body) : undefined,
-          redirect: isPalceOrder ? 'manual' : 'follow',
+          redirect: isPaymentOrder ? 'manual' : 'follow',
           mode: 'cors',
         });
       } catch (fetchError) {
@@ -236,8 +242,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         throw fetchError;
       }
 
-      // Handle redirects manually for place_order_book
-      if (isPalceOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
+      // Handle redirects manually for payment endpoints
+      if (isPaymentOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
         console.warn('place_order_book endpoint redirected, but continuing...');
         if (res.type === 'opaqueredirect') {
           try {
@@ -255,7 +261,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
             console.warn('Retry with no-cors also failed:', retryError);
           }
         }
-      } else if (!isPalceOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
+      } else if (!isPaymentOrder && (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301)) {
         const error = new Error("API endpoint redirected. This may indicate a server configuration issue.");
         error.status = res.status;
         error.data = null;
@@ -962,7 +968,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();
 
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
         const userId = userData.id || userData.user_id || userData.client_id || courseId;
 
         formData.append('client_id', userId.toString());
@@ -997,43 +1003,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
 
           return result;
         } catch (error) {
-          if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
-            console.warn('CORS error detected, returning success...');
-            
-            invalidateCache([
-              `profile/get-my-courses`,
-              `video_course/${courseId}`,
-              `course/${courseId}`,
-              `courses/${courseId}`,
-              'my-courses'
-            ]);
-
-            globalEvents.emit('dataUpdated', {
-              type: 'purchaseSuccess',
-              courseId: courseId,
-              courseType: 'video_course',
-              source: 'subscribeToCourse'
-            });
-
-            return {
-              code: 200,
-              success: true,
-              message: "Paint Order Data",
-              data: {
-                id: Date.now(),
-                client_name: userData.name || userData.full_name || "user",
-                details: [
-                  {
-                    id: Date.now(),
-                    name: "Course subscription completed",
-                    price: amount,
-                    discount: "0.00",
-                    images: ""
-                  }
-                ]
-              }
-            };
-          }
+          console.error("Purchase error for video course:", error);
           throw error;
         }
       },
@@ -1042,7 +1012,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       async subscribeToLiveCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();
 
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
         const userId = userData.id || userData.user_id || userData.client_id || courseId;
 
         formData.append('client_id', userId.toString());
@@ -1077,43 +1047,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
 
           return result;
         } catch (error) {
-          if (error.isCorsIssue || error.message.includes('CORS') || error.message.includes('Network error')) {
-            console.warn('CORS error detected for live course, returning success...');
-            
-            invalidateCache([
-              `profile/get-my-courses`,
-              `live_course/${courseId}`,
-              `course/${courseId}`,
-              `courses/${courseId}`,
-              'my-courses'
-            ]);
-
-            globalEvents.emit('dataUpdated', {
-              type: 'purchaseSuccess',
-              courseId: courseId,
-              courseType: 'live_course',
-              source: 'subscribeToLiveCourse'
-            });
-
-            return {
-              code: 200,
-              success: true,
-              message: "Paint Order Data",
-              data: {
-                id: Date.now(),
-                client_name: userData.name || userData.full_name || "user",
-                details: [
-                  {
-                    id: Date.now(),
-                    name: "Live course subscription completed",
-                    price: amount,
-                    discount: "0.00",
-                    images: ""
-                  }
-                ]
-              }
-            };
-          }
+          console.error("Purchase error for live course:", error);
           throw error;
         }
       },

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiUser, FiPhone, FiMapPin, FiHome, FiCreditCard, FiRefreshCw } from "react-icons/fi";
 import { FaCcVisa, FaApplePay, FaGooglePay } from "react-icons/fa";
@@ -249,7 +249,7 @@ const handleDeliveryOrder = async (e) => {
       // Use the token from request context or parse from tokenData instead of relying on 'token' or 'userToken' keys directly
       let token = null;
       try {
-        const tokenData = localStorage.getItem("tokenData");
+        const tokenData = localStorage.getItem("DR_KROK_tokenData");
         if (tokenData) {
           const parsed = JSON.parse(tokenData);
           if (parsed.token) {
@@ -342,7 +342,7 @@ const handleDeliveryOrder = async (e) => {
       // Use the token from request context or parse from tokenData instead of relying on 'token' or 'userToken' keys directly
       let token = null;
       try {
-        const tokenData = localStorage.getItem("tokenData");
+        const tokenData = localStorage.getItem("DR_KROK_tokenData");
         if (tokenData) {
           const parsed = JSON.parse(tokenData);
           if (parsed.token) {
