@@ -26,14 +26,15 @@ function InstructorsCarousel() {
 
       try {
         setLoading(true);
-        const data = await getInstructors();
+        const res = await getInstructors();
+
+        // support both old (plain array) and new ({data, pagination}) return shape
+        const list = Array.isArray(res) ? res : (res?.data || []);
 
         // إزالة التكرار إن وجد
-        const uniqueInstructors = data
-          ? data.filter(
-              (v, i, a) => a.findIndex((t) => t.id === v.id) === i
-            )
-          : [];
+        const uniqueInstructors = list.filter(
+          (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+        );
 
         setInstructors(uniqueInstructors);
       } catch (err) {

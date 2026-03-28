@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   FaFacebookF,
@@ -10,52 +10,63 @@ import {
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
+import Pagination from "../../components/Pagination";
+
+const PER_PAGE = 12;
 
 function Instructors() {
   const { t } = useTranslation();
   const { getInstructors } = useApi();
   const [instructors, setInstructors] = useState([]);
-  const [filteredInstructors, setFilteredInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const fetchInstructors = async () => {
-      try {
-        setLoading(true);
-        const data = await getInstructors();
-        setInstructors(data || []);
-        setFilteredInstructors(data || []);
-      } catch (err) {
-        console.error("Error fetching instructors:", err);
-        setError(err.message);
-        toast.error(t("instructors.error"));
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-    fetchInstructors();
+  const fetchInstructors = useCallback(async (page = 1) => {
+    try {
+      setLoading(true);
+      const res = await getInstructors({ page, per_page: PER_PAGE });
+      const data = res.data || res || [];
+      setInstructors(Array.isArray(data) ? data : []);
+      if (res.pagination) {
+        setTotalPages(res.pagination.total_pages || 1);
+        setCurrentPage(res.pagination.current_page || page);
+      } else {
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error("Error fetching instructors:", err);
+      setError(err.message);
+      toast.error(t("instructors.error"));
+    } finally {
+      setLoading(false);
+    }
   }, [getInstructors, t]);
 
   useEffect(() => {
-    let filtered = instructors;
+    fetchInstructors(1);
+  }, [fetchInstructors]);
 
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (instructor) =>
-          instructor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (instructor.job_title &&
-            instructor.job_title
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())) ||
-          instructor.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchInstructors(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-    setFilteredInstructors(filtered);
-  }, [instructors, searchTerm]);
+  // Client-side search filter (on current page data)
+  const filteredInstructors = instructors.filter((instructor) => {
+    if (!searchTerm) return true;
+    return (
+      instructor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (instructor.job_title &&
+        instructor.job_title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      instructor.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (loading) {
     return (
@@ -76,7 +87,7 @@ function Instructors() {
         <div className="p-8 text-center bg-white shadow-xl dark:bg-gray-800 rounded-2xl">
           <p className="mb-4 text-red-500">{t("instructors.error")}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => fetchInstructors(currentPage)}
             className="px-6 py-2 text-white rounded-lg bg-primary hover:bg-primary/90"
           >
             Try Again
@@ -130,14 +141,12 @@ function Instructors() {
                 to={`/instructors/${instructor.id}`}
                 className="block"
               >
-                <div
-                  className="overflow-hidden transition-all duration-300 bg-white border shadow-sm group dark:bg-gray-800 rounded-2xl hover:shadow-lg"
-                >
+                <div className="overflow-hidden transition-all duration-300 bg-white border shadow-sm group dark:bg-gray-800 rounded-2xl hover:shadow-lg">
                   <div className="relative">
                     <img
                       src={instructor.image || "/logo.png"}
                       alt={instructor.name}
-                      className="   mx-auto h-64 w-[250px]   "
+                      className="mx-auto h-64 w-[250px]"
                       onError={(e) => {
                         e.target.src = "/logo.png";
                       }}
@@ -152,7 +161,7 @@ function Instructors() {
                       {instructor.job_title || t("instructors.instructor")}
                     </p>
 
-                    {/* Social Icons Centered */}
+                    {/* Social Icons */}
                     <div className="flex justify-center space-x-3">
                       {instructor.facebook && (
                         <a
@@ -196,6 +205,16 @@ function Instructors() {
               </Link>
             ))}
           </div>
+        )}
+
+        {/* Pagination — only shown when not filtering by search */}
+        {!searchTerm && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            loading={loading}
+          />
         )}
       </div>
     </div>

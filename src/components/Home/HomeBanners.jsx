@@ -1,26 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { HiMoon, HiSun } from "react-icons/hi";
 import {
   Swiper,
   SwiperSlide
 } from "swiper/react";
-import { Autoplay, Navigation, Pagination, Keyboard, EffectFade } from "swiper/modules";
+import { Autoplay, Navigation, Keyboard } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/effect-fade";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
+import Pagination from "../Pagination";
 
-/**
- * HomeBanners.jsx
- * - جلب من https://dr-krok.hudurly.com/api/banner
- * - عرض كل بنر في Swiper
- * - dark / light mode toggle باستخدام .dark class
- * - فتح الفيديو في modal (iframe) عند الضغط على Watch/Play
- * - تعديل: استبدال زر الفيديو بزر تفاصيل مع عرض الوصف في بوبب
- */
+const PER_PAGE = 6;
 
 export default function HomeBanners() {
   const { t, i18n } = useTranslation();
@@ -30,27 +21,48 @@ export default function HomeBanners() {
   const [openPopup, setOpenPopup] = useState(null);
   const swiperRef = useRef(null);
 
-  useEffect(() => {
-    // fetch banners using ApiContext to include Accept-Language header
-    const fetchBanners = async () => {
-      try {
-        const data = await request('banner');
-        if (data.success && Array.isArray(data.data)) {
-          setBanners(data.data);
-        } else {
-          setBanners([]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch banners:", err);
-        setBanners([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBanners();
-  }, [request, i18n.language]);
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Stop swiper autoplay and open popup with description
+  const fetchBanners = async (page = 1) => {
+    try {
+      setLoading(true);
+      const data = await request(`banner?page=${page}&per_page=${PER_PAGE}`, {
+        useCache: false,
+      });
+      if (data.success && Array.isArray(data.data)) {
+        setBanners(data.data);
+        if (data.pagination) {
+          setTotalPages(data.pagination.total_pages || 1);
+          setCurrentPage(data.pagination.current_page || page);
+        } else {
+          setTotalPages(1);
+        }
+      } else {
+        setBanners([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch banners:", err);
+      setBanners([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBanners(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchBanners(page);
+    const el = document.getElementById("banners-section");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Stop swiper autoplay and open popup
   const handleDetailsClick = (banner) => {
     if (swiperRef.current && swiperRef.current.autoplay) {
       swiperRef.current.autoplay.stop();
@@ -58,7 +70,6 @@ export default function HomeBanners() {
     setOpenPopup(banner);
   };
 
-  // Close popup and resume swiper autoplay
   const closePopup = () => {
     setOpenPopup(null);
     if (swiperRef.current && swiperRef.current.autoplay) {
@@ -67,13 +78,15 @@ export default function HomeBanners() {
   };
 
   return (
-    <section className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <section
+      id="banners-section"
+      className="relative w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+    >
       <div className="container px-4 mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-extrabold md:text-3xl">{t('homeBanners.title')}</h2>
- 
           </div>
         </div>
 
@@ -81,20 +94,15 @@ export default function HomeBanners() {
         <div className="relative">
           <Swiper
             onSwiper={(swiper) => (swiperRef.current = swiper)}
-            modules={[Autoplay, Navigation, Pagination, Keyboard]}
+            modules={[Autoplay, Navigation, Keyboard]}
             spaceBetween={20}
             slidesPerView={1}
             slidesPerGroup={1}
-            loop={true}
+            loop={banners.length > 1}
             autoplay={{ delay: 5000, disableOnInteraction: false }}
             navigation={{
               nextEl: ".banner-next",
               prevEl: ".banner-prev",
-            }}
-            pagination={{
-              clickable: true,
-              dynamicBullets: true,
-              dynamicMainBullets: 4
             }}
             keyboard={{ enabled: true }}
             a11y={{ enabled: true }}
@@ -119,30 +127,19 @@ export default function HomeBanners() {
               banners.map((b) => (
                 <SwiperSlide key={b.id}>
                   <div className="relative h-80 overflow-hidden md:h-96 lg:h-[28rem] rounded-2xl">
-                    {/* Background image */}
                     <img
                       src={b.image}
                       alt={b.description || `Banner ${b.id}`}
                       className="object-cover w-full h-full transition-transform duration-700 scale-100 hover:scale-105"
                       loading="lazy"
                     />
-
-                    {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-black/10 dark:from-black/50 dark:to-black/20"></div>
-
-                    {/* Content box */}
                     <div className="absolute inset-0 flex items-center justify-center px-6">
                       <div className="max-w-4xl mx-auto text-center text-white">
                         <div className="p-4 border bg-black/30 dark:bg-black/40 backdrop-blur-sm rounded-2xl md:p-6 border-white/10">
                           <h3 className="mb-3 text-lg font-semibold md:text-xl">
                             {b.description?.split(".")[0] || `Banner #${b.id}`}
                           </h3>
-
-                          {/* Remove description from here */}
-                          {/* <p className="mb-5 text-sm md:text-base text-white/90 line-clamp-4">
-                            {b.description}
-                          </p> */}
-
                           <div className="flex items-center justify-center gap-3">
                             <a
                               href={b.link}
@@ -152,7 +149,6 @@ export default function HomeBanners() {
                             >
                               {t('homeBanners.openLink')}
                             </a>
-
                             <button
                               onClick={() => handleDetailsClick(b)}
                               className="inline-flex items-center gap-2 px-3 py-2 text-sm text-white transition rounded-lg bg-primary hover:shadow-lg"
@@ -184,6 +180,14 @@ export default function HomeBanners() {
             <FiChevronRight className="w-6 h-6" />
           </button>
         </div>
+
+        {/* Page-level pagination for loading more banner sets */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          loading={loading}
+        />
       </div>
 
       {/* Details Popup */}
@@ -207,10 +211,8 @@ export default function HomeBanners() {
         </div>
       )}
 
-      {/* tiny loader style for demo */}
       <style>{`
         .loader { border-top-color: rgba(8,145,178,1); }
-        .line-clamp-4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
       `}</style>
     </section>
   );

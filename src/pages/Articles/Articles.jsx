@@ -1,16 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { FaFacebook, FaInstagram, FaYoutube, FaStar, FaUser } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 
 // الصورة الافتراضية للمحاضرين
 const DEFAULT_INSTRUCTOR_IMAGE = '/logo.png';
 
 // ---------- Component ----------
 export default function TrainerArticlesPage() {
-  const { getBlogs, getInstructors } = useApi();
+  const { getBlogs } = useApi();
   const { t, i18n } = useTranslation();
   const [instructors, setInstructors] = useState([]);
   const [blogs, setBlogs] = useState([]);
@@ -19,72 +20,98 @@ export default function TrainerArticlesPage() {
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState({});
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const PER_PAGE = 15;
+
   const currentLang = (i18n?.language || 'en').split('-')[0];
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        // جلب البيانات من API الجديد
-        const blogsResponse = await getBlogs({ page: 1, per_page: 15 });
-        if (!mounted) return;
+  const load = useCallback(async (page = 1, instructorId = null) => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = { page, per_page: PER_PAGE };
+      if (instructorId) params.instructor_id = instructorId;
+      const blogsResponse = await getBlogs(params);
 
-        if (blogsResponse && blogsResponse.data) {
-          // استخراج المحاضرين من البيانات
+      if (blogsResponse && blogsResponse.data) {
+        // Set pagination info
+        const pag = blogsResponse.pagination;
+        if (pag) {
+          setTotalPages(pag.total_pages || 1);
+          setTotalItems(pag.total_items || 0);
+          setCurrentPage(pag.current_page || page);
+        }
+
+        // Extract instructors from data (only on page 1 without filter, to build sidebar)
+        if (page === 1 && !instructorId) {
           const instructorsFromBlogs = blogsResponse.data.map(instructor => ({
             id: instructor.id,
             name: instructor.name,
             image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
-            blogs: instructor.blogs || []
+            blogs: instructor.blogs || [],
+            facebook: instructor.facebook,
+            instagram: instructor.instagram,
+            youtube: instructor.youtube,
           }));
-
           setInstructors(instructorsFromBlogs);
-          
-          // إنشاء مصفوفة مسطحة للمقالات
-          const allBlogs = instructorsFromBlogs.flatMap(instructor => 
-            instructor.blogs.map(blog => ({
-              ...blog,
-              instructor_id: {
-                id: instructor.id,
-                name: instructor.name,
-                image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE
-              }
-            }))
-          );
-          
-          setBlogs(allBlogs);
-        } else {
-          setInstructors([]);
-          setBlogs([]);
         }
-      } catch (e) {
-        if (!mounted) return;
-        setError(e?.message || t('articles.error'));
-      } finally {
-        if (mounted) setLoading(false);
+
+        // Create flat blogs array
+        const allBlogs = blogsResponse.data.flatMap(instructor =>
+          (instructor.blogs || []).map(blog => ({
+            ...blog,
+            instructor_id: {
+              id: instructor.id,
+              name: instructor.name,
+              image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
+            }
+          }))
+        );
+
+        setBlogs(allBlogs);
+      } else {
+        setBlogs([]);
+        if (page === 1 && !instructorId) setInstructors([]);
       }
-    };
-    load();
-    return () => { mounted = false; };
+    } catch (e) {
+      setError(e?.message || t('articles.error'));
+    } finally {
+      setLoading(false);
+    }
   }, [getBlogs, t]);
 
+  // Initial load — fetch all instructors for sidebar
   useEffect(() => {
-    // reset expansion on language change to recompute truncation length if needed
+    load(1, null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reload when language changes
+  useEffect(() => {
     setExpanded({});
   }, [currentLang]);
 
-  const filteredBlogs = useMemo(() => {
-    if (!selectedInstructorId) return blogs;
-    return blogs.filter(b => String(b.instructor_id?.id) === String(selectedInstructorId));
-  }, [blogs, selectedInstructorId]);
+  // When instructor filter or page changes
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    load(page, selectedInstructorId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleInstructorSelect = (id) => {
+    setSelectedInstructorId(id);
+    setCurrentPage(1);
+    load(1, id);
+  };
 
   const selectedInstructor = useMemo(() => {
     return instructors.find(i => String(i.id) === String(selectedInstructorId)) || null;
   }, [instructors, selectedInstructorId]);
 
-  // الحصول على المحاضرين الذين لديهم مقالات فقط
+  // The instructors with blogs for the sidebar
   const instructorsWithArticles = useMemo(() => {
     return instructors.filter(instructor => instructor.blogs && instructor.blogs.length > 0);
   }, [instructors]);
@@ -101,7 +128,7 @@ export default function TrainerArticlesPage() {
     if (!dateStr) return '';
     const [date, time] = dateStr.split(' ');
     const [day, month, year] = date.split('-');
-    const dateObj = new Date(`${year}-${month}-${day}T${time.replace(' ', '')}`);
+    const dateObj = new Date(`${year}-${month}-${day}T${time?.replace(' ', '') || '00:00'}`);
     return dateObj.toLocaleDateString(currentLang === 'ua' ? 'uk-UA' : 'en-US', {
       year: 'numeric',
       month: 'long',
@@ -111,7 +138,6 @@ export default function TrainerArticlesPage() {
     });
   };
 
-  // دالة لمعالجة الصور التالفة
   const handleImageError = (e) => {
     e.target.src = DEFAULT_INSTRUCTOR_IMAGE;
   };
@@ -128,7 +154,7 @@ export default function TrainerArticlesPage() {
             <h2 className="mb-3 text-lg font-medium">{t('articles.instructors')}</h2>
             <div className="space-y-3">
               <button
-                onClick={() => setSelectedInstructorId(null)}
+                onClick={() => handleInstructorSelect(null)}
                 className={`w-full text-left p-2 rounded-lg transition-colors ${selectedInstructorId === null ? 'border border-primary dark:border-primary bg-primary/10 dark:bg-primary/30 shadow-sm' : 'border border-primary/20 dark:border-primary/70 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
               >
                 {t('articles.allInstructors')}
@@ -136,12 +162,12 @@ export default function TrainerArticlesPage() {
               {instructorsWithArticles.map((tr) => (
                 <button
                   key={tr.id}
-                  onClick={() => setSelectedInstructorId(tr.id)}
+                  onClick={() => handleInstructorSelect(tr.id)}
                   className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${String(selectedInstructorId) === String(tr.id) ? 'border border-primary dark:border-primary bg-primary/10 dark:bg-primary/30 shadow-sm' : 'border border-primary/20 dark:border-primary/70 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                 >
-                  <img 
-                    src={tr.image} 
-                    alt={tr.name} 
+                  <img
+                    src={tr.image}
+                    alt={tr.name}
                     className="object-cover w-12 h-12 border-2 border-white rounded-full shadow-sm"
                     onError={handleImageError}
                   />
@@ -152,7 +178,6 @@ export default function TrainerArticlesPage() {
                         {tr.blogs.length} {t('articles.articleCount', { count: tr.blogs.length })}
                       </div>
                     </div>
- 
                   </div>
                 </button>
               ))}
@@ -165,69 +190,73 @@ export default function TrainerArticlesPage() {
                 {selectedInstructor ? t('articles.byInstructor', { name: selectedInstructor.name }) : t('articles.allArticles')}
               </h3>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                {filteredBlogs.length} {t('articles.count')}
+                {totalItems} {t('articles.count')}
               </div>
             </div>
 
             {loading ? (
               <div className="p-6 text-center bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">
-                <LoadingSpinner
-                  variant="spinner"
-                  size="lg"
-                  className="text-primary"
-                />
+                <LoadingSpinner variant="spinner" size="lg" className="text-primary" />
               </div>
             ) : error ? (
               <div className="p-6 text-center text-red-600 bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">{t('articles.error')}</div>
-            ) : !filteredBlogs.length ? (
+            ) : !blogs.length ? (
               <div className="p-6 text-center bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">{t('articles.noArticles')}</div>
             ) : (
-              <div className="grid gap-4">
-                {filteredBlogs.map((b) => {
-                  const text = stripHtml(b.description || '');
-                  const isExpanded = !!expanded[b.id];
-                  const maxChars = 200;
-                  const showToggle = text.length > maxChars;
-                  const display = isExpanded ? text : text.slice(0, maxChars) + (showToggle ? '...' : '');
-                  const instr = b.instructor_id || {};
-                  return (
-                    <article key={b.id} className="p-4 overflow-hidden bg-white border border-gray-100 shadow-sm dark:bg-gray-800 rounded-2xl dark:border-gray-700">
-                      <h4 className="mb-2 text-lg font-semibold">{b.name}</h4>
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">{formatDate(b.created_at)}</p>
-                      <p className="mb-3 text-sm text-gray-600 whitespace-pre-line dark:text-gray-300">{display}</p>
-                      {showToggle && (
-                        <button onClick={() => toggleExpand(b.id)} className="mb-3 text-sm font-medium text-primary hover:underline">
-                          {isExpanded ? t('articles.showLess') : t('articles.showMore')}
-                        </button>
-                      )}
-                      {b.image && (
-                        <img 
-                          src={b.image} 
-                          alt={b.name} 
-                          className="object-cover w-full h-56 mb-3 rounded-lg"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <div className="flex items-center gap-3 mt-2">
-                        <img 
-                          src={instr.image} 
-                          alt={instr.name} 
-                          className="object-cover w-10 h-10 rounded-full"
-                          onError={handleImageError}
-                        />
-                        <div>
-                          <div className="text-sm font-medium">{instr.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {t('articles.instructor')}
+              <>
+                <div className="grid gap-4">
+                  {blogs.map((b) => {
+                    const text = stripHtml(b.description || '');
+                    const isExpanded = !!expanded[b.id];
+                    const maxChars = 200;
+                    const showToggle = text.length > maxChars;
+                    const display = isExpanded ? text : text.slice(0, maxChars) + (showToggle ? '...' : '');
+                    const instr = b.instructor_id || {};
+                    return (
+                      <article key={b.id} className="p-4 overflow-hidden bg-white border border-gray-100 shadow-sm dark:bg-gray-800 rounded-2xl dark:border-gray-700">
+                        <h4 className="mb-2 text-lg font-semibold">{b.name}</h4>
+                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">{formatDate(b.created_at)}</p>
+                        <p className="mb-3 text-sm text-gray-600 whitespace-pre-line dark:text-gray-300">{display}</p>
+                        {showToggle && (
+                          <button onClick={() => toggleExpand(b.id)} className="mb-3 text-sm font-medium text-primary hover:underline">
+                            {isExpanded ? t('articles.showLess') : t('articles.showMore')}
+                          </button>
+                        )}
+                        {b.image && (
+                          <img
+                            src={b.image}
+                            alt={b.name}
+                            className="object-cover w-full h-56 mb-3 rounded-lg"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                        )}
+                        <div className="flex items-center gap-3 mt-2">
+                          <img
+                            src={instr.image}
+                            alt={instr.name}
+                            className="object-cover w-10 h-10 rounded-full"
+                            onError={handleImageError}
+                          />
+                          <div>
+                            <div className="text-sm font-medium">{instr.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {t('articles.instructor')}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {/* Server-side Pagination */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  loading={loading}
+                />
+              </>
             )}
           </main>
 
@@ -235,9 +264,9 @@ export default function TrainerArticlesPage() {
             {selectedInstructor ? (
               <div className="sticky p-6 bg-white border border-gray-100 shadow-lg dark:bg-gray-800 rounded-2xl dark:border-gray-700 top-6">
                 <div className="flex items-center gap-4">
-                  <img 
-                    src={selectedInstructor.image} 
-                    alt={selectedInstructor.name} 
+                  <img
+                    src={selectedInstructor.image}
+                    alt={selectedInstructor.name}
                     className="object-cover w-20 h-20 border-2 rounded-full shadow-md border-primary"
                     onError={handleImageError}
                   />
@@ -250,7 +279,6 @@ export default function TrainerArticlesPage() {
                 </div>
 
                 <div className="flex gap-3 mt-4">
-                  {/* يمكن إضافة روابط السوشيال ميديا إذا كانت متوفرة في البيانات */}
                   {selectedInstructor.facebook && (
                     <a href={selectedInstructor.facebook} target="_blank" rel="noreferrer" className="p-2 transition bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"><FaFacebook /></a>
                   )}

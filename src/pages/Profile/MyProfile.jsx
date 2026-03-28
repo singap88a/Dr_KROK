@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-toastify";
 import {
   FaUser,
@@ -16,6 +16,8 @@ import {
   FaInstagram,
   FaTelegram,
   FaWhatsapp,
+  FaSearch,
+  FaChevronDown,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
@@ -57,6 +59,12 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     }
   }, [initialIsEditing]);
   const [universities, setUniversities] = useState([]);
+  const [uniPage, setUniPage] = useState(1);
+  const [uniTotalPages, setUniTotalPages] = useState(1);
+  const [uniLoading, setUniLoading] = useState(false);
+  const [uniSearch, setUniSearch] = useState("");
+  const [uniDropdownOpen, setUniDropdownOpen] = useState(false);
+  const uniDropdownRef = useRef(null);
   const [collegeYears, setCollegeYears] = useState([]);
   const [localUser, setLocalUser] = useState(user);
   const [formData, setFormData] = useState({
@@ -81,21 +89,43 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   // State for password change modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  // Fetch universities and college years on component mount
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      try {
-        const data = await request('universities');
-        if (data.success) {
-          setUniversities(data.data);
+  // Fetch universities with pagination
+  const fetchUniversities = useCallback(async (page = 1, append = false) => {
+    try {
+      setUniLoading(true);
+      const data = await request(`universities?page=${page}&per_page=15`, { useCache: true });
+      if (data.success) {
+        const newUnis = data.data || [];
+        setUniversities(prev => append ? [...prev, ...newUnis] : newUnis);
+        if (data.pagination) {
+          setUniTotalPages(data.pagination.total_pages || 1);
+          setUniPage(data.pagination.current_page || page);
         } else {
-          toast.error(t('profile.toast.update_fail'));
+          // No pagination info = all loaded
+          setUniTotalPages(1);
         }
-      } catch (error) {
-        console.error("Error fetching universities:", error);
-        toast.error(t('profile.toast.update_fail'));
+      }
+    } catch (error) {
+      console.error("Error fetching universities:", error);
+    } finally {
+      setUniLoading(false);
+    }
+  }, [request]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (uniDropdownRef.current && !uniDropdownRef.current.contains(e.target)) {
+        setUniDropdownOpen(false);
       }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch universities and college years on component mount
+  useEffect(() => {
+    fetchUniversities(1, false);
 
     const fetchCollegeYears = async () => {
       try {
@@ -111,8 +141,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       }
     };
 
-    fetchUniversities();
-    fetchCollegeYears();  }, [request, i18n.language, t]);
+    fetchCollegeYears();
+  }, [fetchUniversities, request, i18n.language, t]);
 
   // Update form data and local user when user changes (only when not editing)
   useEffect(() => {
@@ -577,20 +607,91 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                   {t('profile.university')}
                 </label>
                 {isEditing ? (
-                  <select
-                    name="university_id"
-                    value={formData.university_id}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  >
-                    <option value="">{t('profile.select_university')}</option>
-                    {universities.map((university) => (
-                      <option key={university.id} value={university.id}>
-                        {university.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={uniDropdownRef}>
+                    {/* Trigger button */}
+                    <button
+                      type="button"
+                      onClick={() => setUniDropdownOpen(o => !o)}
+                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
+                    >
+                      <span className={formData.university_id ? "" : "text-gray-400"}>
+                        {formData.university_id
+                          ? universities.find(u => String(u.id) === String(formData.university_id))?.name || t('profile.select_university')
+                          : t('profile.select_university')}
+                      </span>
+                      <FaChevronDown className={`text-xs transition-transform ${uniDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown panel */}
+                    {uniDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
+                        {/* Search */}
+                        <div className="flex items-center gap-2 p-2 border-b border-border">
+                          <FaSearch className="text-xs text-gray-400 shrink-0" />
+                          <input
+                            type="text"
+                            value={uniSearch}
+                            onChange={e => setUniSearch(e.target.value)}
+                            placeholder={t('profile.search_university', 'Search university...')}
+                            className="flex-1 text-sm bg-transparent outline-none dark:text-white"
+                            autoFocus
+                          />
+                        </div>
+
+                        {/* List */}
+                        <ul className="overflow-y-auto flex-1">
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleInputChange({ target: { name: 'university_id', value: '' } });
+                                setUniDropdownOpen(false);
+                                setUniSearch("");
+                              }}
+                              className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              {t('profile.select_university')}
+                            </button>
+                          </li>
+                          {universities
+                            .filter(u => !uniSearch || u.name.toLowerCase().includes(uniSearch.toLowerCase()))
+                            .map(university => (
+                              <li key={university.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange({ target: { name: 'university_id', value: university.id } });
+                                    setUniDropdownOpen(false);
+                                    setUniSearch("");
+                                  }}
+                                  className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
+                                    String(formData.university_id) === String(university.id)
+                                      ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
+                                      : 'dark:text-white'
+                                  }`}
+                                >
+                                  {university.name}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+
+                        {/* Load more */}
+                        {uniPage < uniTotalPages && !uniSearch && (
+                          <div className="p-2 border-t border-border">
+                            <button
+                              type="button"
+                              onClick={() => fetchUniversities(uniPage + 1, true)}
+                              disabled={uniLoading}
+                              className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
+                            >
+                              {uniLoading ? t('common.loading', 'Loading...') : t('profile.load_more_universities', 'Load more universities')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <FaGraduationCap className="text-primary" />

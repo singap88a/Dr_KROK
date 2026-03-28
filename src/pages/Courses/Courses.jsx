@@ -4,15 +4,17 @@ import {
   FaPlayCircle,
   FaVideo,
 } from "react-icons/fa";
-import { FiHeart, FiCalendar, FiClock, FiUsers } from "react-icons/fi";
 import { useApi } from "../../context/ApiContext";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import Pagination from "../../components/Pagination";
 import VideoCourses from "./VideoCourses";
 import LiveCourses from "../Live_courses/LiveCourses";
+
+const PER_PAGE = 12;
 
 export default function Courses() {
   const { t, i18n } = useTranslation();
@@ -27,82 +29,98 @@ export default function Courses() {
   const [liveCourses, setLiveCourses] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
 
-  // Load video courses
+  // Pagination state — separate for each tab
+  const [videoPage, setVideoPage] = useState(1);
+  const [videoTotalPages, setVideoTotalPages] = useState(1);
+  const [livePage, setLivePage] = useState(1);
+  const [liveTotalPages, setLiveTotalPages] = useState(1);
+
+  const fetchVideo = async (page = 1) => {
+    let mounted = true;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getVideoCourses({ page, per_page: PER_PAGE });
+      if (!mounted) return;
+      const mapped = (res.data || []).map((c) => ({
+        id: c.id,
+        type: "video",
+        title: c.title,
+        description: c.description,
+        instructor: c.instructor?.name || c.instructor || "",
+        instructorImg: c.instructor_image || "/user.png",
+        hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
+        lessons: c.lessons_count ?? 0,
+        rating: c.avg_rating ?? 0,
+        price: c.price ? Number(c.price) : 0,
+        discount: c.discount ? Number(c.discount) : 0,
+        img:
+          c.image && typeof c.image === "string" && c.image.length > 0
+            ? c.image
+            : "/logo.png",
+      }));
+      setVideoCourses(mapped);
+      if (res.pagination) {
+        setVideoTotalPages(res.pagination.total_pages || 1);
+        setVideoPage(res.pagination.current_page || page);
+      }
+    } catch (err) {
+      setError(err?.message || "Failed to load courses");
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  };
+
+  const fetchLive = async (page = 1) => {
+    let mounted = true;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getLiveCourses({ page, per_page: PER_PAGE });
+      if (!mounted) return;
+      const mapped = (res.data || []).map((c) => ({
+        id: c.id,
+        type: "live",
+        title: c.title,
+        description: c.description,
+        category: c.category,
+        level: c.level,
+        language: c.language,
+        started_at: c.started_at,
+        college_year: c.college_year,
+        price: c.price ? Number(c.price) : 0,
+        discount: c.discount ? Number(c.discount) : 0,
+        rating: c.avg_rating ?? 0,
+        img:
+          c.image && typeof c.image === "string" && c.image.length > 0
+            ? c.image
+            : "/logo.png",
+      }));
+      setLiveCourses(mapped);
+      if (res.pagination) {
+        setLiveTotalPages(res.pagination.total_pages || 1);
+        setLivePage(res.pagination.current_page || page);
+      }
+    } catch (err) {
+      setError(err?.message || "Failed to load courses");
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  };
+
+  // Load video courses on tab switch or language change
   useEffect(() => {
     if (activeTab !== "video") return;
-    let mounted = true;
-    setLoading(true);
-    setError("");
-    getVideoCourses({ page: 1, per_page: 30 })
-      .then((res) => {
-        if (!mounted) return;
-        const mapped = (res.data || []).map((c) => ({
-          id: c.id,
-          type: "video",
-          title: c.title,
-          description: c.description,
-          instructor: c.instructor?.name || c.instructor || "",
-          instructorImg: c.instructor_image || "/user.png",
-          hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
-          lessons: c.lessons_count ?? 0,
-          rating: c.avg_rating ?? 0,
-          price: c.price ? Number(c.price) : 0,
-          discount: c.discount ? Number(c.discount) : 0,
-          img:
-            c.image && typeof c.image === "string" && c.image.length > 0
-              ? c.image
-              : "/logo.png",
-        }));
-        setVideoCourses(mapped);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setError(err?.message || "Failed to load courses");
-      })
-      .finally(() => mounted && setLoading(false));
-    return () => {
-      mounted = false;
-    };
-  }, [activeTab, getVideoCourses, i18n.language]);
+    fetchVideo(videoPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, i18n.language]);
 
-  // Load live courses
+  // Load live courses on tab switch or language change
   useEffect(() => {
     if (activeTab !== "live") return;
-    let mounted = true;
-    setLoading(true);
-    setError("");
-    getLiveCourses({ page: 1, per_page: 30 })
-      .then((res) => {
-        if (!mounted) return;
-        const mapped = (res.data || []).map((c) => ({
-          id: c.id,
-          type: "live",
-          title: c.title,
-          description: c.description,
-          category: c.category,
-          level: c.level,
-          language: c.language,
-          started_at: c.started_at,
-          college_year: c.college_year,
-          price: c.price ? Number(c.price) : 0,
-          discount: c.discount ? Number(c.discount) : 0,
-          rating: c.avg_rating ?? 0,
-          img:
-            c.image && typeof c.image === "string" && c.image.length > 0
-              ? c.image
-              : "/logo.png",
-        }));
-        setLiveCourses(mapped);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setError(err?.message || "Failed to load courses");
-      })
-      .finally(() => mounted && setLoading(false));
-    return () => {
-      mounted = false;
-    };
-  }, [activeTab, getLiveCourses, i18n.language]);
+    fetchLive(livePage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, i18n.language]);
 
   // Load favorites to reflect heart state
   useEffect(() => {
@@ -131,7 +149,6 @@ export default function Courses() {
       return;
     }
     try {
-      // Handle both old format ("video"/"live") and new format ("video_course"/"live_course")
       let type;
       if (courseType === "video_course" || courseType === "live_course") {
         type = courseType;
@@ -168,6 +185,20 @@ export default function Courses() {
     }
   }
 
+  const currentPage = activeTab === "video" ? videoPage : livePage;
+  const totalPages = activeTab === "video" ? videoTotalPages : liveTotalPages;
+
+  const handlePageChange = (page) => {
+    if (activeTab === "video") {
+      setVideoPage(page);
+      fetchVideo(page);
+    } else {
+      setLivePage(page);
+      fetchLive(page);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen py-10 transition-colors duration-300 ">
       <div className="px-4 mx-auto max-w-7xl sm:px-0">
@@ -183,7 +214,7 @@ export default function Courses() {
           <div className="flex items-center gap-3">
             <div className="items-center hidden p-1 bg-white rounded-full shadow-sm sm:flex dark:bg-gray-800">
               <button
-                onClick={() => setActiveTab("video")}
+                onClick={() => { setActiveTab("video"); setQuery(""); }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                   activeTab === "video"
                     ? "bg-primary text-white"
@@ -193,7 +224,7 @@ export default function Courses() {
                 <FaPlayCircle className="inline mr-2" /> {t("courses.videoCourse", "Video Course")}
               </button>
               <button
-                onClick={() => setActiveTab("live")}
+                onClick={() => { setActiveTab("live"); setQuery(""); }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                   activeTab === "live"
                     ? "bg-red-600 text-white"
@@ -205,38 +236,31 @@ export default function Courses() {
             </div>
 
             {/* Search */}
-<div className="flex items-center px-3 py-2 transition-all duration-200 bg-white border border-gray-300 rounded-full shadow-sm focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:focus-within:border-blue-400">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-5 h-5 text-gray-500 dark:text-gray-400"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-3.85z"
-    />
-  </svg>
-
-  <input
-    value={query}
-    onChange={(e) => setQuery(e.target.value)}
-    className="w-48 px-3 text-sm text-gray-700 placeholder-gray-400 bg-transparent outline-none sm:w-64 dark:text-gray-200 dark:placeholder-gray-500"
-    placeholder={t("courses.searchPlaceholder", "Search for a course or instructor...")}
-    aria-label="Search courses"
-  />
-</div>
-
+            <div className="flex items-center px-3 py-2 transition-all duration-200 bg-white border border-gray-300 rounded-full shadow-sm focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:focus-within:border-blue-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-3.85z" />
+              </svg>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-48 px-3 text-sm text-gray-700 placeholder-gray-400 bg-transparent outline-none sm:w-64 dark:text-gray-200 dark:placeholder-gray-500"
+                placeholder={t("courses.searchPlaceholder", "Search for a course or instructor...")}
+                aria-label="Search courses"
+              />
+            </div>
           </div>
         </header>
 
         {/* Mobile Toggle */}
         <div className="flex gap-3 mb-4 sm:hidden">
           <button
-            onClick={() => setActiveTab("video")}
+            onClick={() => { setActiveTab("video"); setQuery(""); }}
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold ${
               activeTab === "video"
                 ? "bg-primary text-white"
@@ -246,7 +270,7 @@ export default function Courses() {
             <FaPlayCircle className="inline mr-2" /> Video Course
           </button>
           <button
-            onClick={() => setActiveTab("live")}
+            onClick={() => { setActiveTab("live"); setQuery(""); }}
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold ${
               activeTab === "live"
                 ? "bg-red-600 text-white"
@@ -300,6 +324,16 @@ export default function Courses() {
                   t={t}
                   isLoggedIn={isLoggedIn}
                   navigate={navigate}
+                />
+              )}
+
+              {/* Pagination — only when not searching */}
+              {!query && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  loading={loading}
                 />
               )}
             </>

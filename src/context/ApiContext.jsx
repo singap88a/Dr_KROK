@@ -412,9 +412,17 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   }, [request]);
 
   // Instructor API functions
-  const getInstructors = useCallback(async () => {
-    const response = await request("instructor", { useCache: true });
-    return response.data || [];
+  const getInstructors = useCallback(async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", params.page);
+    if (params.per_page) query.set("per_page", params.per_page);
+    const path = query.toString() ? `instructor?${query.toString()}` : "instructor";
+    const response = await request(path, { useCache: true });
+    return {
+      data: Array.isArray(response?.data) ? response.data : (response.data || []),
+      pagination: response?.pagination || null,
+      raw: response,
+    };
   }, [request]);
 
   const getInstructorById = useCallback(async (id) => {

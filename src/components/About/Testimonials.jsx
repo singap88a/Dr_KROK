@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { Pagination as SwiperPagination, Autoplay } from "swiper/modules";
 import { FaStar, FaPlay, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
+import Pagination from "../Pagination";
 import "swiper/css";
 import "swiper/css/pagination";
+
+const PER_PAGE = 9;
 
 export default function Testimonials() {
   const { t } = useTranslation();
@@ -16,23 +19,45 @@ export default function Testimonials() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
 
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        setLoading(true);
-        const response = await request("testimonial");
-        setTestimonials(response.data || []);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch testimonials:", err);
-        setError(t("testimonials.error"));
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-    fetchTestimonials();
-  }, [request, t]);
+  const fetchTestimonials = async (page = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await request(`testimonial?page=${page}&per_page=${PER_PAGE}`, {
+        useCache: false,
+      });
+      setTestimonials(response.data || []);
+      if (response.pagination) {
+        setTotalPages(response.pagination.total_pages || 1);
+        setCurrentPage(response.pagination.current_page || page);
+      } else {
+        // Fallback: no pagination in API — just show all
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error("Failed to fetch testimonials:", err);
+      setError(t("testimonials.error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTestimonials(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchTestimonials(page);
+    // Scroll to testimonials section
+    const el = document.getElementById("testimonials-section");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
 
   const openVideoModal = (videoUrl) => {
     setSelectedVideo(videoUrl);
@@ -46,7 +71,7 @@ export default function Testimonials() {
 
   if (loading) {
     return (
-      <section className="relative w-full transition-colors duration-300">
+      <section id="testimonials-section" className="relative w-full transition-colors duration-300">
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-12 text-3xl font-bold text-center">
             {t("testimonials.title")}
@@ -64,7 +89,7 @@ export default function Testimonials() {
 
   if (error) {
     return (
-      <section className="relative w-full transition-colors duration-300">
+      <section id="testimonials-section" className="relative w-full transition-colors duration-300">
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-12 text-3xl font-bold text-center">
             {t("testimonials.title")}
@@ -73,7 +98,7 @@ export default function Testimonials() {
             <div className="text-center">
               <p className="mb-4 text-red-500">{error}</p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => fetchTestimonials(currentPage)}
                 className="px-4 py-2 text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
               >
                 {t("common.retry", "Retry")}
@@ -87,7 +112,7 @@ export default function Testimonials() {
 
   if (!testimonials || testimonials.length === 0) {
     return (
-      <section className="relative w-full transition-colors duration-300">
+      <section id="testimonials-section" className="relative w-full transition-colors duration-300">
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-12 text-3xl font-bold text-center">
             {t("testimonials.title")}
@@ -101,14 +126,14 @@ export default function Testimonials() {
   }
 
   return (
-    <section className="relative w-full py-10 transition-colors duration-300">
+    <section id="testimonials-section" className="relative w-full py-10 transition-colors duration-300">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-12 text-3xl font-bold text-center">
           {t("testimonials.title")}
         </h2>
 
         <Swiper
-          modules={[Pagination, Autoplay]}
+          modules={[SwiperPagination, Autoplay]}
           pagination={{
             clickable: true,
             dynamicBullets: true,
@@ -124,8 +149,7 @@ export default function Testimonials() {
         >
           {testimonials.map((item) => (
             <SwiperSlide key={item.id}>
-              <div className="flex flex-col justify-between h-full p-6 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border min-h-[242px]  ">
-                
+              <div className="flex flex-col justify-between h-full p-6 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border min-h-[242px]">
                 {/* الصورة + البيانات */}
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
@@ -135,8 +159,7 @@ export default function Testimonials() {
                         alt={item.name}
                         className="object-cover w-20 h-20 border-4 rounded-full border-primary"
                         onError={(e) => {
-                          e.target.src =
-                            "https://via.placeholder.com/96x96?text=No+Image";
+                          e.target.src = "https://via.placeholder.com/96x96?text=No+Image";
                         }}
                       />
                     ) : (
@@ -170,10 +193,9 @@ export default function Testimonials() {
                 </div>
 
                 {/* الوصف */}
-    <p className="mt-4 text-sm leading-relaxed text-left text-text-secondary line-clamp-2">
-  {item.description}
-</p>
-
+                <p className="mt-4 text-sm leading-relaxed text-left text-text-secondary line-clamp-2">
+                  {item.description}
+                </p>
 
                 {/* Video Button */}
                 {item.video && item.video.trim() !== "" && (
@@ -194,13 +216,20 @@ export default function Testimonials() {
         </Swiper>
 
         <div className="flex justify-center mx-auto mt-8 custom-pagination"></div>
+
+        {/* Page-level pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          loading={loading}
+        />
       </div>
 
       {/* Video Modal */}
       {showVideoModal && selectedVideo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
           <div className="relative w-full max-w-4xl p-4 mx-4 bg-white rounded-lg dark:bg-gray-800">
-            {/* Close Button */}
             <button
               onClick={closeVideoModal}
               className="absolute z-10 p-2 text-gray-500 top-2 right-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -209,7 +238,6 @@ export default function Testimonials() {
               <FaTimes className="text-xl" />
             </button>
 
-            {/* Video Player */}
             <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
               <iframe
                 src={selectedVideo}
