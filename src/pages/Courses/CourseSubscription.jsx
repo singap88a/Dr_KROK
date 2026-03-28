@@ -6,6 +6,7 @@ import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import CouponInput from "../../components/CouponInput";
 import SubscriptionSuccess from "../../components/SubscriptionSuccess";
+import IncompleteProfileModal from "../../components/IncompleteProfileModal";
 import {
   FaArrowLeft,
   FaPlay,
@@ -73,6 +74,9 @@ export default function CourseSubscription() {
   const [showTerms, setShowTerms] = useState(false);
   const [termsText, setTermsText] = useState("");
   const [termsLoading, setTermsLoading] = useState(false);
+
+  // Profile missing modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -250,7 +254,11 @@ export default function CourseSubscription() {
       }
     } catch (err) {
       console.error('Payment error:', err);
-      setError(err.message || t('courses.subscription_failed') || 'Payment initialization failed');
+      if (err.message && err.message.includes("Profile data is missing")) {
+        setShowProfileModal(true);
+      } else {
+        setError(err.message || t('courses.subscription_failed') || 'Payment initialization failed');
+      }
     } finally {
       setIsSubscribing(false);
     }
@@ -792,6 +800,12 @@ export default function CourseSubscription() {
           </div>
         </div>
       )}
+
+      {/* Profile Incomplete Modal */}
+      <IncompleteProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
     </section>
   );
 }

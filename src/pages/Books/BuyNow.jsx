@@ -7,9 +7,9 @@ import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import CitySelector from "../../components/CitySelector";
 import CouponInput from "../../components/CouponInput";
+import IncompleteProfileModal from "../../components/IncompleteProfileModal";
 
 import he from "he";
-
 
 export default function BuyNowPage() {
   const navigate = useNavigate();
@@ -68,6 +68,9 @@ export default function BuyNowPage() {
   const [termsText, setTermsText] = useState("");
   const [termsLoading, setTermsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Profile missing modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     if (book?.images) {
@@ -303,6 +306,10 @@ const handleDeliveryOrder = async (e) => {
 
       console.log('Order response:', response);
 
+      if (response && response.success === false) {
+          throw new Error(response.message || t('books.order_failed'));
+      }
+
       if (response?.data?.payment_url) {
         setSuccess(t('books.order_placed_successfully_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
@@ -320,13 +327,17 @@ const handleDeliveryOrder = async (e) => {
 
     } catch (err) {
       console.error('Order error:', err);
-      let errorMessage = err.message || t('books.order_failed');
+      if (err.message && err.message.includes('Profile data is missing')) {
+        setShowProfileModal(true);
+      } else {
+        let errorMessage = err.message || t('books.order_failed');
 
-      if (err.message.includes('CORS') || err.message.includes('Failed to fetch')) {
-        errorMessage = "Network error. Please check your connection and try again.";
-      } 
+        if (err.message.includes('CORS') || err.message.includes('Failed to fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } 
 
-      setError(errorMessage);
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -381,6 +392,10 @@ const handleDeliveryOrder = async (e) => {
         invalidateCacheOnSuccess: ['orders', 'profile/get-my-profile']
       });
 
+      if (response && response.success === false) {
+          throw new Error(response.message || t('books.purchase_failed'));
+      }
+
       if (response?.data?.payment_url) {
         setSuccess(t('books.purchase_successful_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
@@ -397,13 +412,17 @@ const handleDeliveryOrder = async (e) => {
 
     } catch (err) {
       console.error('Purchase error:', err);
-      let errorMessage = err.message || t('books.purchase_failed');
+      if (err.message && err.message.includes('Profile data is missing')) {
+        setShowProfileModal(true);
+      } else {
+        let errorMessage = err.message || t('books.purchase_failed');
 
-      if (err.message.includes('CORS') || err.message.includes('Failed to fetch')) {
-        errorMessage = "Network error. Please check your connection and try again.";
-      } 
+        if (err.message.includes('CORS') || err.message.includes('Failed to fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } 
 
-      setError(errorMessage);
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -904,6 +923,12 @@ const handleDeliveryOrder = async (e) => {
           </div>
         </div>
       )}
+
+      {/* Profile Incomplete Modal */}
+      <IncompleteProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
     </section>
   );
 }
