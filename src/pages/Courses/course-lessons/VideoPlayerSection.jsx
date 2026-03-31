@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../../i18n";
 import { Link } from "react-router-dom";
 import {
   FaVideo,
@@ -993,12 +994,22 @@ const VideoPlayerSection = ({
                 onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
-              <div className="flex items-center justify-center h-full bg-accent dark:bg-accent-dark">
-                <div className="text-center">
-                  <FaVideo className="mx-auto mb-2 text-4xl text-text-muted dark:text-text-muted-dark" />
-                  <p className="text-text-muted dark:text-text-muted-dark">
-                    {t("courses.videoNotAvailable", "Video not available")}
-                  </p>
+              <div className="relative w-full h-full group overflow-hidden">
+                <img 
+                  src={currentLesson.image || "/logo.png"} 
+                  alt={currentLesson.title} 
+                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                  <div className="text-center p-6">
+                    <FaVideo className="mx-auto mb-4 text-5xl text-white/30" />
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      Lesson Content
+                    </h3>
+                    <p className="text-white/80 max-w-xs mx-auto text-sm leading-relaxed">
+                      {t("courses.noIntroVideo", "No introductory video for this lesson currently. You can browse the files and attachments below.")}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -1089,12 +1100,22 @@ const VideoPlayerSection = ({
                 onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
-              <div className="flex items-center justify-center h-full bg-accent dark:bg-accent-dark">
-                <div className="text-center">
-                  <FaVideo className="mx-auto mb-2 text-4xl text-text-muted dark:text-text-muted-dark" />
-                  <p className="text-text-muted dark:text-text-muted-dark">
-                    {t("courses.videoNotAvailable", "Video not available")}
-                  </p>
+              <div className="relative w-full h-full group overflow-hidden">
+                <img 
+                  src={currentSection.images?.[0] || "/logo.png"} 
+                  alt={currentSection.title} 
+                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                  <div className="text-center p-6">
+                    <FaVideo className="mx-auto mb-4 text-5xl text-white/30" />
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      Section Content
+                    </h3>
+                    <p className="text-white/80 max-w-xs mx-auto text-sm leading-relaxed">
+                      {t("courses.noIntroVideo", "No introductory video for this section currently. You can browse the files and attachments below.")}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

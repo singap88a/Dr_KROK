@@ -31,6 +31,7 @@ import {
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import LeaveReview from "./LeaveReview";
@@ -191,19 +192,30 @@ export default function CourseDetails() {
         if (ampm === 'AM' && hour24 === 12) hour24 = 0;
 
         const date = new Date(year, month - 1, day, hour24, minutes);
-        return date.toLocaleDateString('en-US', {
+        const formattedDate = date.toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
         });
+        
+        return `${formattedDate} (Ukraine Time)`;
       }
 
       // Fallback for other formats
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString();
+      
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      return `${formattedDate} (Ukraine Time)`;
     } catch {
       return dateString;
     }

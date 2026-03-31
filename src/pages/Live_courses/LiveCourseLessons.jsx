@@ -806,21 +806,21 @@ export default function LiveCourseLessons() {
         hour12: true 
       });
       
-      return `${weekday} • ${month} ${day}, ${year} • ${time}`;
+      return `${weekday} • ${month} ${day}, ${year} • ${time} (Ukraine Time)`;
     } catch {
       return dateString;
     }
   };
 
-  // 🔥 دالة التحقق من تفعيل الرابط (قبل المحاضرة بساعة)
+  // 🔥 دالة التحقق من تفعيل الرابط (قبل المحاضرة بـ 5 دقائق)
   const isLinkActive = (startTime) => {
     if (!startTime) return false;
     try {
       const start = new Date(startTime.replace(" ", "T")).getTime();
       const now = new Date().getTime();
-      const oneHour = 60 * 60 * 1000;
-      // متاح إذا كان الوقت الحالي بعد (وقت البداية - ساعة)
-      return now >= (start - oneHour);
+      const fiveMinutes = 5 * 60 * 1000;
+      // متاح إذا كان الوقت الحالي بعد (وقت البداية - 5 دقائق)
+      return now >= (start - fiveMinutes);
     } catch {
       return false;
     }
@@ -1295,7 +1295,7 @@ export default function LiveCourseLessons() {
                                       {!active && (
                                         <p className="flex items-center gap-1 text-xs font-medium text-red-500">
                                           <FaClock className="animate-pulse" />
-                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 1 hour before the session starts.")}
+                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Ukraine Time).")}
                                         </p>
                                       )}
                                     </>
@@ -1381,7 +1381,7 @@ export default function LiveCourseLessons() {
                                     <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-800/20">
                                       <FaClock className="text-red-500 animate-pulse" />
                                       <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 1 hour before the session starts.")}
+                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Ukraine Time).")}
                                       </span>
                                     </div>
                                   )}
