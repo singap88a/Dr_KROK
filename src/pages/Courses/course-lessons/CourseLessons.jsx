@@ -457,7 +457,7 @@ export default function CourseLessons() {
     const isFree = lesson.type === "free" || lesson.type === "Free";
     if (!isFree) {
       if (!isLoggedIn) {
-        navigate("/login");
+        navigate("/login", { state: { from: location.pathname } });
         return;
       }
       setShowPurchaseModal(true);
@@ -507,7 +507,7 @@ export default function CourseLessons() {
     const isFree = section.type === "free" || section.type === "Free" || hasFreeLessons(section.id);
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
-        navigate("/login");
+        navigate("/login", { state: { from: location.pathname } });
         return;
       }
       setShowPurchaseModal(true);

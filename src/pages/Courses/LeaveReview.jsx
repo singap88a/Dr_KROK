@@ -4,13 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { useUser } from '../../context/UserContext';
 import { useApi } from '../../context/ApiContext';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, type = 'video_course' }) => {
   const { t } = useTranslation();
   const { isLoggedIn } = useUser();
   const { submitCourseReview, getCourseAccess } = useApi();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -55,7 +56,7 @@ const LeaveReview = ({ courseId, onReviewSubmitted, userHasReviewed = false, typ
 
     if (!isLoggedIn) {
       toast.info(t('auth.login_required') || 'Please login to leave a review');
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
 

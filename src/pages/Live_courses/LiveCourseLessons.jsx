@@ -685,7 +685,7 @@ export default function LiveCourseLessons() {
     // If lesson is not free and user doesn't have access
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
-        navigate("/login");
+        navigate("/login", { state: { from: location.pathname } });
         return;
       }
       setShowPurchaseModal(true);
@@ -736,7 +736,7 @@ export default function LiveCourseLessons() {
     const isFree = section.type === "free" || section.type === "Free" || hasFreeLessons(section.id);
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
-        navigate("/login");
+        navigate("/login", { state: { from: location.pathname } });
         return;
       }
       setShowPurchaseModal(true);

@@ -266,7 +266,7 @@ const handleDeliveryOrder = async (e) => {
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
-        setTimeout(() => navigate('/Login'), 1200);
+        setTimeout(() => navigate('/login', { state: { from: location.pathname } }), 1200);
         return;
       }
       // Prepare form data for multipart/form-data
@@ -367,7 +367,7 @@ const handleDeliveryOrder = async (e) => {
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
-        setTimeout(() => navigate('/Login'), 1200);
+        setTimeout(() => navigate('/login', { state: { from: location.pathname } }), 1200);
         return;
       }
 

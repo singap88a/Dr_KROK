@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Lottie from "lottie-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import { useApi } from "../../../context/ApiContext";
@@ -12,6 +12,8 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -45,7 +47,8 @@ export default function LoginPage() {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
         setTimeout(() => {
-          window.location.href = "/";
+          const from = location.state?.from || "/";
+          navigate(from, { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Login failed: " + data.message, { position: "top-right" });
@@ -60,6 +63,9 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     localStorage.setItem('DR_KROK_auth_flow', 'login');
+    if (location.state?.from) {
+      localStorage.setItem('DR_KROK_return_url', location.state.from);
+    }
     // استخدام الـ Vercel URL مباشرة بدون localhost
     const callbackUrl = 'https://admin.dr-krok.com/api/auth/callback';
     
@@ -168,7 +174,13 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://admin.dr-krok.com/api/auth/apple'}
+                onClick={() => {
+                  localStorage.setItem('DR_KROK_auth_flow', 'login');
+                  if (location.state?.from) {
+                    localStorage.setItem('DR_KROK_return_url', location.state.from);
+                  }
+                  window.location.href = 'https://admin.dr-krok.com/api/auth/apple';
+                }}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <AppleIcon className="w-5 h-5 mr-3" />
@@ -181,6 +193,7 @@ export default function LoginPage() {
               {t('auth.login.no_account')}{" "}
               <Link
                 to="/register"
+                state={location.state}
                 className="font-medium text-primary hover:underline"
               >
                 {t('auth.login.register')}

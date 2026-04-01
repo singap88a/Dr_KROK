@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Lottie from "lottie-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import { useApi } from "../../../context/ApiContext";
@@ -14,6 +14,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 export default function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { register: userRegister } = useUser();
   const { register: apiRegister, request } = useApi();
 
@@ -91,7 +92,8 @@ export default function RegisterPage() {
           position: "top-right",
         });
         setTimeout(() => {
-          navigate("/profile");
+          const from = location.state?.from || "/profile";
+          navigate(from, { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Registration failed: " + (data.message || "Please try again."), {
@@ -110,6 +112,9 @@ export default function RegisterPage() {
 
   const handleGoogleRegister = () => {
     localStorage.setItem('DR_KROK_auth_flow', 'register');
+    if (location.state?.from) {
+      localStorage.setItem('DR_KROK_return_url', location.state.from);
+    }
     // استخدام الـ Vercel URL مباشرة للتسجيل بجوجل
     const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
     
@@ -280,7 +285,13 @@ export default function RegisterPage() {
 
               <button
                 type="button"
-                onClick={() => window.location.href = 'https://admin.dr-krok.com/api/auth/apple?register=true'}
+                onClick={() => {
+                  localStorage.setItem('DR_KROK_auth_flow', 'register');
+                  if (location.state?.from) {
+                    localStorage.setItem('DR_KROK_return_url', location.state.from);
+                  }
+                  window.location.href = 'https://admin.dr-krok.com/api/auth/apple?register=true';
+                }}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <AppleIcon className="w-5 h-5 mr-3" />
@@ -291,12 +302,7 @@ export default function RegisterPage() {
             {/* Link to Login */}
             <div className="mt-6 text-sm text-center">
               {t('auth.register.have_account')}{" "}
-              <Link
-                to="/login"
-                className="font-medium text-primary hover:underline"
-              >
-                {t('auth.register.login')}
-              </Link>
+
             </div>
           </div>
         </div>

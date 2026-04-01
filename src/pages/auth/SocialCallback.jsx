@@ -48,13 +48,18 @@ const SocialCallback = () => {
                 position: 'top-right',
               });
               
-              // Navigate based on auth flow
+              // Navigate based on auth flow and return URL
               const authFlow = localStorage.getItem('DR_KROK_auth_flow');
+              const returnUrl = localStorage.getItem('DR_KROK_return_url');
+              
               if (authFlow === 'register') {
                 localStorage.setItem('DR_KROK_show_completion_modal', 'true');
               }
-              const redirectPath = authFlow === 'register' ? "/profile" : "/";
+              
+              const redirectPath = returnUrl || (authFlow === 'register' ? "/profile" : "/");
+              
               localStorage.removeItem('DR_KROK_auth_flow');
+              localStorage.removeItem('DR_KROK_return_url');
 
               setTimeout(() => {
                 navigate(redirectPath, { replace: true });
@@ -79,11 +84,16 @@ const SocialCallback = () => {
             });
             
             const authFlow = localStorage.getItem('DR_KROK_auth_flow');
+            const returnUrl = localStorage.getItem('DR_KROK_return_url');
+            
             if (authFlow === 'register') {
               localStorage.setItem('DR_KROK_show_completion_modal', 'true');
             }
-            const redirectPath = authFlow === 'register' ? "/profile" : "/";
+            
+            const redirectPath = returnUrl || (authFlow === 'register' ? "/profile" : "/");
+            
             localStorage.removeItem('DR_KROK_auth_flow');
+            localStorage.removeItem('DR_KROK_return_url');
 
             setTimeout(() => {
               navigate(redirectPath, { replace: true });

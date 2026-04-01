@@ -208,7 +208,7 @@ export default function CourseSubscription() {
 
   const handleSubscription = async () => {
     if (!isLoggedIn) {
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
 
@@ -678,6 +678,7 @@ export default function CourseSubscription() {
                   <div className="mt-4 text-center">
                     <Link
                       to="/login"
+                      state={{ from: location.pathname }}
                       className="text-sm text-primary hover:text-secondary"
                     >
                       {t('courses.loginToSubscribe', 'Login to subscribe')}
