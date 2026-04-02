@@ -302,7 +302,13 @@ export default function RegisterPage() {
             {/* Link to Login */}
             <div className="mt-6 text-sm text-center">
               {t('auth.register.have_account')}{" "}
-
+              <Link
+                to="/login"
+                state={location.state}
+                className="font-medium text-primary hover:underline"
+              >
+                {t('auth.register.login')}
+              </Link>
             </div>
           </div>
         </div>
