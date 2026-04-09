@@ -140,7 +140,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!isLoggedIn) {
-                      navigate("/login");
+                      navigate("/login", { state: { from: window.location.pathname } });
                       return;
                     }
                     onToggleFavorite(course.id, "live_course");

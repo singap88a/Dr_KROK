@@ -23,7 +23,7 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
                 e.preventDefault();
                 e.stopPropagation();
                 if (!isLoggedIn) {
-                  navigate("/login");
+                  navigate("/login", { state: { from: window.location.pathname } });
                   return;
                 }
                 onToggleFavorite(course.id, "video_course");

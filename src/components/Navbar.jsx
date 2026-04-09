@@ -217,6 +217,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/register"
+              state={{ from: location.pathname }}
               className="px-4 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base text-white transition rounded-lg bg-primary hover:bg-primary-dark whitespace-nowrap"
             >
               {t("navbar.signUp")}
@@ -279,6 +280,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/register"
+                state={{ from: location.pathname }}
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
               >
