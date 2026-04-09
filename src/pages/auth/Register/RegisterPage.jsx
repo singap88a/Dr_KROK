@@ -115,8 +115,9 @@ export default function RegisterPage() {
     if (location.state?.from) {
       localStorage.setItem('DR_KROK_return_url', location.state.from);
     }
-    // استخدام الـ Vercel URL مباشرة للتسجيل بجوجل
-    const callbackUrl = 'https://dr-krok.vercel.app/auth/callback';
+    
+    // Build callback URL dynamically for environment compatibility
+    const callbackUrl = `${window.location.origin}/auth/callback`;
     
     const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
     
@@ -290,7 +291,12 @@ export default function RegisterPage() {
                   if (location.state?.from) {
                     localStorage.setItem('DR_KROK_return_url', location.state.from);
                   }
-                  window.location.href = 'https://admin.dr-krok.com/api/auth/apple?register=true';
+                  
+                  const callbackUrl = `${window.location.origin}/auth/callback`;
+                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+                  
+                  console.log("Redirecting to Apple OAuth for registration:", appleAuthUrl);
+                  window.location.href = appleAuthUrl;
                 }}
                 className="flex items-center justify-center w-full px-4 py-3 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >

@@ -72,7 +72,7 @@ export default function CoursesPreview({ courses }) {
   const onToggleFavorite = async (courseId) => {
     if (!isLoggedIn) {
       toast.info(t("auth.login_required", "Please login to use favorites"));
-      navigate("/login");
+      navigate("/login", { state: { from: window.location.pathname } });
       return;
     }
     try {

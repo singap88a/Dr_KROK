@@ -14,20 +14,18 @@ const SocialCallback = () => {
   useEffect(() => {
     const handleSocialCallback = async () => {
       try {
-        // Extract token from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const email = urlParams.get('email');
 
-        console.log("Token received:", token);
-        console.log("Email received:", email);
+        console.log("Social Auth Callback - Token received:", !!token);
+        if (email) console.log("Social Auth Callback - Email received:", email);
 
         if (token) {
-          // Save token in localStorage
           localStorage.setItem("token", token);
 
-          // Fetch user data using the token
           try {
+            console.log("Fetching user profile with token...");
             const userResponse = await axios.get(
               "https://admin.dr-krok.com/api/auth/me",
               {
@@ -38,26 +36,37 @@ const SocialCallback = () => {
               }
             );
 
-            console.log("User data response:", userResponse.data);
+            console.log("User data response success:", userResponse.data.success);
 
             if (userResponse.data.success) {
-              // Save user data in context
               login(token, userResponse.data.data);
               
               toast.success(t('auth.social.login_success'), {
                 position: 'top-right',
               });
               
-              // Navigate based on auth flow and return URL
               const authFlow = localStorage.getItem('DR_KROK_auth_flow');
               const returnUrl = localStorage.getItem('DR_KROK_return_url');
               
+              console.log("Auth Flow:", authFlow, "Return URL:", returnUrl);
+
               if (authFlow === 'register') {
                 localStorage.setItem('DR_KROK_show_completion_modal', 'true');
               }
               
-              const redirectPath = returnUrl || (authFlow === 'register' ? "/profile" : "/");
+              // Helper to prevent infinite loops by not redirecting back to auth pages
+              const getSafeRedirect = (url) => {
+                if (!url) return null;
+                const unsafePaths = ["/login", "/register", "/auth/callback"];
+                if (unsafePaths.some(p => url.includes(p))) return null;
+                return url;
+              };
+
+              const safeReturnUrl = getSafeRedirect(returnUrl);
+              const redirectPath = safeReturnUrl || (authFlow === 'register' ? "/profile" : "/");
               
+              console.log("Final Redirect Path:", redirectPath);
+
               localStorage.removeItem('DR_KROK_auth_flow');
               localStorage.removeItem('DR_KROK_return_url');
 
@@ -65,14 +74,13 @@ const SocialCallback = () => {
                 navigate(redirectPath, { replace: true });
               }, 1500);
             } else {
-              throw new Error("Failed to get user data");
+              throw new Error("API returned success:false");
             }
           } catch (userError) {
-            console.error("Error fetching user data:", userError);
+            console.error("Error fetching user data profile:", userError);
 
-            // If fetching data fails, use basic data
             const basicUserData = {
-              id: Date.now(), // Temporary ID
+              id: Date.now(),
               email: email || 'user@example.com',
               name: email?.split('@')[0] || 'User',
             };
@@ -103,7 +111,7 @@ const SocialCallback = () => {
           throw new Error("No token received from social login");
         }
       } catch (error) {
-        console.error("Social authentication failed:", error);
+        console.error("Social authentication failed overall:", error);
         toast.error(t('auth.social.auth_failed'), {
           position: 'top-right',
         });
