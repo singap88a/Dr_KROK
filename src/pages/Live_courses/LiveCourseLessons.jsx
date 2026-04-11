@@ -1399,10 +1399,20 @@ export default function LiveCourseLessons() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center bg-accent aspect-video">
-                  <div className="text-center">
-                    <FaList className="mx-auto mb-4 text-6xl text-text-muted" />
-                    <p className="text-text-muted">
+                <div className="relative flex items-center justify-center overflow-hidden bg-accent aspect-video">
+                  {course?.image && (
+                    <div className="absolute inset-0 w-full h-full pointer-events-none">
+                      <img 
+                        src={Array.isArray(course.image) ? course.image[0] : course.image} 
+                        alt={course.title} 
+                        className="object-cover w-full h-full opacity-30 blur-sm"
+                      />
+                      <div className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-[1px]"></div>
+                    </div>
+                  )}
+                  <div className="relative z-10 text-center p-6">
+                    <FaList className="mx-auto mb-4 text-6xl text-text-muted drop-shadow-md" />
+                    <p className="font-medium text-text drop-shadow-md">
                       {t("courses.selectContent", "Select a lesson or section to start")}
                     </p>
                     {!hasAccess && (
@@ -1456,10 +1466,7 @@ export default function LiveCourseLessons() {
                           {course.instructor.years_of_experience} {t("courses.yearsExp", "years experience")}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <FaStarSolid className="text-yellow-400" />
-                        <span>{(course.instructor.average_rating || 0).toFixed(1)}</span>
-                      </div>
+
                     </div>
 
                     <p className="mb-4 text-sm leading-relaxed text-text line-clamp-3">

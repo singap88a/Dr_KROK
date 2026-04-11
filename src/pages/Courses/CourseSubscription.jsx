@@ -455,10 +455,7 @@ export default function CourseSubscription() {
                           <FaGraduationCap />
                           <span>{course.instructor.years_of_experience} {t('courses.yearsExp', 'years experience')}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <FaStar className="text-yellow-400" />
-                          <span>{(course.instructor.average_rating || 0).toFixed(1)}</span>
-                        </div>
+
                       </div>
                     </div>
                   </div>
