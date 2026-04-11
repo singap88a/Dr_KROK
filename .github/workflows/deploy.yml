@@ -3,16 +3,14 @@ name: Build and Deploy to Production
 on:
   push:
     branches:
-      - frontend
+      - frontend # بيراقب برانش الفرونت عندك
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout frontend branch
+      - name: Checkout Code
         uses: actions/checkout@v3
-        with:
-          ref: frontend
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -25,9 +23,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy dist to production branch
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to Production Branch
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          personal_token: ${{ secrets.GH_TOKEN }}
-          publish_branch: production
-          publish_dir: ./dist
+          branch: production 
+          folder: dist 
+          clean: true
