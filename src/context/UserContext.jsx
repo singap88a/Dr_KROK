@@ -1,5 +1,5 @@
 // UserContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const UserContext = createContext();
 
@@ -60,7 +60,7 @@ export const UserProvider = ({ children }) => {
     };
   }, []);
 
-  const login = (token, user) => {
+  const login = useCallback((token, user) => {
     // Store token with expiration (24 hours from now)
     const tokenData = {
       token: token,
@@ -70,9 +70,9 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem("DR_KROK_user", JSON.stringify(user));
     setIsLoggedIn(true);
     setUserData(user);
-  };
+  }, []);
 
-  const register = (token, user) => {
+  const register = useCallback((token, user) => {
     // Store token with expiration (24 hours from now)
     const tokenData = {
       token: token,
@@ -82,9 +82,9 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem("DR_KROK_userName", user.name);
     setIsLoggedIn(true);
     setUserData(user);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("DR_KROK_tokenData");
     localStorage.removeItem("DR_KROK_token");
     localStorage.removeItem("DR_KROK_userToken");
@@ -92,9 +92,9 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem("DR_KROK_userName");
     setIsLoggedIn(false);
     setUserData(null);
-  };
+  }, []);
 
-  const updateUser = (updater) => {
+  const updateUser = useCallback((updater) => {
     setUserData((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       if (next) {
@@ -102,7 +102,7 @@ export const UserProvider = ({ children }) => {
       }
       return next;
     });
-  };
+  }, []);
 
   const value = {
     isLoggedIn,

@@ -266,7 +266,8 @@ const handleDeliveryOrder = async (e) => {
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
-        setTimeout(() => navigate('/login', { state: { from: location.pathname } }), 1200);
+        const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+        setTimeout(() => navigate('/login', { state: { from: returnPath } }), 1200);
         return;
       }
       // Prepare form data for multipart/form-data
@@ -367,7 +368,8 @@ const handleDeliveryOrder = async (e) => {
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
-        setTimeout(() => navigate('/login', { state: { from: location.pathname } }), 1200);
+        const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+        setTimeout(() => navigate('/login', { state: { from: returnPath } }), 1200);
         return;
       }
 
