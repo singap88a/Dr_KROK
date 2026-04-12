@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useUser } from '../../context/UserContext';
@@ -10,9 +10,12 @@ const SocialCallback = () => {
   const navigate = useNavigate();
   const { login } = useUser();
   const { t } = useTranslation();
+  const processedRef = useRef(false);
 
   useEffect(() => {
     const handleSocialCallback = async () => {
+      if (processedRef.current) return;
+      processedRef.current = true;
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
@@ -22,6 +25,13 @@ const SocialCallback = () => {
         if (email) console.log("Social Auth Callback - Email received:", email);
 
         if (token) {
+          // Prevent React StrictMode double-execution using sessionStorage
+          if (sessionStorage.getItem('DR_KROK_consumed_token') === token) {
+            console.log("Token already processed, skipping...");
+            return;
+          }
+          sessionStorage.setItem('DR_KROK_consumed_token', token);
+
           localStorage.setItem("token", token);
 
           try {
