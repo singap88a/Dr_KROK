@@ -63,14 +63,12 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     localStorage.setItem('DR_KROK_auth_flow', 'login');
-    if (location.state?.from) {
-      localStorage.setItem('DR_KROK_return_url', location.state.from);
-    }
+    const returnUrl = location.state?.from || "/";
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
     
-    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
+    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?return_url=${encodeURIComponent(returnUrl)}&callback=${encodeURIComponent(callbackUrl)}`;
     
     console.log("Redirecting to Google OAuth:", googleAuthUrl);
     window.location.href = googleAuthUrl;
@@ -177,12 +175,10 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   localStorage.setItem('DR_KROK_auth_flow', 'login');
-                  if (location.state?.from) {
-                    localStorage.setItem('DR_KROK_return_url', location.state.from);
-                  }
+                  const returnUrl = location.state?.from || "/";
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
-                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?callback=${encodeURIComponent(callbackUrl)}`;
+                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?return_url=${encodeURIComponent(returnUrl)}&callback=${encodeURIComponent(callbackUrl)}`;
                   
                   console.log("Redirecting to Apple OAuth:", appleAuthUrl);
                   window.location.href = appleAuthUrl;
