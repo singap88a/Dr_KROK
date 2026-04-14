@@ -20,11 +20,9 @@ const SocialCallback = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const email = urlParams.get('email');
-        const returnUrlParam = urlParams.get('return_url'); // New: read from query param
 
         console.log("Social Auth Callback - Token received:", !!token);
         if (email) console.log("Social Auth Callback - Email received:", email);
-        if (returnUrlParam) console.log("Social Auth Callback - Return URL received:", returnUrlParam);
 
         if (token) {
           // Prevent React StrictMode double-execution using sessionStorage
@@ -58,10 +56,9 @@ const SocialCallback = () => {
               });
               
               const authFlow = localStorage.getItem('DR_KROK_auth_flow');
-              const localStorageReturnUrl = localStorage.getItem('DR_KROK_return_url');
-              const returnUrl = returnUrlParam || localStorageReturnUrl;
+              const returnUrl = localStorage.getItem('DR_KROK_return_url');
               
-              console.log("Auth Flow:", authFlow, "Return URL (final):", returnUrl);
+              console.log("Auth Flow:", authFlow, "Return URL:", returnUrl);
 
               if (authFlow === 'register') {
                 localStorage.setItem('DR_KROK_show_completion_modal', 'true');
@@ -105,8 +102,7 @@ const SocialCallback = () => {
             });
             
             const authFlow = localStorage.getItem('DR_KROK_auth_flow');
-            const localStorageReturnUrl = localStorage.getItem('DR_KROK_return_url');
-            const returnUrl = returnUrlParam || localStorageReturnUrl;
+            const returnUrl = localStorage.getItem('DR_KROK_return_url');
             
             if (authFlow === 'register') {
               localStorage.setItem('DR_KROK_show_completion_modal', 'true');
