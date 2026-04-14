@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../context/ApiContext";
 import { useTheme } from "../context/ThemeContext";
+import { useCart } from "../context/CartContext";
 import LogoutConfirmModal from "./LogoutConfirmModal";
 
 export default function Navbar() {
@@ -25,8 +26,11 @@ export default function Navbar() {
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const cartRef = useRef(null);
 
   const { isLoggedIn, userData, logout } = useUser();
+  const { cartItems, removeFromCart } = useCart();
 
   useEffect(() => {
     i18n.changeLanguage(language);
@@ -54,6 +58,24 @@ export default function Navbar() {
 
     fetchSettings();
   }, [getSettings]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cartRef.current && !cartRef.current.contains(event.target)) {
+        setCartOpen(false);
+      }
+    };
+
+    if (cartOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [cartOpen]);
 
   const languages = [
     { code: "en", name: "EN", flag: "https://flagcdn.com/w20/gb.png" },
@@ -96,9 +118,6 @@ export default function Navbar() {
             </Link>
 
           )}
-          {/* <span className="absolute w-16 px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded-md opacity-0 left-1/2 group-hover:opacity-100 bg-primary">
-            Dr KROK
-          </span> */}
         </div>
 
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
@@ -162,6 +181,80 @@ export default function Navbar() {
               </div>
             )}
           </div>
+
+          {/* Cart Icon (Only show if not empty) */}
+          {cartItems.length > 0 && (
+            <div className="relative" ref={cartRef}>
+              <button
+                onClick={() => setCartOpen(!cartOpen)}
+                className="relative p-2 transition rounded-full text-textSecondary hover:bg-surface hover:text-primary"
+              >
+                <FaBookmark className="text-xl" />
+                <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs text-white bg-red-500 rounded-full">
+                  {cartItems.length}
+                </span>
+              </button>
+
+              {/* Cart Dropdown */}
+              {cartOpen && (
+                <div className="absolute right-0 w-80 mt-3 overflow-hidden border rounded-xl shadow-2xl bg-background border-border z-50 backdrop-blur-md">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-primary/10 to-transparent">
+                    <h3 className="font-semibold text-text">{t("cart.title", "Your Cart")}</h3>
+                    <span className="text-sm font-medium text-primary">{cartItems.length} {t("cart.items", "Items")}</span>
+                  </div>
+                  
+                  <div className="max-h-[60vh] overflow-y-auto">
+                  {cartItems.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-textSecondary">
+                      <FaShoppingCart className="mx-auto mb-2 text-3xl opacity-20" />
+                      <p>{t("cart.empty", "Your cart is empty")}</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {cartItems.map((item) => (
+                        <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 p-4 transition hover:bg-surface/50 group">
+                          <Link 
+                            to={item.url}
+                            state={item.stateData}
+                            onClick={() => setCartOpen(false)}
+                            className="flex-shrink-0"
+                          >
+                            <img src={item.image || "/logo.png"} alt={item.name} className="object-cover w-16 h-16 border rounded-lg border-border" />
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <Link 
+                              to={item.url}
+                              state={item.stateData}
+                              onClick={() => setCartOpen(false)}
+                              className="block text-sm font-medium truncate text-text hover:text-primary transition-colors"
+                              title={item.name}
+                            >
+                              {item.name}
+                            </Link>
+                            <p className="mt-1 text-xs text-textSecondary capitalize">{t(`cart.type_${item.type}`, item.type.replace('_', ' '))}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-sm font-bold text-primary">₴{Number(item.price).toFixed(2)}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFromCart(item.id, item.type);
+                            }}
+                            className="p-2 text-gray-400 transition-colors rounded-full hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                            title={t("cart.remove", "Remove")}
+                          >
+                            <FaTrash className="text-sm" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          )}
 
           {isLoggedIn ? (
             <div className="relative group">

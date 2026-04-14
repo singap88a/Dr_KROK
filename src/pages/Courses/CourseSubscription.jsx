@@ -3,10 +3,12 @@ import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
+import { useCart } from "../../context/CartContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import CouponInput from "../../components/CouponInput";
 import SubscriptionSuccess from "../../components/SubscriptionSuccess";
 import IncompleteProfileModal from "../../components/IncompleteProfileModal";
+import { toast } from "react-toastify";
 import {
   FaArrowLeft,
   FaPlay,
@@ -22,6 +24,7 @@ import {
   FaCheck,
   FaLock,
   FaShoppingCart,
+  FaBookmark,
   FaCreditCard,
   FaCcVisa,
   FaApplePay,
@@ -43,6 +46,7 @@ export default function CourseSubscription() {
   const { t } = useTranslation();
   const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request, getAuthToken } = useApi();
   const { isLoggedIn } = useUser();
+  const { addToCart } = useCart();
 
   const isLiveCourse = location.pathname.includes('live-courses');
 
@@ -312,6 +316,24 @@ export default function CourseSubscription() {
   const subtotalAfterDiscount = Math.max(0, priceNumber - discountAmount);
   const couponDiscountAmount = subtotalAfterDiscount * (couponDiscount / 100);
   const discountedPrice = Math.max(0, subtotalAfterDiscount - couponDiscountAmount);
+
+  // Use course.image[0] if array, else image.
+  const imageUrl = course?.image && Array.isArray(course.image) ? course.image[0] : course?.image || "/logo.png";
+
+  const handleAddToCart = () => {
+    if (!course) return;
+    
+    addToCart({
+      id: course.id,
+      type: isLiveCourse ? "live_course" : "course",
+      name: course.title,
+      image: imageUrl,
+      price: discountedPrice.toFixed(2),
+      url: window.location.pathname
+    });
+    
+    toast.success("Item saved successfully!");
+  };
 
   // Show success page if subscription was successful
   if (subscriptionSuccess) {
@@ -680,6 +702,14 @@ export default function CourseSubscription() {
                     >
                       {t('courses.loginToSubscribe', 'Login to subscribe')}
                     </Link>
+                    
+                    <button 
+                      onClick={handleAddToCart}
+                      className="flex items-center justify-center w-full gap-2 px-4 py-3 mt-4 text-sm font-medium transition-all duration-300 border cursor-pointer text-primary rounded-xl border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
+                    >
+                      <FaBookmark />
+                      {t('cart.save_path', 'Save link for later')}
+                    </button>
                   </div>
                 )}
 

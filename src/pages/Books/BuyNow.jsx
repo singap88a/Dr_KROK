@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiUser, FiPhone, FiMapPin, FiHome, FiCreditCard, FiRefreshCw } from "react-icons/fi";
-import { FaCcVisa, FaApplePay, FaGooglePay } from "react-icons/fa";
+import { FaCcVisa, FaApplePay, FaGooglePay, FaBookmark } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
+import { useCart } from "../../context/CartContext";
 import { useTranslation } from 'react-i18next';
+import { toast } from "react-toastify";
 import CitySelector from "../../components/CitySelector";
 import CouponInput from "../../components/CouponInput";
 import IncompleteProfileModal from "../../components/IncompleteProfileModal";
@@ -16,6 +18,7 @@ export default function BuyNowPage() {
   const { state } = useLocation();
   const { request, invalidateCache } = useApi();
   const { userData, isLoggedIn } = useUser();
+  const { addToCart } = useCart();
   const { t } = useTranslation();
 
   const invalidateOrdersCache = useCallback(() => {
@@ -202,6 +205,22 @@ export default function BuyNowPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleAddToCart = () => {
+    if (!book) return;
+    
+    addToCart({
+      id: book.id,
+      type: "book",
+      name: book.name,
+      image: mainImage || "/logo.png",
+      price: discountedPrice.toFixed(2),
+      url: "/buynow",
+      stateData: { book: book, bookType: bookType }
+    });
+    
+    toast.success("Item saved successfully!");
   };
 
 
@@ -823,6 +842,17 @@ const handleDeliveryOrder = async (e) => {
                 >
                   {loading ? t('books.placing_order') : t('books.place_order')}
                 </button>
+                {/* Save Path Button */}
+                {!isLoggedIn && (
+                  <button 
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
+                  >
+                    <FaBookmark />
+                    {t('cart.save_path', 'Save link for later')}
+                  </button>
+                )}
               </form>
             )}
 
@@ -884,6 +914,17 @@ const handleDeliveryOrder = async (e) => {
                 >
                   {loading ? t('books.processing') : t('books.purchase_now')}
                 </button>
+                {/* Save Path Button */}
+                {!isLoggedIn && (
+                  <button 
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
+                  >
+                    <FaBookmark />
+                    {t('cart.save_path', 'Save link for later')}
+                  </button>
+                )}
               </div>
             )}
           </div>

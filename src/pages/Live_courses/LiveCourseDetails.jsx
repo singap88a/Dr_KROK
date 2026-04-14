@@ -26,7 +26,6 @@ import {
   FaBriefcase,
   FaUserGraduate,
   FaCalendarAlt,
-  FaFilePdf,
   FaImage,
 } from "react-icons/fa";
 
@@ -344,12 +343,14 @@ export default function LiveCourseDetails() {
                 {t("courses.subscribeNow", "Subscribe Now")}
               </button>
             )}
-            <button
-              onClick={() => navigate(`/live-courses/${id}/lessons`)}
-              className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
-            >
-              {userHasAccess ? t("courses.startCourse", "Start Course") : t("courses.viewRecording", "View Recording")}
-            </button>
+            {userHasAccess && (
+              <button
+                onClick={() => navigate(`/live-courses/${id}/lessons`)}
+                className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
+              >
+                {t("courses.startCourse", "Start Course")}
+              </button>
+            )}
           </div>
         </div>
       </div>
