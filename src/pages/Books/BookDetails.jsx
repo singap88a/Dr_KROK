@@ -89,8 +89,6 @@ export default function BookDetails() {
     }
   };
 
-
-
   if (loading) {
     return (
       <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">

@@ -47,8 +47,7 @@ export default function LoginPage() {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
         setTimeout(() => {
-          const from = location.state?.from || "/";
-          navigate(from, { replace: true });
+          navigate("/", { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Login failed: " + data.message, { position: "top-right" });
@@ -63,7 +62,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     localStorage.setItem('DR_KROK_auth_flow', 'login');
-    const returnUrl = location.state?.from || "/";
+    const returnUrl = "/";
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
@@ -175,7 +174,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   localStorage.setItem('DR_KROK_auth_flow', 'login');
-                  const returnUrl = location.state?.from || "/";
+                  const returnUrl = "/";
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
                   const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?return_url=${encodeURIComponent(returnUrl)}&callback=${encodeURIComponent(callbackUrl)}`;
@@ -195,7 +194,6 @@ export default function LoginPage() {
               {t('auth.login.no_account')}{" "}
               <Link
                 to="/register"
-                state={location.state}
                 className="font-medium text-primary hover:underline"
               >
                 {t('auth.login.register')}

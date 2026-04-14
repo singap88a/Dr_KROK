@@ -36,6 +36,7 @@ import PurchasePolicy from "./pages/PurchasePolicy/PurchasePolicy";
 import { UserProvider } from "./context/UserContext";
 import { ApiProvider } from "./context/ApiContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { CartProvider } from "./context/CartContext";
 import TelegramIcon from "./components/TelegramIcon";
 import Instructors from "./pages/Instructors/Instructors";
 import InstructorDetails from "./pages/Instructors/InstructorDetails";
@@ -53,6 +54,7 @@ export default function App() {
      <ThemeProvider>
      <ApiProvider>
       <UserProvider>
+       <CartProvider>
         <ScrollToTop />
 
         <Navbar />
@@ -114,6 +116,7 @@ export default function App() {
       <CTA />
 
         <Footer />
+       </CartProvider>
       </UserProvider>
      </ApiProvider>
      </ThemeProvider>

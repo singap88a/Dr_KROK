@@ -818,10 +818,16 @@ export default function LiveCourseLessons() {
     try {
       const start = new Date(startTime.replace(" ", "T")).getTime();
       const now = new Date().getTime();
+      
+      // بناءً على طلبك: توقيت أوكرانيا متأخر بساعة عن توقيت مصر
+      // يعني لو مصر 11 يبقى أوكرانيا 10
+      const nowUkraine = now - (60 * 60 * 1000);
+
       const fiveMinutes = 5 * 60 * 1000;
-      // متاح إذا كان الوقت الحالي بعد (وقت البداية - 5 دقائق)
-      return now >= (start - fiveMinutes);
-    } catch {
+      // متاح إذا كان الوقت بتوقيت أوكرانيا بعد (وقت البداية - 5 دقائق)
+      return nowUkraine >= (start - fiveMinutes);
+    } catch (e) {
+      console.error("Error calculating link active time:", e);
       return false;
     }
   };

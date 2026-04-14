@@ -53,8 +53,7 @@ export default function CourseDetails() {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isInstructorExpanded, setIsInstructorExpanded] = useState(false);
   const videoRef = useRef(null);
-
-
+  
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {

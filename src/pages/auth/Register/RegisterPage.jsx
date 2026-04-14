@@ -92,8 +92,7 @@ export default function RegisterPage() {
           position: "top-right",
         });
         setTimeout(() => {
-          const from = location.state?.from || "/profile";
-          navigate(from, { replace: true });
+          navigate("/profile", { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Registration failed: " + (data.message || "Please try again."), {
@@ -112,7 +111,7 @@ export default function RegisterPage() {
 
   const handleGoogleRegister = () => {
     localStorage.setItem('DR_KROK_auth_flow', 'register');
-    const returnUrl = location.state?.from || "/profile";
+    const returnUrl = "/profile";
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
@@ -286,7 +285,7 @@ export default function RegisterPage() {
                 type="button"
                 onClick={() => {
                   localStorage.setItem('DR_KROK_auth_flow', 'register');
-                  const returnUrl = location.state?.from || "/profile";
+                  const returnUrl = "/profile";
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
                   const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?return_url=${encodeURIComponent(returnUrl)}&callback=${encodeURIComponent(callbackUrl)}&register=true`;
@@ -306,7 +305,6 @@ export default function RegisterPage() {
               {t('auth.register.have_account')}{" "}
               <Link
                 to="/login"
-                state={location.state}
                 className="font-medium text-primary hover:underline"
               >
                 {t('auth.register.login')}
