@@ -850,7 +850,7 @@ const handleDeliveryOrder = async (e) => {
                     className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
                   >
                     <FaBookmark />
-                    {t('cart.save_path', 'Save link for later')}
+                    {t('cart.save_path', 'Save to wishlist to return later')}
                   </button>
                 )}
               </form>
@@ -922,7 +922,7 @@ const handleDeliveryOrder = async (e) => {
                     className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
                   >
                     <FaBookmark />
-                    {t('cart.save_path', 'Save link for later')}
+                    {t('cart.save_path', 'Save to wishlist to return later')}
                   </button>
                 )}
               </div>

@@ -47,8 +47,7 @@ export default function LoginPage() {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
         setTimeout(() => {
-          const from = location.state?.from || "/";
-          navigate(from, { replace: true });
+          navigate("/profile", { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Login failed: " + data.message, { position: "top-right" });

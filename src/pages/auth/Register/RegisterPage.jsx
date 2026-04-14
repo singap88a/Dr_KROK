@@ -92,8 +92,7 @@ export default function RegisterPage() {
           position: "top-right",
         });
         setTimeout(() => {
-          const from = location.state?.from || "/profile";
-          navigate(from, { replace: true });
+          navigate("/profile", { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Registration failed: " + (data.message || "Please try again."), {
