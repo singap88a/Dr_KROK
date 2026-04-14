@@ -64,16 +64,7 @@ const SocialCallback = () => {
                 localStorage.setItem('DR_KROK_show_completion_modal', 'true');
               }
               
-              // Helper to prevent infinite loops by not redirecting back to auth pages
-              const getSafeRedirect = (url) => {
-                if (!url) return null;
-                const unsafePaths = ["/login", "/register", "/auth/callback"];
-                if (unsafePaths.some(p => url.includes(p))) return null;
-                return url;
-              };
-
-              const safeReturnUrl = getSafeRedirect(returnUrl);
-              const redirectPath = safeReturnUrl || (authFlow === 'register' ? "/profile" : "/");
+              const redirectPath = "/profile";
               
               console.log("Final Redirect Path:", redirectPath);
 
@@ -108,7 +99,7 @@ const SocialCallback = () => {
               localStorage.setItem('DR_KROK_show_completion_modal', 'true');
             }
             
-            const redirectPath = returnUrl || (authFlow === 'register' ? "/profile" : "/");
+            const redirectPath = "/profile";
             
             localStorage.removeItem('DR_KROK_auth_flow');
             localStorage.removeItem('DR_KROK_return_url');

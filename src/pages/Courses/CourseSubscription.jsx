@@ -708,7 +708,7 @@ export default function CourseSubscription() {
                       className="flex items-center justify-center w-full gap-2 px-4 py-3 mt-4 text-sm font-medium transition-all duration-300 border cursor-pointer text-primary rounded-xl border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
                     >
                       <FaBookmark />
-                      {t('cart.save_path', 'Save link for later')}
+                      {t('cart.save_path', 'Save to wishlist to return later')}
                     </button>
                   </div>
                 )}

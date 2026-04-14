@@ -182,6 +182,67 @@ export default function Navbar() {
             )}
           </div>
 
+          {isLoggedIn ? (
+            <div className="relative group">
+              <Link
+                to="/profile"
+                className="flex items-center justify-center w-10 h-10 text-white transition rounded-full bg-primary hover:bg-primary-dark"
+              >
+                <img
+                  src={
+                    (userData &&
+                      (userData.imageprofile || userData.avatar)) ||
+                    "/user.png"
+                  }
+                  alt="Profile"
+                  className="w-full h-full rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    if (!e.currentTarget.src.includes('/user.png')) {
+                      e.currentTarget.src = "/user.png";
+                    }
+                  }}
+                />
+              </Link>
+
+              <div className="absolute right-0 invisible min-w-48 max-w-xs mt-2 overflow-hidden transition-all duration-300 border rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 group-hover:visible bg-background border-border backdrop-blur-sm">
+                <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+                  <p className="text-sm font-semibold text-text truncate">
+                    {userData ? userData.name : "User"}
+                  </p>
+                  <p className="text-xs text-textSecondary truncate">
+                    {userData ? userData.email : ""}
+                  </p>
+                </div>
+                <div className="py-1">
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-surface text-text group/item"
+                  >
+                    <FaUser className="text-primary group-hover/item:scale-110 transition-transform" />
+                    <span>{t("navbar.profile")}</span>
+                  </Link>
+
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 group/item"
+                  >
+                    <FaSignOutAlt className="group-hover/item:scale-110 transition-transform" />
+                    <span>{t("navbar.logout")}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Link
+              to="/register"
+              state={{ from: location.pathname }}
+              className="px-4 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base text-white transition rounded-lg bg-primary hover:bg-primary-dark whitespace-nowrap"
+            >
+              {t("navbar.signUp")}
+            </Link>
+          )}
+
           {/* Cart Icon (Only show if not empty) */}
           {cartItems.length > 0 && (
             <div className="relative" ref={cartRef}>
@@ -254,67 +315,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          )}
-
-          {isLoggedIn ? (
-            <div className="relative group">
-              <Link
-                to="/profile"
-                className="flex items-center justify-center w-10 h-10 text-white transition rounded-full bg-primary hover:bg-primary-dark"
-              >
-                <img
-                  src={
-                    (userData &&
-                      (userData.imageprofile || userData.avatar)) ||
-                    "/user.png"
-                  }
-                  alt="Profile"
-                  className="w-full h-full rounded-full"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    if (!e.currentTarget.src.includes('/user.png')) {
-                      e.currentTarget.src = "/user.png";
-                    }
-                  }}
-                />
-              </Link>
-
-              <div className="absolute right-0 invisible min-w-48 max-w-xs mt-2 overflow-hidden transition-all duration-300 border rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 group-hover:visible bg-background border-border backdrop-blur-sm">
-                <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
-                  <p className="text-sm font-semibold text-text truncate">
-                    {userData ? userData.name : "User"}
-                  </p>
-                  <p className="text-xs text-textSecondary truncate">
-                    {userData ? userData.email : ""}
-                  </p>
-                </div>
-                <div className="py-1">
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-surface text-text group/item"
-                  >
-                    <FaUser className="text-primary group-hover/item:scale-110 transition-transform" />
-                    <span>{t("navbar.profile")}</span>
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 group/item"
-                  >
-                    <FaSignOutAlt className="group-hover/item:scale-110 transition-transform" />
-                    <span>{t("navbar.logout")}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <Link
-              to="/register"
-              state={{ from: location.pathname }}
-              className="px-4 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base text-white transition rounded-lg bg-primary hover:bg-primary-dark whitespace-nowrap"
-            >
-              {t("navbar.signUp")}
-            </Link>
           )}
 
           <button
