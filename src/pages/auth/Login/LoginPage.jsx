@@ -47,7 +47,8 @@ export default function LoginPage() {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
         setTimeout(() => {
-          navigate("/", { replace: true });
+          const from = location.state?.from || "/";
+          navigate(from, { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Login failed: " + data.message, { position: "top-right" });
@@ -62,12 +63,14 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     localStorage.setItem('DR_KROK_auth_flow', 'login');
-    const returnUrl = "/";
+    if (location.state?.from) {
+      localStorage.setItem('DR_KROK_return_url', location.state.from);
+    }
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
     
-    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?return_url=${encodeURIComponent(returnUrl)}&callback=${encodeURIComponent(callbackUrl)}`;
+    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
     
     console.log("Redirecting to Google OAuth:", googleAuthUrl);
     window.location.href = googleAuthUrl;
@@ -174,10 +177,12 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   localStorage.setItem('DR_KROK_auth_flow', 'login');
-                  const returnUrl = "/";
+                  if (location.state?.from) {
+                    localStorage.setItem('DR_KROK_return_url', location.state.from);
+                  }
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
-                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?return_url=${encodeURIComponent(returnUrl)}&callback=${encodeURIComponent(callbackUrl)}`;
+                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?callback=${encodeURIComponent(callbackUrl)}`;
                   
                   console.log("Redirecting to Apple OAuth:", appleAuthUrl);
                   window.location.href = appleAuthUrl;
@@ -194,6 +199,7 @@ export default function LoginPage() {
               {t('auth.login.no_account')}{" "}
               <Link
                 to="/register"
+                state={location.state}
                 className="font-medium text-primary hover:underline"
               >
                 {t('auth.login.register')}
