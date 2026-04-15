@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaUserEdit, FaTimes } from 'react-icons/fa';
+import { FaUserEdit, FaTimes, FaBookmark } from 'react-icons/fa';
 
-export default function IncompleteProfileModal({ isOpen, onClose }) {
+export default function IncompleteProfileModal({ isOpen, onClose, showSaveOption, onSave }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -12,7 +12,7 @@ export default function IncompleteProfileModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div 
-        className="relative w-full max-w-md p-6 overflow-hidden text-center bg-white shadow-2xl dark:bg-gray-800 rounded-2xl"
+        className="relative w-full max-w-xl p-8 overflow-hidden text-center bg-white shadow-2xl dark:bg-gray-800 rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -37,21 +37,43 @@ export default function IncompleteProfileModal({ isOpen, onClose }) {
           {t('profile.incomplete_message', 'Your profile data is missing. Please complete your profile information to proceed with this purchase.')}
         </p>
 
+        {showSaveOption && (
+          <div className="p-3 mb-6 bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/20 dark:border-blue-800 text-left">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200 text-center">
+              {t('cart.save_before_profile_message', '💡 We recommend saving this product to your wishlist first, so you can easily return to it after updating your profile.')}
+            </p>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex flex-col gap-3 sm:flex-row">
-          <button
-            onClick={() => {
-              onClose();
-              navigate('/profile');
-            }}
-            className="flex-1 px-6 py-3 font-semibold text-white transition-all rounded-xl border border-transparent bg-primary hover:bg-primary/90 hover:shadow-lg focus:ring-4 focus:ring-primary/20"
-          >
-            {t('profile.go_to_profile', 'Update Profile')}
-          </button>
+          {showSaveOption ? (
+            <button
+              onClick={() => {
+                if (onSave) onSave();
+                onClose();
+                navigate('/profile');
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white transition-all rounded-xl border border-transparent bg-primary hover:bg-primary/90 hover:shadow-lg focus:ring-4 focus:ring-primary/20 whitespace-nowrap"
+            >
+              <FaBookmark className="shrink-0" />
+              {t('profile.save_and_update', 'Save & Update Profile')}
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/profile');
+              }}
+              className="flex-1 px-6 py-3 font-semibold text-white transition-all rounded-xl border border-transparent bg-primary hover:bg-primary/90 hover:shadow-lg focus:ring-4 focus:ring-primary/20"
+            >
+              {t('profile.go_to_profile', 'Update Profile')}
+            </button>
+          )}
           
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 font-medium text-gray-700 transition-colors bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+            className="flex-1 px-6 py-3 font-medium text-gray-700 transition-colors bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 whitespace-nowrap"
           >
             {t('common.cancel', 'Cancel')}
           </button>

@@ -8,6 +8,7 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import CouponInput from "../../components/CouponInput";
 import SubscriptionSuccess from "../../components/SubscriptionSuccess";
 import IncompleteProfileModal from "../../components/IncompleteProfileModal";
+import SaveBeforeLoginModal from "../../components/SaveBeforeLoginModal";
 import { toast } from "react-toastify";
 import {
   FaArrowLeft,
@@ -46,7 +47,7 @@ export default function CourseSubscription() {
   const { t } = useTranslation();
   const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request, getAuthToken } = useApi();
   const { isLoggedIn } = useUser();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
 
   const isLiveCourse = location.pathname.includes('live-courses');
 
@@ -81,6 +82,9 @@ export default function CourseSubscription() {
 
   // Profile missing modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Save before login modal state
+  const [showSaveWarning, setShowSaveWarning] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -333,6 +337,27 @@ export default function CourseSubscription() {
     });
     
     toast.success("Item saved successfully!");
+  };
+
+  const handleLoginClick = (e) => {
+    e?.preventDefault();
+    const isItemInCart = cartItems?.some(i => i.id === course.id && i.type === (isLiveCourse ? "live_course" : "course"));
+    if (!isItemInCart) {
+      setShowSaveWarning(true);
+    } else {
+      navigate('/login', { state: { from: location.pathname } });
+    }
+  };
+
+  const handleSaveAndLogin = () => {
+    handleAddToCart();
+    setShowSaveWarning(false);
+    navigate('/login', { state: { from: location.pathname } });
+  };
+
+  const handleContinueToLogin = () => {
+    setShowSaveWarning(false);
+    navigate('/login', { state: { from: location.pathname } });
   };
 
   // Show success page if subscription was successful
@@ -695,13 +720,12 @@ export default function CourseSubscription() {
                 {/* Login Link */}
                 {!isLoggedIn && (
                   <div className="mt-4 text-center">
-                    <Link
-                      to="/login"
-                      state={{ from: location.pathname }}
-                      className="text-sm text-primary hover:text-secondary"
+                    <button
+                      onClick={handleLoginClick}
+                      className="text-sm text-primary hover:text-secondary hover:underline"
                     >
                       {t('courses.loginToSubscribe', 'Login to subscribe')}
-                    </Link>
+                    </button>
                     
                     <button 
                       onClick={handleAddToCart}
@@ -829,10 +853,20 @@ export default function CourseSubscription() {
         </div>
       )}
 
-      {/* Profile Incomplete Modal */}
+      {/* Save Warning Modal */}
+      <SaveBeforeLoginModal 
+        isOpen={showSaveWarning} 
+        onClose={() => setShowSaveWarning(false)} 
+        onSave={handleSaveAndLogin} 
+        onContinueToLogin={handleContinueToLogin} 
+      />
+
+      {/* Incomplete Profile Modal */}
       <IncompleteProfileModal 
         isOpen={showProfileModal} 
-        onClose={() => setShowProfileModal(false)} 
+        onClose={() => setShowProfileModal(false)}
+        showSaveOption={!cartItems?.some(i => i.id === course?.id && i.type === (isLiveCourse ? "live_course" : "course"))}
+        onSave={handleAddToCart}
       />
     </section>
   );
