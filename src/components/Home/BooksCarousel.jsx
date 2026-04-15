@@ -7,10 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import "swiper/css";
 import "swiper/css/pagination";
-import 'react-toastify/dist/ReactToastify.css';
 
 function BooksCarousel() {
   const navigate = useNavigate();
@@ -79,7 +78,6 @@ function BooksCarousel() {
   if (loading) {
   return (
     <section className="relative py-12 w-full transition-colors duration-300 bg-gradient-to-r from-[#e0f9fa] via-white to-[#e0f9fa] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <ToastContainer />
         <div className="px-6 mx-auto text-center max-w-7xl">{t('books.loading_featured_books')}</div>
       </section>
     );

@@ -13,8 +13,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import {
   FaUser,
   FaShoppingCart,
@@ -337,8 +336,6 @@ export default function Profile() {
 
   return (
     <div className="flex min-h-screen bg-background text-text">
-      <ToastContainer />
-      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(true)}
         className="fixed left-0 z-30 flex items-center justify-center w-12 h-12 text-white transition-all duration-300 shadow-lg top-20 rounded-br-2xl bg-gradient-to-r from-primary to-primary hover:scale-105 hover:shadow-2xl lg:hidden backdrop-blur-md bg-opacity-80"

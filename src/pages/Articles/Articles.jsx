@@ -35,16 +35,7 @@ export default function TrainerArticlesPage() {
       const params = { page, per_page: PER_PAGE };
       if (instructorId) params.instructor_id = instructorId;
       const blogsResponse = await getBlogs(params);
-
       if (blogsResponse && blogsResponse.data) {
-        // Set pagination info
-        const pag = blogsResponse.pagination;
-        if (pag) {
-          setTotalPages(pag.total_pages || 1);
-          setTotalItems(pag.total_items || 0);
-          setCurrentPage(pag.current_page || page);
-        }
-
         // Extract instructors from data (only on page 1 without filter, to build sidebar)
         if (page === 1 && !instructorId) {
           const instructorsFromBlogs = blogsResponse.data.map(instructor => ({
@@ -59,17 +50,29 @@ export default function TrainerArticlesPage() {
           setInstructors(instructorsFromBlogs);
         }
 
-        // Create flat blogs array
-        const allBlogs = blogsResponse.data.flatMap(instructor =>
-          (instructor.blogs || []).map(blog => ({
-            ...blog,
-            instructor_id: {
-              id: instructor.id,
-              name: instructor.name,
-              image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
-            }
-          }))
-        );
+        // Create flat blogs array, filtered by instructor if selected
+        const allBlogs = blogsResponse.data
+          .filter(instructor => !instructorId || String(instructor.id) === String(instructorId))
+          .flatMap(instructor =>
+            (instructor.blogs || []).map(blog => ({
+              ...blog,
+              instructor_id: {
+                id: instructor.id,
+                name: instructor.name,
+                image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
+              }
+            }))
+          );
+
+        // Set pagination info
+        const pag = blogsResponse.pagination;
+        if (pag) {
+          setTotalPages(pag.total_pages || 1);
+          // If filtering by instructor, we might want to use the local count 
+          // if the server totalItems is for all instructors
+          setTotalItems(instructorId ? allBlogs.length : (pag.total_items || 0));
+          setCurrentPage(pag.current_page || page);
+        }
 
         setBlogs(allBlogs);
       } else {

@@ -47,7 +47,7 @@ export default function CourseSubscription() {
   const { t } = useTranslation();
   const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request, getAuthToken } = useApi();
   const { isLoggedIn } = useUser();
-  const { addToCart, cartItems } = useCart();
+  const { addToCart, cartItems, removeFromCart } = useCart();
 
   const isLiveCourse = location.pathname.includes('live-courses');
 
@@ -245,9 +245,11 @@ export default function CourseSubscription() {
 
       if (response && response.success) {
         if (response.data?.payment_url) {
+          removeFromCart(id, isLiveCourse ? 'live_course' : 'course');
           // Redirect to the payment URL from the response
           window.location.href = response.data.payment_url;
         } else if (response.data?.invoice_url) {
+           removeFromCart(id, isLiveCourse ? 'live_course' : 'course');
            // Fallback for invoice_url if that's still used in some cases
            window.location.href = response.data.invoice_url;
         } else {
@@ -335,8 +337,6 @@ export default function CourseSubscription() {
       price: discountedPrice.toFixed(2),
       url: window.location.pathname
     });
-    
-    toast.success("Item saved successfully!");
   };
 
   const handleLoginClick = (e) => {

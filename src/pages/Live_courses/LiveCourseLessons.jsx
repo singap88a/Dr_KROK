@@ -98,6 +98,15 @@ export default function LiveCourseLessons() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 🔥 حالة القائمة الجانبية
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
+  // تحديث الوقت كل 30 ثانية عشان الرابط يفتح تلقائي
+  const [currentTimeMs, setCurrentTimeMs] = useState(Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Quiz States
   const [quizModal, setQuizModal] = useState({
     isOpen: false,
@@ -806,7 +815,7 @@ export default function LiveCourseLessons() {
         hour12: true 
       });
       
-      return `${weekday} • ${month} ${day}, ${year} • ${time} (Ukraine Time)`;
+      return `${weekday} • ${month} ${day}, ${year} • ${time} (Local Time)`;
     } catch {
       return dateString;
     }
@@ -817,15 +826,9 @@ export default function LiveCourseLessons() {
     if (!startTime) return false;
     try {
       const start = new Date(startTime.replace(" ", "T")).getTime();
-      const now = new Date().getTime();
-      
-      // بناءً على طلبك: توقيت أوكرانيا متأخر بساعة عن توقيت مصر
-      // يعني لو مصر 11 يبقى أوكرانيا 10
-      const nowUkraine = now - (60 * 60 * 1000);
-
       const fiveMinutes = 5 * 60 * 1000;
-      // متاح إذا كان الوقت بتوقيت أوكرانيا بعد (وقت البداية - 5 دقائق)
-      return nowUkraine >= (start - fiveMinutes);
+      // يقارن مع الوقت المحدث بـ setInterval
+      return currentTimeMs >= (start - fiveMinutes);
     } catch (e) {
       console.error("Error calculating link active time:", e);
       return false;
@@ -1301,7 +1304,7 @@ export default function LiveCourseLessons() {
                                       {!active && (
                                         <p className="flex items-center gap-1 text-xs font-medium text-red-500">
                                           <FaClock className="animate-pulse" />
-                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Ukraine Time).")}
+                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Local Time).")}
                                         </p>
                                       )}
                                     </>
@@ -1387,7 +1390,7 @@ export default function LiveCourseLessons() {
                                     <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-800/20">
                                       <FaClock className="text-red-500 animate-pulse" />
                                       <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Ukraine Time).")}
+                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Local Time).")}
                                       </span>
                                     </div>
                                   )}

@@ -19,7 +19,7 @@ export default function BuyNowPage() {
   const { state } = useLocation();
   const { request, invalidateCache } = useApi();
   const { userData, isLoggedIn } = useUser();
-  const { addToCart, cartItems } = useCart();
+  const { addToCart, cartItems, removeFromCart } = useCart();
   const { t } = useTranslation();
 
   const invalidateOrdersCache = useCallback(() => {
@@ -223,8 +223,6 @@ export default function BuyNowPage() {
       url: "/buynow",
       stateData: { book: book, bookType: bookType }
     });
-    
-    toast.success("Item saved successfully!");
   };
 
   const handleLoginClick = (e) => {
@@ -359,6 +357,7 @@ const handleDeliveryOrder = async (e) => {
       }
 
       if (response?.data?.payment_url) {
+        removeFromCart(book.id, "book");
         setSuccess(t('books.order_placed_successfully_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
           window.location.href = response.data.payment_url;
@@ -446,6 +445,7 @@ const handleDeliveryOrder = async (e) => {
       }
 
       if (response?.data?.payment_url) {
+        removeFromCart(book.id, "book");
         setSuccess(t('books.purchase_successful_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
           window.location.href = response.data.payment_url;
