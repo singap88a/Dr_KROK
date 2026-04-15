@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 const BOOKS_PER_PAGE = 12;
@@ -126,7 +125,6 @@ export default function Books() {
 
   return (
     <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
-      <ToastContainer />
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">

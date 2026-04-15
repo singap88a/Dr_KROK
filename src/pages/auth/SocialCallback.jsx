@@ -2,8 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useUser } from '../../context/UserContext';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 
 const SocialCallback = () => {
@@ -127,7 +126,6 @@ const SocialCallback = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
-      <ToastContainer />
       <div className="text-center">
         <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary"></div>
         <p className="text-lg">{t('auth.social.processing_auth')}</p>

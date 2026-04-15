@@ -264,8 +264,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
   const handleSave = async () => {
     // Basic validation
-    if (!formData.name || !formData.email) {
-      toast.error(t('profile.toast.name_email_required'));
+    if (!formData.name || !formData.email || !formData.phone || !formData.birth || !formData.gender) {
+      toast.error(t('profile.toast.all_fields_required', 'All primary profile fields are required!'));
       return;
     }
     
@@ -490,8 +490,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
             <div className="space-y-4">
               {/* Full Name */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.full_name')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.full_name')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <input
@@ -512,8 +512,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Email */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.email_address')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.email_address')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <input
@@ -534,8 +534,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Phone */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.phone_number')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.phone_number')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <input
@@ -544,6 +544,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     value={formData.phone}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
                   />
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -557,8 +558,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
             <div className="space-y-4">
               {/* Birth Date */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.birth_date')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.birth_date')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <input
@@ -567,6 +568,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     value={formData.birth}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
                   />
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -578,8 +580,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Gender */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.gender')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.gender')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <select
@@ -587,6 +589,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     value={formData.gender}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
                   >
                     <option value="">{t('profile.select_gender')}</option>
                     <option value="male">{t('profile.male')}</option>
@@ -603,8 +606,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* University */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.university')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <div className="relative" ref={uniDropdownRef}>
@@ -702,8 +705,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* College Year */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
-                  {t('profile.college_year')}
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.college_year')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
               {isEditing ? (
                 <select
@@ -738,7 +741,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Facebook */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                <label className="block mb-2 text-sm font-bold text-text-primary">
                   <FaFacebook className="inline mr-2 text-blue-600" />
                   {t('profile.facebook')}
                 </label>
@@ -761,7 +764,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Instagram */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                <label className="block mb-2 text-sm font-bold text-text-primary">
                   <FaInstagram className="inline mr-2 text-pink-600" />
                   {t('profile.instagram')}
                 </label>
@@ -784,7 +787,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Telegram */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                <label className="block mb-2 text-sm font-bold text-text-primary">
                   <FaTelegram className="inline mr-2 text-blue-500" />
                   {t('profile.telegram')}
                 </label>
@@ -807,7 +810,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* WhatsApp */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-text-secondary">
+                <label className="block mb-2 text-sm font-bold text-text-primary">
                   <FaWhatsapp className="inline mr-2 text-green-600" />
                   {t('profile.whatsapp')}
                 </label>

@@ -5,8 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import { useApi } from "../../../context/ApiContext";
 import loginAnimation from "../../../components/animations/Login_animation.json";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import he from "he";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -126,8 +125,6 @@ export default function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
-      <ToastContainer />
-
       <div className="container p-6 mx-auto">
         <div className="grid max-w-5xl grid-cols-1 mx-auto overflow-hidden shadow-xl bg-surface rounded-2xl md:grid-cols-2">
           {/* Left Animation */}

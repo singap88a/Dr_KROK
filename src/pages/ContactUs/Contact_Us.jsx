@@ -13,8 +13,7 @@ import {
   FaTiktok,
   FaYoutube,
 } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 
@@ -300,8 +299,6 @@ export default function ContactUs() {
         </div>
       </section>
 
-      {/* Toast Container */}
-      <ToastContainer />
     </div>
   );
 }

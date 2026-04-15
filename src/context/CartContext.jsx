@@ -30,28 +30,31 @@ export const CartProvider = ({ children }) => {
 
     // item shape: { id, type (book | course | live_course), name, image, price, url }
     const addToCart = (item) => {
-        setCartItems((prevItems) => {
-            const existingItem = prevItems.find(
-                (i) => i.id === item.id && i.type === item.type
-            );
-            if (existingItem) {
-                toast.info(t("cart.already_in_cart", "Item is already in the cart!"), { position: "top-right" });
-                return prevItems;
-            }
-            toast.success(t("cart.added_to_cart", "Added to the cart successfully!"), { position: "top-right" });
-            return [...prevItems, item];
-        });
+        const existingItem = cartItems.find(
+            (i) => String(i.id) === String(item.id) && i.type === item.type
+        );
+
+        if (existingItem) {
+            toast.info(t("cart.already_in_cart", "Item is already in the cart!"), { position: "top-right" });
+            return;
+        }
+
+        const newItems = [...cartItems, item];
+        setCartItems(newItems);
+        localStorage.setItem("drkrok_cart", JSON.stringify(newItems));
+        toast.success(t("cart.added_to_cart", "Added to the cart successfully!"), { position: "top-right" });
     };
 
     const removeFromCart = (itemId, itemType) => {
-        setCartItems((prevItems) =>
-            prevItems.filter((i) => !(i.id === itemId && i.type === itemType))
-        );
+        const newItems = cartItems.filter((i) => !(String(i.id) === String(itemId) && i.type === itemType));
+        setCartItems(newItems);
+        localStorage.setItem("drkrok_cart", JSON.stringify(newItems));
         toast.info(t("cart.removed_from_cart", "Item removed from the cart."), { position: "top-right" });
     };
 
     const clearCart = () => {
         setCartItems([]);
+        localStorage.removeItem("drkrok_cart");
     };
 
     return (

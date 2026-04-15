@@ -301,7 +301,7 @@ export default function Navbar() {
                         <span className="text-[10px] font-bold uppercase tracking-widest opacity-90 border-b border-white/30 leading-tight">Wishlist Reminder</span>
                       </div>
                       <p className="text-xs font-semibold leading-relaxed drop-shadow-sm">
-                        {t('cart.reminder_short', '✨ Your items are waiting! Check your wishlist to complete your order.')}
+                        {t('cart.reminder_short', ' Your items are waiting! Check your wishlist to complete your order✨.')}
                       </p>
                     </div>
                   </div>
