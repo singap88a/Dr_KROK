@@ -31,6 +31,31 @@ export default function Navbar() {
 
   const { isLoggedIn, userData, logout } = useUser();
   const { cartItems, removeFromCart } = useCart();
+  const [reminderStep, setReminderStep] = useState('hidden'); // 'visible' | 'hidden'
+  const [isHoveringReminder, setIsHoveringReminder] = useState(false);
+
+  // Cart Reminder Logic: 5s ON / 10s OFF with Hover Pause
+  useEffect(() => {
+    if (cartItems?.length === 0 || cartOpen) {
+      setReminderStep('hidden');
+      return;
+    }
+
+    let timeout;
+    if (reminderStep === 'visible') {
+      // If visible and NOT hovering, hide after 5 seconds
+      if (!isHoveringReminder) {
+        timeout = setTimeout(() => setReminderStep('hidden'), 5000);
+      }
+    } else {
+      // If hidden, show after 10 seconds
+      timeout = setTimeout(() => setReminderStep('visible'), 10000);
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [reminderStep, isHoveringReminder, cartItems?.length, cartOpen]);
 
   useEffect(() => {
     i18n.changeLanguage(language);
@@ -247,14 +272,41 @@ export default function Navbar() {
           {cartItems.length > 0 && (
             <div className="relative" ref={cartRef}>
               <button
-                onClick={() => setCartOpen(!cartOpen)}
-                className="relative p-2 transition rounded-full text-textSecondary hover:bg-surface hover:text-primary"
+                onClick={() => {
+                  setCartOpen(!cartOpen);
+                  setReminderStep('hidden');
+                }}
+                className={`relative p-2 transition rounded-full text-textSecondary hover:bg-surface hover:text-primary ${reminderStep === 'visible' ? 'animate-bounce' : ''}`}
               >
                 <FaBookmark className="text-xl" />
                 <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs text-white bg-red-500 rounded-full">
                   {cartItems.length}
                 </span>
               </button>
+
+              {/* Cart Reminder Tooltip - Rectangular primary design with arrow */}
+              {reminderStep === 'visible' && !cartOpen && (
+                <div 
+                  className="absolute right-0 top-full mt-3 z-[60] origin-top-right"
+                  onMouseEnter={() => setIsHoveringReminder(true)}
+                  onMouseLeave={() => setIsHoveringReminder(false)}
+                >
+                  <div className="relative px-4 py-3 bg-primary text-white rounded-lg shadow-2xl animate-in fade-in zoom-in slide-in-from-top-3 duration-300 border border-white/20 min-w-[220px]">
+                    {/* Arrow pointing from icon to the box */}
+                    <div className="absolute -top-1.5 right-4 w-4 h-4 bg-primary border-t border-l border-white/20 rotate-45"></div>
+                    
+                    <div className="relative">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <FaBookmark className="text-white/90 text-xs" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-90 border-b border-white/30 leading-tight">Wishlist Reminder</span>
+                      </div>
+                      <p className="text-xs font-semibold leading-relaxed drop-shadow-sm">
+                        {t('cart.reminder_short', '✨ Your items are waiting! Check your wishlist to complete your order.')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Cart Dropdown */}
               {cartOpen && (

@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import CitySelector from "../../components/CitySelector";
 import CouponInput from "../../components/CouponInput";
 import IncompleteProfileModal from "../../components/IncompleteProfileModal";
+import SaveBeforeLoginModal from "../../components/SaveBeforeLoginModal";
 
 import he from "he";
 
@@ -18,7 +19,7 @@ export default function BuyNowPage() {
   const { state } = useLocation();
   const { request, invalidateCache } = useApi();
   const { userData, isLoggedIn } = useUser();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { t } = useTranslation();
 
   const invalidateOrdersCache = useCallback(() => {
@@ -74,6 +75,9 @@ export default function BuyNowPage() {
 
   // Profile missing modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Save before login modal state
+  const [showSaveWarning, setShowSaveWarning] = useState(false);
 
   useEffect(() => {
     if (book?.images) {
@@ -221,6 +225,30 @@ export default function BuyNowPage() {
     });
     
     toast.success("Item saved successfully!");
+  };
+
+  const handleLoginClick = (e) => {
+    e?.preventDefault();
+    const isItemInCart = cartItems?.some(i => i.id === book.id && i.type === "book");
+    if (!isItemInCart) {
+      setShowSaveWarning(true);
+    } else {
+      const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+      navigate('/login', { state: { from: returnPath } });
+    }
+  };
+
+  const handleSaveAndLogin = () => {
+    handleAddToCart();
+    setShowSaveWarning(false);
+    const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+    navigate('/login', { state: { from: returnPath } });
+  };
+
+  const handleContinueToLogin = () => {
+    setShowSaveWarning(false);
+    const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+    navigate('/login', { state: { from: returnPath } });
   };
 
 
@@ -844,14 +872,23 @@ const handleDeliveryOrder = async (e) => {
                 </button>
                 {/* Save Path Button */}
                 {!isLoggedIn && (
-                  <button 
-                    type="button"
-                    onClick={handleAddToCart}
-                    className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
-                  >
-                    <FaBookmark />
-                    {t('cart.save_path', 'Save to wishlist to return later')}
-                  </button>
+                  <div className="mt-4 text-center">
+                    <button
+                      type="button"
+                      onClick={handleLoginClick}
+                      className="text-sm font-medium text-primary hover:text-secondary hover:underline"
+                    >
+                      {t('courses.loginToSubscribe', 'Login to subscribe')}
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={handleAddToCart}
+                      className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
+                    >
+                      <FaBookmark />
+                      {t('cart.save_path', 'Save to wishlist to return later')}
+                    </button>
+                  </div>
                 )}
               </form>
             )}
@@ -916,14 +953,23 @@ const handleDeliveryOrder = async (e) => {
                 </button>
                 {/* Save Path Button */}
                 {!isLoggedIn && (
-                  <button 
-                    type="button"
-                    onClick={handleAddToCart}
-                    className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
-                  >
-                    <FaBookmark />
-                    {t('cart.save_path', 'Save to wishlist to return later')}
-                  </button>
+                  <div className="mt-4 text-center">
+                    <button
+                      type="button"
+                      onClick={handleLoginClick}
+                      className="text-sm font-medium text-primary hover:text-secondary hover:underline"
+                    >
+                      {t('courses.loginToSubscribe', 'Login to subscribe')}
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={handleAddToCart}
+                      className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
+                    >
+                      <FaBookmark />
+                      {t('cart.save_path', 'Save to wishlist to return later')}
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -967,10 +1013,20 @@ const handleDeliveryOrder = async (e) => {
         </div>
       )}
 
+      {/* Save Warning Modal */}
+      <SaveBeforeLoginModal 
+        isOpen={showSaveWarning} 
+        onClose={() => setShowSaveWarning(false)} 
+        onSave={handleSaveAndLogin} 
+        onContinueToLogin={handleContinueToLogin} 
+      />
+
       {/* Profile Incomplete Modal */}
       <IncompleteProfileModal 
         isOpen={showProfileModal} 
-        onClose={() => setShowProfileModal(false)} 
+        onClose={() => setShowProfileModal(false)}
+        showSaveOption={!cartItems?.some(i => i.id === book?.id && i.type === "book")}
+        onSave={handleAddToCart}
       />
     </section>
   );
