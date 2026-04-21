@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
-import { FiSearch, FiHeart, FiTruck, FiFileText, FiGrid, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { useState, useEffect, useCallback } from "react";
+import { FiSearch, FiHeart, FiTruck, FiFileText, FiGrid, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import LoadingSpinner from "../../components/LoadingSpinner";
-
-const BOOKS_PER_PAGE = 12;
 
 export default function Books() {
   const navigate = useNavigate();
@@ -22,20 +20,30 @@ export default function Books() {
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState("all"); // "all", "Delivery", "PDF"
-  const [showAll, setShowAll] = useState(false);
+
+  // Server-side pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+
+  const fetchBooks = useCallback(async (page = 1) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await request(`books?page=${page}`, { useCache: false });
+      setBooks(response.data || []);
+      setPagination(response.pagination || null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [request]);
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await request("books");
-        setBooks(response.data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchBooks(currentPage);
+  }, [currentPage, i18n.language]);
 
+  useEffect(() => {
     const fetchFavorites = async () => {
       try {
         const response = await getFavorites();
@@ -45,19 +53,16 @@ export default function Books() {
         console.error("Failed to fetch favorites");
       }
     };
-
-    fetchBooks();
     fetchFavorites();
-  }, [request, getFavorites, i18n.language]);
+  }, [getFavorites]);
 
-  // Filter books by search term and type
+  // Filter books by search term and type (client-side on current page data)
   const filteredBooks = books.filter((book) => {
     const matchesSearch = book.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const bType = book.type?.toLowerCase().trim();
     const fType = typeFilter.toLowerCase();
-    
-    // Check if it matches hardcoded EN keys or current translated values
+
     const isDeliveryValue = bType === "delivery" || bType === t('books.delivery')?.toLowerCase().trim();
     const isPdfValue = bType === "pdf" || bType === "pdf only" || bType === t('books.pdf_only')?.toLowerCase().trim();
 
@@ -73,9 +78,12 @@ export default function Books() {
     return matchesSearch && matchesType;
   });
 
-  // Get books to display based on showAll state
-  const displayedBooks = showAll ? filteredBooks : filteredBooks.slice(0, BOOKS_PER_PAGE);
-  const hasMoreBooks = filteredBooks.length > BOOKS_PER_PAGE;
+  const handlePageChange = (newPage) => {
+    if (!pagination) return;
+    if (newPage < 1 || newPage > pagination.total_pages) return;
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleToggleFavorite = async (bookId) => {
     if (!isLoggedIn) {
@@ -97,6 +105,30 @@ export default function Books() {
     } finally {
       setFavoritesLoading(false);
     }
+  };
+
+  // Generate page numbers to show (with ellipsis)
+  const getPageNumbers = () => {
+    if (!pagination) return [];
+    const { total_pages, current_page } = pagination;
+    const pages = [];
+    const delta = 2;
+
+    for (let i = 1; i <= total_pages; i++) {
+      if (
+        i === 1 ||
+        i === total_pages ||
+        (i >= current_page - delta && i <= current_page + delta)
+      ) {
+        pages.push(i);
+      } else if (
+        i === current_page - delta - 1 ||
+        i === current_page + delta + 1
+      ) {
+        pages.push('...');
+      }
+    }
+    return pages;
   };
 
   if (loading) {
@@ -123,6 +155,8 @@ export default function Books() {
     );
   }
 
+  const pageNumbers = getPageNumbers();
+
   return (
     <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
       <div className="mx-auto max-w-7xl">
@@ -146,7 +180,7 @@ export default function Books() {
         {/* Type Filter Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
           <button
-            onClick={() => { setTypeFilter("all"); setShowAll(false); }}
+            onClick={() => setTypeFilter("all")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all duration-300 ${
               typeFilter === "all"
                 ? "bg-primary text-white shadow-lg shadow-primary/25"
@@ -157,7 +191,7 @@ export default function Books() {
             {t('books.filter_all')}
           </button>
           <button
-            onClick={() => { setTypeFilter("Delivery"); setShowAll(false); }}
+            onClick={() => setTypeFilter("Delivery")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all duration-300 ${
               typeFilter === "Delivery"
                 ? "bg-primary text-white shadow-lg shadow-primary/25"
@@ -168,7 +202,7 @@ export default function Books() {
             {t('books.filter_delivery')}
           </button>
           <button
-            onClick={() => { setTypeFilter("PDF"); setShowAll(false); }}
+            onClick={() => setTypeFilter("PDF")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all duration-300 ${
               typeFilter === "PDF"
                 ? "bg-primary text-white shadow-lg shadow-primary/25"
@@ -181,13 +215,19 @@ export default function Books() {
         </div>
 
         {/* Results Count */}
-        <div className="mb-6 text-sm text-text-secondary">
-          {t('books.showing_results', { shown: displayedBooks.length, total: filteredBooks.length })}
-        </div>
+        {pagination && (
+          <div className="mb-6 text-sm text-text-secondary">
+            {t('books.showing_results', {
+              shown: filteredBooks.length,
+              total: pagination.total_items
+            })}
+            {' '}— {t('books.page_of', { current: pagination.current_page, total: pagination.total_pages }) || `Page ${pagination.current_page} of ${pagination.total_pages}`}
+          </div>
+        )}
 
         {/* Books Grid */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {displayedBooks.map((book) => {
+          {filteredBooks.map((book) => {
             const price = parseFloat(book.price);
             const discountPercent = parseFloat(book.discount);
             const discountAmount = discountPercent > 0 ? (price * discountPercent / 100) : 0;
@@ -232,7 +272,7 @@ export default function Books() {
                   <h3 className="mb-2 text-lg font-semibold transition group-hover:text-primary">
                     {book.name}
                   </h3>
-                    <div 
+                    <div
                       className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 prose prose-sm dark:prose-invert max-w-none"
                       dangerouslySetInnerHTML={{ __html: book.description }}
                     />
@@ -260,24 +300,46 @@ export default function Books() {
           })}
         </div>
 
-        {/* Show More / Show Less Button */}
-        {hasMoreBooks && (
-          <div className="flex justify-center mt-10">
+        {/* Server-Side Pagination */}
+        {pagination && pagination.total_pages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            {/* Prev Button */}
             <button
-              onClick={() => setShowAll(!showAll)}
-              className="flex items-center gap-2 px-8 py-3 font-medium transition-all duration-300 border rounded-full bg-surface border-border text-text hover:border-primary hover:text-primary hover:shadow-lg"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={!pagination.prev_page_url}
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium transition-all duration-300 border rounded-full bg-surface border-border text-text hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {showAll ? (
-                <>
-                  <FiChevronUp className="text-xl" />
-                  {t('books.show_less')}
-                </>
+              <FiChevronLeft />
+              {t('books.prev') || 'Prev'}
+            </button>
+
+            {/* Page Numbers */}
+            {pageNumbers.map((page, idx) =>
+              page === '...' ? (
+                <span key={`ellipsis-${idx}`} className="px-2 py-2 text-text-secondary">…</span>
               ) : (
-                <>
-                  <FiChevronDown className="text-xl" />
-                  {t('books.show_more')}
-                </>
-              )}
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-10 h-10 rounded-full text-sm font-medium transition-all duration-300 ${
+                    page === currentPage
+                      ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                      : 'bg-surface border border-border text-text hover:border-primary hover:text-primary'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+
+            {/* Next Button */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={!pagination.next_page_url}
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium transition-all duration-300 border rounded-full bg-surface border-border text-text hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {t('books.next') || 'Next'}
+              <FiChevronRight />
             </button>
           </div>
         )}

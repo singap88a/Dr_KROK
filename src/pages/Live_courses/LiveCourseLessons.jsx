@@ -7,6 +7,7 @@ import { useUser } from "../../context/UserContext";
 import i18n from "../../i18n";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SectionItem from "../Courses/SectionItem";
+import dayjs from "dayjs";
 
 // Import Components
 import { useLessonProgress } from "./ProgressSystem/LessonProgress";
@@ -804,18 +805,9 @@ export default function LiveCourseLessons() {
   const formatSessionTime = (dateString) => {
     if (!dateString) return null;
     try {
-      const d = new Date(dateString.replace(" ", "T"));
-      const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(d);
-      const day = d.getDate().toString().padStart(2, '0');
-      const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(d);
-      const year = d.getFullYear();
-      const time = d.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: true 
-      });
-      
-      return `${weekday} • ${month} ${day}, ${year} • ${time} (Local Time)`;
+      // الاعتماد على dayjs أفضل عشان بيظبط الـ Timezone اللي راجع من الـ API بشكل أتوماتيك
+      // ومبيحصلش مشاكل في أي متصفح
+      return dayjs(dateString).format("dddd • MMM DD, YYYY • hh:mm A (Local Time)");
     } catch {
       return dateString;
     }
@@ -825,7 +817,8 @@ export default function LiveCourseLessons() {
   const isLinkActive = (startTime) => {
     if (!startTime) return false;
     try {
-      const start = new Date(startTime.replace(" ", "T")).getTime();
+      const start = dayjs(startTime).valueOf();
+      if (isNaN(start)) return false;
       const fiveMinutes = 5 * 60 * 1000;
       // يقارن مع الوقت المحدث بـ setInterval
       return currentTimeMs >= (start - fiveMinutes);
@@ -1267,8 +1260,15 @@ export default function LiveCourseLessons() {
                               const statusRaw = currentLesson?.status || currentSection?.status;
                               // API could return status as "active" or "Active"
                               const isLectureEnded = statusRaw && statusRaw.toString().toLowerCase() === "active";
-                              const active = isLinkActive(currentLesson?.started_at || currentSection?.started_at);
-                              const link = currentLesson?.zoom_link || currentSection?.zoom_link;
+                              let active = false;
+                              let link = null;
+                              if (currentLesson && currentLesson.zoom_link) {
+                                active = isLinkActive(currentLesson.started_at);
+                                link = currentLesson.zoom_link;
+                              } else if (currentSection && currentSection.zoom_link) {
+                                active = isLinkActive(currentSection.started_at);
+                                link = currentSection.zoom_link;
+                              }
                               return (
                                 <div className="flex flex-col gap-2">
                                   {isLectureEnded ? (
@@ -1368,8 +1368,15 @@ export default function LiveCourseLessons() {
                         {(currentLesson?.zoom_link || currentSection?.zoom_link) && (
                           <div className="flex flex-col items-center gap-3 mt-6">
                             {(() => {
-                              const active = isLinkActive(currentLesson?.started_at || currentSection?.started_at);
-                              const link = currentLesson?.zoom_link || currentSection?.zoom_link;
+                              let active = false;
+                              let link = null;
+                              if (currentLesson && currentLesson.zoom_link) {
+                                active = isLinkActive(currentLesson.started_at);
+                                link = currentLesson.zoom_link;
+                              } else if (currentSection && currentSection.zoom_link) {
+                                active = isLinkActive(currentSection.started_at);
+                                link = currentSection.zoom_link;
+                              }
                               return (
                                 <>
                                   <a
