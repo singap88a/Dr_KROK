@@ -1,127 +1,383 @@
-import React from "react";
-import { FaUser, FaClock, FaPlay, FaStar } from "react-icons/fa";
+import React, { useState } from "react";
+import {
+  FaPlay,
+  FaStar,
+  FaVideo,
+  FaBroadcastTower,
+  FaCalendarAlt,
+  FaGlobe,
+  FaTag,
+  FaGraduationCap,
+  FaClock,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-const MyCourses = ({ enrolledCourses, renderStars }) => {
+// ─── helpers ────────────────────────────────────────────────────────────────
+const isLive = (course) =>
+  course.type === "live_course" ||
+  course.type === "live" ||
+  course.course_type === "live_course" ||
+  course.course_type === "live";
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return null;
+  try {
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+};
+
+const formatPrice = (price, discount) => {
+  if (!price) return null;
+  const original = parseFloat(price);
+  const pct = discount ? parseFloat(discount) : 0;
+  const final = pct ? original - (original * pct) / 100 : original;
+  return { original, pct, final };
+};
+
+// ─── Stars ──────────────────────────────────────────────────────────────────
+const Stars = ({ rating }) => {
+  const val = Number(rating) || 0;
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FaStar
+          key={s}
+          className={`text-xs ${
+            s <= val ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"
+          }`}
+        />
+      ))}
+    </span>
+  );
+};
+
+// ─── Single Card ─────────────────────────────────────────────────────────────
+const CourseCard = ({ course, onClick }) => {
+  const { t } = useTranslation();
+  const live = isLive(course);
+  const price = formatPrice(course.price, course.discount);
+
+  return (
+    <div
+      onClick={onClick}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border cursor-pointer
+        bg-surface border-border shadow-sm
+        transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+    >
+      {/* Thumbnail */}
+      <div className="relative h-44 overflow-hidden shrink-0">
+        <img
+          src={course.image || course.image_url || "/course-placeholder.jpg"}
+          alt={course.title || course.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={(e) => {
+            e.currentTarget.src = "/course-placeholder.jpg";
+          }}
+        />
+
+        {/* dark overlay on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300" />
+
+        {/* Play button */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+              live
+                ? "bg-rose-500"
+                : "bg-primary"
+            }`}
+          >
+            {live ? (
+              <FaBroadcastTower className="text-white text-lg" />
+            ) : (
+              <FaPlay className="text-white text-sm translate-x-0.5" />
+            )}
+          </div>
+        </div>
+
+        {/* Type badge – top-left */}
+        <span
+          className={`absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shadow ${
+            live
+              ? "bg-rose-500 text-white"
+              : "bg-primary text-white"
+          }`}
+        >
+          {live ? (
+            <><FaBroadcastTower className="inline mr-1 text-[10px]" />Live</>
+          ) : (
+            <><FaVideo className="inline mr-1 text-[10px]" />Video</>
+          )}
+        </span>
+
+        {/* Level badge – top-right */}
+        {course.level && (
+          <span className="absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/50 text-white capitalize">
+            {course.level}
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-col flex-1 p-4 gap-2">
+        {/* Title */}
+        <h3 className="font-semibold text-base line-clamp-2 leading-snug">
+          {course.title || course.name}
+        </h3>
+
+        {/* Meta row */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-secondary">
+          {course.language && (
+            <span className="flex items-center gap-1">
+              <FaGlobe className="shrink-0" />
+              {course.language}
+            </span>
+          )}
+          {course.college_year && (
+            <span className="flex items-center gap-1">
+              <FaGraduationCap className="shrink-0" />
+              {t("courses.collegeYear")} {course.college_year}
+            </span>
+          )}
+
+          {course.course_duration_days && (
+            <span className="flex items-center gap-1">
+              <FaClock className="shrink-0" />
+              {course.course_duration_days}d
+            </span>
+          )}
+        </div>
+
+        {/* Live: session date */}
+        {live && course.started_at && (
+          <div className="flex items-center gap-1.5 text-xs font-medium text-rose-500">
+            <FaCalendarAlt />
+            {formatDate(course.started_at)}
+          </div>
+        )}
+
+        {/* Rating */}
+        {course.avg_rating !== undefined && course.avg_rating !== null && (
+          <div className="flex items-center gap-1.5">
+            <Stars rating={course.avg_rating} />
+            <span className="text-xs text-text-secondary">{Number(course.avg_rating).toFixed(1)}</span>
+          </div>
+        )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Price + CTA */}
+        <div className="flex items-center justify-between mt-1 pt-3 border-t border-border">
+          <div className="flex flex-col">
+            {price ? (
+              <>
+                {price.pct > 0 && (
+                  <span className="text-[11px] line-through text-text-secondary">
+                    ₴{price.original.toLocaleString()}
+                  </span>
+                )}
+                <span className="text-sm font-bold text-primary">
+                  ₴{price.final.toLocaleString()}
+                  {price.pct > 0 && (
+                    <span className="ml-1 text-[11px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full">
+                      -{price.pct}%
+                    </span>
+                  )}
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          <button
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white transition-all ${
+              live
+                ? "bg-rose-500 hover:bg-rose-600"
+                : "bg-primary hover:bg-secondary"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            {live ? t("liveCourses.joinLive") : t("myCourses.continue")}
+            <FaChevronRight className="text-[10px]" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Section header ──────────────────────────────────────────────────────────
+const SectionHeader = ({ icon: Icon, label, count, accent }) => (
+  <div className={`flex items-center gap-3 mb-4`}>
+    <span
+      className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+        accent === "live"
+          ? "bg-rose-100 dark:bg-rose-900/30 text-rose-500"
+          : "bg-primary/10 text-primary"
+      }`}
+    >
+      <Icon className="text-base" />
+    </span>
+    <div>
+      <h3 className="font-bold text-base">{label}</h3>
+    </div>
+    <span
+      className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full ${
+        accent === "live"
+          ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600"
+          : "bg-primary/10 text-primary"
+      }`}
+    >
+      {count}
+    </span>
+  </div>
+);
+
+// ─── Filter tabs ─────────────────────────────────────────────────────────────
+const FILTERS = ["all", "video_course", "live_course"];
+
+// ─── Main component ───────────────────────────────────────────────────────────
+const MyCourses = ({ enrolledCourses }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [filter, setFilter] = useState("all");
 
-  const handleCourseClick = (courseId, courseType) => {
-    // Check if it's a live course based on type or other indicators
-    const isLiveCourse = courseType === 'live_course' ||
-                        courseType === 'live' ||
-                        (typeof courseType === 'object' && courseType?.is_live) ||
-                        courseId.toString().startsWith('live_');
-
-    if (isLiveCourse) {
-      navigate(`/live-courses/${courseId}/lessons`);
+  const handleCourseClick = (course) => {
+    if (isLive(course)) {
+      navigate(`/live-courses/${course.id}/lessons`);
     } else {
-      navigate(`/courses/${courseId}/lessons`);
+      navigate(`/courses/${course.id}/lessons`);
     }
   };
 
+  const videoCourses = enrolledCourses.filter((c) => !isLive(c));
+  const liveCourses = enrolledCourses.filter((c) => isLive(c));
+
+  const visibleVideo =
+    filter === "live_course" ? [] : filter === "video_course" ? videoCourses : videoCourses;
+  const visibleLive =
+    filter === "video_course" ? [] : filter === "live_course" ? liveCourses : liveCourses;
+
+  const filterLabel = (f) => {
+    if (f === "all") return t("testYourself.filters.all");
+    if (f === "video_course") return t("courses.videoCourse");
+    return t("courses.liveCourse");
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between pt-2">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <h2 className="text-2xl font-bold">{t("myCourses.title")}</h2>
         <span className="text-sm text-text-secondary">
           {t("myCourses.enrolledCount", { count: enrolledCourses.length })}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-        {enrolledCourses.map((course) => (
-          <div
-            key={course.id}
-            className="overflow-hidden transition-shadow duration-200 border shadow-sm cursor-pointer bg-surface border-border rounded-xl hover:shadow-lg"
-            onClick={() => handleCourseClick(course.id, course.type || course.course_type)}
-          >
-            <div className="relative">
-              <img
-                src={course.image || course.image_url || "/course-placeholder.jpg"}
-                alt={course.title || course.name}
-                className="object-cover w-full h-48"
-                onError={(e) => { e.currentTarget.src = "/course-placeholder.jpg"; }}
+      {/* Filter tabs */}
+      {enrolledCourses.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          {FILTERS.map((f) => {
+            const cnt =
+              f === "all"
+                ? enrolledCourses.length
+                : f === "video_course"
+                ? videoCourses.length
+                : liveCourses.length;
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                  filter === f
+                    ? f === "live_course"
+                      ? "bg-rose-500 text-white border-rose-500 shadow"
+                      : "bg-primary text-white border-primary shadow"
+                    : "bg-surface border-border text-text-secondary hover:border-primary hover:text-primary"
+                }`}
+              >
+                {f === "live_course" ? (
+                  <FaBroadcastTower className="text-xs" />
+                ) : f === "video_course" ? (
+                  <FaVideo className="text-xs" />
+                ) : (
+                  <FaTag className="text-xs" />
+                )}
+                {filterLabel(f)}
+                <span
+                  className={`text-[11px] px-1.5 py-0.5 rounded-full font-bold ${
+                    filter === f ? "bg-white/20" : "bg-border"
+                  }`}
+                >
+                  {cnt}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Video Courses section ── */}
+      {visibleVideo.length > 0 && (
+        <section>
+          <SectionHeader
+            icon={FaVideo}
+            label={t("courses.videoCourse")}
+            count={visibleVideo.length}
+            accent="video"
+          />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {visibleVideo.map((course, idx) => (
+              <CourseCard
+                key={`video-${course.id}-${idx}`}
+                course={course}
+                onClick={() => handleCourseClick(course)}
               />
-              <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 opacity-0 bg-black/20 hover:opacity-100">
-                <button
-                  className="px-4 py-2 font-medium transition-colors rounded-lg bg-white/90 dark:bg-black/50 text-text dark:text-white hover:bg-white dark:hover:bg-black/70"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCourseClick(course.id, course.type || course.course_type);
-                  }}
-                >
-                  <FaPlay className="inline mr-2" />
-                  {t("myCourses.continueLearning")}
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <h3 className="mb-2 text-lg font-semibold line-clamp-2">
-                {course.title || course.name}
-              </h3>
-
-              <div className="flex items-center gap-2 mb-3">
-                <FaUser className="text-sm text-primary" />
-                <span className="text-sm text-text-secondary">
-                  {course.instructor || course.instructor_name || "Instructor"}
-                </span>
-              </div>
-
-              {/* <div className="flex items-center gap-2 mb-4">
-                <FaClock className="text-sm text-primary" />
-                <span className="text-sm text-text-secondary">
-                  {course.duration || "Duration not specified"}
-                </span>
-              </div> */}
-
-              {/* Progress Bar - Show if progress data exists */}
-              {course.progress !== undefined && (
-                <div className="mb-4">
-                  <div className="flex justify-between mb-1 text-sm">
-                    <span>{t("myCourses.progress")}</span>
-                    <span>{course.progress}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full">
-                    <div
-                      className="h-2 transition-all duration-300 rounded-full bg-primary"
-                      style={{ width: `${course.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {course.rating && renderStars(course.rating)}
-                  {course.rating && (
-                    <span className="ml-1 text-sm text-text-secondary">
-                      {course.rating}
-                    </span>
-                  )}
-                </div>
-                <button
-                  className="px-4 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCourseClick(course.id, course.type || course.course_type);
-                  }}
-                >
-                  {t("myCourses.continue")}
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </section>
+      )}
 
+      {/* ── Live Courses section ── */}
+      {visibleLive.length > 0 && (
+        <section>
+          <SectionHeader
+            icon={FaBroadcastTower}
+            label={t("courses.liveCourse")}
+            count={visibleLive.length}
+            accent="live"
+          />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {visibleLive.map((course, idx) => (
+              <CourseCard
+                key={`live-${course.id}-${idx}`}
+                course={course}
+                onClick={() => handleCourseClick(course)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Empty state */}
       {enrolledCourses.length === 0 && (
-        <div className="py-12 text-center">
-          <FaPlay className="mx-auto mb-4 text-4xl text-gray-400" />
-          <h3 className="mb-2 text-lg font-semibold text-text-secondary">{t("myCourses.noCourses")}</h3>
-          <p className="text-text-secondary">{t("myCourses.browseCourses")}</p>
+        <div className="py-16 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <FaPlay className="text-2xl text-primary" />
+          </div>
+          <h3 className="mb-2 text-lg font-semibold">{t("myCourses.noCourses")}</h3>
+          <p className="text-text-secondary text-sm">{t("myCourses.browseCourses")}</p>
         </div>
       )}
     </div>

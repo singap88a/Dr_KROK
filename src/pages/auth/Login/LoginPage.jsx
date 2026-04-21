@@ -45,6 +45,7 @@ export default function LoginPage() {
       if (data.success) {
         toast.success("✅ Login successful!", { position: "top-right" });
         userLogin(data.data.token, data.data);
+        localStorage.setItem('DR_KROK_show_completion_modal', 'true');
         setTimeout(() => {
           navigate("/profile", { replace: true });
         }, 1500);
