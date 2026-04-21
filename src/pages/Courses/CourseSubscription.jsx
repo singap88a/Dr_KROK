@@ -46,7 +46,7 @@ export default function CourseSubscription() {
   const location = useLocation();
   const { t } = useTranslation();
   const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request, getAuthToken } = useApi();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, userData } = useUser();
   const { addToCart, cartItems, removeFromCart } = useCart();
 
   const isLiveCourse = location.pathname.includes('live-courses');
@@ -217,6 +217,15 @@ export default function CourseSubscription() {
   const handleSubscription = async () => {
     if (!isLoggedIn) {
       navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+
+    const isProfileIncomplete = (u) => {
+      return !u?.phone || !u?.university_id || !u?.college_year;
+    };
+
+    if (isProfileIncomplete(userData)) {
+      setShowProfileModal(true);
       return;
     }
 

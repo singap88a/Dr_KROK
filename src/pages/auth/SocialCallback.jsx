@@ -59,9 +59,7 @@ const SocialCallback = () => {
               
               console.log("Auth Flow:", authFlow, "Return URL:", returnUrl);
 
-              if (authFlow === 'register') {
-                localStorage.setItem('DR_KROK_show_completion_modal', 'true');
-              }
+              localStorage.setItem('DR_KROK_show_completion_modal', 'true');
               
               const redirectPath = "/profile";
               
@@ -94,9 +92,7 @@ const SocialCallback = () => {
             const authFlow = localStorage.getItem('DR_KROK_auth_flow');
             const returnUrl = localStorage.getItem('DR_KROK_return_url');
             
-            if (authFlow === 'register') {
-              localStorage.setItem('DR_KROK_show_completion_modal', 'true');
-            }
+            localStorage.setItem('DR_KROK_show_completion_modal', 'true');
             
             const redirectPath = "/profile";
             
