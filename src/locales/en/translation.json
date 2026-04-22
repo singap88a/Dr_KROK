@@ -682,8 +682,10 @@
 
   "courses": {
     "askInstructor": "Ask the Instructor",
-    "askInstructorDescription": "Have questions about this course? Contact the instructor directly via WhatsApp for personalized assistance.",
+    "askInstructorDescription": "Have questions about this course? Contact the instructor directly for personalized assistance.",
     "contactInstructor": "Contact Instructor",
+    "contactWhatsApp": "Contact via WhatsApp",
+    "contactTelegram": "Ask on Telegram",
     "featuredVideoCourses": "Featured Video Courses",
     "students": "Students",
     "browseCourses": "Browse Courses",

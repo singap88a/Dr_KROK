@@ -623,6 +623,7 @@ export default function CourseLessons() {
               course={course}
               courseProgress={courseProgress}
               isLoggedIn={isLoggedIn}
+              hasAccess={hasAccess}
               lessonStatuses={lessonStatuses}
               onLessonComplete={handleLessonComplete}
               onFileClick={handleFileClick}

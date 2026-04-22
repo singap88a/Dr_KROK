@@ -150,6 +150,18 @@ function InstructorDetails() {
                   {t("instructors.details.yearsOfExperience")}:{" "}
                   {years_of_experience}
                 </div>
+
+                {telegram && (
+                  <a
+                    href={telegram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-bold text-white transition-all transform bg-primary rounded-xl hover:bg-primary/90 hover:scale-105 shadow-lg shadow-primary/20 mt-2"
+                  >
+                    <FaTelegram size={18} />
+                    {t("courses.askInstructor", "Ask the Instructor")}
+                  </a>
+                )}
               </div>
             </div>
 
