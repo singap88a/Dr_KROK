@@ -916,7 +916,15 @@
     "minimumInstallment": "Мінімальний внесок: $100",
     "totalPrice": "Загальна ціна",
     "installmentErrorMin": "Мінімальна сума внеску - 100$",
-    "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну"
+    "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну",
+    "topStudents": {
+      "title": "Кращі студенти",
+      "subtitle": "Зустрічайте кращих студентів цього курсу",
+      "rank": "Місце",
+      "score": "Бал",
+      "percentage": "Відсоток",
+      "noStudents": "Кращих студентів поки немає."
+    }
   },
 
   "orders": {

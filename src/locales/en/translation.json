@@ -943,7 +943,15 @@
     "student": "Student",
     "courseTitle": "Course Title",
     "certificateFileName": "certificate",
-    "drKrokAcademy": "Dr. KROK Academy"
+    "drKrokAcademy": "Dr. KROK Academy",
+    "topStudents": {
+      "title": "Top Students",
+      "subtitle": "Meet the top achievers of this course",
+      "rank": "Rank",
+      "score": "Score",
+      "percentage": "Percentage",
+      "noStudents": "No top students yet."
+    }
   },
   "orders": {
     "title": "My Orders",

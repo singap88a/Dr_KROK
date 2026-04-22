@@ -36,6 +36,7 @@ import i18n from "../../i18n";
 import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import LeaveReview from "./LeaveReview";
+import TopStudentsSlider from "../../components/TopStudentsSlider";
 
 export default function CourseDetails() {
   const { id } = useParams();
@@ -54,18 +55,18 @@ export default function CourseDetails() {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isInstructorExpanded, setIsInstructorExpanded] = useState(false);
   const videoRef = useRef(null);
-  
+
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
       try {
         setLoading(true);
         setError("");
-        
+
         const data = await getVideoCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(data);
-        
+
         // Set reviews from course data
         if (data && data.ratings && Array.isArray(data.ratings)) {
           setReviews(data.ratings);
@@ -92,7 +93,7 @@ export default function CourseDetails() {
     };
 
     loadData();
-    
+
     return () => {
       mounted = false;
     };
@@ -199,14 +200,14 @@ export default function CourseDetails() {
           hour: '2-digit',
           minute: '2-digit'
         });
-        
+
         return `${formattedDate} (Ukraine Time)`;
       }
 
       // Fallback for other formats
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      
+
       const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -214,7 +215,7 @@ export default function CourseDetails() {
         hour: '2-digit',
         minute: '2-digit'
       });
-      
+
       return `${formattedDate} (Ukraine Time)`;
     } catch {
       return dateString;
@@ -264,7 +265,7 @@ export default function CourseDetails() {
         {/* تفاصيل الكورس */}
         <div className="flex flex-col justify-between space-y-4 sm:space-y-6">
           <h1 className="text-2xl font-bold sm:text-3xl">{course.title}</h1>
-          <div 
+          <div
             className={`text-sm text-text-secondary sm:text-base ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
             dangerouslySetInnerHTML={{ __html: course.description }}
           />
@@ -299,7 +300,7 @@ export default function CourseDetails() {
                 </span>
                 {/* نسبة الخصم */}
                 <span className="px-2 py-1 text-xs font-semibold text-white bg-red-600 rounded">
-                 {Math.round(Number(course.discount))}%
+                  {Math.round(Number(course.discount))}%
                 </span>
               </>
             )}
@@ -395,8 +396,8 @@ export default function CourseDetails() {
         <div className="lg:col-span-2">
           {/* Leave Review Component */}
           <div className="mb-8">
-            <LeaveReview 
-              courseId={id} 
+            <LeaveReview
+              courseId={id}
               onReviewSubmitted={handleReviewSubmitted}
               userHasReviewed={userHasReviewed}
             />
@@ -407,7 +408,7 @@ export default function CourseDetails() {
             <h3 className="text-lg font-semibold sm:text-xl">
               {t('courses.reviews') || 'Reviews'} ({reviews.length})
             </h3>
-            
+
             {/* Rating Distribution */}
             {reviews.length > 0 && (
               <div className="p-4 mb-6 border rounded-lg border-border bg-surface">
@@ -425,7 +426,7 @@ export default function CourseDetails() {
                             ))}
                           </div>
                           <div className="flex-1 h-3 overflow-hidden bg-gray-200 rounded-full">
-                            <div 
+                            <div
                               className="h-full transition-all duration-300 bg-yellow-400"
                               style={{ width: `${percentage}%` }}
                             />
@@ -443,7 +444,7 @@ export default function CourseDetails() {
                 </div>
               </div>
             )}
-            
+
             {reviews.length === 0 && (
               <p className="text-text-muted">
                 {t('courses.noReviews') || 'No reviews yet.'}
@@ -509,7 +510,7 @@ export default function CourseDetails() {
             <ul className="mt-4 space-y-2 text-sm">
               {course.instructor?.years_of_experience && (
                 <li className="flex items-center gap-2">
-                  <FaChalkboardTeacher className="text-primary" /> 
+                  <FaChalkboardTeacher className="text-primary" />
                   {course.instructor.years_of_experience} {t("courses.yearsOfExperience", "Years of Experience")}
                 </li>
               )}
@@ -538,7 +539,7 @@ export default function CourseDetails() {
               )}
               {course.instructor?.email && (
                 <li className="flex items-center gap-2">
-                  <FaEnvelope className="text-primary" /> 
+                  <FaEnvelope className="text-primary" />
                   <a href={`mailto:${course.instructor.email}`} className="hover:text-secondary">
                     {course.instructor.email}
                   </a>
@@ -546,7 +547,7 @@ export default function CourseDetails() {
               )}
               {course.instructor?.phone && (
                 <li className="flex items-center gap-2">
-                  <FaPhone className="text-primary" /> 
+                  <FaPhone className="text-primary" />
                   <a href={`tel:${course.instructor.phone}`} className="hover:text-secondary">
                     {course.instructor.phone}
                   </a>
@@ -584,6 +585,9 @@ export default function CourseDetails() {
           </div>
         </div>
       </div>
+
+      {/* Top Students Section */}
+      <TopStudentsSlider students={course.top_students} />
     </section>
   );
 }

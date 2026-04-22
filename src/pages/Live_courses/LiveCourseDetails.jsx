@@ -38,6 +38,7 @@ import i18n from "../../i18n";
 import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import LeaveReview from "../Courses/LeaveReview";
+import TopStudentsSlider from "../../components/TopStudentsSlider";
 
 export default function LiveCourseDetails() {
   const { id } = useParams();
@@ -151,7 +152,7 @@ export default function LiveCourseDetails() {
       ? course.video
       : null;
   }, [course]);
-// ////
+  // ////
   const getLevelTranslation = (level) => {
     const levelMap = {
       'beginner': t('courses.beginner', 'Beginner'),
@@ -166,7 +167,7 @@ export default function LiveCourseDetails() {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      
+
       const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -174,7 +175,7 @@ export default function LiveCourseDetails() {
         hour: '2-digit',
         minute: '2-digit'
       });
-      
+
       return `${formattedDate} (Ukraine Time)`;
     } catch {
       return dateString;
@@ -255,7 +256,7 @@ export default function LiveCourseDetails() {
         <div className="flex flex-col justify-between space-y-4 sm:space-y-6">
           <h1 className="text-2xl font-bold sm:text-3xl">{course.title}</h1>
           <div className="text-sm text-text-secondary sm:text-base">
-            <div 
+            <div
               className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}
               dangerouslySetInnerHTML={{ __html: course.description }}
             />
@@ -291,7 +292,7 @@ export default function LiveCourseDetails() {
                 </span>
                 {/* نسبة الخصم */}
                 <span className="px-2 py-1 text-xs font-semibold text-white bg-red-600 rounded">
-                 {Math.round(Number(course.discount))}%
+                  {Math.round(Number(course.discount))}%
                 </span>
               </>
             )}
@@ -365,7 +366,7 @@ export default function LiveCourseDetails() {
         </div>
       </div>
 
- 
+
 
       {/* Review + Instructor (if available) */}
       <div className="grid max-w-6xl gap-8 mx-auto mt-12 sm:mt-16 lg:grid-cols-3">
@@ -515,6 +516,9 @@ export default function LiveCourseDetails() {
           </div>
         )}
       </div>
+
+      {/* Top Students Section */}
+      <TopStudentsSlider students={course.top_students} />
     </section>
   );
 }
