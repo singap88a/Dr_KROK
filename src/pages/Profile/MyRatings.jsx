@@ -4,7 +4,7 @@ import { FaStar, FaEye, FaCalendarAlt, FaUser, FaBook } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../../context/UserContext';
 import { useApi } from '../../context/ApiContext';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import LoadingSpinner from '../../components/Common/LoadingSpinner';
 
 const MyRatings = ({ user, onRatingsUpdate }) => {
   const { t } = useTranslation();

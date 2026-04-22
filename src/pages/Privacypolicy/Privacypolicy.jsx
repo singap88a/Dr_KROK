@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import he from 'he'
 import { useApi } from '../../context/ApiContext'
 import { useTranslation } from 'react-i18next'
-import LoadingSpinner from '../../components/LoadingSpinner'
+import LoadingSpinner from '../../components/Common/LoadingSpinner'
 
 export default function Privacypolicy() {
   const { request } = useApi()

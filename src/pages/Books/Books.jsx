@@ -5,7 +5,7 @@ import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 
 export default function Books() {
   const navigate = useNavigate();

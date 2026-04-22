@@ -34,9 +34,9 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import { useUser } from "../../context/UserContext";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import LeaveReview from "./LeaveReview";
-import TopStudentsSlider from "../../components/TopStudentsSlider";
+import TopStudentsSlider from "../../components/Common/TopStudentsSlider";
 
 export default function CourseDetails() {
   const { id } = useParams();

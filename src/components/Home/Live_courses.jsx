@@ -12,7 +12,7 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../Common/LoadingSpinner";
 
 export default function Live_courses({ courses }) {
   const { t } = useTranslation();

@@ -9,8 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
-import LoadingSpinner from "../../components/LoadingSpinner";
-import Pagination from "../../components/Pagination";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
+import Pagination from "../../components/Common/Pagination";
 import VideoCourses from "./VideoCourses";
 import LiveCourses from "../Live_courses/LiveCourses";
 

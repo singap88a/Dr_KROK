@@ -9,7 +9,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
-import Pagination from "../Pagination";
+import Pagination from "../Common/Pagination";
 
 const PER_PAGE = 6;
 

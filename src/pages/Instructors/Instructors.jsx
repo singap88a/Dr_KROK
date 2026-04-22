@@ -12,7 +12,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
-import Pagination from "../../components/Pagination";
+import Pagination from "../../components/Common/Pagination";
 
 const PER_PAGE = 12;
 

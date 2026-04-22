@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { FaArrowLeft, FaTrophy, FaRedo, FaCheckCircle, FaClipboardList } from "react-icons/fa";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 
 export default function CourseSectionTestResults() {
   const { id } = useParams();

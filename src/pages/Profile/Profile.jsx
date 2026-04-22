@@ -31,9 +31,9 @@ import MyOrders from "./MyOrders";
 import MyCourses from "./MyCourses";
 import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
-import LogoutConfirmModal from "../../components/LogoutConfirmModal";
+import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import ProfileCompletionModal from "./ProfileCompletionModal";
 
 export default function Profile() {

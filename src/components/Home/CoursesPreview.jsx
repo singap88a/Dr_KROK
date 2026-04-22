@@ -11,7 +11,7 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../Common/LoadingSpinner";
 import RatingStars from "../../pages/Courses/components/RatingStars";
 
 export default function CoursesPreview({ courses }) {

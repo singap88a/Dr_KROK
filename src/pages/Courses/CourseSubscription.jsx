@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 import { useCart } from "../../context/CartContext";
-import LoadingSpinner from "../../components/LoadingSpinner";
-import CouponInput from "../../components/CouponInput";
-import SubscriptionSuccess from "../../components/SubscriptionSuccess";
-import IncompleteProfileModal from "../../components/IncompleteProfileModal";
-import SaveBeforeLoginModal from "../../components/SaveBeforeLoginModal";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
+import CouponInput from "../../components/Common/CouponInput";
+import SubscriptionSuccess from "../../components/Subscription/SubscriptionSuccess";
+import IncompleteProfileModal from "../../components/Modals/IncompleteProfileModal";
+import SaveBeforeLoginModal from "../../components/Modals/SaveBeforeLoginModal";
 import { toast } from "react-toastify";
 import {
   FaArrowLeft,

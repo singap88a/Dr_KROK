@@ -5,7 +5,7 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import i18n from "../../i18n";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import SectionItem from "../Courses/SectionItem";
 import dayjs from "dayjs";
 
