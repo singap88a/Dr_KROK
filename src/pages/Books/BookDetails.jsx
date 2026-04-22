@@ -6,7 +6,7 @@ import { useUser } from "../../context/UserContext";
 import he from 'he';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import PDFViewer from "../../components/Books/PDFViewer";
 
 export default function BookDetails() {

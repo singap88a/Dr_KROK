@@ -13,7 +13,7 @@ import {
   FaFilePdf,
   FaAward
 } from "react-icons/fa";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/Common/LoadingSpinner";
 
 export default function Certificate() {
   const { id } = useParams();

@@ -18,6 +18,8 @@ import {
   FaWhatsapp,
   FaSearch,
   FaChevronDown,
+  FaBook,
+  FaStethoscope,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
@@ -75,12 +77,30 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     gender: "",
     university_id: "",
     college_year: "",
+    category_id: "",
+    specialization_id: "",
     image: null,
     facebook: "",
     instagram: "",
     telegram: "",
     whatsapp: "",
   });
+
+  const [categories, setCategories] = useState([]);
+  const [catPage, setCatPage] = useState(1);
+  const [catTotalPages, setCatTotalPages] = useState(1);
+  const [catLoading, setCatLoading] = useState(false);
+  const [catSearch, setCatSearch] = useState("");
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+  const catDropdownRef = useRef(null);
+
+  const [specializations, setSpecializations] = useState([]);
+  const [specPage, setSpecPage] = useState(1);
+  const [specTotalPages, setSpecTotalPages] = useState(1);
+  const [specLoading, setSpecLoading] = useState(false);
+  const [specSearch, setSpecSearch] = useState("");
+  const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
+  const specDropdownRef = useRef(null);
   const [imagePreview, setImagePreview] = useState("");
   const { t, i18n } = useTranslation();
 
@@ -112,11 +132,61 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     }
   }, [request]);
 
+  // Fetch categories with pagination
+  const fetchCategories = useCallback(async (page = 1, append = false) => {
+    try {
+      setCatLoading(true);
+      const data = await request(`categories?page=${page}&per_page=15`, { useCache: true });
+      if (data.success) {
+        const newCats = data.data || [];
+        setCategories(prev => append ? [...prev, ...newCats] : newCats);
+        if (data.pagination) {
+          setCatTotalPages(data.pagination.total_pages || 1);
+          setCatPage(data.pagination.current_page || page);
+        } else {
+          setCatTotalPages(1);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setCatLoading(false);
+    }
+  }, [request]);
+
+  // Fetch specializations with pagination
+  const fetchSpecializations = useCallback(async (page = 1, append = false) => {
+    try {
+      setSpecLoading(true);
+      const data = await request(`specializations?page=${page}&per_page=15`, { useCache: true });
+      if (data.success) {
+        const newSpecs = data.data || [];
+        setSpecializations(prev => append ? [...prev, ...newSpecs] : newSpecs);
+        if (data.pagination) {
+          setSpecTotalPages(data.pagination.total_pages || 1);
+          setSpecPage(data.pagination.current_page || page);
+        } else {
+          setSpecTotalPages(1);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching specializations:", error);
+    } finally {
+      setSpecLoading(false);
+    }
+  }, [request]);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (uniDropdownRef.current && !uniDropdownRef.current.contains(e.target)) {
         setUniDropdownOpen(false);
+      }
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) {
+        setCatDropdownOpen(false);
+      }
+      if (specDropdownRef.current && !specDropdownRef.current.contains(e.target)) {
+        setSpecDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -126,6 +196,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   // Fetch universities and college years on component mount
   useEffect(() => {
     fetchUniversities(1, false);
+    fetchCategories(1, false);
+    fetchSpecializations(1, false);
 
     const fetchCollegeYears = async () => {
       try {
@@ -156,6 +228,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: user.gender || "",
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
+        category_id: user.category?.id || user.category_id || "",
+        specialization_id: user.specialization?.id || user.specialization_id || "",
         image: null,
         facebook: user.facebook || "",
         instagram: user.instagram || "",
@@ -279,6 +353,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       return;
     }
 
+
     setLoading(true);
     try {
       const token = getAuthToken();
@@ -307,6 +382,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: formData.gender || "",
         university_id: parseInt(formData.university_id) || 0,
         college_year: formData.college_year,
+        category_id: parseInt(formData.category_id) || 0,
+        specialization_id: parseInt(formData.specialization_id) || 0,
         facebook: formData.facebook || "",
         instagram: formData.instagram || "",
         telegram: formData.telegram || "",
@@ -371,6 +448,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: user.gender || "",
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
+        category_id: user.category?.id || user.category_id || "",
+        specialization_id: user.specialization?.id || user.specialization_id || "",
         image: null,
         facebook: user.facebook || "",
         instagram: user.instagram || "",
@@ -444,7 +523,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Picture Section */}
-        <div className="p-6 text-center border bg-surface border-border rounded-xl">
+        <div className="p-6 text-center border bg-surface border-border rounded-xl h-fit sticky top-24">
           <div className="relative w-32 h-32 mx-auto mb-4">
             <img
               src={imagePreview || "/user.png"}
@@ -480,6 +559,166 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
           {formData.image && (
             <p className="mt-2 text-sm text-green-600">New image selected</p>
           )}
+
+          {/* Social Media Section (Relocated) */}
+          <div className="mt-8 pt-8 border-t border-border">
+            <h4 className="mb-4 text-sm font-bold text-left uppercase tracking-wider opacity-60 flex items-center gap-2">
+              <FaChevronDown className="text-[10px]" /> {t('profile.social_media')}
+            </h4>
+            <div className="space-y-3">
+              {/* Facebook */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaFacebook className="inline mr-1 text-blue-600" /> Facebook
+                    </label>
+                    <input
+                      type="url"
+                      name="facebook"
+                      value={formData.facebook}
+                      onChange={handleInputChange}
+                      placeholder="https://facebook.com/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.facebook || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.facebook ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-blue-100 dark:bg-blue-900/30">
+                        <FaFacebook className="text-blue-600 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">Facebook</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.facebook ? "View" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+
+              {/* Instagram */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaInstagram className="inline mr-1 text-pink-600" /> Instagram
+                    </label>
+                    <input
+                      type="url"
+                      name="instagram"
+                      value={formData.instagram}
+                      onChange={handleInputChange}
+                      placeholder="https://instagram.com/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.instagram || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.instagram ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-pink-100 dark:bg-pink-900/30">
+                        <FaInstagram className="text-pink-600 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">Instagram</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.instagram ? "View" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+
+              {/* Telegram */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaTelegram className="inline mr-1 text-blue-500" /> Telegram
+                    </label>
+                    <input
+                      type="url"
+                      name="telegram"
+                      value={formData.telegram}
+                      onChange={handleInputChange}
+                      placeholder="https://t.me/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.telegram || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.telegram ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-blue-50 dark:bg-blue-900/20">
+                        <FaTelegram className="text-blue-500 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">Telegram</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.telegram ? "View" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaWhatsapp className="inline mr-1 text-green-600" /> WhatsApp
+                    </label>
+                    <input
+                      type="tel"
+                      name="whatsapp"
+                      value={formData.whatsapp}
+                      onChange={handleInputChange}
+                      placeholder="Wa.me/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.whatsapp ? (user.whatsapp.includes('http') ? user.whatsapp : `https://wa.me/${user.whatsapp}`) : "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.whatsapp ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-green-100 dark:bg-green-900/30">
+                        <FaWhatsapp className="text-green-600 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">WhatsApp</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.whatsapp ? "Chat" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Profile Details */}
@@ -503,9 +742,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaUser className="text-primary" />
-                    <span>{user.name}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaUser className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.name}</span>
                   </div>
                 )}
               </div>
@@ -525,9 +766,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaEnvelope className="text-primary" />
-                    <span>{user.email}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaEnvelope className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.email}</span>
                   </div>
                 )}
               </div>
@@ -547,9 +790,107 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaPhone className="text-primary" />
-                    <span>{user.phone || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaPhone className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.phone || t('profile.not_provided')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.category')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
+                </label>
+                {isEditing ? (
+                  <div className="relative" ref={catDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setCatDropdownOpen(o => !o)}
+                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
+                    >
+                      <span className={formData.category_id ? "" : "text-gray-400"}>
+                        {formData.category_id
+                          ? categories.find(c => String(c.id) === String(formData.category_id))?.name || t('profile.select_category')
+                          : t('profile.select_category')}
+                      </span>
+                      <FaChevronDown className={`text-xs transition-transform ${catDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {catDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
+                        <div className="flex items-center gap-2 p-2 border-b border-border">
+                          <FaSearch className="text-xs text-gray-400 shrink-0" />
+                          <input
+                            type="text"
+                            value={catSearch}
+                            onChange={e => setCatSearch(e.target.value)}
+                            placeholder={t('profile.search_category', 'Search category...')}
+                            className="flex-1 text-sm bg-transparent outline-none dark:text-white"
+                            autoFocus
+                          />
+                        </div>
+                        <ul className="overflow-y-auto flex-1">
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleInputChange({ target: { name: 'category_id', value: '' } });
+                                setCatDropdownOpen(false);
+                                setCatSearch("");
+                              }}
+                              className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              {t('profile.select_category')}
+                            </button>
+                          </li>
+                          {categories
+                            .filter(c => !catSearch || c.name.toLowerCase().includes(catSearch.toLowerCase()))
+                            .map(category => (
+                              <li key={category.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange({ target: { name: 'category_id', value: category.id } });
+                                    setCatDropdownOpen(false);
+                                    setCatSearch("");
+                                  }}
+                                  className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
+                                    String(formData.category_id) === String(category.id)
+                                      ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
+                                      : 'dark:text-white'
+                                  }`}
+                                >
+                                  {category.name}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                        {catPage < catTotalPages && !catSearch && (
+                          <div className="p-2 border-t border-border">
+                            <button
+                              type="button"
+                              onClick={() => fetchCategories(catPage + 1, true)}
+                              disabled={catLoading}
+                              className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
+                            >
+                              {catLoading ? t('common.loading', 'Loading...') : t('profile.load_more_categories', 'Load more categories')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaBook className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">
+                      {localUser.category?.name || categories.find((c) => c.id == localUser.category_id)?.name || t('profile.not_selected')}
+                    </span>
                   </div>
                 )}
               </div>
@@ -571,9 +912,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaCalendarAlt className="text-primary" />
-                    <span>{user.birth ? formatDateForDisplay(user.birth) : t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaCalendarAlt className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.birth ? formatDateForDisplay(user.birth) : t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -597,9 +940,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     <option value="other">{t('profile.other')}</option>
                   </select>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaVenusMars className="text-primary" />
-                    <span className="capitalize">{user.gender || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaVenusMars className="text-primary text-sm" />
+                    </div>
+                    <span className="capitalize font-medium">{user.gender || t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -607,7 +952,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
               {/* University */}
               <div>
                 <label className="block mb-2 text-sm font-bold text-text-primary">
-                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
+                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
                 </label>
                 {isEditing ? (
                   <div className="relative" ref={uniDropdownRef}>
@@ -696,9 +1041,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaGraduationCap className="text-primary" />
-                    <span>{localUser.university?.name || universities.find((u) => u.id == localUser.university_id)?.name || t('profile.not_selected')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaGraduationCap className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{localUser.university?.name || universities.find((u) => u.id == localUser.university_id)?.name || t('profile.not_selected')}</span>
                   </div>
                 )}
               </div>
@@ -708,125 +1055,123 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 <label className="block mb-2 text-sm font-bold text-text-primary">
                   {t('profile.college_year')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
-              {isEditing ? (
-                <select
-                  name="college_year"
-                  value={formData.college_year}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">{t('profile.select_year')}</option>
-                  {collegeYears.map((year) => (
-                    <option key={year.id} value={year.id}>
-                      {year.name}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaGraduationCap className="text-primary" />
-                  <span>
-                    {collegeYears.find((year) => year.id == localUser.college_year)?.name || t('profile.not_specified')}
-                  </span>
-                </div>
-              )}
-              </div>
-            </div>
-          </div>
-
-          {/* Social Media Section */}
-          <div className="mt-8">
-            <h4 className="mb-4 text-lg font-semibold">{t('profile.social_media')}</h4>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Facebook */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaFacebook className="inline mr-2 text-blue-600" />
-                  {t('profile.facebook')}
-                </label>
                 {isEditing ? (
-                  <input
-                    type="url"
-                    name="facebook"
-                    value={formData.facebook}
+                  <select
+                    name="college_year"
+                    value={formData.college_year}
                     onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'Facebook' })}
                     className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                    required
+                  >
+                    <option value="">{t('profile.select_year')}</option>
+                    {collegeYears.map((year) => (
+                      <option key={year.id} value={year.id}>
+                        {year.name}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaFacebook className="text-blue-600" />
-                    <span>{user.facebook || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaGraduationCap className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">
+                      {collegeYears.find((year) => year.id == localUser.college_year)?.name || t('profile.not_specified')}
+                    </span>
                   </div>
                 )}
               </div>
 
-              {/* Instagram */}
+              {/* Specialization */}
               <div>
                 <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaInstagram className="inline mr-2 text-pink-600" />
-                  {t('profile.instagram')}
+                  {t('profile.specialization')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
                 </label>
                 {isEditing ? (
-                  <input
-                    type="url"
-                    name="instagram"
-                    value={formData.instagram}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'Instagram' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaInstagram className="text-pink-600" />
-                    <span>{user.instagram || t('profile.not_provided')}</span>
-                  </div>
-                )}
-              </div>
+                  <div className="relative" ref={specDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setSpecDropdownOpen(o => !o)}
+                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
+                    >
+                      <span className={formData.specialization_id ? "" : "text-gray-400"}>
+                        {formData.specialization_id
+                          ? specializations.find(s => String(s.id) === String(formData.specialization_id))?.name || t('profile.select_specialization')
+                          : t('profile.select_specialization')}
+                      </span>
+                      <FaChevronDown className={`text-xs transition-transform ${specDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-              {/* Telegram */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaTelegram className="inline mr-2 text-blue-500" />
-                  {t('profile.telegram')}
-                </label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="telegram"
-                    value={formData.telegram}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'Telegram' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaTelegram className="text-blue-500" />
-                    <span>{user.telegram || t('profile.not_provided')}</span>
+                    {specDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
+                        <div className="flex items-center gap-2 p-2 border-b border-border">
+                          <FaSearch className="text-xs text-gray-400 shrink-0" />
+                          <input
+                            type="text"
+                            value={specSearch}
+                            onChange={e => setSpecSearch(e.target.value)}
+                            placeholder={t('profile.search_specialization', 'Search specialization...')}
+                            className="flex-1 text-sm bg-transparent outline-none dark:text-white"
+                            autoFocus
+                          />
+                        </div>
+                        <ul className="overflow-y-auto flex-1">
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleInputChange({ target: { name: 'specialization_id', value: '' } });
+                                setSpecDropdownOpen(false);
+                                setSpecSearch("");
+                              }}
+                              className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              {t('profile.select_specialization')}
+                            </button>
+                          </li>
+                          {specializations
+                            .filter(s => !specSearch || s.name.toLowerCase().includes(specSearch.toLowerCase()))
+                            .map(specialization => (
+                              <li key={specialization.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange({ target: { name: 'specialization_id', value: specialization.id } });
+                                    setSpecDropdownOpen(false);
+                                    setSpecSearch("");
+                                  }}
+                                  className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
+                                    String(formData.specialization_id) === String(specialization.id)
+                                      ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
+                                      : 'dark:text-white'
+                                  }`}
+                                >
+                                  {specialization.name}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                        {specPage < specTotalPages && !specSearch && (
+                          <div className="p-2 border-t border-border">
+                            <button
+                              type="button"
+                              onClick={() => fetchSpecializations(specPage + 1, true)}
+                              disabled={specLoading}
+                              className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
+                            >
+                              {specLoading ? t('common.loading', 'Loading...') : t('profile.load_more_specializations', 'Load more specializations')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-
-              {/* WhatsApp */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaWhatsapp className="inline mr-2 text-green-600" />
-                  {t('profile.whatsapp')}
-                </label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="whatsapp"
-                    value={formData.whatsapp}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'WhatsApp' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaWhatsapp className="text-green-600" />
-                    <span>{user.whatsapp || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaStethoscope className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{localUser.specialization?.name || specializations.find((s) => s.id == localUser.specialization_id)?.name || t('profile.not_selected')}</span>
                   </div>
                 )}
               </div>

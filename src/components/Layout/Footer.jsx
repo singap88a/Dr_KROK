@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaYoutube, FaFacebookF, FaInstagram, FaTiktok, FaTelegramPlane } from "react-icons/fa";
 import { useTranslation, Trans } from "react-i18next";
-import { useApi } from "../context/ApiContext";
+import { useApi } from "../../context/ApiContext";
 import he from 'he';
 import { Link } from "react-router-dom";
 

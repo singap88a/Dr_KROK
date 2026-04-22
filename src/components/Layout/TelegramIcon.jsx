@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaTelegramPlane } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-import { useApi } from "../context/ApiContext";
+import { useApi } from "../../context/ApiContext";
 
 export default function TelegramIcon() {
   const { t } = useTranslation();

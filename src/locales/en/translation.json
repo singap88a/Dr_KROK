@@ -60,6 +60,14 @@
     "college_year": "College Year",
     "select_year": "Select Year",
     "not_specified": "Not specified",
+    "category": "Department/Category",
+    "select_category": "Select Department",
+    "search_category": "Search category...",
+    "load_more_categories": "Load more categories",
+    "specialization": "Specialization",
+    "select_specialization": "Select Specialization",
+    "search_specialization": "Search specialization...",
+    "load_more_specializations": "Load more specializations",
     "new_image_selected": "New image selected",
     "social_media": "Social Media",
     "facebook": "Facebook",
@@ -76,6 +84,8 @@
       "name_email_required": "Name and email are required",
       "select_university": "Please select a university",
       "select_college_year": "Please select your college year",
+      "select_category": "Please select a department/category",
+      "select_specialization": "Please select a specialization",
       "auth_missing": "Authentication token not found",
       "image_type": "Please select an image file",
       "image_size": "Image size should be less than 5MB"
@@ -199,6 +209,11 @@
     "error": "Error",
     "medical_books_store": "Medical Books Store",
     "search_books": "Search books...",
+    "select_category": "Filter by Category",
+    "all_categories": "All Categories",
+    "no_books_found": "No books found",
+    "try_different_filter": "Try a different category or search term",
+    "reset_filters": "Reset all filters",
     "view_details": "View Details",
     "filter_all": "All",
     "filter_delivery": "Delivery",
@@ -672,8 +687,10 @@
 
   "courses": {
     "askInstructor": "Ask the Instructor",
-    "askInstructorDescription": "Have questions about this course? Contact the instructor directly via WhatsApp for personalized assistance.",
+    "askInstructorDescription": "Have questions about this course? Contact the instructor directly for personalized assistance.",
     "contactInstructor": "Contact Instructor",
+    "contactWhatsApp": "Contact via WhatsApp",
+    "contactTelegram": "Ask on Telegram",
     "featuredVideoCourses": "Featured Video Courses",
     "students": "Students",
     "browseCourses": "Browse Courses",
@@ -926,7 +943,15 @@
     "student": "Student",
     "courseTitle": "Course Title",
     "certificateFileName": "certificate",
-    "drKrokAcademy": "Dr. KROK Academy"
+    "drKrokAcademy": "Dr. KROK Academy",
+    "topStudents": {
+      "title": "Top Students",
+      "subtitle": "Meet the top achievers of this course",
+      "rank": "Rank",
+      "score": "Score",
+      "percentage": "Percentage",
+      "noStudents": "No top students yet."
+    }
   },
   "orders": {
     "title": "My Orders",

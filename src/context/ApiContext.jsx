@@ -168,7 +168,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       isFormData = false,
       useCache = true,
       cacheTTL = 10 * 60 * 1000,
-      invalidateCacheOnSuccess = [] // New: specify cache patterns to invalidate on success
+      invalidateCacheOnSuccess = [], // New: specify cache patterns to invalidate on success
+      signal = null // New: support request cancellation
     } = {}) => {
       
       // Don't cache non-GET requests or form data
@@ -223,6 +224,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           body: isFormData ? body : body ? JSON.stringify(body) : undefined,
           redirect: isPaymentOrder ? 'manual' : 'follow',
           mode: 'cors',
+          signal: signal,
         });
       } catch (fetchError) {
         if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
@@ -1563,8 +1565,21 @@ async getCertificateUrl(token, courseId, courseType = 'video') {
     console.error('❌ Failed to get certificate URL:', error);
     throw error;
   }
-}
+},
 
+      // Gemini Chat API
+      async getChatStatus(signal = null) {
+        return await request("chat/status", { auth: true, signal });
+      },
+
+      async sendChatMessage(message, signal = null) {
+        return await request("chat/send", {
+          method: "POST",
+          body: { message },
+          auth: true,
+          signal
+        });
+      }
     }),
     [
       baseUrl,

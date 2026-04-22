@@ -7,10 +7,10 @@ import { useUser } from "../../context/UserContext";
 import { useCart } from "../../context/CartContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from "react-toastify";
-import CitySelector from "../../components/CitySelector";
-import CouponInput from "../../components/CouponInput";
-import IncompleteProfileModal from "../../components/IncompleteProfileModal";
-import SaveBeforeLoginModal from "../../components/SaveBeforeLoginModal";
+import CitySelector from "../../components/Common/CitySelector";
+import CouponInput from "../../components/Common/CouponInput";
+import IncompleteProfileModal from "../../components/Modals/IncompleteProfileModal";
+import SaveBeforeLoginModal from "../../components/Modals/SaveBeforeLoginModal";
 
 import he from "he";
 

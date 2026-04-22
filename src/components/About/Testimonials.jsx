@@ -4,7 +4,7 @@ import { Pagination as SwiperPagination, Autoplay } from "swiper/modules";
 import { FaStar, FaPlay, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
-import Pagination from "../Pagination";
+import Pagination from "../Common/Pagination";
 import "swiper/css";
 import "swiper/css/pagination";
 

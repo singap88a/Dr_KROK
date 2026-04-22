@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useApi } from "../../../context/ApiContext";
 
 import { FaArrowLeft, FaCheck, FaTimes, FaTrophy } from "react-icons/fa";
-import LoadingSpinner from "../../../components/LoadingSpinner";
+import LoadingSpinner from "../../../components/Common/LoadingSpinner";
 
 export default function LessonTestResults() {
   const { id } = useParams();

@@ -19,7 +19,8 @@ import {
   FaClock,
   FaUnlock,
   FaTrophy,
-  FaAward
+  FaAward,
+  FaTelegram
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import InlinePDFViewer from "../Popups/InlinePDFViewer";
@@ -30,6 +31,7 @@ const VideoPlayerSection = ({
   course,
   courseProgress,
   isLoggedIn,
+  hasAccess,
   lessonStatuses,
   onLessonComplete,
   onFileClick,
@@ -951,12 +953,26 @@ const VideoPlayerSection = ({
               {course.instructor.bio}
             </p>
 
-            <Link
-              to={`/instructors/${course.instructor.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
-            >
-              {t("instructors.viewDetails", "View Details")}
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to={`/instructors/${course.instructor.id}`}
+                className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
+              >
+                {t("instructors.viewDetails", "View Details")}
+              </Link>
+
+              {course.instructor.telegram && (
+                <a
+                  href={course.instructor.telegram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary dark:bg-primary-dark hover:bg-primary/90 dark:hover:bg-primary-dark/90"
+                >
+                  <FaTelegram className="text-lg" />
+                  {t("courses.askInstructor", "Ask the Instructor")}
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1053,31 +1069,7 @@ const VideoPlayerSection = ({
 
             {renderContentAttachments(currentLesson, 'lesson')}
 
-            {course.instructor && course.instructor.whatsapp && (
-              <div className="p-3 mt-4 border rounded-lg bg-surface dark:bg-surface-dark border-border dark:border-border-dark">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full dark:bg-green-900">
-                    <FaWhatsapp className="text-lg text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-text dark:text-text-dark">
-                      {t("courses.askInstructor", "Ask the Instructor")}
-                    </h4>
-                    <a
-                      href={`https://wa.me/${course.instructor.whatsapp.replace(
-                        /[^0-9]/g,
-                        ""
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                    >
-                      {t("courses.contactInstructor", "Contact Instructor")}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       );

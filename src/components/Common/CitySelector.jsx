@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FiMapPin, FiChevronDown, FiSearch } from 'react-icons/fi';
-import { useApi } from '../context/ApiContext';
+import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 
 const CitySelector = ({ value, onChange, required = false, onCitySelect }) => {

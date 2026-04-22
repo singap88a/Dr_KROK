@@ -3,8 +3,8 @@ import { FaFacebook, FaInstagram, FaYoutube, FaStar, FaUser } from 'react-icons/
 import { Link } from 'react-router-dom';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
-import LoadingSpinner from '../../components/LoadingSpinner';
-import Pagination from '../../components/Pagination';
+import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import Pagination from '../../components/Common/Pagination';
 
 // الصورة الافتراضية للمحاضرين
 const DEFAULT_INSTRUCTOR_IMAGE = '/logo.png';

@@ -3,7 +3,7 @@ import React from "react";
 import Features from "../../components/Home/Features";
 import CoursesPreview from "../../components/Home/CoursesPreview";
 import BooksCarousel from "../../components/Home/BooksCarousel";
-import ThemeToggle from "../../components/Home/ThemeToggle";
+import StatsSection from "../../components/Home/StatsSection";
 import NewsUpdates from "../../components/Home/Articles";
  import InstructorsCarousel from "../../components/Home/InstructorsCarousel";
 import HomeBanners from "../../components/Home/HomeBanners";
@@ -18,7 +18,7 @@ export default function DrKrokHome() {
           <Features />
           <CoursesPreview />
           <BooksCarousel />
-          <ThemeToggle />
+          <StatsSection />
           <Live_courses/>
           <NewsUpdates />
           <HomeBanners/>

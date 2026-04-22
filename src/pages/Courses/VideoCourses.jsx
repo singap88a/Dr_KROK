@@ -1,5 +1,5 @@
 import React from "react";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiStar } from "react-icons/fi";
 import RatingStars from "./components/RatingStars";
 
 export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, goToDetails, t, isLoggedIn, navigate }) {
@@ -35,6 +35,11 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
             {course.discount > 0 && (
               <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 left-3">
                 {Math.round(course.discount)}%
+              </span>
+            )}
+            {course.is_bestseller && (
+              <span className="absolute flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-yellow-500 rounded shadow bottom-3 right-3">
+                <FiStar /> {t("courses.bestseller", "Bestseller")}
               </span>
             )}
           </div>

@@ -4,7 +4,7 @@ import { useApi } from "../../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import i18n from "../../../i18n";
-import LoadingSpinner from "../../../components/LoadingSpinner";
+import LoadingSpinner from "../../../components/Common/LoadingSpinner";
 import CourseHeader from "./CourseHeader";
 import CourseContentSidebar from "./CourseContentSidebar";
 import VideoPlayerSection from "./VideoPlayerSection";
@@ -623,6 +623,7 @@ export default function CourseLessons() {
               course={course}
               courseProgress={courseProgress}
               isLoggedIn={isLoggedIn}
+              hasAccess={hasAccess}
               lessonStatuses={lessonStatuses}
               onLessonComplete={handleLessonComplete}
               onFileClick={handleFileClick}

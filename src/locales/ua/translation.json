@@ -60,6 +60,14 @@
     "college_year": "Курс навчання",
     "select_year": "Оберіть курс",
     "not_specified": "Не вказано",
+    "category": "Категорія",
+    "select_category": "Оберіть категорію",
+    "search_category": "Пошук категорії...",
+    "load_more_categories": "Завантажити більше категорій",
+    "specialization": "Спеціалізація",
+    "select_specialization": "Оберіть спеціалізацію",
+    "search_specialization": "Пошук спеціалізації...",
+    "load_more_specializations": "Завантажити більше спеціалізацій",
     "new_image_selected": "Обрано нове зображення",
     "social_media": "Соціальні мережі",
     "facebook": "Facebook",
@@ -76,6 +84,8 @@
       "name_email_required": "Потрібні ім'я та електронна адреса",
       "select_university": "Будь ласка, оберіть університет",
       "select_college_year": "Будь ласка, оберіть курс навчання",
+      "select_category": "Будь ласка, оберіть категорію",
+      "select_specialization": "Будь ласка, оберіть спеціалізацію",
       "auth_missing": "Токен автентифікації не знайдено",
       "image_type": "Будь ласка, оберіть файл зображення",
       "image_size": "Розмір зображення має бути менше 5МБ"
@@ -199,6 +209,11 @@
     "error": "Помилка",
     "medical_books_store": "Магазин медичних книг",
     "search_books": "Пошук книг...",
+    "select_category": "Фільтрувати за категорією",
+    "all_categories": "Всі категорії",
+    "no_books_found": "Книг не знайдено",
+    "try_different_filter": "Спробуйте іншу категорію або термін пошуку",
+    "reset_filters": "Скинути всі фільтри",
     "view_details": "Переглянути деталі",
     "filter_all": "Всі",
     "filter_delivery": "Доставка",
@@ -313,6 +328,8 @@
     "markCompleted": "Позначити як завершене",
     "askInstructor": "Запитати інструктора",
     "contactInstructor": "Зв'язатися з інструктором",
+    "contactWhatsApp": "Зв'язатися через WhatsApp",
+    "contactTelegram": "Запитати у Telegram",
     "sectionLessons": "Уроки розділу",
     "paid": "Платний",
     "andMore": "І ще",
@@ -899,7 +916,15 @@
     "minimumInstallment": "Мінімальний внесок: $100",
     "totalPrice": "Загальна ціна",
     "installmentErrorMin": "Мінімальна сума внеску - 100$",
-    "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну"
+    "installmentErrorMax": "Сума внеску не може перевищувати загальну ціну",
+    "topStudents": {
+      "title": "Кращі студенти",
+      "subtitle": "Зустрічайте кращих студентів цього курсу",
+      "rank": "Місце",
+      "score": "Бал",
+      "percentage": "Відсоток",
+      "noStudents": "Кращих студентів поки немає."
+    }
   },
 
   "orders": {

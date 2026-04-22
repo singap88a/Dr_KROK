@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import he from "he";
-import { FiHeart, FiCalendar, FiClock, FiUsers, FiPlay } from "react-icons/fi";
+import { FiHeart, FiCalendar, FiClock, FiUsers, FiPlay, FiStar } from "react-icons/fi";
 import { MdLiveTv } from "react-icons/md";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -12,7 +12,7 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../Common/LoadingSpinner";
 
 export default function Live_courses({ courses }) {
   const { t } = useTranslation();
@@ -135,6 +135,7 @@ export default function Live_courses({ courses }) {
       price: c.price ? Number(c.price) : 0,
       discount: c.discount ? Number(c.discount) : 0,
       rating: c.avg_rating ?? 0,
+      is_bestseller: c.is_bestseller,
       img:
         c.image && typeof c.image === "string" && c.image.length > 0
           ? c.image
@@ -233,10 +234,15 @@ export default function Live_courses({ courses }) {
                       <FiHeart className={`text-lg ${favoriteIds.includes(`live_course_${course.id}`) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
                     </button>
                       {/* Time Status Badge - Bottom */}
-                      <div className="absolute z-10 bottom-4 left-4">
-                        <div className={`px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
+                      <div className="absolute z-10 bottom-4 left-4 flex flex-col gap-2">
+                        <div className={`px-3 py-1 w-max text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
                           {t(`liveCourses.${timeStatus.status}`, timeStatus.text)}
                         </div>
+                        {course.is_bestseller && (
+                          <div className="flex w-max items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-yellow-500 rounded-full shadow-lg">
+                            <FiStar /> {t("courses.bestseller", "Bestseller")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Gradient Overlay */}

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiHeart, FiCalendar, FiClock, FiUsers } from "react-icons/fi";
+import { FiHeart, FiCalendar, FiClock, FiUsers, FiStar } from "react-icons/fi";
 
 export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, goToDetails, t, isLoggedIn, navigate }) {
   const formatDate = (dateString) => {
@@ -55,11 +55,15 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
               </div>
             </div>
 
-            {/* Time Status Badge */}
-            <div className="absolute z-10 bottom-3 left-3">
-              <div className={`px-2 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${getTimeStatus(course.started_at).color}`}>
+            <div className="absolute z-10 bottom-3 left-3 flex flex-col gap-2">
+              <div className={`px-2 py-1 text-xs font-semibold text-white rounded-full shadow-lg w-max ${getTimeStatus(course.started_at).color}`}>
                 {t(`liveCourses.${getTimeStatus(course.started_at).status}`, getTimeStatus(course.started_at).text)}
               </div>
+              {course.is_bestseller && (
+                <div className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-yellow-500 rounded-full shadow-lg w-max">
+                  <FiStar /> {t("courses.bestseller", "Bestseller")}
+                </div>
+              )}
             </div>
           </div>
 

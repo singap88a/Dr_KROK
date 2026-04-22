@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import he from "he";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiStar } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
@@ -172,6 +172,13 @@ function BooksCarousel() {
                       alt={b.name}
                       className="object-cover w-full transition-transform duration-500 h-52 hover:scale-110"
                     />
+
+                    {/* Bestseller Badge */}
+                    {b.is_bestseller && (
+                      <div className="absolute z-10 bottom-3 right-3 flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-yellow-500 rounded-lg shadow-md">
+                        <FiStar className="text-xs" /> {t('books.bestseller', 'Bestseller')}
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}

@@ -6,11 +6,13 @@ import {
   FaYoutube,
   FaEnvelope,
   FaSearch,
+  FaTelegram,
+  FaWhatsapp,
 } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
-import Pagination from "../../components/Pagination";
+import Pagination from "../../components/Common/Pagination";
 
 const PER_PAGE = 12;
 
@@ -191,6 +193,26 @@ function Instructors() {
                           className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white"
                         >
                           <FaYoutube size={15} />
+                        </a>
+                      )}
+                      {instructor.telegram && (
+                        <a
+                          href={instructor.telegram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-blue-500 hover:text-white"
+                        >
+                          <FaTelegram size={15} />
+                        </a>
+                      )}
+                      {instructor.whatsapp && (
+                        <a
+                          href={`https://wa.me/${instructor.whatsapp.replace(/[^0-9]/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 transition-colors bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-green-500 hover:text-white"
+                        >
+                          <FaWhatsapp size={15} />
                         </a>
                       )}
                       <a

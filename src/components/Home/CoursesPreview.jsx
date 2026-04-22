@@ -11,7 +11,7 @@ import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../Common/LoadingSpinner";
 import RatingStars from "../../pages/Courses/components/RatingStars";
 
 export default function CoursesPreview({ courses }) {
@@ -102,6 +102,7 @@ export default function CoursesPreview({ courses }) {
       price: c.price ? Number(c.price) : 0,
       discount: c.discount ? Number(c.discount) : 0,
       rating: c.avg_rating ?? 0,
+      is_bestseller: c.is_bestseller,
       img:
         c.image && typeof c.image === "string" && c.image.length > 0
           ? c.image
@@ -179,6 +180,12 @@ export default function CoursesPreview({ courses }) {
                       {hasDiscount && (
                         <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 left-3">
                           {discountPercent}%
+                        </span>
+                      )}
+                      
+                      {course.is_bestseller && (
+                        <span className="absolute flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-yellow-500 rounded shadow bottom-3 right-3">
+                          <FiStar className="text-xs" /> {t("courses.bestseller", "Bestseller")}
                         </span>
                       )}
                     </div>

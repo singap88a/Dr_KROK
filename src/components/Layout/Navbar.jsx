@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark } from "react-icons/fa";
-import { useUser } from "../context/UserContext";
+import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
-import { useApi } from "../context/ApiContext";
-import { useTheme } from "../context/ThemeContext";
-import { useCart } from "../context/CartContext";
-import LogoutConfirmModal from "./LogoutConfirmModal";
+import { useApi } from "../../context/ApiContext";
+import { useTheme } from "../../context/ThemeContext";
+import { useCart } from "../../context/CartContext";
+import LogoutConfirmModal from "../Modals/LogoutConfirmModal";
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
