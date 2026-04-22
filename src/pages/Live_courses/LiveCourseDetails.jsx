@@ -27,6 +27,8 @@ import {
   FaUserGraduate,
   FaCalendarAlt,
   FaImage,
+  FaHourglassHalf,
+  FaPercentage,
 } from "react-icons/fa";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -325,6 +327,16 @@ export default function LiveCourseDetails() {
             <div className="flex items-center gap-2">
               <FaUsers className="text-primary" /> {t("courses.collegeYear", "College Year")} <span className="font-medium">{course.college_year}</span>
             </div>
+            {course.course_duration_days > 0 && (
+              <div className="flex items-center gap-2 col-span-full">
+                <FaHourglassHalf className="text-primary" />
+                <span>{t("courses.accessDuration", "Access Duration")}:</span>
+                <span className="font-semibold text-primary">
+                  {course.course_duration_days} {t("courses.days", "days")}
+                </span>
+                <span className="text-text-muted text-xs">({t("courses.accessDurationNote", "from the date of purchase")})</span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3">
@@ -343,14 +355,12 @@ export default function LiveCourseDetails() {
                 {t("courses.subscribeNow", "Subscribe Now")}
               </button>
             )}
-            {userHasAccess && (
-              <button
-                onClick={() => navigate(`/live-courses/${id}/lessons`)}
-                className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
-              >
-                {t("courses.startCourse", "Start Course")}
-              </button>
-            )}
+            <button
+              onClick={() => navigate(`/live-courses/${id}/lessons`)}
+              className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
+            >
+              {t("courses.viewLessons", "View Lessons")}
+            </button>
           </div>
         </div>
       </div>

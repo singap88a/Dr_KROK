@@ -26,6 +26,7 @@ import {
   FaBriefcase,
   FaUserGraduate,
   FaCalendarAlt,
+  FaHourglassHalf,
 } from "react-icons/fa";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -350,6 +351,16 @@ export default function CourseDetails() {
                 <FaStar className="text-primary" /> {t("courses.averageRating", "Average Rating")} <span className="font-medium">{course.avg_rating.toFixed(1)} / 5.0</span>
               </div>
             )} */}
+            {course.course_duration_days > 0 && (
+              <div className="flex items-center gap-2 col-span-full">
+                <FaHourglassHalf className="text-primary" />
+                <span>{t("courses.accessDuration", "Access Duration")}:</span>
+                <span className="font-semibold text-primary">
+                  {course.course_duration_days} {t("courses.days", "days")}
+                </span>
+                <span className="text-text-muted text-xs">({t("courses.accessDurationNote", "from the date of purchase")})</span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3">
