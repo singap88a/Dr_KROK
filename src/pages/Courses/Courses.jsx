@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   FaPlayCircle,
   FaVideo,
+  FaStar,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ export default function Courses() {
   const { isLoggedIn } = useUser();
   const [activeTab, setActiveTab] = useState("video"); // video | live
   const [query, setQuery] = useState("");
+  const [showBestsellers, setShowBestsellers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [videoCourses, setVideoCourses] = useState([]);
@@ -52,6 +54,7 @@ export default function Courses() {
         hours: Math.max(1, Math.round((c.duration_minutes || 0) / 60)),
         lessons: c.lessons_count ?? 0,
         rating: c.avg_rating ?? 0,
+        is_bestseller: c.is_bestseller,
         price: c.price ? Number(c.price) : 0,
         discount: c.discount ? Number(c.discount) : 0,
         img:
@@ -91,6 +94,7 @@ export default function Courses() {
         price: c.price ? Number(c.price) : 0,
         discount: c.discount ? Number(c.discount) : 0,
         rating: c.avg_rating ?? 0,
+        is_bestseller: c.is_bestseller,
         img:
           c.image && typeof c.image === "string" && c.image.length > 0
             ? c.image
@@ -172,9 +176,11 @@ export default function Courses() {
   const filtered = useMemo(() => {
     return visible.filter((c) => {
       const text = `${c.title} ${c.instructor || ""} ${c.description || ""}`.toLowerCase();
-      return text.includes(query.toLowerCase());
+      const matchesSearch = text.includes(query.toLowerCase());
+      const matchesBestseller = showBestsellers ? c.is_bestseller === true : true;
+      return matchesSearch && matchesBestseller;
     });
-  }, [visible, query]);
+  }, [visible, query, showBestsellers]);
 
   function goToDetails(course) {
     if (!course?.id) return;
@@ -212,7 +218,9 @@ export default function Courses() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="items-center hidden p-1 bg-white rounded-full shadow-sm sm:flex dark:bg-gray-800">
+            <div className={`items-center hidden p-1 bg-white rounded-full shadow-sm sm:flex dark:bg-gray-800 border-2 transition-colors duration-300 ${
+              activeTab === "video" ? "border-primary" : "border-red-600"
+            }`}>
               <button
                 onClick={() => { setActiveTab("video"); setQuery(""); }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition ${
@@ -234,6 +242,20 @@ export default function Courses() {
                 <FaVideo className="inline mr-2" /> {t("courses.liveCourse", "Live Course")}
               </button>
             </div>
+
+            {/* Bestsellers Toggle */}
+            <button
+              onClick={() => setShowBestsellers(!showBestsellers)}
+              className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
+                showBestsellers 
+                  ? "bg-yellow-500 text-white border-yellow-500 shadow-md" 
+                  : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+              }`}
+              aria-pressed={showBestsellers}
+            >
+              <FaStar className={showBestsellers ? "text-white" : "text-yellow-500"} /> 
+              {t("courses.bestsellers", "Bestsellers")}
+            </button>
 
             {/* Search */}
             <div className="flex items-center px-3 py-2 transition-all duration-200 bg-white border border-gray-300 rounded-full shadow-sm focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:focus-within:border-blue-400">

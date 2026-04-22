@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { FiSearch, FiHeart, FiTruck, FiFileText, FiGrid, FiChevronLeft, FiChevronRight, FiFilter, FiChevronDown } from "react-icons/fi";
+import { FiSearch, FiHeart, FiTruck, FiFileText, FiGrid, FiChevronLeft, FiChevronRight, FiFilter, FiChevronDown, FiStar } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
@@ -100,6 +100,8 @@ export default function Books() {
       matchesType = isDeliveryValue;
     } else if (fType === "pdf") {
       matchesType = isPdfValue;
+    } else if (fType === "bestseller") {
+      matchesType = book.is_bestseller === true;
     }
 
     return matchesSearch && matchesType;
@@ -289,6 +291,17 @@ export default function Books() {
             <FiFileText className="text-lg" />
             {t('books.filter_pdf')}
           </button>
+          <button
+            onClick={() => setTypeFilter("bestseller")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all duration-300 ${
+              typeFilter === "bestseller"
+                ? "bg-yellow-500 text-white shadow-lg shadow-yellow-500/25"
+                : "bg-surface border border-border text-text hover:border-yellow-500 hover:text-yellow-500"
+            }`}
+          >
+            <FiStar className="text-lg" />
+            {t('books.filter_bestseller', 'Bestsellers')}
+          </button>
         </div>
 
         {/* Results Count */}
@@ -343,6 +356,13 @@ export default function Books() {
                       alt={book.name}
                       className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                     />
+
+                    {/* Bestseller Badge */}
+                    {book.is_bestseller && (
+                      <div className="absolute z-10 bottom-3 right-3 flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-yellow-500 rounded-lg shadow-md">
+                        <FiStar className="text-xs" /> {t('books.bestseller', 'Bestseller')}
+                      </div>
+                    )}
                   </div>
 
                   {/* Book Content */}
