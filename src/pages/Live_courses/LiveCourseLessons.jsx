@@ -78,6 +78,7 @@ export default function LiveCourseLessons() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [course, setCourse] = useState(null);
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
   const [lessons, setLessons] = useState([]);
   const [sections, setSections] = useState([]);
   const [hasAccess, setHasAccess] = useState(false);
@@ -422,6 +423,15 @@ export default function LiveCourseLessons() {
         const courseData = await getLiveCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(courseData);
+
+        // ⏱️ حساب فرق التوقيت بين السيرفر والجهاز (Server Time Synchronization)
+        if (courseData.server_time) {
+          const serverTime = new Date(courseData.server_time).getTime();
+          const localTime = Date.now();
+          const offset = serverTime - localTime;
+          setServerTimeOffset(offset);
+          console.log(`⏱️ Time Offset Calculated: ${offset}ms (Server: ${courseData.server_time})`);
+        }
         setLessons(courseData.lessons || []);
         setSections(courseData.sections || []);
 
@@ -805,23 +815,41 @@ export default function LiveCourseLessons() {
   const formatSessionTime = (dateString) => {
     if (!dateString) return null;
     try {
-      // الاعتماد على dayjs أفضل عشان بيظبط الـ Timezone اللي راجع من الـ API بشكل أتوماتيك
-      // ومبيحصلش مشاكل في أي متصفح
-      return dayjs(dateString).format("dddd • MMM DD, YYYY • hh:mm A (Local Time)");
+      // إذا كان التاريخ لا يحتوي على منطقة زمنية، نفترض أنه UTC (Z) ونحوله لتوقيت السيرفر للعرض
+      let startGlobal = dateString;
+      if (!dateString.includes("+") && !dateString.includes("Z")) {
+        startGlobal = dateString.replace(" ", "T") + "Z";
+      }
+
+      // القيمة الافتراضية لأوكرانيا هي +03:00 إذا لم نجدها في server_time
+      const serverOffsetStr = course?.server_time?.match(/([+-]\d{2}:\d{2})$/)?.[1] || "+03:00";
+
+      return dayjs(startGlobal).utcOffset(serverOffsetStr).format("dddd • MMM DD, YYYY • hh:mm A");
     } catch {
       return dateString;
     }
   };
 
-  // 🔥 دالة التحقق من تفعيل الرابط (قبل المحاضرة بـ 5 دقائق)
+  // 🔥 دالة التحقق من تفعيل الرابط (قبل المحاضرة بـ 5 دقائق) باستخدام وقت السيرفر الموحد
   const isLinkActive = (startTime) => {
-    if (!startTime) return false;
+    if (!startTime || !course?.server_time) return false;
     try {
-      const start = dayjs(startTime).valueOf();
+      // 1. تحويل وقت المحاضرة إلى UTC (لأن السيرفر يرسله UTC بدون علامة Z أحياناً)
+      let startGlobal = startTime;
+      if (!startTime.includes("+") && !startTime.includes("Z")) {
+        startGlobal = startTime.replace(" ", "T") + "Z";
+      }
+
+      const start = dayjs(startGlobal).valueOf();
       if (isNaN(start)) return false;
+      
       const fiveMinutes = 5 * 60 * 1000;
-      // يقارن مع الوقت المحدث بـ setInterval
-      return currentTimeMs >= (start - fiveMinutes);
+      
+      // 2. الوقت الحالي "الحقيقي" للسيرفر (وقت الجهاز + الفرق المحسوب)
+      // هذا الوقت هو بمثابة ساعة السيرفر الآن بتوقيت UTC
+      const ukraineTimeNow = currentTimeMs + serverTimeOffset;
+      
+      return ukraineTimeNow >= (start - fiveMinutes);
     } catch (e) {
       console.error("Error calculating link active time:", e);
       return false;
@@ -1304,7 +1332,7 @@ export default function LiveCourseLessons() {
                                       {!active && (
                                         <p className="flex items-center gap-1 text-xs font-medium text-red-500">
                                           <FaClock className="animate-pulse" />
-                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Local Time).")}
+                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts.")}
                                         </p>
                                       )}
                                     </>
@@ -1397,7 +1425,7 @@ export default function LiveCourseLessons() {
                                     <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-800/20">
                                       <FaClock className="text-red-500 animate-pulse" />
                                       <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts (Local Time).")}
+                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts.")}
                                       </span>
                                     </div>
                                   )}

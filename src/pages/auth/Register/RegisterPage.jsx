@@ -16,7 +16,6 @@ export default function RegisterPage() {
   const location = useLocation();
   const { register: userRegister } = useUser();
   const { register: apiRegister, request } = useApi();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -24,7 +23,6 @@ export default function RegisterPage() {
     confirm: "",
     university: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -57,6 +55,7 @@ export default function RegisterPage() {
     }
   }, [showTerms, request]);
 
+
   function validate() {
     const e = {};
     if (!form.name.trim()) e.name = t('auth.register.errors.name');
@@ -64,8 +63,6 @@ export default function RegisterPage() {
     if (form.password.length < 6)
       e.password = t('auth.register.errors.password');
     if (!form.confirm) e.confirm = t('auth.register.errors.confirm');
-    if (form.password !== form.confirm)
-      e.confirm = t('auth.register.errors.match');
     if (!agree) e.agree = t('auth.register.errors.agree');
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -82,7 +79,13 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      const data = await apiRegister(form.name, form.email, form.password, form.confirm, form.university);
+      const data = await apiRegister(
+        form.name,
+        form.email,
+        form.password,
+        form.confirm,
+        form.university
+      );
 
       if (data.success) {
         userRegister(data.data.token, data.data);
@@ -225,6 +228,7 @@ export default function RegisterPage() {
                   <p className="mt-1 text-xs text-red-500">{errors.confirm}</p>
                 )}
               </div>
+
 
               {/* Terms and Conditions */}
               <div className="flex items-center space-x-2">

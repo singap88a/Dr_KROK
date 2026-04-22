@@ -18,6 +18,8 @@ import {
   FaWhatsapp,
   FaSearch,
   FaChevronDown,
+  FaBook,
+  FaStethoscope,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
@@ -75,12 +77,30 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     gender: "",
     university_id: "",
     college_year: "",
+    category_id: "",
+    specialization_id: "",
     image: null,
     facebook: "",
     instagram: "",
     telegram: "",
     whatsapp: "",
   });
+
+  const [categories, setCategories] = useState([]);
+  const [catPage, setCatPage] = useState(1);
+  const [catTotalPages, setCatTotalPages] = useState(1);
+  const [catLoading, setCatLoading] = useState(false);
+  const [catSearch, setCatSearch] = useState("");
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+  const catDropdownRef = useRef(null);
+
+  const [specializations, setSpecializations] = useState([]);
+  const [specPage, setSpecPage] = useState(1);
+  const [specTotalPages, setSpecTotalPages] = useState(1);
+  const [specLoading, setSpecLoading] = useState(false);
+  const [specSearch, setSpecSearch] = useState("");
+  const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
+  const specDropdownRef = useRef(null);
   const [imagePreview, setImagePreview] = useState("");
   const { t, i18n } = useTranslation();
 
@@ -112,11 +132,61 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     }
   }, [request]);
 
+  // Fetch categories with pagination
+  const fetchCategories = useCallback(async (page = 1, append = false) => {
+    try {
+      setCatLoading(true);
+      const data = await request(`categories?page=${page}&per_page=15`, { useCache: true });
+      if (data.success) {
+        const newCats = data.data || [];
+        setCategories(prev => append ? [...prev, ...newCats] : newCats);
+        if (data.pagination) {
+          setCatTotalPages(data.pagination.total_pages || 1);
+          setCatPage(data.pagination.current_page || page);
+        } else {
+          setCatTotalPages(1);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setCatLoading(false);
+    }
+  }, [request]);
+
+  // Fetch specializations with pagination
+  const fetchSpecializations = useCallback(async (page = 1, append = false) => {
+    try {
+      setSpecLoading(true);
+      const data = await request(`specializations?page=${page}&per_page=15`, { useCache: true });
+      if (data.success) {
+        const newSpecs = data.data || [];
+        setSpecializations(prev => append ? [...prev, ...newSpecs] : newSpecs);
+        if (data.pagination) {
+          setSpecTotalPages(data.pagination.total_pages || 1);
+          setSpecPage(data.pagination.current_page || page);
+        } else {
+          setSpecTotalPages(1);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching specializations:", error);
+    } finally {
+      setSpecLoading(false);
+    }
+  }, [request]);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (uniDropdownRef.current && !uniDropdownRef.current.contains(e.target)) {
         setUniDropdownOpen(false);
+      }
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) {
+        setCatDropdownOpen(false);
+      }
+      if (specDropdownRef.current && !specDropdownRef.current.contains(e.target)) {
+        setSpecDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -126,6 +196,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   // Fetch universities and college years on component mount
   useEffect(() => {
     fetchUniversities(1, false);
+    fetchCategories(1, false);
+    fetchSpecializations(1, false);
 
     const fetchCollegeYears = async () => {
       try {
@@ -156,6 +228,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: user.gender || "",
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
+        category_id: user.category?.id || user.category_id || "",
+        specialization_id: user.specialization?.id || user.specialization_id || "",
         image: null,
         facebook: user.facebook || "",
         instagram: user.instagram || "",
@@ -279,6 +353,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       return;
     }
 
+
     setLoading(true);
     try {
       const token = getAuthToken();
@@ -307,6 +382,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: formData.gender || "",
         university_id: parseInt(formData.university_id) || 0,
         college_year: formData.college_year,
+        category_id: parseInt(formData.category_id) || 0,
+        specialization_id: parseInt(formData.specialization_id) || 0,
         facebook: formData.facebook || "",
         instagram: formData.instagram || "",
         telegram: formData.telegram || "",
@@ -371,6 +448,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: user.gender || "",
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
+        category_id: user.category?.id || user.category_id || "",
+        specialization_id: user.specialization?.id || user.specialization_id || "",
         image: null,
         facebook: user.facebook || "",
         instagram: user.instagram || "",
@@ -553,6 +632,100 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                   </div>
                 )}
               </div>
+
+              {/* Category */}
+              <div>
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.category')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
+                </label>
+                {isEditing ? (
+                  <div className="relative" ref={catDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setCatDropdownOpen(o => !o)}
+                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
+                    >
+                      <span className={formData.category_id ? "" : "text-gray-400"}>
+                        {formData.category_id
+                          ? categories.find(c => String(c.id) === String(formData.category_id))?.name || t('profile.select_category')
+                          : t('profile.select_category')}
+                      </span>
+                      <FaChevronDown className={`text-xs transition-transform ${catDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {catDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
+                        <div className="flex items-center gap-2 p-2 border-b border-border">
+                          <FaSearch className="text-xs text-gray-400 shrink-0" />
+                          <input
+                            type="text"
+                            value={catSearch}
+                            onChange={e => setCatSearch(e.target.value)}
+                            placeholder={t('profile.search_category', 'Search category...')}
+                            className="flex-1 text-sm bg-transparent outline-none dark:text-white"
+                            autoFocus
+                          />
+                        </div>
+                        <ul className="overflow-y-auto flex-1">
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleInputChange({ target: { name: 'category_id', value: '' } });
+                                setCatDropdownOpen(false);
+                                setCatSearch("");
+                              }}
+                              className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              {t('profile.select_category')}
+                            </button>
+                          </li>
+                          {categories
+                            .filter(c => !catSearch || c.name.toLowerCase().includes(catSearch.toLowerCase()))
+                            .map(category => (
+                              <li key={category.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange({ target: { name: 'category_id', value: category.id } });
+                                    setCatDropdownOpen(false);
+                                    setCatSearch("");
+                                  }}
+                                  className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
+                                    String(formData.category_id) === String(category.id)
+                                      ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
+                                      : 'dark:text-white'
+                                  }`}
+                                >
+                                  {category.name}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                        {catPage < catTotalPages && !catSearch && (
+                          <div className="p-2 border-t border-border">
+                            <button
+                              type="button"
+                              onClick={() => fetchCategories(catPage + 1, true)}
+                              disabled={catLoading}
+                              className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
+                            >
+                              {catLoading ? t('common.loading', 'Loading...') : t('profile.load_more_categories', 'Load more categories')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaBook className="text-primary" />
+                    <span className="text-text-primary">
+                      {localUser.category?.name || categories.find((c) => c.id == localUser.category_id)?.name || t('profile.not_selected')}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -607,7 +780,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
               {/* University */}
               <div>
                 <label className="block mb-2 text-sm font-bold text-text-primary">
-                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
+                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
                 </label>
                 {isEditing ? (
                   <div className="relative" ref={uniDropdownRef}>
@@ -708,29 +881,121 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 <label className="block mb-2 text-sm font-bold text-text-primary">
                   {t('profile.college_year')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
-              {isEditing ? (
-                <select
-                  name="college_year"
-                  value={formData.college_year}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">{t('profile.select_year')}</option>
-                  {collegeYears.map((year) => (
-                    <option key={year.id} value={year.id}>
-                      {year.name}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                  <FaGraduationCap className="text-primary" />
-                  <span>
-                    {collegeYears.find((year) => year.id == localUser.college_year)?.name || t('profile.not_specified')}
-                  </span>
-                </div>
-              )}
+                {isEditing ? (
+                  <select
+                    name="college_year"
+                    value={formData.college_year}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
+                    <option value="">{t('profile.select_year')}</option>
+                    {collegeYears.map((year) => (
+                      <option key={year.id} value={year.id}>
+                        {year.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaGraduationCap className="text-primary" />
+                    <span className="text-text-primary">
+                      {collegeYears.find((year) => year.id == localUser.college_year)?.name || t('profile.not_specified')}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Specialization */}
+              <div>
+                <label className="block mb-2 text-sm font-bold text-text-primary">
+                  {t('profile.specialization')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
+                </label>
+                {isEditing ? (
+                  <div className="relative" ref={specDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setSpecDropdownOpen(o => !o)}
+                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
+                    >
+                      <span className={formData.specialization_id ? "" : "text-gray-400"}>
+                        {formData.specialization_id
+                          ? specializations.find(s => String(s.id) === String(formData.specialization_id))?.name || t('profile.select_specialization')
+                          : t('profile.select_specialization')}
+                      </span>
+                      <FaChevronDown className={`text-xs transition-transform ${specDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {specDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
+                        <div className="flex items-center gap-2 p-2 border-b border-border">
+                          <FaSearch className="text-xs text-gray-400 shrink-0" />
+                          <input
+                            type="text"
+                            value={specSearch}
+                            onChange={e => setSpecSearch(e.target.value)}
+                            placeholder={t('profile.search_specialization', 'Search specialization...')}
+                            className="flex-1 text-sm bg-transparent outline-none dark:text-white"
+                            autoFocus
+                          />
+                        </div>
+                        <ul className="overflow-y-auto flex-1">
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleInputChange({ target: { name: 'specialization_id', value: '' } });
+                                setSpecDropdownOpen(false);
+                                setSpecSearch("");
+                              }}
+                              className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              {t('profile.select_specialization')}
+                            </button>
+                          </li>
+                          {specializations
+                            .filter(s => !specSearch || s.name.toLowerCase().includes(specSearch.toLowerCase()))
+                            .map(specialization => (
+                              <li key={specialization.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange({ target: { name: 'specialization_id', value: specialization.id } });
+                                    setSpecDropdownOpen(false);
+                                    setSpecSearch("");
+                                  }}
+                                  className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
+                                    String(formData.specialization_id) === String(specialization.id)
+                                      ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
+                                      : 'dark:text-white'
+                                  }`}
+                                >
+                                  {specialization.name}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                        {specPage < specTotalPages && !specSearch && (
+                          <div className="p-2 border-t border-border">
+                            <button
+                              type="button"
+                              onClick={() => fetchSpecializations(specPage + 1, true)}
+                              disabled={specLoading}
+                              className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
+                            >
+                              {specLoading ? t('common.loading', 'Loading...') : t('profile.load_more_specializations', 'Load more specializations')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <FaStethoscope className="text-primary" />
+                    <span className="text-text-primary">{localUser.specialization?.name || specializations.find((s) => s.id == localUser.specialization_id)?.name || t('profile.not_selected')}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

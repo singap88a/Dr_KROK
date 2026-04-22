@@ -9,6 +9,51 @@ import { Link } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 
+const parseDateString = (dateString) => {
+  if (!dateString) return 0;
+  try {
+    if (typeof dateString === 'string' && dateString.includes('-') && dateString.split('-')[0].length === 2) {
+      const parts = dateString.split(' ');
+      const [day, month, year] = parts[0].split('-');
+      let hours = 0, minutes = 0;
+      if (parts.length > 1) {
+        const timeSplit = parts[1].split(':');
+        hours = parseInt(timeSplit[0]) || 0;
+        minutes = parseInt(timeSplit[1]) || 0;
+        if (parts[2] === 'PM' && hours !== 12) hours += 12;
+        if (parts[2] === 'AM' && hours === 12) hours = 0;
+      }
+      return new Date(year, month - 1, day, hours, minutes).getTime();
+    }
+    const d = new Date(dateString).getTime();
+    return isNaN(d) ? 0 : d;
+  } catch {
+    return 0;
+  }
+};
+
+const formatDateString = (dateString) => {
+  if (!dateString) return '';
+  try {
+    if (typeof dateString === 'string' && dateString.includes('-') && dateString.split('-')[0].length === 2) {
+      const parts = dateString.split(' ');
+      const [day, month, year] = parts[0].split('-');
+      const parsedDate = new Date(year, month - 1, day);
+      if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toLocaleDateString();
+      }
+      return parts[0];
+    }
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString();
+    }
+    return dateString;
+  } catch {
+    return dateString;
+  }
+};
+
 export default function FeaturedArticles({ articles }) {
   const { getBlogs } = useApi();
   const { t } = useTranslation();
@@ -27,7 +72,7 @@ export default function FeaturedArticles({ articles }) {
 
         // Flatten blogs from instructors and sort by date
         const allBlogs = (res.data || []).flatMap(instructor => instructor.blogs || []);
-        const sortedBlogs = allBlogs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        const sortedBlogs = allBlogs.sort((a, b) => parseDateString(b.created_at) - parseDateString(a.created_at));
         const decodedBlogs = sortedBlogs.slice(0, 3).map(b => ({
           ...b,
           description: b.description ? he.decode(b.description) : ""
@@ -51,7 +96,7 @@ export default function FeaturedArticles({ articles }) {
       id: b.id,
       title: b.name,
       description: b.description,
-      date: b.created_at ? new Date(b.created_at).toLocaleDateString() : "",
+      date: formatDateString(b.created_at),
       image: b.image,
     }));
   }, [fetched]);
