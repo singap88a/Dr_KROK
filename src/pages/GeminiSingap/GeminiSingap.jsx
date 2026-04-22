@@ -255,6 +255,32 @@ const GeminiSingap = () => {
     }
   }, [chats]);
 
+  const StatusItems = ({ compact = false }) => {
+    if (!chatInfo) return null;
+    return (
+      <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 w-full mx-auto animate-fade-in ${compact ? 'max-w-2xl' : 'max-w-4xl'}`}>
+        {[
+          { label: "Used", value: chatInfo.used_requests, icon: <FaChartLine />, color: "text-blue-500" },
+          { label: "Left", value: chatInfo.remaining_requests, icon: <FaPaperPlane />, color: "text-green-500" },
+          { label: "Limit", value: chatInfo.daily_limit, icon: <FaStop />, color: "text-purple-500" },
+          { label: "Reset", value: chatInfo.time_until_reset, icon: <FaClock />, color: "text-blue-500" }
+        ].map((item, idx) => (
+          <div key={idx} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+            darkMode ? 'bg-surface/40 border-border' : 'bg-white border-gray-100 shadow-sm'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs ${item.color} opacity-80`}>{item.icon}</span>
+              <span className="text-[9px] font-bold tracking-widest uppercase opacity-40 hidden sm:inline">{item.label}</span>
+            </div>
+            <span className={`text-xs font-bold ${item.label === 'Reset' || item.label === 'Left' ? item.color : 'text-text'}`}>
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // Guest view
   if (!isLoggedIn) {
     return (
@@ -282,53 +308,6 @@ const GeminiSingap = () => {
   return (
     <div className={`relative flex flex-col min-h-screen transition-colors duration-300 ${darkMode ? 'bg-background text-text' : 'bg-slate-50 text-gray-900'} ${chatInfo ? 'pt-14' : ''}`}>
       
-      {/* Unified Compact Side Stats */}
-      {chatInfo && (
-        <div className="fixed top-24 right-4 z-50 flex flex-col gap-3 animate-fade-in pointer-events-none">
-          <div className={`p-4 rounded-[24px] border pointer-events-auto transition-all duration-500 shadow-2xl ${
-            darkMode ? 'bg-surface/80 border-border backdrop-blur-xl' : 'bg-white/80 border-gray-100 backdrop-blur-xl shadow-blue-500/5'
-          } w-44`}>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-              <span className="text-[10px] font-bold tracking-widest uppercase opacity-50">Status</span>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaChartLine className="text-xs text-blue-500" />
-                  <span className="text-[10px] font-medium opacity-50">Used</span>
-                </div>
-                <span className="text-xs font-bold">{chatInfo.used_requests}</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaPaperPlane className="text-xs text-green-500" />
-                  <span className="text-[10px] font-medium opacity-50">Left</span>
-                </div>
-                <span className="text-xs font-bold text-green-500">{chatInfo.remaining_requests}</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaStop className="text-xs text-purple-500" />
-                  <span className="text-[10px] font-medium opacity-50">Limit</span>
-                </div>
-                <span className="text-xs font-bold">{chatInfo.daily_limit}</span>
-              </div>
-
-              <div className="pt-3 border-t border-border/50">
-                <div className="flex items-center gap-2 mb-1">
-                  <FaClock className="text-[10px] text-amber-500" />
-                  <span className="text-[9px] font-bold uppercase tracking-widest opacity-40">Reset</span>
-                </div>
-                <div className="text-xs font-bold text-blue-500">{chatInfo.time_until_reset}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Copy Success Popup */}
       {showCopyPopup && (
@@ -364,31 +343,35 @@ const GeminiSingap = () => {
         </div>
       )}
 
-      {/* Header */}
       {showHeader && (
-        <header className="flex flex-col items-center justify-center flex-1 w-full max-w-4xl px-4 py-8 mx-auto text-center animate-fade-in">
-          <div className="p-4 mb-8 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <img src="logo.png" alt="Gemini" className="w-20 h-20 drop-shadow-2xl" />
+        <header className="flex flex-col items-center justify-center flex-1 w-full max-w-4xl px-4 py-4 mx-auto text-center animate-fade-in overflow-hidden">
+          <div className="p-2 mb-4 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+            <img src="logo.png" alt="Gemini" className="w-16 h-16 drop-shadow-2xl" />
           </div>
-          <h1 className="mb-4 text-5xl font-bold tracking-tight md:text-6xl">
+          <h1 className="mb-2 text-3xl font-bold tracking-tight md:text-5xl">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
               Hello, there
             </span>
           </h1>
-          <p className={`text-2xl md:text-3xl font-medium ${darkMode ? 'text-text-secondary' : 'text-gray-500'}`}>
+          <p className={`text-lg md:text-2xl font-medium ${darkMode ? 'text-text-secondary' : 'text-gray-500'}`}>
             How can I help you today?
           </p>
 
-          <div className="grid w-full grid-cols-1 gap-4 mt-16 md:grid-cols-3">
+          {/* New Horizontal Status on Landing */}
+          <div className="mt-4 w-full">
+            <StatusItems />
+          </div>
+
+          <div className="grid w-full grid-cols-1 gap-3 mt-8 md:grid-cols-3">
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion.text)}
-                className={`flex flex-col items-start p-6 text-left transition-all duration-300 hover:scale-[1.02] border rounded-2xl ${
+                className={`flex flex-col items-start p-4 text-left transition-all duration-300 hover:scale-[1.02] border rounded-2xl ${
                   darkMode ? 'bg-surface/50 border-border hover:bg-accent/50' : 'bg-white border-gray-200 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5'
                 }`}
               >
-                <div className={`p-3 rounded-xl mb-4 ${darkMode ? 'bg-background' : 'bg-blue-50 text-blue-600'}`}>
+                <div className={`p-2.5 rounded-xl mb-3 ${darkMode ? 'bg-background' : 'bg-blue-50 text-blue-600'}`}>
                   {suggestion.icon}
                 </div>
                 <h4 className="text-sm font-medium leading-relaxed">{suggestion.text}</h4>
@@ -475,6 +458,13 @@ const GeminiSingap = () => {
               </div>
             </div>
           </form>
+
+          {/* New Horizontal Status in Chat Input area */}
+          {!showHeader && (
+            <div className="mt-4">
+              <StatusItems compact={true} />
+            </div>
+          )}
 
           <div className="flex justify-center gap-4 mt-4">
             <button onClick={resetChat} className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${darkMode ? 'text-text-muted hover:bg-accent' : 'text-gray-500 hover:bg-gray-200'}`}>

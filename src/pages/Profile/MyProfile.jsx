@@ -523,7 +523,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Picture Section */}
-        <div className="p-6 text-center border bg-surface border-border rounded-xl">
+        <div className="p-6 text-center border bg-surface border-border rounded-xl h-fit sticky top-24">
           <div className="relative w-32 h-32 mx-auto mb-4">
             <img
               src={imagePreview || "/user.png"}
@@ -559,6 +559,166 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
           {formData.image && (
             <p className="mt-2 text-sm text-green-600">New image selected</p>
           )}
+
+          {/* Social Media Section (Relocated) */}
+          <div className="mt-8 pt-8 border-t border-border">
+            <h4 className="mb-4 text-sm font-bold text-left uppercase tracking-wider opacity-60 flex items-center gap-2">
+              <FaChevronDown className="text-[10px]" /> {t('profile.social_media')}
+            </h4>
+            <div className="space-y-3">
+              {/* Facebook */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaFacebook className="inline mr-1 text-blue-600" /> Facebook
+                    </label>
+                    <input
+                      type="url"
+                      name="facebook"
+                      value={formData.facebook}
+                      onChange={handleInputChange}
+                      placeholder="https://facebook.com/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.facebook || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.facebook ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-blue-100 dark:bg-blue-900/30">
+                        <FaFacebook className="text-blue-600 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">Facebook</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.facebook ? "View" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+
+              {/* Instagram */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaInstagram className="inline mr-1 text-pink-600" /> Instagram
+                    </label>
+                    <input
+                      type="url"
+                      name="instagram"
+                      value={formData.instagram}
+                      onChange={handleInputChange}
+                      placeholder="https://instagram.com/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.instagram || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.instagram ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-pink-100 dark:bg-pink-900/30">
+                        <FaInstagram className="text-pink-600 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">Instagram</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.instagram ? "View" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+
+              {/* Telegram */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaTelegram className="inline mr-1 text-blue-500" /> Telegram
+                    </label>
+                    <input
+                      type="url"
+                      name="telegram"
+                      value={formData.telegram}
+                      onChange={handleInputChange}
+                      placeholder="https://t.me/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.telegram || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.telegram ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-blue-50 dark:bg-blue-900/20">
+                        <FaTelegram className="text-blue-500 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">Telegram</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.telegram ? "View" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div>
+                {isEditing ? (
+                  <div className="space-y-1 text-left">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
+                      <FaWhatsapp className="inline mr-1 text-green-600" /> WhatsApp
+                    </label>
+                    <input
+                      type="tel"
+                      name="whatsapp"
+                      value={formData.whatsapp}
+                      onChange={handleInputChange}
+                      placeholder="Wa.me/..."
+                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                ) : (
+                  <a 
+                    href={user.whatsapp ? (user.whatsapp.includes('http') ? user.whatsapp : `https://wa.me/${user.whatsapp}`) : "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                      user.whatsapp ? 'border-border hover:border-primary/50 bg-gray-50/50 dark:bg-gray-800/50' : 'border-dashed border-border opacity-50 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded bg-green-100 dark:bg-green-900/30">
+                        <FaWhatsapp className="text-green-600 text-xs" />
+                      </div>
+                      <span className="text-xs font-medium">WhatsApp</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted">
+                      {user.whatsapp ? "Chat" : "None"}
+                    </span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Profile Details */}
@@ -582,9 +742,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaUser className="text-primary" />
-                    <span>{user.name}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaUser className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.name}</span>
                   </div>
                 )}
               </div>
@@ -604,9 +766,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaEnvelope className="text-primary" />
-                    <span>{user.email}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaEnvelope className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.email}</span>
                   </div>
                 )}
               </div>
@@ -626,9 +790,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaPhone className="text-primary" />
-                    <span>{user.phone || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaPhone className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.phone || t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -718,9 +884,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaBook className="text-primary" />
-                    <span className="text-text-primary">
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaBook className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">
                       {localUser.category?.name || categories.find((c) => c.id == localUser.category_id)?.name || t('profile.not_selected')}
                     </span>
                   </div>
@@ -744,9 +912,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     required
                   />
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaCalendarAlt className="text-primary" />
-                    <span>{user.birth ? formatDateForDisplay(user.birth) : t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaCalendarAlt className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{user.birth ? formatDateForDisplay(user.birth) : t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -770,9 +940,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     <option value="other">{t('profile.other')}</option>
                   </select>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaVenusMars className="text-primary" />
-                    <span className="capitalize">{user.gender || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaVenusMars className="text-primary text-sm" />
+                    </div>
+                    <span className="capitalize font-medium">{user.gender || t('profile.not_provided')}</span>
                   </div>
                 )}
               </div>
@@ -869,9 +1041,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaGraduationCap className="text-primary" />
-                    <span>{localUser.university?.name || universities.find((u) => u.id == localUser.university_id)?.name || t('profile.not_selected')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaGraduationCap className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{localUser.university?.name || universities.find((u) => u.id == localUser.university_id)?.name || t('profile.not_selected')}</span>
                   </div>
                 )}
               </div>
@@ -897,9 +1071,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     ))}
                   </select>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaGraduationCap className="text-primary" />
-                    <span className="text-text-primary">
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaGraduationCap className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">
                       {collegeYears.find((year) => year.id == localUser.college_year)?.name || t('profile.not_specified')}
                     </span>
                   </div>
@@ -991,107 +1167,11 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaStethoscope className="text-primary" />
-                    <span className="text-text-primary">{localUser.specialization?.name || specializations.find((s) => s.id == localUser.specialization_id)?.name || t('profile.not_selected')}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Social Media Section */}
-          <div className="mt-8">
-            <h4 className="mb-4 text-lg font-semibold">{t('profile.social_media')}</h4>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Facebook */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaFacebook className="inline mr-2 text-blue-600" />
-                  {t('profile.facebook')}
-                </label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="facebook"
-                    value={formData.facebook}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'Facebook' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaFacebook className="text-blue-600" />
-                    <span>{user.facebook || t('profile.not_provided')}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Instagram */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaInstagram className="inline mr-2 text-pink-600" />
-                  {t('profile.instagram')}
-                </label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="instagram"
-                    value={formData.instagram}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'Instagram' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaInstagram className="text-pink-600" />
-                    <span>{user.instagram || t('profile.not_provided')}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Telegram */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaTelegram className="inline mr-2 text-blue-500" />
-                  {t('profile.telegram')}
-                </label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="telegram"
-                    value={formData.telegram}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'Telegram' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaTelegram className="text-blue-500" />
-                    <span>{user.telegram || t('profile.not_provided')}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* WhatsApp */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  <FaWhatsapp className="inline mr-2 text-green-600" />
-                  {t('profile.whatsapp')}
-                </label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="whatsapp"
-                    value={formData.whatsapp}
-                    onChange={handleInputChange}
-                    placeholder={t('profile.social_placeholder', { platform: 'WhatsApp' })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <FaWhatsapp className="text-green-600" />
-                    <span>{user.whatsapp || t('profile.not_provided')}</span>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
+                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
+                      <FaStethoscope className="text-primary text-sm" />
+                    </div>
+                    <span className="font-medium">{localUser.specialization?.name || specializations.find((s) => s.id == localUser.specialization_id)?.name || t('profile.not_selected')}</span>
                   </div>
                 )}
               </div>

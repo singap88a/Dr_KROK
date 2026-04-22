@@ -236,7 +236,7 @@ export default function CourseDetails() {
   }
 
   return (
-    <section className="min-h-screen px-4 py-8 bg-background sm:px-6 md:px-12 text-text">
+    <section className="min-h-screen px-4 py-8 bg-background sm:px-6 md:px-12 text-text pt-20">
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
         <div className="relative w-full h-[500px] overflow-hidden shadow-lg rounded-2xl lg:mx-0">

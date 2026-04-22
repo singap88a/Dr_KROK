@@ -228,7 +228,7 @@ export default function LiveCourseDetails() {
               onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
-            <img src={imageUrl} alt={course.title} className="object-cover w-full h-[300px]" />
+            <img src={imageUrl} alt={course.title} className="object-cover w-full h-[500px]" />
           )}
           {!isPlaying && videoUrl && (
             <div className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/50" onClick={handlePlay}>
