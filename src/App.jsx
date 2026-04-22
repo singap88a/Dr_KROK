@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
@@ -49,6 +49,9 @@ import PaymentFailed from "./pages/Payment/PaymentFailed";
 import NotFound from "./pages/NotFound/NotFound";
 
 export default function App() {
+  const location = useLocation();
+  const isChatPage = location.pathname === "/gemini";
+
   return (
     <div className="min-h-screen bg-background text-text">
      <ThemeProvider>
@@ -93,7 +96,7 @@ export default function App() {
           <Route path="/live-courses/:id/test-results/:scope/:testId" element={<FinalTestResults />} />
           <Route path="/live-courses/:id/certificate" element={<Certificate />} />
 
- 
+
           <Route path="/articles" element={<TrainerArticlesPage />} />
           <Route path="/gemini" element={<GeminiSingap />} />
           <Route path="/test" element={<TestYourself />} />
@@ -113,9 +116,14 @@ export default function App() {
       </main>
       <AI_Icon />
       <TelegramIcon/>
-      <CTA />
+      
+      {!isChatPage && (
+        <>
+          <CTA />
+          <Footer />
+        </>
+      )}
 
-        <Footer />
        </CartProvider>
       </UserProvider>
      </ApiProvider>
