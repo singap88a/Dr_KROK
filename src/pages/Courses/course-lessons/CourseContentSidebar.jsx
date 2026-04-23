@@ -97,20 +97,14 @@ const CourseContentSidebar = ({
   }, [isLoggedIn, course?.id, checkCertificateExists, getAuthToken]);
 
   const sortedSections = useMemo(() => {
-    return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
+    return sections;
   }, [sections]);
 
   const getSectionLessons = useMemo(() => {
     return (sectionId) => {
       const section = sections.find((s) => s.id === sectionId);
       if (!section || !section.lessons) return [];
-      return [...section.lessons].sort((a, b) => {
-        const aFree = a.type === "free" || a.type === "Free";
-        const bFree = b.type === "free" || b.type === "Free";
-        if (aFree && !bFree) return -1;
-        if (!aFree && bFree) return 1;
-        return (a.id || 0) - (b.id || 0);
-      });
+      return section.lessons;
     };
   }, [sections]);
 
