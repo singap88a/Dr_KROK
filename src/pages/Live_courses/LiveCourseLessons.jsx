@@ -7,7 +7,13 @@ import { useUser } from "../../context/UserContext";
 import i18n from "../../i18n";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import SectionItem from "../Courses/SectionItem";
+import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // Import Components
 import { useLessonProgress } from "./ProgressSystem/LessonProgress";
@@ -803,30 +809,51 @@ export default function LiveCourseLessons() {
     }
   };
 
-  // 🔥 دالة تنسيق الوقت بشكل احترافي
-  const formatSessionTime = (dateString) => {
+  // 🔥 دالة تنسيق الوقت بشكل خام لاستخدامها في التصميمات المعقدة
+  const formatSessionTimeRaw = (dateString) => {
     if (!dateString) return null;
     try {
-      // إذا كان التاريخ لا يحتوي على منطقة زمنية، نفترض أنه UTC (Z) ونحوله لتوقيت السيرفر للعرض
-      let startGlobal = dateString;
+      let sessionTime;
       if (!dateString.includes("+") && !dateString.includes("Z")) {
-        startGlobal = dateString.replace(" ", "T") + "Z";
+        sessionTime = dayjs.utc(dateString.replace(" ", "T"));
+      } else {
+        sessionTime = dayjs(dateString);
       }
-
-      // القيمة الافتراضية لأوكرانيا هي +03:00 إذا لم نجدها في server_time
-      const serverOffsetStr = course?.server_time?.match(/([+-]\d{2}:\d{2})$/)?.[1] || "+03:00";
-
-      return dayjs(startGlobal).utcOffset(serverOffsetStr).format("dddd • MMM DD, YYYY • hh:mm A");
+      return {
+        localFull: sessionTime.local().format("dddd • MMM DD, YYYY • hh:mm A"),
+        localTime: sessionTime.local().format("hh:mm A"),
+        localDate: sessionTime.local().format("dddd • MMM DD, YYYY"),
+        ukraineTime: sessionTime.utcOffset(3).format("hh:mm A"),
+        moment: sessionTime
+      };
     } catch {
-      return dateString;
+      return null;
     }
+  };
+
+  // 🔥 دالة تنسيق الوقت بشكل احترافي - تعرض الوقت بتوقيت الطالب المحلي
+  const formatSessionTime = (dateString) => {
+    const raw = formatSessionTimeRaw(dateString);
+    if (!raw) return dateString;
+
+    return (
+      <span className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+        <span className="font-bold text-primary">{raw.localFull}</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-medium">
+          {t("liveCourses.localTime", "Your Local Time")}
+        </span>
+        <span className="text-[10px] text-text-muted opacity-70">
+          ({raw.ukraineTime} Ukraine)
+        </span>
+      </span>
+    );
   };
 
   // 🔥 دالة التحقق من تفعيل الرابط (قبل المحاضرة بـ 5 دقائق) باستخدام وقت السيرفر الموحد
   const isLinkActive = (startTime) => {
     if (!startTime || !course?.server_time) return false;
     try {
-      // 1. تحويل وقت المحاضرة إلى UTC (لأن السيرفر يرسله UTC بدون علامة Z أحياناً)
+      // 1. تحويل وقت المحاضرة إلى كائن dayjs
       let startGlobal = startTime;
       if (!startTime.includes("+") && !startTime.includes("Z")) {
         startGlobal = startTime.replace(" ", "T") + "Z";
@@ -838,13 +865,40 @@ export default function LiveCourseLessons() {
       const fiveMinutes = 5 * 60 * 1000;
       
       // 2. الوقت الحالي "الحقيقي" للسيرفر (وقت الجهاز + الفرق المحسوب)
-      // هذا الوقت هو بمثابة ساعة السيرفر الآن بتوقيت UTC
       const ukraineTimeNow = currentTimeMs + serverTimeOffset;
       
       return ukraineTimeNow >= (start - fiveMinutes);
     } catch (e) {
       console.error("Error calculating link active time:", e);
       return false;
+    }
+  };
+
+  // 🔥 دالة حساب الوقت المتبقي للمحاضرة
+  const getTimeUntilStart = (startTime) => {
+    if (!startTime) return null;
+    try {
+      let startGlobal = startTime;
+      if (!startTime.includes("+") && !startTime.includes("Z")) {
+        startGlobal = startTime.replace(" ", "T") + "Z";
+      }
+      const start = dayjs(startGlobal).valueOf();
+      const now = currentTimeMs + serverTimeOffset;
+      const diff = start - now;
+      
+      if (diff <= 0) return null;
+      
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(minutes / 60);
+      
+      if (hours > 24) return null;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes % 60}m`;
+      }
+      return `${minutes}m`;
+    } catch {
+      return null;
     }
   };
 
@@ -1262,77 +1316,126 @@ export default function LiveCourseLessons() {
                           </div>
                         )}
 
-                        {/* Session start time - ALWAYS show if available */}
+                        {/* Session start time & Join link - Professional Redesign */}
                         {(currentLesson?.started_at || currentSection?.started_at) && (
-                          <div className="flex items-center gap-2 p-3 mt-3 text-sm border rounded bg-surface-2 border-border-2">
-                            <FaCalendarAlt className="text-primary" />
-                            <span className="font-medium">{t("liveCourses.sessionDate", "Session Date")}:</span>
-                            <span className="text-text-muted">
-                              {formatSessionTime(currentLesson?.started_at || currentSection?.started_at)}
-                            </span>
-                          </div>
-                        )}
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ boxShadow: "0 10px 25px -5px rgba(var(--primary-rgb), 0.2)" }}
+                            className="p-6 mt-6 border-2 shadow-sm rounded-2xl bg-gradient-to-br from-surface to-accent/20 border-primary/20 hover:border-primary/40 transition-colors duration-300"
+                          >
+                            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                              <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                  <motion.div 
+                                    animate={{ rotate: [0, 10, -10, 0] }}
+                                    transition={{ repeat: Infinity, duration: 4 }}
+                                    className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary"
+                                  >
+                                    <FaCalendarAlt size={14} />
+                                  </motion.div>
+                                  <span className="text-sm font-semibold tracking-wide uppercase text-text-muted">
+                                    {t("liveCourses.sessionSchedule", "Session Schedule")}
+                                  </span>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  {(() => {
+                                    const rawTime = formatSessionTimeRaw(currentLesson?.started_at || currentSection?.started_at);
+                                    return rawTime && (
+                                      <>
+                                        <div className="text-3xl font-black tracking-tight text-primary">
+                                          {rawTime.localTime}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm font-medium text-text-muted">
+                                          <span>{rawTime.localDate}</span>
+                                          <span className="w-1 h-1 rounded-full bg-primary/30"></span>
+                                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary text-white shadow-sm">
+                                            {t("liveCourses.localTimeShort", "Local")}
+                                          </span>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
 
-                        {/* Zoom link - ALWAYS show if available */}
-                        {(currentLesson?.zoom_link || currentSection?.zoom_link) && (
-                          <div className="mt-4">
-                            {(() => {
-                              const statusRaw = currentLesson?.status || currentSection?.status;
-                              // API could return status as "active" or "Active"
-                              const isLectureEnded = statusRaw && statusRaw.toString().toLowerCase() === "active";
-                              let active = false;
-                              let link = null;
-                              if (currentLesson && currentLesson.zoom_link) {
-                                active = isLinkActive(currentLesson.started_at);
-                                link = currentLesson.zoom_link;
-                              } else if (currentSection && currentSection.zoom_link) {
-                                active = isLinkActive(currentSection.started_at);
-                                link = currentSection.zoom_link;
-                              }
-                              return (
-                                <div className="flex flex-col gap-2">
-                                  {isLectureEnded ? (
-                                    <>
-                                      <button
-                                        disabled
-                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 w-[200px] font-bold text-white transition-all duration-300 rounded-xl shadow-md bg-gray-400 cursor-not-allowed opacity-70"
-                                      >
-                                        <FaVideo />
-                                        {t("liveCourses.joinLiveSession", "Join Live Session")}
-                                      </button>
-                                      <p className="flex items-center gap-1 text-sm font-medium text-text-muted mt-1">
-                                        <FaVideo className="text-gray-400" />
-                                        {t("liveCourses.sessionEnded", "The session has concluded. You can watch the recorded lecture below.")}
-                                      </p>
-                                    </>
-                                  ) : (
-                                    <>
+                                {(() => {
+                                  const rawTime = formatSessionTimeRaw(currentLesson?.started_at || currentSection?.started_at);
+                                  return rawTime && (
+                                    <div className="flex items-center gap-2 text-[11px] font-medium text-text-muted opacity-80 bg-accent/40 w-fit px-2 py-1 rounded-lg">
+                                      <FaClock className="text-primary/60" />
+                                      <span>{t("liveCourses.ukraineTime", "Ukraine")}: {rawTime.ukraineTime}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+
+                              <div className="flex flex-col gap-3 min-w-[220px]">
+                                {(() => {
+                                  const statusRaw = currentLesson?.status || currentSection?.status;
+                                  const isLectureEnded = statusRaw && statusRaw.toString().toLowerCase() === "active";
+                                  let active = false;
+                                  let link = null;
+                                  if (currentLesson && currentLesson.zoom_link) {
+                                    active = isLinkActive(currentLesson.started_at);
+                                    link = currentLesson.zoom_link;
+                                  } else if (currentSection && currentSection.zoom_link) {
+                                    active = isLinkActive(currentSection.started_at);
+                                    link = currentSection.zoom_link;
+                                  }
+
+                                  if (isLectureEnded) {
+                                    return (
+                                      <div className="space-y-2">
+                                        <button disabled className="w-full flex items-center justify-center gap-2 px-6 py-4 font-bold text-white bg-gray-400 rounded-2xl cursor-not-allowed opacity-70">
+                                          <FaVideo /> {t("liveCourses.joinLiveSession", "Join Live Session")}
+                                        </button>
+                                        <p className="text-[11px] text-center text-text-muted leading-tight">
+                                          {t("liveCourses.sessionEndedShort", "The live session has ended.")}
+                                        </p>
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div className="space-y-3">
                                       <a
                                         href={active ? link : undefined}
                                         target={active ? "_blank" : undefined}
                                         rel={active ? "noopener noreferrer" : undefined}
                                         onClick={(e) => !active && e.preventDefault()}
-                                        className={`inline-flex items-center justify-center gap-2 px-6 py-3 w-[200px] font-bold text-white transition-all duration-300 rounded-xl shadow-md ${
+                                        className={`group w-full flex items-center justify-center gap-3 px-6 py-4 font-bold text-white transition-all duration-300 rounded-2xl shadow-lg ${
                                           active 
-                                          ? "bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer" 
-                                          : "bg-gray-400 cursor-not-allowed opacity-70"
+                                          ? "bg-gradient-to-r from-primary to-secondary hover:shadow-primary/30 hover:scale-[1.03] active:scale-95" 
+                                          : "bg-gray-400 cursor-not-allowed opacity-80"
                                         }`}
                                       >
-                                        <FaVideo />
+                                        <FaVideo className={active ? "animate-bounce" : ""} />
                                         {t("liveCourses.joinLiveSession", "Join Live Session")}
                                       </a>
                                       {!active && (
-                                        <p className="flex items-center gap-1 text-xs font-medium text-red-500">
-                                          <FaClock className="animate-pulse" />
-                                          {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts.")}
-                                        </p>
+                                        <div className="flex flex-col gap-2 p-4 border rounded-2xl bg-white/50 dark:bg-black/20 border-red-100 dark:border-red-900/20 shadow-sm">
+                                          <div className="flex items-center gap-2 text-[11px] font-bold text-red-500">
+                                            <FaClock className="animate-pulse" />
+                                            <span>{t("liveCourses.linkOpensSoonShort", "Link activates 5m before start")}</span>
+                                          </div>
+                                          {(() => {
+                                            const remaining = getTimeUntilStart(currentLesson?.started_at || currentSection?.started_at);
+                                            return remaining && (
+                                              <div className="text-[11px] font-black text-primary flex items-center gap-1.5 mt-1 pt-1 border-t border-red-50 dark:border-red-900/10">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></div>
+                                                {t("liveCourses.startsIn", "Starts in")}: {remaining}
+                                              </div>
+                                            );
+                                          })()}
+                                        </div>
                                       )}
-                                    </>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          </motion.div>
                         )}
 
                         {/* Attachments */}
@@ -1360,76 +1463,131 @@ export default function LiveCourseLessons() {
                       </div>
                     </>
                   ) : (
-                    // Inactive status - show professional message
-                    <div className="p-8 text-center aspect-video bg-accent">
-                      <div className="max-w-lg mx-auto">
-                        <div className="mb-4 text-3xl">
-                          <FaClock className="mx-auto text-4xl text-yellow-500" />
-                        </div>
+                    <div className="p-10 text-center bg-surface sm:p-16">
+                      <div className="max-w-xl mx-auto">
+                        <motion.div 
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="flex items-center justify-center w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-50 text-yellow-500 dark:bg-yellow-900/20"
+                        >
+                          <FaClock className="text-4xl" />
+                        </motion.div>
 
-                        <div className="mb-3 text-lg font-semibold text-text">
+                        <h3 className="mb-3 text-2xl font-bold text-text">
                           {t("liveCourses.sessionInactive", "Session is Currently Inactive")}
-                        </div>
+                        </h3>
+                        <p className="mb-8 text-text-muted">
+                          {t("liveCourses.sessionInactiveMessageLong", "This session hasn't started yet. Check the schedule below for your local time.")}
+                        </p>
 
-                        {/* ALWAYS show session date if available */}
                         {(currentLesson?.started_at || currentSection?.started_at) && (
-                          <div className="p-3 mb-4 text-sm border rounded bg-surface-2 border-border-2">
-                            <div className="flex items-center justify-center gap-2">
-                              <FaCalendarAlt className="text-primary" />
-                              <span className="font-medium">{t("liveCourses.sessionDate", "Session Date")}:</span>
-                              <span className="text-text-muted">
-                                {formatSessionTime(currentLesson?.started_at || currentSection?.started_at)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* ALWAYS show zoom link if available */}
-                        {(currentLesson?.zoom_link || currentSection?.zoom_link) && (
-                          <div className="flex flex-col items-center gap-3 mt-6">
+                          <div className="grid grid-cols-1 gap-6 mb-10 sm:grid-cols-2">
                             {(() => {
-                              let active = false;
-                              let link = null;
-                              if (currentLesson && currentLesson.zoom_link) {
-                                active = isLinkActive(currentLesson.started_at);
-                                link = currentLesson.zoom_link;
-                              } else if (currentSection && currentSection.zoom_link) {
-                                active = isLinkActive(currentSection.started_at);
-                                link = currentSection.zoom_link;
-                              }
-                              return (
+                              const raw = formatSessionTimeRaw(currentLesson?.started_at || currentSection?.started_at);
+                              return raw && (
                                 <>
-                                  <a
-                                    href={active ? link : undefined}
-                                    target={active ? "_blank" : undefined}
-                                    rel={active ? "noopener noreferrer" : undefined}
-                                    onClick={(e) => !active && e.preventDefault()}
-                                    className={`inline-flex items-center justify-center gap-3 px-8 py-3.5 font-bold text-white transition-all duration-300 rounded-xl shadow-lg ${
-                                      active 
-                                      ? "bg-gradient-to-r from-primary to-secondary hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer" 
-                                      : "bg-gray-400 cursor-not-allowed opacity-80"
-                                    }`}
+                                  <motion.div 
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    whileHover={{ y: -5, boxShadow: "0 15px 30px -10px rgba(var(--primary-rgb), 0.3)" }}
+                                    className="relative overflow-hidden p-6 border-2 rounded-3xl bg-surface shadow-xl border-primary/30 group transition-all duration-300"
                                   >
-                                    <FaVideo className="text-lg" />
-                                    {t("liveCourses.viewMeetingLink", "View Meeting Link")}
-                                  </a>
-                                  {!active && (
-                                    <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-800/20">
-                                      <FaClock className="text-red-500 animate-pulse" />
-                                      <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {t("liveCourses.linkOpensSoon", "The link will be active exactly 5 minutes before the session starts.")}
-                                      </span>
+                                    <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full bg-primary/5 group-hover:bg-primary/10 transition-colors"></div>
+                                    <div className="relative z-10">
+                                      <div className="mb-2 text-[10px] font-black tracking-[0.2em] uppercase text-primary">
+                                        {t("liveCourses.yourLocalTime", "Your Local Time")}
+                                      </div>
+                                      <div className="text-3xl font-black text-text mb-1 group-hover:text-primary transition-colors">
+                                        {raw.localTime}
+                                      </div>
+                                      <div className="text-xs font-bold text-text-muted">
+                                        {raw.localDate}
+                                      </div>
                                     </div>
-                                  )}
+                                  </motion.div>
+
+                                  <motion.div 
+                                    initial={{ x: 20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    whileHover={{ y: -5 }}
+                                    className="relative overflow-hidden p-6 border-2 rounded-3xl bg-accent/20 shadow-lg border-border group transition-all duration-300"
+                                  >
+                                    <div className="relative z-10">
+                                      <div className="mb-2 text-[10px] font-black tracking-[0.2em] uppercase text-text-muted opacity-60">
+                                        {t("liveCourses.ukraineTimeShort", "Ukraine")}
+                                      </div>
+                                      <div className="text-3xl font-black text-text/80 mb-1">
+                                        {raw.ukraineTime}
+                                      </div>
+                                      <div className="text-xs font-bold text-text-muted italic">
+                                        {t("liveCourses.referenceOnly", "Reference Only")}
+                                      </div>
+                                    </div>
+                                  </motion.div>
                                 </>
                               );
                             })()}
                           </div>
                         )}
 
-                        <p className="mt-3 text-sm text-text-muted">
-                          {t("liveCourses.sessionInactiveMessage", "This session is not currently active. Please check the schedule for updates.")}
-                        </p>
+                        <div className="flex flex-col items-center gap-4">
+                          {(() => {
+                            const statusRaw = currentLesson?.status || currentSection?.status;
+                            const isLectureEnded = statusRaw && statusRaw.toString().toLowerCase() === "active";
+                            let active = false;
+                            let link = null;
+                            if (currentLesson && currentLesson.zoom_link) {
+                              active = isLinkActive(currentLesson.started_at);
+                              link = currentLesson.zoom_link;
+                            } else if (currentSection && currentSection.zoom_link) {
+                              active = isLinkActive(currentSection.started_at);
+                              link = currentSection.zoom_link;
+                            }
+
+                            return (
+                              <>
+                                <a
+                                  href={active ? link : undefined}
+                                  target={active ? "_blank" : undefined}
+                                  rel={active ? "noopener noreferrer" : undefined}
+                                  onClick={(e) => !active && e.preventDefault()}
+                                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 font-bold text-white transition-all duration-300 rounded-2xl shadow-lg ${
+                                    active 
+                                    ? "bg-gradient-to-r from-primary to-secondary hover:shadow-xl hover:scale-[1.03] active:scale-95" 
+                                    : "bg-gray-400 cursor-not-allowed opacity-80"
+                                  }`}
+                                >
+                                  <FaVideo className={active ? "animate-pulse" : ""} />
+                                  {t("liveCourses.viewMeetingLink", "View Meeting Link")}
+                                </a>
+                                
+                                {!active && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col sm:flex-row items-center gap-3 px-6 py-3 border-2 rounded-2xl bg-red-50/30 border-red-100 dark:bg-red-900/10 dark:border-red-800/20 shadow-sm"
+                                  >
+                                    <div className="flex items-center gap-2 text-xs font-black text-red-600 dark:text-red-400">
+                                      <FaClock className="animate-spin-slow" />
+                                      <span>{t("liveCourses.linkOpensSoonShort", "Link activates 5m before start")}</span>
+                                    </div>
+                                    {(() => {
+                                      const remaining = getTimeUntilStart(currentLesson?.started_at || currentSection?.started_at);
+                                      return remaining && (
+                                        <div className="sm:ml-3 sm:pl-3 sm:border-l-2 border-red-200 dark:border-red-800 flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                                          <span className="text-xs font-black text-primary">
+                                            {t("liveCourses.in", "In")}: {remaining}
+                                          </span>
+                                        </div>
+                                      );
+                                    })()}
+                                  </motion.div>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                   )}
