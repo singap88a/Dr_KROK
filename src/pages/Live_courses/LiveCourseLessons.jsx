@@ -651,7 +651,7 @@ export default function LiveCourseLessons() {
   }, [currentLesson?.id]);
 
   const sortedSections = useMemo(() => {
-    return [...sections].sort((a, b) => (a.id || 0) - (b.id || 0));
+    return sections;
   }, [sections]);
 
   const getSectionLessons = useMemo(() => {
@@ -659,15 +659,7 @@ export default function LiveCourseLessons() {
       const section = sections.find((s) => s.id === sectionId);
       if (!section || !section.lessons) return [];
       
-      const sectionLessons = [...section.lessons].sort((a, b) => {
-        const aFree = a.type === "free" || a.type === "Free" || a.is_free === true;
-        const bFree = b.type === "free" || b.type === "Free" || b.is_free === true;
-        if (aFree && !bFree) return -1;
-        if (!aFree && bFree) return 1;
-        return (a.id || 0) - (b.id || 0);
-      });
-
-      return sectionLessons;
+      return section.lessons;
     };
   }, [sections]);
 
