@@ -43,7 +43,7 @@ import InstructorDetails from "./pages/Instructors/InstructorDetails";
 import LiveCourses from "./pages/Live_courses/LiveCourses";
 import LiveCourseDetails from "./pages/Live_courses/LiveCourseDetails";
 // import LiveCourseSubscription from "./pages/Live_courses/LiveCourseSubscription";
-import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons";
+import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons/LiveCourseLessons";
 import PaymentSuccess from "./pages/Payment/PaymentSuccess";
 import PaymentFailed from "./pages/Payment/PaymentFailed";
 import NotFound from "./pages/NotFound/NotFound";
