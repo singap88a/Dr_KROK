@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import RatingStars from "../../pages/Courses/components/RatingStars";
+import RatingStars from "../Common/RatingStars";
 
 export default function CoursesPreview({ courses }) {
   const { t } = useTranslation();

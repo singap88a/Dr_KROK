@@ -26,9 +26,7 @@ import {
   FaBriefcase,
   FaUserGraduate,
   FaCalendarAlt,
-  FaImage,
   FaHourglassHalf,
-  FaPercentage,
 } from "react-icons/fa";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -40,11 +38,11 @@ import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import LeaveReview from "../../components/Courses/LeaveReview.jsx";
 import TopStudentsSlider from "../../components/Common/TopStudentsSlider";
 
-export default function LiveCourseDetails() {
+export default function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getLiveCourseById, getCourseAccess } = useApi();
+  const { getVideoCourseById, getCourseAccess } = useApi();
   const { userData, isLoggedIn } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -55,6 +53,7 @@ export default function LiveCourseDetails() {
   const [userHasAccess, setUserHasAccess] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isInstructorExpanded, setIsInstructorExpanded] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -64,19 +63,19 @@ export default function LiveCourseDetails() {
         setLoading(true);
         setError("");
 
-        const data = await getLiveCourseById(id, isLoggedIn);
+        const data = await getVideoCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(data);
 
         // Set reviews from course data
-        if (data.ratings && Array.isArray(data.ratings)) {
+        if (data && data.ratings && Array.isArray(data.ratings)) {
           setReviews(data.ratings);
         }
 
         // Check course access if logged in
         if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id, 'live_course');
+            const access = await getCourseAccess(id, 'video_course');
             setUserHasAccess(access);
           } catch {
             // If access check fails, assume no access for paid content
@@ -98,7 +97,7 @@ export default function LiveCourseDetails() {
     return () => {
       mounted = false;
     };
-  }, [id, getLiveCourseById, getCourseAccess, isLoggedIn]);
+  }, [id, getVideoCourseById, getCourseAccess, isLoggedIn]);
 
   // Check if user has already reviewed this course
   useEffect(() => {
@@ -139,9 +138,10 @@ export default function LiveCourseDetails() {
     ));
   };
 
+
   const imageUrl = useMemo(() => {
     if (!course) return "/logo.png";
-    const img = Array.isArray(course.image) ? course.image[0] : course.image;
+    const img = course.image && Array.isArray(course.image) ? course.image[0] : course.image;
     if (typeof img === "string" && img.length > 0) return img;
     return "/logo.png";
   }, [course]);
@@ -152,7 +152,7 @@ export default function LiveCourseDetails() {
       ? course.video
       : null;
   }, [course]);
-  // ////
+
   const getLevelTranslation = (level) => {
     const levelMap = {
       'beginner': t('courses.beginner', 'Beginner'),
@@ -162,9 +162,49 @@ export default function LiveCourseDetails() {
     return levelMap[level] || level;
   };
 
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+    // Format: "22-09-2025 03:47 PM"
+    const [datePart, timePart, ampm] = dateString.split(' ');
+    const [day, month, year] = datePart.split('-');
+    let [hour, minute] = timePart.split(':');
+    hour = parseInt(hour);
+    if (ampm === 'PM' && hour !== 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    return new Date(year, month - 1, day, hour, minute);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     try {
+      // Handle DD-MM-YYYY HH:MM AM/PM format
+      const parts = dateString.split(' ');
+      if (parts.length >= 2) {
+        const datePart = parts[0]; // DD-MM-YYYY
+        const timePart = parts[1]; // HH:MM
+        const ampm = parts[2]; // AM/PM
+
+        const [day, month, year] = datePart.split('-');
+        const [hours, minutes] = timePart.split(':');
+
+        // Convert to 24-hour format
+        let hour24 = parseInt(hours);
+        if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+        if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+        const date = new Date(year, month - 1, day, hour24, minutes);
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        return `${formattedDate} (Ukraine Time)`;
+      }
+
+      // Fallback for other formats
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
 
@@ -182,18 +222,6 @@ export default function LiveCourseDetails() {
     }
   };
 
-  const getTimeStatus = (dateString) => {
-    const now = new Date();
-    const courseDate = new Date(dateString);
-    const diffTime = courseDate.getTime() - now.getTime();
-    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-
-    if (diffHours < 0) return null; // Don't show anything if ended
-    if (diffHours <= 24) return { status: 'liveToday', text: 'LIVE TODAY', color: 'bg-red-500' };
-    if (diffHours <= 168) return { status: 'comingSoon', text: 'COMING SOON', color: 'bg-orange-500' };
-    return { status: 'upcoming', text: 'UPCOMING', color: 'bg-blue-500' };
-  };
-
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -207,19 +235,16 @@ export default function LiveCourseDetails() {
     );
   }
 
-  const timeStatus = getTimeStatus(course.started_at);
-  const isUpcoming = new Date(course.started_at) > new Date();
-
   return (
-    <section className="min-h-screen px-4 py-20 bg-background sm:px-6 md:px-12 text-text">
+    <section className="min-h-screen px-4 py-8 bg-background sm:px-6 md:px-12 text-text pt-20">
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
-        <div className="relative w-full overflow-hidden shadow-lg rounded-2xl lg:mx-0 h-fit lg:self-start">
+        <div className="relative w-full h-[500px] overflow-hidden shadow-lg rounded-2xl lg:mx-0">
           {videoUrl ? (
             <video
               ref={videoRef}
               src={videoUrl}
-              className="object-cover w-full h-[400px]"
+              className="object-cover w-full h-full"
               muted
               playsInline
               controls={isPlaying}
@@ -228,26 +253,11 @@ export default function LiveCourseDetails() {
               onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
-            <img src={imageUrl} alt={course.title} className="object-cover w-full h-[500px]" />
+            <img src={imageUrl} alt={course.title} className="object-cover w-full h-full" />
           )}
           {!isPlaying && videoUrl && (
             <div className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/50" onClick={handlePlay}>
               <FaPlay className="text-4xl text-white drop-shadow-lg sm:text-5xl" />
-            </div>
-          )}
-          {/* Live Badge */}
-          <div className="absolute z-10 top-4 left-4">
-            <div className="flex items-center gap-1 px-3 py-1 text-white rounded-full shadow-lg bg-gradient-to-r from-[#E11D48] to-[#F97316]">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-              <span className="text-xs font-bold">{t("liveCourses.live", "LIVE")}</span>
-            </div>
-          </div>
-          {/* Time Status Badge */}
-          {timeStatus && (
-            <div className="absolute z-10 top-4 right-4">
-              <div className={`px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg ${timeStatus.color}`}>
-                {t(`liveCourses.${timeStatus.status}`, timeStatus.text)}
-              </div>
             </div>
           )}
         </div>
@@ -255,20 +265,18 @@ export default function LiveCourseDetails() {
         {/* تفاصيل الكورس */}
         <div className="flex flex-col justify-between space-y-4 sm:space-y-6">
           <h1 className="text-2xl font-bold sm:text-3xl">{course.title}</h1>
-          <div className="text-sm text-text-secondary sm:text-base">
-            <div
-              className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}
-              dangerouslySetInnerHTML={{ __html: course.description }}
-            />
-            {course.description && course.description.length > 150 && (
-              <button
-                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80 cursor-pointer"
-              >
-                {isDescriptionExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
-              </button>
-            )}
-          </div>
+          <div
+            className={`text-sm text-text-secondary sm:text-base ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
+            dangerouslySetInnerHTML={{ __html: course.description }}
+          />
+          {course.description && course.description.length > 200 && (
+            <button
+              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              className="mt-1 font-medium underline text-primary hover:text-primary/80 text-start"
+            >
+              {isDescriptionExpanded ? "Show Less" : "Read More"}
+            </button>
+          )}
 
           {/* Rating */}
           <div className="flex items-center gap-2">
@@ -301,7 +309,11 @@ export default function LiveCourseDetails() {
           {/* معلومات */}
           <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 sm:gap-4">
             <div className="flex items-center gap-2">
-              <FaLayerGroup className="text-primary" /> {t("courses.level", "Level")} <span className="font-medium">{getLevelTranslation(course.level)}</span>
+              <FaUser className="text-primary" /> {t("courses.instructor", "Instructor")} <span className="font-medium">{course.instructor?.name || (typeof course.instructor === 'string' ? course.instructor : "")}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <FaLayerGroup className="text-primary" /> {t("courses.level", "Level")} <span className="font-medium">{getLevelTranslation(course?.level)}</span>
             </div>
             <div className="flex items-center gap-2">
               <FaCertificate className="text-primary" /> {t("courses.category", "Category")} <span className="font-medium">
@@ -317,17 +329,29 @@ export default function LiveCourseDetails() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <FaGlobe className="text-primary" /> {t("courses.language", "Language")} <span className="font-medium">{course.language}</span>
+              <FaGlobe className="text-primary" /> {t("courses.language", "Language")} <span className="font-medium">{course?.language || ""}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FaBook className="text-primary" /> {t("courses.lessons", "Lessons")} <span className="font-medium">{course.lessons_count || 0}</span>
+              <FaBook className="text-primary" /> {t("courses.lectures", "Lectures")} <span className="font-medium">{course.lessons_count || 0}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FaCalendarAlt className="text-primary" /> {t("courses.startedAt", "Started At")} <span className="font-medium">{formatDate(course.started_at)}</span>
+              <FaCalendarAlt className="text-primary" /> {t("courses.courseDate", "Course Date")} <span className="font-medium">
+                {course.instructor?.created_at ? (() => {
+                  const date = parseDate(course.instructor.created_at);
+                  if (!date) return '';
+                  const year = date.getFullYear();
+                  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                  const day = date.getDate().toString().padStart(2, '0');
+                  return `${year}-${month}-${day}`;
+                })() : ''}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <FaUsers className="text-primary" /> {t("courses.collegeYear", "College Year")} <span className="font-medium">{course.college_year}</span>
-            </div>
+
+            {/* {course.avg_rating && (
+              <div className="flex items-center gap-2">
+                <FaStar className="text-primary" /> {t("courses.averageRating", "Average Rating")} <span className="font-medium">{course.avg_rating.toFixed(1)} / 5.0</span>
+              </div>
+            )} */}
             {course.course_duration_days > 0 && (
               <div className="flex items-center gap-2 col-span-full">
                 <FaHourglassHalf className="text-primary" />
@@ -343,32 +367,30 @@ export default function LiveCourseDetails() {
           <div className="flex gap-3">
             {userHasAccess ? (
               <button
-                onClick={() => navigate(`/live-courses/${id}/lessons`)}
+                onClick={() => navigate(`/courses/${id}/lessons`)}
                 className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
               >
-                {isUpcoming ? t("courses.joinLive", "Join Live") : t("courses.viewRecording", "View Recording")}
+                {t("courses.startCourse", "Start Course")}
               </button>
             ) : (
               <button
-                onClick={() => navigate(`/live-courses/${id}/subscribe`)}
+                onClick={() => navigate(`/courses/${id}/subscribe`)}
                 className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
               >
                 {t("courses.subscribeNow", "Subscribe Now")}
               </button>
             )}
             <button
-              onClick={() => navigate(`/live-courses/${id}/lessons`)}
+              onClick={() => navigate(`/courses/${id}/lessons`)}
               className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
             >
-              {t("courses.viewLessons", "View Lessons")}
+              {t("courses.previewCourse", "Preview Course")}
             </button>
           </div>
         </div>
       </div>
 
-
-
-      {/* Review + Instructor (if available) */}
+      {/* Review + Instructor */}
       <div className="grid max-w-6xl gap-8 mx-auto mt-12 sm:mt-16 lg:grid-cols-3">
         {/* Reviews */}
         <div className="lg:col-span-2">
@@ -378,7 +400,6 @@ export default function LiveCourseDetails() {
               courseId={id}
               onReviewSubmitted={handleReviewSubmitted}
               userHasReviewed={userHasReviewed}
-              type="live_course"
             />
           </div>
 
@@ -387,6 +408,43 @@ export default function LiveCourseDetails() {
             <h3 className="text-lg font-semibold sm:text-xl">
               {t('courses.reviews') || 'Reviews'} ({reviews.length})
             </h3>
+
+            {/* Rating Distribution */}
+            {reviews.length > 0 && (
+              <div className="p-4 mb-6 border rounded-lg border-border bg-surface">
+                <h4 className="mb-4 text-base font-semibold">{t('courses.ratingDistribution', 'Rating Distribution')}</h4>
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((starCount) => {
+                    const count = reviews.filter(r => Math.round(r.rate_number) === starCount).length;
+                    const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                    return (
+                      <div key={starCount} className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-sm">
+                            {Array.from({ length: starCount }).map((_, i) => (
+                              <FaStar key={i} className="text-yellow-400" size={14} />
+                            ))}
+                          </div>
+                          <div className="flex-1 h-3 overflow-hidden bg-gray-200 rounded-full">
+                            <div
+                              className="h-full transition-all duration-300 bg-yellow-400"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-text-muted w-14 text-right">
+                            {count} ({percentage.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="text-xs text-center text-text-muted ml-1">
+                          {starCount} {starCount === 1 ? t('courses.star', 'Star') : t('courses.stars', 'Stars')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {reviews.length === 0 && (
               <p className="text-text-muted">
                 {t('courses.noReviews') || 'No reviews yet.'}
@@ -434,87 +492,98 @@ export default function LiveCourseDetails() {
           </div>
         </div>
 
-        {/* Instructor Info - if available */}
-        {course.instructor && (
-          <div className="sticky self-start top-24">
-            <div className="p-6 border rounded-lg shadow-sm border-border bg-surface h-fit">
-              <img
-                src={course.instructor?.image || "https://randomuser.me/api/portraits/men/10.jpg"}
-                alt={course.instructor?.name || t("courses.instructor", "Instructor")}
-                className="object-cover w-24 h-24 mx-auto mb-4 rounded-full"
-              />
-              <h3 className="text-lg font-bold text-center">{course.instructor?.name || t("courses.instructor", "Instructor")}</h3>
-              <p className="mb-2 text-sm text-center text-text-muted">
-                {course.instructor?.job_title || t("courses.jobTitle", "Job Title")}
-              </p>
-              <p className="mb-4 text-sm font-medium text-center text-primary">
-                {t("courses.expertise", "Expertise")}: {course.instructor?.expertise || t("courses.noExpertise", "Not specified")}
-              </p>
-              <ul className="mt-4 space-y-2 text-sm">
-                {course.instructor?.years_of_experience && (
-                  <li className="flex items-center gap-2">
-                    <FaChalkboardTeacher className="text-primary" />
-                    {course.instructor.years_of_experience} {t("courses.yearsOfExperience", "Years of Experience")}
-                  </li>
-                )}
-                {course.instructor?.bio && (
-                  <li className="flex items-start gap-2">
-                    <FaUserGraduate className="mt-1 text-primary" /> {course.instructor.bio}
-                  </li>
-                )}
-                {course.university?.name && (
-                  <li className="flex items-center gap-2">
-                    <FaUniversity className="text-primary" /> {course.university.name}
-                  </li>
-                )}
-                {course.instructor?.email && (
-                  <li className="flex items-center gap-2">
-                    <FaEnvelope className="text-primary" />
-                    <a href={`mailto:${course.instructor.email}`} className="hover:text-secondary">
-                      {course.instructor.email}
-                    </a>
-                  </li>
-                )}
-                {course.instructor?.phone && (
-                  <li className="flex items-center gap-2">
-                    <FaPhone className="text-primary" />
-                    <a href={`tel:${course.instructor.phone}`} className="hover:text-secondary">
-                      {course.instructor.phone}
-                    </a>
-                  </li>
-                )}
-              </ul>
-              {/* Social Links */}
-              <div className="flex justify-center gap-4 mt-4 text-xl text-primary">
-                {course.instructor?.facebook && (
-                  <a href={course.instructor.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
-                    <FaFacebook />
+        {/* Instructor Info - Sticky */}
+        <div className="sticky self-start top-24">
+          <div className="p-6 border rounded-lg shadow-sm border-border bg-surface h-fit">
+            <img
+              src={course.instructor?.image || "https://randomuser.me/api/portraits/men/10.jpg"}
+              alt={course.instructor?.name || t("courses.instructor", "Instructor")}
+              className="object-cover w-24 h-24 mx-auto mb-4 rounded-full"
+            />
+            <h3 className="text-lg font-bold text-center">{course.instructor?.name || t("courses.instructor", "Instructor")}</h3>
+            <p className="mb-2 text-sm text-center text-text-muted">
+              {course.instructor?.job_title || t("courses.jobTitle", "Job Title")}
+            </p>
+            <p className="mb-4 text-sm font-medium text-center text-primary">
+              {t("courses.expertise", "Expertise")}: {course.instructor?.expertise || t("courses.noExpertise", "Not specified")}
+            </p>
+            <ul className="mt-4 space-y-2 text-sm">
+              {course.instructor?.years_of_experience && (
+                <li className="flex items-center gap-2">
+                  <FaChalkboardTeacher className="text-primary" />
+                  {course.instructor.years_of_experience} {t("courses.yearsOfExperience", "Years of Experience")}
+                </li>
+              )}
+              {course.instructor?.bio && (
+                <li className="flex items-start gap-2">
+                  <FaUserGraduate className="mt-1 flex-shrink-0 text-primary" />
+                  <div className="flex-1">
+                    <div className={`${!isInstructorExpanded ? 'line-clamp-3' : ''}`}>
+                      {course.instructor.bio}
+                    </div>
+                    {course.instructor.bio && course.instructor.bio.length > 100 && (
+                      <button
+                        onClick={() => setIsInstructorExpanded(!isInstructorExpanded)}
+                        className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80"
+                      >
+                        {isInstructorExpanded ? "Show Less" : "Read More"}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              )}
+              {course.university?.name && (
+                <li className="flex items-center gap-2">
+                  <FaUniversity className="text-primary" /> {course.university.name}
+                </li>
+              )}
+              {course.instructor?.email && (
+                <li className="flex items-center gap-2">
+                  <FaEnvelope className="text-primary" />
+                  <a href={`mailto:${course.instructor.email}`} className="hover:text-secondary">
+                    {course.instructor.email}
                   </a>
-                )}
-                {course.instructor?.instagram && (
-                  <a href={course.instructor.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
-                    <FaInstagram />
+                </li>
+              )}
+              {course.instructor?.phone && (
+                <li className="flex items-center gap-2">
+                  <FaPhone className="text-primary" />
+                  <a href={`tel:${course.instructor.phone}`} className="hover:text-secondary">
+                    {course.instructor.phone}
                   </a>
-                )}
-                {course.instructor?.youtube && (
-                  <a href={course.instructor.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
-                    <FaYoutube />
-                  </a>
-                )}
-                {course.instructor?.telegram && (
-                  <a href={course.instructor.telegram} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
-                    <FaTelegram />
-                  </a>
-                )}
-                {course.instructor?.whatsapp && (
-                  <a href={course.instructor.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
-                    <FaWhatsapp />
-                  </a>
-                )}
-              </div>
+                </li>
+              )}
+            </ul>
+            {/* Social Links */}
+            <div className="flex justify-center gap-4 mt-4 text-xl text-primary">
+              {course.instructor?.facebook && (
+                <a href={course.instructor.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
+                  <FaFacebook />
+                </a>
+              )}
+              {course.instructor?.instagram && (
+                <a href={course.instructor.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
+                  <FaInstagram />
+                </a>
+              )}
+              {course.instructor?.youtube && (
+                <a href={course.instructor.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
+                  <FaYoutube />
+                </a>
+              )}
+              {course.instructor?.telegram && (
+                <a href={course.instructor.telegram} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
+                  <FaTelegram />
+                </a>
+              )}
+              {course.instructor?.whatsapp && (
+                <a href={course.instructor.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-secondary">
+                  <FaWhatsapp />
+                </a>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Top Students Section */}

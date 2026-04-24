@@ -799,35 +799,35 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 )}
               </div>
 
-              {/* Category */}
+              {/* Specialization */}
               <div>
                 <label className="block mb-2 text-sm font-bold text-text-primary">
-                  {t('profile.category')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
+                  {t('profile.specialization')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
                 </label>
                 {isEditing ? (
-                  <div className="relative" ref={catDropdownRef}>
+                  <div className="relative" ref={specDropdownRef}>
                     <button
                       type="button"
-                      onClick={() => setCatDropdownOpen(o => !o)}
+                      onClick={() => setSpecDropdownOpen(o => !o)}
                       className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
                     >
-                      <span className={formData.category_id ? "" : "text-gray-400"}>
-                        {formData.category_id
-                          ? categories.find(c => String(c.id) === String(formData.category_id))?.name || t('profile.select_category')
-                          : t('profile.select_category')}
+                      <span className={formData.specialization_id ? "" : "text-gray-400"}>
+                        {formData.specialization_id
+                          ? specializations.find(s => String(s.id) === String(formData.specialization_id))?.name || t('profile.select_specialization')
+                          : t('profile.select_specialization')}
                       </span>
-                      <FaChevronDown className={`text-xs transition-transform ${catDropdownOpen ? 'rotate-180' : ''}`} />
+                      <FaChevronDown className={`text-xs transition-transform ${specDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {catDropdownOpen && (
+                    {specDropdownOpen && (
                       <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
                         <div className="flex items-center gap-2 p-2 border-b border-border">
                           <FaSearch className="text-xs text-gray-400 shrink-0" />
                           <input
                             type="text"
-                            value={catSearch}
-                            onChange={e => setCatSearch(e.target.value)}
-                            placeholder={t('profile.search_category', 'Search category...')}
+                            value={specSearch}
+                            onChange={e => setSpecSearch(e.target.value)}
+                            placeholder={t('profile.search_specialization', 'Search specialization...')}
                             className="flex-1 text-sm bg-transparent outline-none dark:text-white"
                             autoFocus
                           />
@@ -837,46 +837,46 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                             <button
                               type="button"
                               onClick={() => {
-                                handleInputChange({ target: { name: 'category_id', value: '' } });
-                                setCatDropdownOpen(false);
-                                setCatSearch("");
+                                handleInputChange({ target: { name: 'specialization_id', value: '' } });
+                                setSpecDropdownOpen(false);
+                                setSpecSearch("");
                               }}
                               className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                             >
-                              {t('profile.select_category')}
+                              {t('profile.select_specialization')}
                             </button>
                           </li>
-                          {categories
-                            .filter(c => !catSearch || c.name.toLowerCase().includes(catSearch.toLowerCase()))
-                            .map(category => (
-                              <li key={category.id}>
+                          {specializations
+                            .filter(s => !specSearch || s.name.toLowerCase().includes(specSearch.toLowerCase()))
+                            .map(specialization => (
+                              <li key={specialization.id}>
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    handleInputChange({ target: { name: 'category_id', value: category.id } });
-                                    setCatDropdownOpen(false);
-                                    setCatSearch("");
+                                    handleInputChange({ target: { name: 'specialization_id', value: specialization.id } });
+                                    setSpecDropdownOpen(false);
+                                    setSpecSearch("");
                                   }}
                                   className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
-                                    String(formData.category_id) === String(category.id)
+                                    String(formData.specialization_id) === String(specialization.id)
                                       ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
                                       : 'dark:text-white'
                                   }`}
                                 >
-                                  {category.name}
+                                  {specialization.name}
                                 </button>
                               </li>
                             ))}
                         </ul>
-                        {catPage < catTotalPages && !catSearch && (
+                        {specPage < specTotalPages && !specSearch && (
                           <div className="p-2 border-t border-border">
                             <button
                               type="button"
-                              onClick={() => fetchCategories(catPage + 1, true)}
-                              disabled={catLoading}
+                              onClick={() => fetchSpecializations(specPage + 1, true)}
+                              disabled={specLoading}
                               className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
                             >
-                              {catLoading ? t('common.loading', 'Loading...') : t('profile.load_more_categories', 'Load more categories')}
+                              {specLoading ? t('common.loading', 'Loading...') : t('profile.load_more_specializations', 'Load more specializations')}
                             </button>
                           </div>
                         )}
@@ -886,11 +886,9 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
-                      <FaBook className="text-primary text-sm" />
+                      <FaStethoscope className="text-primary text-sm" />
                     </div>
-                    <span className="font-medium">
-                      {localUser.category?.name || categories.find((c) => c.id == localUser.category_id)?.name || t('profile.not_selected')}
-                    </span>
+                    <span className="font-medium">{localUser.specialization?.name || specializations.find((s) => s.id == localUser.specialization_id)?.name || t('profile.not_selected')}</span>
                   </div>
                 )}
               </div>
@@ -1082,99 +1080,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 )}
               </div>
 
-              {/* Specialization */}
-              <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
-                  {t('profile.specialization')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
-                </label>
-                {isEditing ? (
-                  <div className="relative" ref={specDropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => setSpecDropdownOpen(o => !o)}
-                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
-                    >
-                      <span className={formData.specialization_id ? "" : "text-gray-400"}>
-                        {formData.specialization_id
-                          ? specializations.find(s => String(s.id) === String(formData.specialization_id))?.name || t('profile.select_specialization')
-                          : t('profile.select_specialization')}
-                      </span>
-                      <FaChevronDown className={`text-xs transition-transform ${specDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
 
-                    {specDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl dark:bg-gray-800 border-border max-h-64 flex flex-col">
-                        <div className="flex items-center gap-2 p-2 border-b border-border">
-                          <FaSearch className="text-xs text-gray-400 shrink-0" />
-                          <input
-                            type="text"
-                            value={specSearch}
-                            onChange={e => setSpecSearch(e.target.value)}
-                            placeholder={t('profile.search_specialization', 'Search specialization...')}
-                            className="flex-1 text-sm bg-transparent outline-none dark:text-white"
-                            autoFocus
-                          />
-                        </div>
-                        <ul className="overflow-y-auto flex-1">
-                          <li>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleInputChange({ target: { name: 'specialization_id', value: '' } });
-                                setSpecDropdownOpen(false);
-                                setSpecSearch("");
-                              }}
-                              className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                              {t('profile.select_specialization')}
-                            </button>
-                          </li>
-                          {specializations
-                            .filter(s => !specSearch || s.name.toLowerCase().includes(specSearch.toLowerCase()))
-                            .map(specialization => (
-                              <li key={specialization.id}>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    handleInputChange({ target: { name: 'specialization_id', value: specialization.id } });
-                                    setSpecDropdownOpen(false);
-                                    setSpecSearch("");
-                                  }}
-                                  className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 ${
-                                    String(formData.specialization_id) === String(specialization.id)
-                                      ? 'bg-primary/10 dark:bg-primary/20 font-medium text-primary'
-                                      : 'dark:text-white'
-                                  }`}
-                                >
-                                  {specialization.name}
-                                </button>
-                              </li>
-                            ))}
-                        </ul>
-                        {specPage < specTotalPages && !specSearch && (
-                          <div className="p-2 border-t border-border">
-                            <button
-                              type="button"
-                              onClick={() => fetchSpecializations(specPage + 1, true)}
-                              disabled={specLoading}
-                              className="w-full py-1.5 text-xs text-center text-primary hover:underline disabled:opacity-50"
-                            >
-                              {specLoading ? t('common.loading', 'Loading...') : t('profile.load_more_specializations', 'Load more specializations')}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
-                    <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
-                      <FaStethoscope className="text-primary text-sm" />
-                    </div>
-                    <span className="font-medium">{localUser.specialization?.name || specializations.find((s) => s.id == localUser.specialization_id)?.name || t('profile.not_selected')}</span>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

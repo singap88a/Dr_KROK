@@ -237,24 +237,27 @@ export default function Profile() {
 
       {/* Stats Section */}
       <div className="p-4 mt-auto border-t border-border">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-lg font-semibold text-primary">
-              {user?.stats?.courses || 0}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="flex flex-col items-center justify-center p-2 transition-colors border rounded-lg bg-surface/40 border-border/50 hover:bg-surface">
+            <div className="flex items-center gap-1.5 mb-1">
+              <FaGraduationCap className="text-sm text-primary/80" />
+              <span className="text-lg font-bold text-primary leading-none">{user?.stats?.courses || 0}</span>
             </div>
-            <div className="text-xs text-text-secondary">{t('profile.stats.courses')}</div>
+            <div className="text-[10px] uppercase tracking-wide font-medium text-text-secondary">{t('profile.stats.courses')}</div>
           </div>
-          <div>
-            <div className="text-lg font-semibold text-primary">
-              {user?.stats?.orders || 0}
+          <div className="flex flex-col items-center justify-center p-2 transition-colors border rounded-lg bg-surface/40 border-border/50 hover:bg-surface">
+            <div className="flex items-center gap-1.5 mb-1">
+              <FaShoppingCart className="text-sm text-primary/80" />
+              <span className="text-lg font-bold text-primary leading-none">{user?.stats?.orders || 0}</span>
             </div>
-            <div className="text-xs text-text-secondary">{t('profile.stats.orders')}</div>
+            <div className="text-[10px] uppercase tracking-wide font-medium text-text-secondary">{t('profile.stats.orders')}</div>
           </div>
-          <div>
-            <div className="text-lg font-semibold text-primary">
-              {user?.stats?.rating || 0}
+          <div className="flex flex-col items-center justify-center p-2 transition-colors border rounded-lg bg-surface/40 border-border/50 hover:bg-surface">
+            <div className="flex items-center gap-1.5 mb-1">
+              <FaStar className="text-sm text-yellow-500/90" />
+              <span className="text-lg font-bold text-primary leading-none">{user?.stats?.rating || 0}</span>
             </div>
-            <div className="text-xs text-text-secondary">{t('profile.stats.rating')}</div>
+            <div className="text-[10px] uppercase tracking-wide font-medium text-text-secondary">{t('profile.stats.rating')}</div>
           </div>
         </div>
       </div>
