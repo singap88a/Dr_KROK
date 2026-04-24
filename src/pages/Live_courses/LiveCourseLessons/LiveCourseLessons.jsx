@@ -11,27 +11,28 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
+// Import Shared Components
+import CourseHeader from "../../../components/Courses/CourseHeader";
+import VideoPlayerSection from "../../../components/Courses/VideoPlayerSection";
+import { QuizModal } from "../../../components/Courses/QuizSystem/QuizModal";
+import { ResultsModal } from "../../../components/Courses/QuizSystem/ResultsModal";
+import { useLessonProgress } from "../../../components/Courses/ProgressSystem/LessonProgress";
+
 // Import Components Local
-import CourseHeader from "./CourseHeader";
-import BatchInfoCard from "./BatchInfoCard";
 import Sidebar from "./Sidebar";
-import VideoPlayerSection from "./VideoPlayerSection";
-import InstructorCard from "./InstructorCard";
+
+// Import Shared Info Cards
+import BatchInfoCard from "../../../components/Courses/InfoCards/BatchInfoCard";
+import InstructorCard from "../../../components/Courses/InfoCards/InstructorCard";
 
 // Import Modals
-import PurchaseModal from "../../Courses/Popups/PurchaseModal";
-import { ImagePopup } from "../ContentModals/ImagePopup";
-import { PDFPopup } from "../ContentModals/PDFPopup";
-import { VideoPopup } from "../ContentModals/VideoPopup";
+import PurchaseModal from "../../../components/Courses/ContentModals/PurchaseModal";
+import ImagePopup from "../../../components/Courses/ContentModals/ImagePopup";
+import PDFPopup from "../../../components/Courses/ContentModals/PDFPopup";
+import VideoPopup from "../../../components/Courses/ContentModals/VideoPopup";
 
 // Import Utils
 import { formatSessionTimeRaw, formatSessionTime, isLinkActive, getTimeUntilStart } from "./timeUtils.jsx";
-import { renderStars } from "./starsUtils.jsx";
-
-// Import Hooks
-import { useLessonProgress } from "../ProgressSystem/LessonProgress";
-import { QuizModal } from "../QuizSystem/QuizModal";
-import { ResultsModal } from "../QuizSystem/ResultsModal";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -730,9 +731,7 @@ export default function LiveCourseLessons() {
           courseProgress={courseProgress}
           progressLoading={progressLoading}
           onPurchaseClick={() => setShowPurchaseModal(true)}
-          renderStars={renderStars}
-          getLevelColor={getLevelColor}
-          t={t}
+          backPath={`/live-courses/${course.id}`}
         />
 
         <BatchInfoCard course={course} t={t} />
@@ -802,10 +801,9 @@ export default function LiveCourseLessons() {
             isLinkActive={isLinkActive}
             getTimeUntilStart={getTimeUntilStart}
             setShowPurchaseModal={setShowPurchaseModal}
-            t={t}
+            isLiveCourse={true}
           />
 
-          <InstructorCard course={course} t={t} />
         </div>
       </div>
 

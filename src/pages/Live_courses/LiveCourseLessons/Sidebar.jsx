@@ -1,9 +1,9 @@
-// LiveCourseLessons/Sidebar.jsx
+// LiveCourseLessons/Sidebar.jsx - Updated to force Vite reload
 import React from "react";
 import { FaTimes, FaBars } from "react-icons/fa";
-import SectionItem from "../../Courses/SectionItem";
-import { FinalTestsSection } from "../QuizSystem/FinalTests";
-import { CertificateSection } from "../CertificateSection/CertificateSection";
+import SectionItem from "../../../components/Courses/Sidebar/SectionItem";
+import { FinalTestsSection } from "../../../components/Courses/QuizSystem/FinalTests.jsx";
+import { CertificateSection } from "../../../components/Courses/CertificateSection/CertificateSection.jsx";
 
 export default function Sidebar({
   sections,

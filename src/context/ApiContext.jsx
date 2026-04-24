@@ -721,7 +721,9 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       async getCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
-          `courses/${courseId}/progress`
+          `courses/${courseId}/progress`,
+          `video_courses/${courseId}/progress`,
+          `video_course/${courseId}/progress`
         ];
         for (const path of candidates) {
           try {
@@ -743,7 +745,9 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('type', 'lesson');
 
         const candidates = [
-          `courses/${courseId}/progress/${lessonId}/complete`
+          `courses/${courseId}/progress/${lessonId}/complete`,
+          `video_courses/${courseId}/progress/${lessonId}/complete`,
+          `video_course/${courseId}/progress/${lessonId}/complete`
         ];
 
         for (const path of candidates) {
