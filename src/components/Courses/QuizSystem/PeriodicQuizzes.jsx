@@ -11,7 +11,7 @@ export const PeriodicQuizzesSection = ({ lesson }) => {
   }
 
   const periodicQuizzes = lesson.lesson_end_tests.filter(
-    (test) => test.test_type === "Periodic Quiz (Live Session)"
+    (test) => test.test_type && test.test_type.includes("Periodic Quiz")
   );
 
   if (periodicQuizzes.length === 0) {

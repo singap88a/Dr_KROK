@@ -426,7 +426,94 @@ export default function CourseLessons() {
     isLoggedIn,
     getCourseProgressDetails,
     updateLessonStatus,
-  ]);
+  ],
+  );
+
+  useEffect(() => {
+    setProcessedQuizzes(new Set());
+    setAnsweredQuizzes(new Set());
+    setQuizResults({});
+  }, [currentLesson?.id]);
+
+  const getPeriodicQuizzes = () => {
+    if (!currentLesson || !currentLesson.lesson_end_tests) return [];
+    return currentLesson.lesson_end_tests.filter(
+      (test) => test.test_type && test.test_type.includes("Periodic Quiz")
+    );
+  };
+
+  const handleVideoTimeUpdate = (e) => {
+    const time = Math.floor(e.target.currentTime);
+    const periodicQuizzes = getPeriodicQuizzes();
+    let foundQuiz = null;
+    let foundTest = null;
+    let questionIndex = 0;
+
+    periodicQuizzes.forEach((test) => {
+      test.quizzes.forEach((quiz, idx) => {
+        if (
+          quiz.show_at_time === time &&
+          !processedQuizzes.has(quiz.id) &&
+          !answeredQuizzes.has(quiz.id)
+        ) {
+          foundQuiz = quiz;
+          foundTest = test;
+          questionIndex = idx;
+        }
+      });
+    });
+
+    if (foundQuiz) {
+      e.target.pause();
+      setProcessedQuizzes((prev) => new Set([...prev, foundQuiz.id]));
+      setQuizModal({
+        isOpen: true,
+        currentQuiz: foundQuiz,
+        currentTest: foundTest,
+        currentQuestionIndex: questionIndex,
+        userAnswers: [],
+        showResult: false,
+      });
+    }
+  };
+
+  const handleVideoEnd = async () => {
+    const periodicQuizzes = getPeriodicQuizzes();
+    if (periodicQuizzes.length > 0) {
+      let totalQuestions = 0;
+      let correctAnswers = 0;
+      let totalScore = 0;
+      let maxScore = 0;
+
+      periodicQuizzes.forEach((test) => {
+        test.quizzes.forEach((quiz) => {
+          totalQuestions++;
+          maxScore += parseInt(quiz.question_score) || 50;
+          const result = quizResults[quiz.id];
+          if (result && result.isCorrect) {
+            correctAnswers++;
+            totalScore += result.score;
+          }
+        });
+      });
+
+      if (totalQuestions > 0) {
+        setTimeout(() => {
+          setResultsModal({
+            isOpen: true,
+            test: periodicQuizzes[0],
+            totalQuestions,
+            correctAnswers,
+            score: Math.round((totalScore / maxScore) * 100),
+          });
+        }, 1000);
+      }
+    }
+
+    if (isLoggedIn && currentLesson) {
+      handleLessonComplete(currentLesson.id);
+    }
+  };
 
   // 🔥 التعديل الرابع: حفظ آخر درس عند النقر عليه + التمركز التلقائي
   const handleLessonClick = async (lesson) => {
@@ -611,6 +698,8 @@ export default function CourseLessons() {
               setResultsModal={setResultsModal}
               setAnsweredQuizzes={setAnsweredQuizzes}
               setQuizResults={setQuizResults}
+              onVideoTimeUpdate={handleVideoTimeUpdate}
+              onVideoEnd={handleVideoEnd}
               onLessonComplete={handleLessonComplete}
               onFileClick={handleFileClick}
               onVideoClick={handleVideoClick}
