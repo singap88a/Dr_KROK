@@ -54,7 +54,7 @@ export default function Profile() {
   const [forceEdit, setForceEdit] = useState(false);
 
   const isProfileIncomplete = (u) => {
-    return !u?.phone || !u?.university_id || !u?.college_year;
+    return !u?.phone || (!u?.university_id && !u?.university?.id) || !u?.college_year;
   };
 
   // Fetch profile data on component mount

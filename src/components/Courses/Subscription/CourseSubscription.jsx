@@ -229,7 +229,7 @@ export default function CourseSubscription() {
     }
 
     const isProfileIncomplete = (u) => {
-      return !u?.phone || !u?.university_id || !u?.college_year;
+      return !u?.phone || (!u?.university_id && !u?.university?.id) || !u?.college_year;
     };
 
     if (isProfileIncomplete(userData)) {
