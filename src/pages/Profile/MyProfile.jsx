@@ -77,7 +77,6 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     gender: "",
     university_id: "",
     college_year: "",
-    category_id: "",
     specialization_id: "",
     image: null,
     facebook: "",
@@ -86,13 +85,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     whatsapp: "",
   });
 
-  const [categories, setCategories] = useState([]);
-  const [catPage, setCatPage] = useState(1);
-  const [catTotalPages, setCatTotalPages] = useState(1);
-  const [catLoading, setCatLoading] = useState(false);
-  const [catSearch, setCatSearch] = useState("");
-  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
-  const catDropdownRef = useRef(null);
+
 
   const [specializations, setSpecializations] = useState([]);
   const [specPage, setSpecPage] = useState(1);
@@ -132,27 +125,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     }
   }, [request]);
 
-  // Fetch categories with pagination
-  const fetchCategories = useCallback(async (page = 1, append = false) => {
-    try {
-      setCatLoading(true);
-      const data = await request(`categories?page=${page}&per_page=15`, { useCache: true });
-      if (data.success) {
-        const newCats = data.data || [];
-        setCategories(prev => append ? [...prev, ...newCats] : newCats);
-        if (data.pagination) {
-          setCatTotalPages(data.pagination.total_pages || 1);
-          setCatPage(data.pagination.current_page || page);
-        } else {
-          setCatTotalPages(1);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    } finally {
-      setCatLoading(false);
-    }
-  }, [request]);
+
 
   // Fetch specializations with pagination
   const fetchSpecializations = useCallback(async (page = 1, append = false) => {
@@ -182,9 +155,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       if (uniDropdownRef.current && !uniDropdownRef.current.contains(e.target)) {
         setUniDropdownOpen(false);
       }
-      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) {
-        setCatDropdownOpen(false);
-      }
+
       if (specDropdownRef.current && !specDropdownRef.current.contains(e.target)) {
         setSpecDropdownOpen(false);
       }
@@ -196,7 +167,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   // Fetch universities and college years on component mount
   useEffect(() => {
     fetchUniversities(1, false);
-    fetchCategories(1, false);
+
     fetchSpecializations(1, false);
 
     const fetchCollegeYears = async () => {
@@ -228,7 +199,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: user.gender || "",
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
-        category_id: user.category?.id || user.category_id || "",
+
         specialization_id: user.specialization?.id || user.specialization_id || "",
         image: null,
         facebook: user.facebook || "",
@@ -382,7 +353,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: formData.gender || "",
         university_id: parseInt(formData.university_id) || 0,
         college_year: formData.college_year,
-        category_id: parseInt(formData.category_id) || 0,
+
         specialization_id: parseInt(formData.specialization_id) || 0,
         facebook: formData.facebook || "",
         instagram: formData.instagram || "",
@@ -448,7 +419,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         gender: user.gender || "",
         university_id: user.university?.id || user.university_id || "",
         college_year: user.college_year || "",
-        category_id: user.category?.id || user.category_id || "",
+
         specialization_id: user.specialization?.id || user.specialization_id || "",
         image: null,
         facebook: user.facebook || "",
@@ -571,7 +542,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 {isEditing ? (
                   <div className="space-y-1 text-left">
                     <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
-                      <FaFacebook className="inline mr-1 text-blue-600" /> Facebook
+                      <FaFacebook className="inline mr-1 text-blue-600" /> Facebook <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
                       type="url"
@@ -609,7 +580,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 {isEditing ? (
                   <div className="space-y-1 text-left">
                     <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
-                      <FaInstagram className="inline mr-1 text-pink-600" /> Instagram
+                      <FaInstagram className="inline mr-1 text-pink-600" /> Instagram <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
                       type="url"
@@ -647,7 +618,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 {isEditing ? (
                   <div className="space-y-1 text-left">
                     <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
-                      <FaTelegram className="inline mr-1 text-blue-500" /> Telegram
+                      <FaTelegram className="inline mr-1 text-blue-500" /> Telegram <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
                       type="url"
@@ -685,7 +656,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                 {isEditing ? (
                   <div className="space-y-1 text-left">
                     <label className="text-[11px] font-bold text-text-secondary uppercase px-1">
-                      <FaWhatsapp className="inline mr-1 text-green-600" /> WhatsApp
+                      <FaWhatsapp className="inline mr-1 text-green-600" /> WhatsApp <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
                       type="tel"
@@ -950,7 +921,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
               {/* University */}
               <div>
                 <label className="block mb-2 text-sm font-bold text-text-primary">
-                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">(Optional)</span>
+                  {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
                   <div className="relative" ref={uniDropdownRef}>

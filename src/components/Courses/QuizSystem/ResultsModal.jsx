@@ -50,9 +50,8 @@ export const ResultsModal = ({ resultsModal, setResultsModal }) => {
   const performance = getPerformanceMessage();
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086]">
-      <div className="flex items-center justify-center w-full h-full p-4">
-        <div className="w-full max-w-xs overflow-hidden transition-all transform shadow-xl bg-surface rounded-xl">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md max-h-[90vh] overflow-hidden transition-all transform shadow-2xl bg-surface rounded-2xl animate-in fade-in zoom-in duration-300">
           {/* Header */}
           <div className="p-3 text-white bg-primary">
             <div className="text-center">
@@ -166,7 +165,6 @@ export const ResultsModal = ({ resultsModal, setResultsModal }) => {
               {t("common.continue", "Continue")}
             </button>
           </div>
-        </div>
       </div>
     </div>
   );

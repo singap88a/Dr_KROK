@@ -65,8 +65,8 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
   };
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#00000086] p-2 sm:p-4">
-      <div className="w-full max-w-lg max-h-full flex flex-col overflow-hidden transition-all transform shadow-xl bg-surface dark:bg-surface-dark rounded-2xl">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden transition-all transform shadow-2xl bg-surface dark:bg-surface-dark rounded-2xl animate-in fade-in zoom-in duration-300">
         {/* Header */}
         <div className="shrink-0 p-3 sm:p-4 text-white bg-primary dark:bg-primary-dark">
           <div className="flex items-center justify-between">
