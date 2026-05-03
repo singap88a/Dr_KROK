@@ -494,7 +494,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Picture Section */}
-        <div className="p-6 text-center border bg-surface border-border rounded-xl h-fit sticky top-24">
+        <div className="p-6 text-center border bg-surface border-border rounded-xl h-fit lg:sticky lg:top-24">
           <div className="relative w-32 h-32 mx-auto mb-4">
             <img
               src={imagePreview || "/user.png"}

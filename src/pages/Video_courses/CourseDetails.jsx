@@ -51,6 +51,7 @@ export default function CourseDetails() {
   const [showAll, setShowAll] = useState(false);
   const [userHasReviewed, setUserHasReviewed] = useState(false);
   const [userHasAccess, setUserHasAccess] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isInstructorExpanded, setIsInstructorExpanded] = useState(false);
@@ -76,12 +77,23 @@ export default function CourseDetails() {
         if (isLoggedIn) {
           try {
             const access = await getCourseAccess(id, 'video_course');
-            setUserHasAccess(access);
+            // access can be a boolean or an object { is_enrolled, is_expired }
+            if (access && typeof access === 'object') {
+              const enrolled = access.is_enrolled === true;
+              const expired  = access.is_expired  === true;
+              setIsExpired(expired);
+              setUserHasAccess(enrolled && !expired);
+            } else {
+              setIsExpired(false);
+              setUserHasAccess(!!access);
+            }
           } catch {
             // If access check fails, assume no access for paid content
+            setIsExpired(false);
             setUserHasAccess(data.price === 0 || data.price === "0");
           }
         } else {
+          setIsExpired(false);
           setUserHasAccess(false);
         }
       } catch (e) {
@@ -364,8 +376,20 @@ export default function CourseDetails() {
             )}
           </div>
 
-          <div className="flex gap-3">
-            {userHasAccess ? (
+          <div className="flex gap-3 flex-wrap">
+            {isExpired ? (
+              /* ───── الكورس منتهى الصلاحية ───── */
+              <button
+                disabled
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-green-600 opacity-80 cursor-not-allowed sm:px-6 sm:py-3 flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t("courses.courseCompleted", "تم اجتياز الدورة")}
+              </button>
+            ) : userHasAccess ? (
+              /* ───── مسجّل والكورس نشط ───── */
               <button
                 onClick={() => navigate(`/courses/${id}/lessons`)}
                 className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
@@ -373,6 +397,7 @@ export default function CourseDetails() {
                 {t("courses.startCourse", "Start Course")}
               </button>
             ) : (
+              /* ───── غير مسجّل ───── */
               <button
                 onClick={() => navigate(`/courses/${id}/subscribe`)}
                 className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
@@ -380,12 +405,15 @@ export default function CourseDetails() {
                 {t("courses.subscribeNow", "Subscribe Now")}
               </button>
             )}
-            <button
-              onClick={() => navigate(`/courses/${id}/lessons`)}
-              className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
-            >
-              {t("courses.previewCourse", "Preview Course")}
-            </button>
+            {/* زر «معاينة الكورس» – يُخفى عند انتهاء الصلاحية */}
+            {!isExpired && (
+              <button
+                onClick={() => navigate(`/courses/${id}/lessons`)}
+                className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
+              >
+                {t("courses.previewCourse", "Preview Course")}
+              </button>
+            )}
           </div>
         </div>
       </div>
