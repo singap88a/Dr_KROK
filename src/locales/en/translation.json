@@ -688,6 +688,10 @@
   "courses": {
     "askInstructor": "Ask the Instructor",
     "askInstructorDescription": "Have questions about this course? Contact the instructor directly for personalized assistance.",
+    "courseCompletedTitle": "Course Successfully Passed!",
+    "courseCompletedMessage": "You have successfully completed the requirements for this course previously. Due to the expiration of the access period, content cannot be displayed at this time. We wish you continued success.",
+    "courseCompleted": "Course Passed",
+    "backToDetails": "Back to Course Details",
     "contactInstructor": "Contact Instructor",
     "contactWhatsApp": "Contact via WhatsApp",
     "contactTelegram": "Ask on Telegram",

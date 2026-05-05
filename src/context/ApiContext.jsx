@@ -989,6 +989,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('course_id', courseId.toString());
         formData.append('payment_method', paymentMethod);
         formData.append('amount', amount.toString());
+        formData.append('deposit_amount', amount.toString());
         if (couponId) {
           formData.append('coupon_id', couponId);
         }
@@ -1033,6 +1034,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('course_id', courseId.toString());
         formData.append('payment_method', paymentMethod);
         formData.append('amount', amount.toString());
+        formData.append('deposit_amount', amount.toString());
         if (couponId) {
           formData.append('coupon_id', couponId);
         }

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import i18n from "../../../i18n";
 import LoadingSpinner from "../../../components/Common/LoadingSpinner";
+import { FaCertificate } from "react-icons/fa";
 // Shared Components
 import CourseHeader from "../../../components/Courses/CourseHeader";
 import VideoPlayerSection from "../../../components/Courses/VideoPlayerSection";
@@ -42,6 +43,7 @@ export default function CourseLessons() {
   const [lessons, setLessons] = useState([]);
   const [sections, setSections] = useState([]);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentSection, setCurrentSection] = useState(null);
   const [expandedSections, setExpandedSections] = useState(new Set());
@@ -327,14 +329,29 @@ export default function CourseLessons() {
           }
         }
 
-        if (isLoggedIn) {
+        // Check course access and expiration
+        if (courseData.enrollment_status) {
+          const { is_enrolled, is_expired: expired } = courseData.enrollment_status;
+          setIsExpired(expired === true);
+          setHasAccess(is_enrolled === true && expired === false);
+        } else if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id);
-            setHasAccess(access);
+            const access = await getCourseAccess(id, 'video_course');
+            if (access && typeof access === 'object') {
+              const enrolled = access.is_enrolled === true;
+              const expired  = access.is_expired  === true;
+              setIsExpired(expired);
+              setHasAccess(enrolled && !expired);
+            } else {
+              setIsExpired(false);
+              setHasAccess(!!access);
+            }
           } catch {
+            setIsExpired(false);
             setHasAccess(courseData.price === 0 || courseData.price === "0");
           }
         } else {
+          setIsExpired(false);
           setHasAccess(false);
         }
 
@@ -659,61 +676,85 @@ export default function CourseLessons() {
         />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-1">
-            <CourseContentSidebar
-              sections={sections}
-              lessons={lessons}
-              course={course}
-              courseProgress={courseProgress}
-              expandedSections={expandedSections}
-              currentLesson={currentLesson}
-              currentSection={currentSection}
-              lessonStatuses={lessonStatuses}
-              hasAccess={hasAccess}
-              isLoggedIn={isLoggedIn}
-              sectionProgress={sectionProgress}
-              calculateTotalProgress={calculateTotalProgress}
-              calculateSectionProgress={calculateSectionProgress}
-              onLessonClick={handleLessonClick}
-              onSectionClick={handleSectionClick}
-              onToggleSection={toggleSection}
-              hasFreeLessons={hasFreeLessons}
-              navigate={navigate}
-            />
-          </div>
+          {isExpired ? (
+            <div className="lg:col-span-3">
+              <div className="flex flex-col items-center justify-center p-8 my-8 text-center border shadow-xl bg-surface rounded-3xl border-border animate-fade-in sm:p-12 sm:my-12">
+                <div className="flex items-center justify-center w-20 h-20 mb-6 bg-green-100 rounded-full dark:bg-green-900/30 sm:w-24 sm:h-24">
+                  <FaCertificate className="text-4xl text-green-600 dark:text-green-400 sm:text-5xl" />
+                </div>
+                <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+                  {t("courses.courseCompletedTitle", "تم اجتياز الدورة بنجاح!")}
+                </h2>
+                <p className="max-w-md mx-auto mb-8 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
+                  {t("courses.courseCompletedMessage", "لقد أتممت متطلبات هذه الدورة بنجاح في وقت سابق. نظراً لانتهاء فترة صلاحية الوصول، لا يمكن عرض المحتوى حالياً. نتمنى لك دوام التوفيق والنجاح.")}
+                </p>
+                <Link 
+                  to={`/courses/${id}`}
+                  className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
+                >
+                  {t("courses.backToDetails", "العودة لتفاصيل الدورة")}
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-6 lg:col-span-1">
+                <CourseContentSidebar
+                  sections={sections}
+                  lessons={lessons}
+                  course={course}
+                  courseProgress={courseProgress}
+                  expandedSections={expandedSections}
+                  currentLesson={currentLesson}
+                  currentSection={currentSection}
+                  lessonStatuses={lessonStatuses}
+                  hasAccess={hasAccess}
+                  isLoggedIn={isLoggedIn}
+                  sectionProgress={sectionProgress}
+                  calculateTotalProgress={calculateTotalProgress}
+                  calculateSectionProgress={calculateSectionProgress}
+                  onLessonClick={handleLessonClick}
+                  onSectionClick={handleSectionClick}
+                  onToggleSection={toggleSection}
+                  hasFreeLessons={hasFreeLessons}
+                  navigate={navigate}
+                />
+              </div>
 
-          {/* Video Section with integrated Quizzes + Instructor Card */}
-          <div id="video-player-section" className="space-y-6 lg:col-span-2">
-            <VideoPlayerSection
-              currentLesson={currentLesson}
-              currentSection={currentSection}
-              course={course}
-              id={id}
-              isLoggedIn={isLoggedIn}
-              hasAccess={hasAccess}
-              lessonStatuses={lessonStatuses}
-              quizModal={quizModal}
-              setQuizModal={setQuizModal}
-              resultsModal={resultsModal}
-              setResultsModal={setResultsModal}
-              setAnsweredQuizzes={setAnsweredQuizzes}
-              setQuizResults={setQuizResults}
-              onVideoTimeUpdate={handleVideoTimeUpdate}
-              onVideoEnd={handleVideoEnd}
-              onLessonComplete={handleLessonComplete}
-              onFileClick={handleFileClick}
-              onVideoClick={handleVideoClick}
-              onImageClick={(image) => {
-                setSelectedImage(image);
-                setShowImagePopup(true);
-              }}
-              isDescriptionExpanded={isDescriptionExpanded}
-              setIsDescriptionExpanded={setIsDescriptionExpanded}
-              setShowPurchaseModal={setShowPurchaseModal}
-              isLiveCourse={false}
-            />
-            <InstructorCard course={course} t={t} />
-          </div>
+              {/* Video Section with integrated Quizzes + Instructor Card */}
+              <div id="video-player-section" className="space-y-6 lg:col-span-2">
+                <VideoPlayerSection
+                  currentLesson={currentLesson}
+                  currentSection={currentSection}
+                  course={course}
+                  id={id}
+                  isLoggedIn={isLoggedIn}
+                  hasAccess={hasAccess}
+                  lessonStatuses={lessonStatuses}
+                  quizModal={quizModal}
+                  setQuizModal={setQuizModal}
+                  resultsModal={resultsModal}
+                  setResultsModal={setResultsModal}
+                  setAnsweredQuizzes={setAnsweredQuizzes}
+                  setQuizResults={setQuizResults}
+                  onVideoTimeUpdate={handleVideoTimeUpdate}
+                  onVideoEnd={handleVideoEnd}
+                  onLessonComplete={handleLessonComplete}
+                  onFileClick={handleFileClick}
+                  onVideoClick={handleVideoClick}
+                  onImageClick={(image) => {
+                    setSelectedImage(image);
+                    setShowImagePopup(true);
+                  }}
+                  isDescriptionExpanded={isDescriptionExpanded}
+                  setIsDescriptionExpanded={setIsDescriptionExpanded}
+                  setShowPurchaseModal={setShowPurchaseModal}
+                  isLiveCourse={false}
+                />
+                <InstructorCard course={course} t={t} />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

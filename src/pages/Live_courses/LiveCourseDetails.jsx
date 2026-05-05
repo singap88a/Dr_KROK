@@ -56,6 +56,7 @@ export default function LiveCourseDetails() {
   const [isExpired, setIsExpired] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -74,8 +75,12 @@ export default function LiveCourseDetails() {
           setReviews(data.ratings);
         }
 
-        // Check course access if logged in
-        if (isLoggedIn) {
+        // Check course access and expiration
+        if (data.enrollment_status) {
+          const { is_enrolled, is_expired: expired } = data.enrollment_status;
+          setIsExpired(expired === true);
+          setUserHasAccess(is_enrolled === true && expired === false);
+        } else if (isLoggedIn) {
           try {
             const access = await getCourseAccess(id, 'live_course');
             // access can be a boolean or an object { is_enrolled, is_expired }
@@ -356,8 +361,8 @@ export default function LiveCourseDetails() {
             {isExpired ? (
               /* ───── الكورس منتهى الصلاحية ───── */
               <button
-                disabled
-                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-green-600 opacity-80 cursor-not-allowed sm:px-6 sm:py-3 flex items-center gap-2"
+                onClick={() => setShowExpiredModal(true)}
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-green-600 hover:bg-green-700 sm:px-6 sm:py-3 flex items-center gap-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -381,15 +386,13 @@ export default function LiveCourseDetails() {
                 {t("courses.subscribeNow", "Subscribe Now")}
               </button>
             )}
-            {/* زر «عرض الدروس» – يُخفى عند انتهاء الصلاحية */}
-            {!isExpired && (
-              <button
-                onClick={() => navigate(`/live-courses/${id}/lessons`)}
-                className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
-              >
-                {t("courses.viewLessons", "View Lessons")}
-              </button>
-            )}
+            {/* زر «عرض الدروس» */}
+            <button
+              onClick={() => navigate(`/live-courses/${id}/lessons`)}
+              className="px-4 py-2 text-sm transition border rounded-lg border-primary text-primary hover:bg-primary hover:text-white sm:px-6 sm:py-3"
+            >
+              {t("courses.viewLessons", "View Lessons")}
+            </button>
           </div>
         </div>
       </div>
@@ -547,6 +550,29 @@ export default function LiveCourseDetails() {
 
       {/* Top Students Section */}
       <TopStudentsSlider students={course.top_students} />
+
+      {/* Expired Modal */}
+      {showExpiredModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md p-6 overflow-hidden text-center bg-white shadow-2xl rounded-2xl dark:bg-surface">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full dark:bg-green-900/30">
+              <FaCertificate className="text-3xl text-green-600 dark:text-green-400" />
+            </div>
+            <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+              {t("courses.courseCompletedTitle", "تم اجتياز الدورة بنجاح")}
+            </h3>
+            <p className="mb-6 text-gray-600 dark:text-gray-300">
+              {t("courses.courseCompletedMessage", "لقد أتممت متطلبات هذه الدورة بنجاح في وقت سابق. نظراً لانتهاء فترة صلاحية الوصول، لا يمكن عرض المحتوى حالياً. نتمنى لك دوام التوفيق والنجاح.")}
+            </p>
+            <button
+              onClick={() => setShowExpiredModal(false)}
+              className="w-full px-4 py-3 font-semibold text-white transition-colors bg-primary rounded-xl hover:bg-secondary"
+            >
+              {t("common.close", "إغلاق")}
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
