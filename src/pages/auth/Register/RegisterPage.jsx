@@ -15,10 +15,12 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { register: userRegister } = useUser();
-  const { register: apiRegister, request } = useApi();
+  const { register: apiRegister, request, sendOtp } = useApi();
+  const [step, setStep] = useState("send-otp"); // "send-otp" or "register"
   const [form, setForm] = useState({
     name: "",
     email: "",
+    otp: "",
     password: "",
     confirm: "",
     university: "",
@@ -60,12 +62,36 @@ export default function RegisterPage() {
     const e = {};
     if (!form.name.trim()) e.name = t('auth.register.errors.name');
     if (!form.email.includes("@")) e.email = t('auth.register.errors.email');
+    if (!form.otp.trim()) e.otp = "OTP is required";
     if (form.password.length < 6)
       e.password = t('auth.register.errors.password');
     if (!form.confirm) e.confirm = t('auth.register.errors.confirm');
     if (!agree) e.agree = t('auth.register.errors.agree');
     setErrors(e);
     return Object.keys(e).length === 0;
+  }
+
+  async function handleSendOtp(e) {
+    e.preventDefault();
+    if (!form.email.includes("@")) {
+      setErrors({ email: t('auth.register.errors.email') });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await sendOtp(form.email);
+      if (data.success) {
+        toast.success("OTP sent to your email!");
+        setStep("register");
+      } else {
+        toast.error(data.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      toast.error("Error sending OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSubmit(e) {
@@ -82,6 +108,7 @@ export default function RegisterPage() {
       const data = await apiRegister(
         form.name,
         form.email,
+        form.otp,
         form.password,
         form.confirm,
         form.university
@@ -147,121 +174,167 @@ export default function RegisterPage() {
           <div className="p-8 md:p-12">
             <h3 className="mb-6 text-xl font-semibold">{t('auth.register.title')}</h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name */}
-              <div>
-                <label className="text-sm font-medium">{t('auth.register.full_name')}</label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder={t('auth.register.full_name')}
-                />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-500">{errors.name}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="text-sm font-medium">{t('auth.register.email')}</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
-                  placeholder={t('auth.register.email')}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="text-sm font-medium">{t('auth.register.password')}</label>
-                <div className="relative">
+            {step === "send-otp" ? (
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                {/* Email Only for OTP */}
+                <div>
+                  <label className="text-sm font-medium">{t('auth.register.email')}</label>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={form.password}
-                    onChange={(e) =>
-                      setForm({ ...form, password: e.target.value })
-                    }
-                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
-                    placeholder={t('auth.register.password')}
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
+                    placeholder={t('auth.register.email')}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
-                  >
-                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                  </button>
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                  )}
                 </div>
-                {errors.password && (
-                  <p className="mt-1 text-xs text-red-500">{errors.password}</p>
-                )}
-              </div>
 
-              {/* Confirm Password */}
-              <div>
-                <label className="text-sm font-medium">{t('auth.register.confirm_password')}</label>
-                <div className="relative">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 font-semibold text-white transition rounded-lg bg-primary hover:bg-primary-dark disabled:opacity-50"
+                >
+                  {loading ? "Sending..." : "Send OTP"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label className="text-sm font-medium">{t('auth.register.full_name')}</label>
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={form.confirm}
-                    onChange={(e) =>
-                      setForm({ ...form, confirm: e.target.value })
-                    }
-                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
-                    placeholder={t('auth.register.confirm_password')}
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
+                    placeholder={t('auth.register.full_name')}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
-                  >
-                    {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                  </button>
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">{errors.name}</p>
+                  )}
                 </div>
-                {errors.confirm && (
-                  <p className="mt-1 text-xs text-red-500">{errors.confirm}</p>
+
+                {/* Email (Read-only or Pre-filled) */}
+                <div>
+                  <label className="text-sm font-medium">{t('auth.register.email')}</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    readOnly
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                  />
+                </div>
+
+                {/* OTP Code */}
+                <div>
+                  <label className="text-sm font-medium">OTP Code</label>
+                  <input
+                    type="text"
+                    value={form.otp}
+                    onChange={(e) => setForm({ ...form, otp: e.target.value })}
+                    className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background"
+                    placeholder="Enter the code sent to your email"
+                  />
+                  {errors.otp && (
+                    <p className="mt-1 text-xs text-red-500">{errors.otp}</p>
+                  )}
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="text-sm font-medium">{t('auth.register.password')}</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={(e) =>
+                        setForm({ ...form, password: e.target.value })
+                      }
+                      className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
+                      placeholder={t('auth.register.password')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
+                    >
+                      {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="text-sm font-medium">{t('auth.register.confirm_password')}</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={form.confirm}
+                      onChange={(e) =>
+                        setForm({ ...form, confirm: e.target.value })
+                      }
+                      className="block w-full px-4 py-2 mt-1 border rounded-lg bg-background pr-10"
+                      placeholder={t('auth.register.confirm_password')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors"
+                    >
+                      {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    </button>
+                  </div>
+                  {errors.confirm && (
+                    <p className="mt-1 text-xs text-red-500">{errors.confirm}</p>
+                  )}
+                </div>
+
+
+                {/* Terms and Conditions */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={agree}
+                    onChange={() => setAgree(!agree)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm">
+                    {t('auth.register.agree_terms')}{" "}
+                    <button
+                      type="button"
+                      onClick={() => setShowTerms(true)}
+                      className="underline text-primary"
+                    >
+                      {t('auth.register.terms_conditions')}
+                    </button>
+                  </span>
+                </div>
+                {errors.agree && (
+                  <p className="mt-1 text-xs text-red-500">{errors.agree}</p>
                 )}
-              </div>
 
-
-              {/* Terms and Conditions */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={agree}
-                  onChange={() => setAgree(!agree)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">
-                  {t('auth.register.agree_terms')}{" "}
-                  <button
-                    type="button"
-                    onClick={() => setShowTerms(true)}
-                    className="underline text-primary"
-                  >
-                    {t('auth.register.terms_conditions')}
-                  </button>
-                </span>
-              </div>
-              {errors.agree && (
-                <p className="mt-1 text-xs text-red-500">{errors.agree}</p>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 font-semibold text-white transition rounded-lg bg-primary hover:bg-primary-dark disabled:opacity-50"
-              >
-                {loading ? t('auth.register.creating') : t('auth.register.create_account')}
-              </button>
-            </form>
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 font-semibold text-white transition rounded-lg bg-primary hover:bg-primary-dark disabled:opacity-50"
+                >
+                  {loading ? t('auth.register.creating') : t('auth.register.create_account')}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setStep("send-otp")}
+                  className="w-full text-sm text-gray-500 hover:underline"
+                >
+                  Change Email
+                </button>
+              </form>
+            )}
 
             {/* Social Login Divider */}
             <div className="relative my-6">

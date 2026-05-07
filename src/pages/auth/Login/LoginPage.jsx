@@ -133,11 +133,11 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* <div className="flex justify-between text-sm">
-                <a href="#" className="text-primary hover:underline">
+              <div className="flex justify-between text-sm">
+                <Link to="/forgot-password" name="forgot-password" id="forgot-password" className="text-primary hover:underline">
                   {t('auth.login.forgot_password')}
-                </a>
-              </div> */}
+                </Link>
+              </div>
 
               <button
                 type="submit"

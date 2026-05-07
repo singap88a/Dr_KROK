@@ -387,10 +387,31 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
     });
   }, [request]);
 
-  const register = useCallback(async (name, email, password, password_confirmation, university) => {
+  const register = useCallback(async (name, email, otp, password, password_confirmation, university) => {
     return await request("auth/register", {
       method: "POST",
-      body: { name, email, password, password_confirmation, university }
+      body: { name, email, otp, password, password_confirmation, university }
+    });
+  }, [request]);
+
+  const sendOtp = useCallback(async (email) => {
+    return await request("auth/send-otp", {
+      method: "POST",
+      body: { email }
+    });
+  }, [request]);
+
+  const forgotPassword = useCallback(async (email) => {
+    return await request("auth/password/forget", {
+      method: "POST",
+      body: { email }
+    });
+  }, [request]);
+
+  const resetPassword = useCallback(async (email, otp, password, password_confirmation) => {
+    return await request("auth/password/reset", {
+      method: "POST",
+      body: { email, otp, password, password_confirmation }
     });
   }, [request]);
 
@@ -442,6 +463,9 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       getMyProfile,
       login,
       register,
+      sendOtp,
+      forgotPassword,
+      resetPassword,
       getFavorites,
       toggleFavorite,
       getInstructors,
