@@ -9,7 +9,8 @@
     "signUp": "Sign Up",
     "profile": "Profile",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "joinUs": "Join Us"
   },
   "contact": {
     "title_fallback": "Contact Us",
@@ -135,7 +136,17 @@
       "required": "Required for platform access",
       "warning": "Please update your information to continue.",
       "success": "Profile has been successfully updated!"
-    }
+    },
+    "notifications": {
+      "title": "My Notifications",
+      "total": "notifications",
+      "mark_as_read": "Mark all as read",
+      "new": "New",
+      "admin": "Admin",
+      "no_notifications": "No Notifications",
+      "no_notifications_desc": "You don't have any notifications at the moment."
+    },
+    "error_loading": "Error Loading Profile"
   },
   "footer": {
     "copyright": "© {{year}} Dr KROK. All rights reserved. Designed and developed by <developer>iCode Tech</developer> software company.",
@@ -457,7 +468,10 @@
     "missingData": "Missing data",
     "close": "Close",
     "goBack": "Go Back",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "got_it": "Got it",
+    "new": "New",
+    "download_file": "Download File"
   },
   "privacyPolicy": {
     "title": "Privacy Policy",
@@ -1106,7 +1120,87 @@
     "discount_label": "Coupon discount ({{percent}}%)",
     "required": "Please enter a coupon code"
   }
-}
+  },
+  "orders": {
+    "title": "My Orders",
+    "totalOrders_one": "{{count}} Order",
+    "totalOrders_other": "{{count}} Orders",
+    "all": "All",
+    "books": "Books",
+    "courses": "Courses",
+    "item": "Item",
+    "type": "Type",
+    "price": "Price",
+    "status": "Status",
+    "date": "Date",
+    "delivery": "Delivery",
+    "pdf": "PDF",
+    "delivery_to": "Delivery to",
+    "statuses": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "paid": "Paid",
+      "cancelled": "Cancelled",
+      "payment": "Payment Processing",
+      "pending_desc": "Your order has been received and is waiting for processing.",
+      "processing_desc": "Your order is being prepared for shipment.",
+      "shipped_desc": "Your order has been shipped and is on its way.",
+      "delivered_desc": "Your order has been successfully delivered.",
+      "paid_desc": "Payment has been successfully processed.",
+      "cancelled_desc": "Your order has been cancelled.",
+      "payment_desc": "Payment is being processed.",
+      "unavailable": "Status information not available.",
+      "unknown": "Unknown"
+    },
+    "messages": {
+      "title": "Order Messages",
+      "no_messages": "No messages for this order yet.",
+      "delivery_paid": "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours",
+      "delivery_completed": "Your order has reached the shipping company, you can go to receive it now",
+      "pdf_completed": "Your order has been completed successfully and you can now download the file as PDF",
+      "course_completed": "This course is now fully yours, you can watch it now",
+      "course_pending": "This course is now yours, but the remaining course amount is pending"
+    }
+  },
+  "jobs": {
+    "title": "Careers",
+    "generalApply": "General Application",
+    "backToJobs": "Back to Jobs",
+    "form": {
+      "personalInfo": "Personal Information",
+      "name": "Full Name",
+      "age": "Age",
+      "country": "Country",
+      "city": "City",
+      "contactInfo": "Contact Information",
+      "email": "Email",
+      "phone": "Phone Number",
+      "whatsapp": "WhatsApp Number",
+      "availableFrom": "Available From",
+      "professionalInfo": "Professional Information",
+      "degree": "Academic Degree",
+      "specialization": "Specialization",
+      "experienceYears": "Years of Experience",
+      "currentSalary": "Current Salary",
+      "expectedSalary": "Expected Salary",
+      "notes": "Additional Notes",
+      "attachments": "Attachments",
+      "photo": "Personal Photo",
+      "cv": "Resume / CV",
+      "dragDrop": "Click or drag file here to upload",
+      "submit": "Submit Application",
+      "cvRequired": "Please upload your CV",
+      "success": {
+        "title": "Application Sent!",
+        "subtitle": "Thank you for your interest.",
+        "description": "We have received your application and will review it soon. Our team will contact you if your profile matches our requirements.",
+        "back": "Back to Home"
+      }
+    }
+  }
 }
 
 

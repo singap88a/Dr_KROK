@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaPlay,
@@ -12,6 +12,8 @@ import {
   FaFilePdf,
   FaVideo,
   FaDownload,
+  FaCommentDots,
+  FaBell,
 } from "react-icons/fa";
 
 // Custom Tooltip Component
@@ -123,7 +125,7 @@ const StatusBadge = ({ status, onClick }) => {
       textColor: "text-gray-800",
       borderColor: "border-gray-200",
       icon: <FaExclamationTriangle className="w-4 h-4 text-gray-500" />,
-      label: status || "Unknown"
+      label: status || t("orders.statuses.unknown", "Unknown")
     };
   };
 
@@ -148,45 +150,45 @@ const StatusModal = ({ isOpen, onClose, status, orderType, order }) => {
     // Delivery book cases
     if (orderType === "delivery") {
       if (status === "paid") {
-        return "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours";
+        return t("orders.messages.delivery_paid", "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours");
       } else if (status === "completed") {
-        return "Your order has reached the shipping company, you can go to receive it now";
+        return t("orders.messages.delivery_completed", "Your order has reached the shipping company, you can go to receive it now");
       }
     }
 
     // PDF book case
     if (orderType === "pdf" && status === "completed") {
-      return "Your order has been completed successfully and you can now download the file as PDF";
+      return t("orders.messages.pdf_completed", "Your order has been completed successfully and you can now download the file as PDF");
     }
 
     // Course cases
     if (orderType === "course" || orderType === "live_course") {
       if (status === "completed") {
-        return "This course is now fully yours, you can watch it now";
+        return t("orders.messages.course_completed", "This course is now fully yours, you can watch it now");
       } else if (status === "pending") {
-        return "This course is now yours, but the remaining course amount is pending";
+        return t("orders.messages.course_pending", "This course is now yours, but the remaining course amount is pending");
       }
     }
 
     // Default cases
     switch (status) {
       case "pending":
-        return "Your order has been received and is waiting for processing.";
+        return t("orders.statuses.pending_desc", "Your order has been received and is waiting for processing.");
       case "processing":
-        return "Your order is being prepared for shipment.";
+        return t("orders.statuses.processing_desc", "Your order is being prepared for shipment.");
       case "shipped":
-        return "Your order has been shipped and is on its way.";
+        return t("orders.statuses.shipped_desc", "Your order has been shipped and is on its way.");
       case "delivered":
       case "completed":
-        return "Your order has been successfully delivered.";
+        return t("orders.statuses.delivered_desc", "Your order has been successfully delivered.");
       case "paid":
-        return "Payment has been successfully processed.";
+        return t("orders.statuses.paid_desc", "Payment has been successfully processed.");
       case "cancelled":
-        return "Your order has been cancelled.";
+        return t("orders.statuses.cancelled_desc", "Your order has been cancelled.");
       case "payment":
-        return "Payment is being processed.";
+        return t("orders.statuses.payment_desc", "Payment is being processed.");
       default:
-        return "Status information not available.";
+        return t("orders.statuses.unavailable", "Status information not available.");
     }
   };
 
@@ -245,9 +247,87 @@ const StatusModal = ({ isOpen, onClose, status, orderType, order }) => {
               onClick={onClose}
               className="px-6 py-3 font-semibold text-white transition-all duration-200 transform shadow-lg bg-primary rounded-xl hover:shadow-xl hover:scale-105"
             >
-              Got it
+              {t("common.got_it", "Got it")}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MessagesModal = ({ isOpen, onClose, order, readMessageIds, setReadMessageIds }) => {
+  if (!isOpen || !order) return null;
+
+  const messages = [...(order.messages || [])].sort((a, b) => 
+    new Date(b.sent_at) - new Date(a.sent_at)
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-lg mx-4 transition-all duration-300 transform scale-100 bg-white shadow-2xl rounded-2xl animate-slideUp">
+        {/* Header */}
+        <div className="relative p-6 text-white bg-primary rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white rounded-full shadow-lg bg-opacity-20">
+                <FaCommentDots className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">{t("orders.messages.title", "Order Messages")}</h3>
+                <p className="text-sm opacity-90">{order.item}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 transition-colors rounded-full hover:bg-white hover:bg-opacity-20"
+            >
+              <FaTimesCircle className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
+          {messages.length > 0 ? (
+            messages.map((msg) => (
+              <div 
+                key={msg.id} 
+                className={`p-4 rounded-xl border-l-4 shadow-sm ${
+                  readMessageIds.includes(msg.id) 
+                    ? "bg-gray-50 border-gray-300" 
+                    : "bg-blue-50 border-blue-500 animate-pulse-subtle"
+                }`}
+              >
+                <p className="text-sm font-medium text-gray-800">{msg.message}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-500">
+                    {new Date(msg.sent_at).toLocaleString()}
+                  </span>
+                  {!readMessageIds.includes(msg.id) && (
+                    <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] rounded-full uppercase font-bold">
+                      {t("common.new", "New")}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-10 text-center">
+              <FaCommentDots className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-gray-500">{t("orders.messages.no_messages", "No messages for this order yet.")}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t bg-gray-50 rounded-b-2xl">
+          <button
+            onClick={onClose}
+            className="w-full py-3 font-semibold text-white transition-all duration-200 transform shadow-md bg-primary rounded-xl hover:shadow-lg hover:scale-[1.02]"
+          >
+            {t("common.close")}
+          </button>
         </div>
       </div>
     </div>
@@ -288,6 +368,7 @@ const normalizeOrders = (orders) => {
         file: o.file,
         city: o.city,
         branch: o.branch,
+        messages: o.messages || [],
       };
     }
     if (o && typeof o === "object" && "total_price" in o) {
@@ -298,6 +379,7 @@ const normalizeOrders = (orders) => {
         price: parseFloat(o.total_price) || 0,
         status: mapStatusFromBackend(o.status),
         date: o.created_at || new Date().toISOString(),
+        messages: o.messages || [],
       };
     }
     return {
@@ -310,6 +392,7 @@ const normalizeOrders = (orders) => {
       file: o.file,
       city: o.city,
       branch: o.branch,
+      messages: o.messages || [],
     };
   });
 };
@@ -321,6 +404,27 @@ const MyOrders = ({ orders }) => {
   const [filterType, setFilterType] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
+  const [selectedOrderForMessages, setSelectedOrderForMessages] = useState(null);
+  const [readMessageIds, setReadMessageIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem("dr_krok_read_messages");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("dr_krok_read_messages", JSON.stringify(readMessageIds));
+  }, [readMessageIds]);
+
+  const truncateText = (text, maxWords = 4) => {
+    if (!text) return "";
+    const words = text.split(" ");
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(" ") + "...";
+  };
 
   // Helper function to format date as YYYY/MM/DD
   const formatDate = (dateString) => {
@@ -337,6 +441,20 @@ const MyOrders = ({ orders }) => {
   const handleStatusClick = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
+  };
+
+  const handleMessagesClick = (order) => {
+    setSelectedOrderForMessages(order);
+    setIsMessagesModalOpen(true);
+    
+    // Mark messages as read
+    const newMessageIds = order.messages
+      .map(m => m.id)
+      .filter(id => !readMessageIds.includes(id));
+      
+    if (newMessageIds.length > 0) {
+      setReadMessageIds(prev => [...prev, ...newMessageIds]);
+    }
   };
 
   const handleDownload = (fileUrl) => {
@@ -450,14 +568,18 @@ const MyOrders = ({ orders }) => {
                           <FaBook className="text-primary" />
                         )}
                         <div className="flex flex-col">
-                          <span className="text-sm">{order.item}</span>
+                          <CustomTooltip text={order.item}>
+                            <span className="text-sm font-medium">
+                              {truncateText(order.item)}
+                            </span>
+                          </CustomTooltip>
                           {order.type === "pdf" && order.file && (
                             <button
                               onClick={() => handleDownload(order.file)}
                               className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
                             >
                               <FaDownload className="w-3 h-3" />
-                              Download File
+                              {t("common.download_file", "Download File")}
                             </button>
                           )}
                         </div>
@@ -474,16 +596,33 @@ const MyOrders = ({ orders }) => {
                       ₴{Number(order.price).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge 
-                        status={normalizedStatus} 
-                        onClick={() => handleStatusClick(order)}
-                      />
+                      <div className="flex items-center gap-4">
+                        <StatusBadge 
+                          status={normalizedStatus} 
+                          onClick={() => handleStatusClick(order)}
+                        />
+                        
+                        {/* Messages Button */}
+                        <div className="relative">
+                          <button
+                            onClick={() => handleMessagesClick(order)}
+                            className="p-2 transition-all rounded-full bg-gray-50 hover:bg-blue-50 text-primary hover:scale-110 active:scale-95"
+                          >
+                            <FaCommentDots className="w-5 h-5" />
+                            {order.messages?.filter(m => !readMessageIds.includes(m.id)).length > 0 && (
+                              <span className="absolute flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 border-2 border-white rounded-full -top-1 -right-1 animate-bounce-slow">
+                                {order.messages.filter(m => !readMessageIds.includes(m.id)).length}
+                              </span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {formatDate(order.date)}
                     </td>
-
                   </tr>
+
                 );
               })}
             </tbody>
@@ -501,11 +640,26 @@ const MyOrders = ({ orders }) => {
               key={order.id}
               className="p-4 bg-white border rounded-lg shadow-sm border-border dark:bg-gray-800"
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-4">
                 <StatusBadge
                   status={normalizedStatus}
                   onClick={() => handleStatusClick(order)}
                 />
+                
+                {/* Mobile Messages Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => handleMessagesClick(order)}
+                    className="p-2.5 transition-all rounded-full bg-blue-50 text-primary hover:scale-110 active:scale-95"
+                  >
+                    <FaCommentDots className="w-5 h-5" />
+                    {order.messages?.filter(m => !readMessageIds.includes(m.id)).length > 0 && (
+                      <span className="absolute flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 border-2 border-white rounded-full -top-1 -right-1 animate-bounce-slow">
+                        {order.messages.filter(m => !readMessageIds.includes(m.id)).length}
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-3 mb-3">
@@ -521,14 +675,16 @@ const MyOrders = ({ orders }) => {
                   <FaBook className="text-lg text-primary" />
                 )}
                 <div className="flex-1">
-                  <p className="font-medium">{order.item}</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">
+                    {truncateText(order.item, 6)}
+                  </p>
                   {order.type === "pdf" && order.file && (
                     <button
                       onClick={() => handleDownload(order.file)}
                       className="flex items-center gap-1 mt-1 text-sm text-blue-500 hover:underline"
                     >
                       <FaDownload className="w-3 h-3" />
-                      Download File
+                      {t("common.download_file", "Download File")}
                     </button>
                   )}
                 </div>
@@ -553,7 +709,7 @@ const MyOrders = ({ orders }) => {
                 </p>
                 {order.type === 'delivery' && order.city && order.branch && (
                   <p>
-                    <span className="font-medium">{t("orders.delivery_info") || "Delivery to"}:</span>{" "}
+                    <span className="font-medium">{t("orders.delivery_to", "Delivery to")}:</span>{" "}
                     {order.city} - {order.branch}
                   </p>
                 )}
@@ -566,7 +722,7 @@ const MyOrders = ({ orders }) => {
                     className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
                   >
                     <FaDownload className="w-4 h-4" />
-                    Download File
+                    {t("common.download_file", "Download File")}
                   </button>
                 </div>
               )}
@@ -582,6 +738,15 @@ const MyOrders = ({ orders }) => {
         status={selectedOrder?.status}
         orderType={selectedOrder?.type}
         order={selectedOrder}
+      />
+
+      {/* Messages Modal */}
+      <MessagesModal
+        isOpen={isMessagesModalOpen}
+        onClose={() => setIsMessagesModalOpen(false)}
+        order={selectedOrderForMessages}
+        readMessageIds={readMessageIds}
+        setReadMessageIds={setReadMessageIds}
       />
     </div>
   );

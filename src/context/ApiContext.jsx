@@ -1609,6 +1609,26 @@ async getCertificateUrl(token, courseId, courseType = 'video') {
           auth: true,
           signal
         });
+      },
+
+      async getNotifications(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        const path = query.toString() ? `profile/my-notifications?${query.toString()}` : "profile/my-notifications";
+        return await request(path, { auth: true, useCache: true });
+      },
+
+      async getJobs() {
+        return await request("job", { useCache: true });
+      },
+
+      async submitJobApplication(formData) {
+        return await request("job_applications", {
+          method: "POST",
+          body: formData,
+          isFormData: true,
+          auth: false // التقديم غالباً متاح للكل حتى لو مش عامل لوجن
+        });
       }
     }),
     [

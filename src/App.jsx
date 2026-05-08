@@ -46,6 +46,8 @@ import LiveCourseLessons from "./pages/Live_courses/LiveCourseLessons/LiveCourse
 import PaymentSuccess from "./pages/Payment/PaymentSuccess";
 import PaymentFailed from "./pages/Payment/PaymentFailed";
 import NotFound from "./pages/NotFound/NotFound";
+import Jobs from "./pages/Jobs/Jobs";
+import ApplicationSuccess from "./pages/Jobs/ApplicationSuccess";
 
 export default function App() {
   const location = useLocation();
@@ -108,6 +110,10 @@ export default function App() {
           {/* Payment Routes */}
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failed" element={<PaymentFailed />} />
+
+          {/* Jobs Routes */}
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/application-success" element={<ApplicationSuccess />} />
 
           {/* NotFound Catch-all Route */}
           <Route path="*" element={<NotFound />} />
