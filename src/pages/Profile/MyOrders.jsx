@@ -144,6 +144,7 @@ const StatusBadge = ({ status, onClick }) => {
 
 // Status Modal Component
 const StatusModal = ({ isOpen, onClose, status, orderType, order }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const getStatusMessage = () => {
@@ -257,6 +258,7 @@ const StatusModal = ({ isOpen, onClose, status, orderType, order }) => {
 };
 
 const MessagesModal = ({ isOpen, onClose, order, readMessageIds, setReadMessageIds }) => {
+  const { t } = useTranslation();
   if (!isOpen || !order) return null;
 
   const messages = [...(order.messages || [])].sort((a, b) => 
