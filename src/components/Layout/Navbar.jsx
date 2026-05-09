@@ -117,7 +117,7 @@ export default function Navbar() {
     { path: "/books", label: "navbar.books" },
     { path: "/about", label: "navbar.about" },
     { path: "/contact", label: "navbar.contact" },
-    { path: "/jobs", label: "navbar.joinUs" },
+    // { path: "/jobs", label: "navbar.joinUs" },
   ];
 
   const handleLogout = () => {
