@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark } from "react-icons/fa";
+import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark, FaBriefcase } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
@@ -117,6 +117,7 @@ export default function Navbar() {
     { path: "/books", label: "navbar.books" },
     { path: "/about", label: "navbar.about" },
     { path: "/contact", label: "navbar.contact" },
+    { path: "/jobs", label: "navbar.joinUs" },
   ];
 
   const handleLogout = () => {

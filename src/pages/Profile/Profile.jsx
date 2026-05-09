@@ -10,7 +10,7 @@
  *   • Light/Dark mode support
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -23,6 +23,7 @@ import {
   FaTimes,
   FaGraduationCap,
   FaHeart,
+  FaBell,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
@@ -31,6 +32,7 @@ import MyOrders from "./MyOrders";
 import MyCourses from "./MyCourses";
 import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
+import MyNotifications from "./MyNotifications";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
@@ -40,7 +42,7 @@ export default function Profile() {
   const location = useLocation();
   const { t } = useTranslation();
   const { updateUser, logout } = useUser();
-  const { getOrders, getMyCourses, getMyProfile } = useApi();
+  const { getOrders, getMyCourses, getMyProfile, getNotifications } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,31 @@ export default function Profile() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [forceEdit, setForceEdit] = useState(false);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+  // Fetch notifications count
+  const updateNotificationsCount = useCallback(async () => {
+    try {
+      const res = await getNotifications();
+      if (res.success) {
+        const notifications = res.data.data || [];
+        const savedReadIds = JSON.parse(localStorage.getItem("dr_krok_read_notifications") || "[]");
+        const unreadCount = notifications.filter(n => !savedReadIds.includes(n.id)).length;
+        setUnreadNotificationsCount(unreadCount);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch notification count", e);
+    }
+  }, [getNotifications]);
+
+  useEffect(() => {
+    updateNotificationsCount();
+    
+    // Listen for notification updates
+    const handleUpdate = () => updateNotificationsCount();
+    window.addEventListener('notifications-updated', handleUpdate);
+    return () => window.removeEventListener('notifications-updated', handleUpdate);
+  }, [updateNotificationsCount]);
 
   const isProfileIncomplete = (u) => {
     return !u?.phone || (!u?.university_id && !u?.university?.id) || !u?.college_year;
@@ -142,6 +169,7 @@ export default function Profile() {
     { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart },
     { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
     { id: "ratings", label: t('profile.sidebar.myRatings'), icon: FaStar },
+    { id: "notifications", label: t('profile.sidebar.myNotifications', 'My Notifications'), icon: FaBell, badge: unreadNotificationsCount },
     { id: "logout", label: t('profile.sidebar.logout'), icon: FaSignOutAlt },
   ];
 
@@ -228,6 +256,11 @@ export default function Profile() {
                 >
                   <Icon className="text-lg" />
                   <span className="font-medium">{item.label}</span>
+                  {item.badge > 0 && (
+                    <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               </li>
             );
@@ -270,7 +303,7 @@ export default function Profile() {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-            <p className="text-text-secondary">Loading profile...</p>
+            <p className="text-text-secondary">{t("profile.loading")}</p>
           </div>
         </div>
       );
@@ -283,13 +316,13 @@ export default function Profile() {
             <div className="w-16 h-16 mx-auto mb-4 text-red-500">
               <FaExclamationTriangle className="w-full h-full" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">Error Loading Profile</h3>
+            <h3 className="mb-2 text-lg font-semibold">{t("profile.error_loading")}</h3>
             <p className="text-text-secondary">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 mt-4 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
             >
-              Try Again
+              {t("common.retry")}
             </button>
           </div>
         </div>
@@ -316,6 +349,8 @@ export default function Profile() {
             ratings: updatedRatings
           }));
         }} />;
+      case "notifications":
+        return <MyNotifications />;
       case "profile":
         return <MyProfile user={user} initialIsEditing={forceEdit} onProfileUpdate={(updated)=>{
           const merged = {
