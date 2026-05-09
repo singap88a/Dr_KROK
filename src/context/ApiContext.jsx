@@ -8,40 +8,40 @@ const ApiContext = createContext(null);
 const apiCache = {
   data: new Map(),
   events: new Map(), // Event system for real-time updates
-  
+
   set(key, value, ttl = 10 * 60 * 1000) {
     this.data.set(key, {
       value,
       timestamp: Date.now(),
       ttl
     });
-    
+
     // Trigger cache update events
     this.triggerEvent('cacheUpdate', { key, value });
   },
-  
+
   get(key) {
     const item = this.data.get(key);
     if (!item) return null;
-    
+
     if (Date.now() - item.timestamp > item.ttl) {
       this.data.delete(key);
       return null;
     }
-    
+
     return item.value;
   },
-  
+
   delete(key) {
     this.data.delete(key);
     this.triggerEvent('cacheDelete', { key });
   },
-  
+
   clear() {
     this.data.clear();
     this.triggerEvent('cacheClear', {});
   },
-  
+
   // Event system methods
   on(event, callback) {
     if (!this.events.has(event)) {
@@ -49,13 +49,13 @@ const apiCache = {
     }
     this.events.get(event).add(callback);
   },
-  
+
   off(event, callback) {
     if (this.events.has(event)) {
       this.events.get(event).delete(callback);
     }
   },
-  
+
   triggerEvent(event, data) {
     if (this.events.has(event)) {
       this.events.get(event).forEach(callback => {
@@ -72,7 +72,7 @@ const apiCache = {
 // Create a global event system for cross-component communication
 const globalEvents = {
   events: new Map(),
-  
+
   emit(event, data) {
     if (this.events.has(event)) {
       this.events.get(event).forEach(callback => {
@@ -84,14 +84,14 @@ const globalEvents = {
       });
     }
   },
-  
+
   on(event, callback) {
     if (!this.events.has(event)) {
       this.events.set(event, new Set());
     }
     this.events.get(event).add(callback);
   },
-  
+
   off(event, callback) {
     if (this.events.has(event)) {
       this.events.get(event).delete(callback);
@@ -149,7 +149,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   const generateCacheKey = useCallback((path, options = {}) => {
     const authToken = getAuthToken();
     const lang = (i18n?.language || localStorage.getItem("DR_KROK_i18nextLng") || "en").split("-")[0];
-    
+
     return JSON.stringify({
       path,
       auth: !!authToken,
@@ -160,25 +160,25 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   }, [getAuthToken]);
 
   const request = useCallback(
-    async (path, { 
-      method = "GET", 
-      headers = {}, 
-      body, 
-      auth = false, 
+    async (path, {
+      method = "GET",
+      headers = {},
+      body,
+      auth = false,
       isFormData = false,
       useCache = true,
       cacheTTL = 10 * 60 * 1000,
       invalidateCacheOnSuccess = [], // New: specify cache patterns to invalidate on success
       signal = null // New: support request cancellation
     } = {}) => {
-      
+
       // Don't cache non-GET requests or form data
       if (method !== 'GET' || isFormData) {
         useCache = false;
       }
 
       const cacheKey = generateCacheKey(path, { method, body });
-      
+
       // Try to get from cache first
       if (useCache) {
         const cached = apiCache.get(cacheKey);
@@ -307,7 +307,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       // Invalidate specified cache on successful non-GET requests
       if (method !== 'GET' && res.ok && invalidateCacheOnSuccess.length > 0) {
         invalidateCache(invalidateCacheOnSuccess);
-        
+
         // Emit global event for real-time updates
         globalEvents.emit('dataUpdated', {
           type: 'cacheInvalidation',
@@ -475,11 +475,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       updateCache,
       emitDataUpdate,
       onDataUpdate,
-      
+
       // Placement Courses API
       async getPlacementCourses(params = {}) {
         const type = params.type || 'all';
-        
+
         if (type === 'video') {
           const res = await request('placementCourses/video', { useCache: true });
           const list = Array.isArray(res?.data) ? res.data.map((c) => ({ ...c, type: 'video' })) : [];
@@ -498,7 +498,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         const live = Array.isArray(liveRes?.data) ? liveRes.data.map((c) => ({ ...c, type: 'live' })) : [];
         return { data: [...video, ...live], raw: { video: videoRes, live: liveRes } };
       },
-      
+
       // Video Courses API
       async getVideoCourses(params = {}) {
         const query = new URLSearchParams();
@@ -512,7 +512,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           raw: response,
         };
       },
-      
+
       async getLiveCourses(params = {}) {
         const query = new URLSearchParams();
         if (params.page) query.set("page", params.page);
@@ -525,7 +525,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           raw: response,
         };
       },
-      
+
       async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
@@ -549,7 +549,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           throw err;
         }
       },
-      
+
       async getLiveCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         try {
@@ -573,7 +573,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           throw err;
         }
       },
-      
+
       async getLiveCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -603,7 +603,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           throw err;
         }
       },
-      
+
       async getCourseLessons(courseId) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -633,7 +633,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           throw err;
         }
       },
-      
+
       async getCourseAccess(courseId, type = null) {
         if (!courseId) throw new Error("Course id is required");
         try {
@@ -663,7 +663,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           return false;
         }
       },
-      
+
       // Video course progress API - UPDATED with auto cache invalidation
       async getCourseProgress(courseId) {
         if (!courseId) throw new Error("Course id is required");
@@ -682,7 +682,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         return { status: 'not_started', percentage: 0, course_id: Number(courseId) };
       },
-      
+
       async startLessonProgress(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         const candidates = [
@@ -692,8 +692,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         ];
         for (const path of candidates) {
           try {
-            const res = await request(path, { 
-              method: 'POST', 
+            const res = await request(path, {
+              method: 'POST',
               auth: true,
               invalidateCacheOnSuccess: [`courses/${courseId}`, `progress`]
             });
@@ -707,27 +707,27 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
 
       async completeLessonProgress(courseId, lessonId, type) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-        
+
         const formData = new FormData();
         formData.append('course', String(courseId));
         formData.append('lesson', String(lessonId));
         formData.append('type', type || 'lesson');
-        
+
         const candidates = [
           `courses/${courseId}/progress/${lessonId}/complete`,
           `video_courses/${courseId}/progress/${lessonId}/complete`,
           `video_course/${courseId}/progress/${lessonId}/complete`
         ];
-        
+
         for (const path of candidates) {
           try {
-            const res = await request(path, { 
-              method: 'POST', 
-              auth: true, 
-              body: formData, 
+            const res = await request(path, {
+              method: 'POST',
+              auth: true,
+              body: formData,
               isFormData: true,
               invalidateCacheOnSuccess: [
-                `courses/${courseId}`, 
+                `courses/${courseId}`,
                 `progress`,
                 `video_course/${courseId}`,
                 `course/${courseId}`
@@ -740,7 +740,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         throw new Error('Progress complete endpoint not available');
       },
-      
+
       // Course Progress API functions - UPDATED
       async getCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
@@ -759,7 +759,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         return null;
       },
-      
+
       async markLessonAsCompleted(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
 
@@ -797,7 +797,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         throw new Error('Lesson complete endpoint not available');
       },
-      
+
       // Live Course Progress API functions - UPDATED بنفس نظام الفيديو
       async getLiveCourseProgress(courseId) {
         if (!courseId) throw new Error("Course id is required");
@@ -815,7 +815,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         return { status: 'not_started', percentage: 0, course_id: Number(courseId) };
       },
-      
+
       async startLiveLessonProgress(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         const candidates = [
@@ -824,11 +824,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         ];
         for (const path of candidates) {
           try {
-            const res = await request(path, { 
-              method: 'POST', 
+            const res = await request(path, {
+              method: 'POST',
               auth: true,
               invalidateCacheOnSuccess: [
-                `courses/${courseId}`, 
+                `courses/${courseId}`,
                 `progress`,
                 `live_courses/${courseId}`,
                 `live_course/${courseId}`
@@ -841,10 +841,10 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         throw new Error('Live course progress start endpoint not available');
       },
-      
+
       async completeLiveLessonProgress(courseId, lessonId, type) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
-        
+
         const token = getAuthToken();
         if (!token) {
           throw new Error("Authentication token is required");
@@ -854,7 +854,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('course', String(courseId));
         formData.append('lesson', String(lessonId));
         formData.append('type', type || 'lesson');
-        
+
         console.log('Sending completeLiveLessonProgress request:', {
           courseId,
           lessonId,
@@ -896,15 +896,15 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           return res;
         } catch (error) {
           console.error("Error completing lesson progress:", error);
-          
+
           if (error.message.includes("The selected lesson is invalid") || error.status === 422) {
             console.log('Trying alternative endpoint for quiz completion...');
-            
+
             const alternativeFormData = new FormData();
             alternativeFormData.append('course_id', String(courseId));
             alternativeFormData.append('lesson_id', String(lessonId));
             alternativeFormData.append('type', type || 'quiz');
-            
+
             try {
               const altRes = await request(`courses/${courseId}/progress/${lessonId}/complete`, {
                 method: 'POST',
@@ -918,18 +918,18 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
                   `live_course/${courseId}`
                 ]
               });
-              
+
               return altRes;
             } catch (altError) {
               console.error("Alternative endpoint also failed:", altError);
               throw altError;
             }
           }
-          
+
           throw error;
         }
       },
-      
+
       async getLiveCourseProgressDetails(courseId) {
         if (!courseId) throw new Error("Course id is required");
         const candidates = [
@@ -946,7 +946,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         return null;
       },
-      
+
       async markLiveLessonAsCompleted(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
 
@@ -984,7 +984,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         throw new Error('Live lesson complete endpoint not available');
       },
-      
+
       async getLiveLessonProgress(courseId, lessonId) {
         if (!courseId || !lessonId) throw new Error("Both courseId and lessonId are required");
         const candidates = [
@@ -1001,7 +1001,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
         return null;
       },
-      
+
       // Course subscription - UPDATED with auto cache invalidation
       async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
         const formData = new FormData();
@@ -1097,11 +1097,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         const response = await request("profile/get-my-courses", { auth: true });
         return response.data || [];
       },
-      
+
       // Add student test results - UPDATED
       async addStudentTest(testData) {
         console.log('🎯 addStudentTest called with:', testData);
-        
+
         try {
           const response = await request("add_student_test", {
             method: "POST",
@@ -1125,7 +1125,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           return response;
         } catch (error) {
           console.error('❌ Error in addStudentTest:', error);
-          
+
           const formData = new FormData();
           formData.append('test_id', testData.test_id?.toString() || "");
           formData.append('course_id', testData.course_id?.toString() || "");
@@ -1171,7 +1171,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       // Check student test - UPDATED مع cache invalidation
       async checkStudentTest(testData) {
         console.log('🔍 checkStudentTest called with:', testData);
-        
+
         try {
           const response = await request("checkStudentTest", {
             method: "POST",
@@ -1185,10 +1185,10 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
 
           console.log('✅ checkStudentTest response:', response);
           return response;
-          
+
         } catch (error) {
           console.error('❌ Error in checkStudentTest:', error);
-          
+
           const formData = new FormData();
           formData.append('course_id', testData.course_id?.toString() || "");
           if (testData.lesson_id) {
@@ -1207,7 +1207,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
                 `test`
               ]
             });
-            
+
             console.log('✅ FormData response for checkStudentTest:', formDataResponse);
             return formDataResponse;
           } catch (formDataError) {
@@ -1231,7 +1231,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           raw: response
         };
       },
-      
+
       // Reviews API
       async submitCourseReview(courseId, rating, comment, type = 'video_course') {
         const formData = new FormData();
@@ -1266,15 +1266,15 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           ]
         });
       },
-      
+
       async getUserRatings() {
         return await request('user/ratings', { auth: true });
       },
-      
+
       async checkUserReview(courseId) {
         return await request(`courses/${courseId}/user-review`, { auth: true });
       },
-      
+
       // Orders API
       async getOrders() {
         const response = await request('orders', { auth: true });
@@ -1284,12 +1284,12 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       // Final Test Results API
       async getFinalTestResult(courseId) {
         if (!courseId) throw new Error("Course id is required");
-        
+
         const candidates = [
           `live_courses/${courseId}/final-test-result`,
           `courses/${courseId}/final-test-result`
         ];
-        
+
         for (const path of candidates) {
           try {
             const response = await request(path, { auth: true });
@@ -1347,255 +1347,255 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       },
 
       // Certificate API functions
-// Certificate API functions - إصلاح الدوال
-async uploadCertificate(token, formData) {
-  if (!token) throw new Error("Token is required");
-  if (!formData) throw new Error("FormData is required");
+      // Certificate API functions - إصلاح الدوال
+      async uploadCertificate(token, formData) {
+        if (!token) throw new Error("Token is required");
+        if (!formData) throw new Error("FormData is required");
 
-  try {
-    // استخدام request العادية بدل axios
-    const response = await request("create_student_certificate", {
-      method: "POST",
-      body: formData,
-      auth: true,
-      isFormData: true
-    });
-    return response;
-  } catch (error) {
-    console.error('Failed to upload certificate:', error);
-    
-    // محاولة باستخدام axios كـ fallback
-    try {
-      const url = buildUrl("create_student_certificate");
-      const axiosResponse = await axios.post(url, formData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
-        },
-        timeout: 30000
-      });
-      return axiosResponse.data;
-    } catch (axiosError) {
-      console.error('Axios upload also failed:', axiosError);
-      throw axiosError;
-    }
-  }
-},
+        try {
+          // استخدام request العادية بدل axios
+          const response = await request("create_student_certificate", {
+            method: "POST",
+            body: formData,
+            auth: true,
+            isFormData: true
+          });
+          return response;
+        } catch (error) {
+          console.error('Failed to upload certificate:', error);
 
-// Certificate API functions - الإصدار المحسن
-async getCertificateFile(token, courseId, courseType = 'video') {
-  if (!token) throw new Error("Token is required");
-  if (!courseId) throw new Error("Course id is required");
-
-  try {
-    // بناء الـ URL مع إضافة الـ type parameter
-    const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
-    console.log('🔍 Fetching certificate from:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Accept": "application/pdf, application/json, */*",
-        "Accept-Language": (i18n?.language || "en").split("-")[0]
-      },
-      // إضافة timeout لمنع التجميد
-      signal: AbortSignal.timeout(30000)
-    });
-
-    if (!response.ok) {
-      // إذا كان الرد 404، هذا يعني لا توجد شهادة
-      if (response.status === 404) {
-        throw new Error("CERTIFICATE_NOT_FOUND");
-      }
-      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-    }
-
-    // محاولة parsing كـ JSON أولاً
-    const contentType = response.headers.get('content-type') || '';
-    
-    if (contentType.includes('application/json')) {
-      const jsonResponse = await response.json();
-      console.log('📄 JSON Response:', jsonResponse);
-      
-      // التحقق من الـ code الجديد (208 أو 200)
-      if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
-        if (jsonResponse.data && jsonResponse.data.certificate) {
-          // إذا كان فيه رابط للشهادة، نحمله
-          const certificateUrl = jsonResponse.data.certificate;
-          console.log('📥 Downloading certificate from URL:', certificateUrl);
-          
+          // محاولة باستخدام axios كـ fallback
           try {
-            // محاولة تحميل الشهادة من الـ URL
-            const pdfResponse = await fetch(certificateUrl, {
-              method: 'GET',
+            const url = buildUrl("create_student_certificate");
+            const axiosResponse = await axios.post(url, formData, {
               headers: {
                 "Authorization": `Bearer ${token}`,
+                "Content-Type": "multipart/form-data"
               },
-              signal: AbortSignal.timeout(30000)
+              timeout: 30000
             });
-            
-            if (pdfResponse.ok) {
-              const pdfBlob = await pdfResponse.blob();
-              if (pdfBlob && pdfBlob.size > 0) {
-                console.log('✅ Certificate downloaded successfully, size:', pdfBlob.size);
-                return pdfBlob;
+            return axiosResponse.data;
+          } catch (axiosError) {
+            console.error('Axios upload also failed:', axiosError);
+            throw axiosError;
+          }
+        }
+      },
+
+      // Certificate API functions - الإصدار المحسن
+      async getCertificateFile(token, courseId, courseType = 'video') {
+        if (!token) throw new Error("Token is required");
+        if (!courseId) throw new Error("Course id is required");
+
+        try {
+          // بناء الـ URL مع إضافة الـ type parameter
+          const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
+          console.log('🔍 Fetching certificate from:', url);
+
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/pdf, application/json, */*",
+              "Accept-Language": (i18n?.language || "en").split("-")[0]
+            },
+            // إضافة timeout لمنع التجميد
+            signal: AbortSignal.timeout(30000)
+          });
+
+          if (!response.ok) {
+            // إذا كان الرد 404، هذا يعني لا توجد شهادة
+            if (response.status === 404) {
+              throw new Error("CERTIFICATE_NOT_FOUND");
+            }
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
+
+          // محاولة parsing كـ JSON أولاً
+          const contentType = response.headers.get('content-type') || '';
+
+          if (contentType.includes('application/json')) {
+            const jsonResponse = await response.json();
+            console.log('📄 JSON Response:', jsonResponse);
+
+            // التحقق من الـ code الجديد (208 أو 200)
+            if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
+              if (jsonResponse.data && jsonResponse.data.certificate) {
+                // إذا كان فيه رابط للشهادة، نحمله
+                const certificateUrl = jsonResponse.data.certificate;
+                console.log('📥 Downloading certificate from URL:', certificateUrl);
+
+                try {
+                  // محاولة تحميل الشهادة من الـ URL
+                  const pdfResponse = await fetch(certificateUrl, {
+                    method: 'GET',
+                    headers: {
+                      "Authorization": `Bearer ${token}`,
+                    },
+                    signal: AbortSignal.timeout(30000)
+                  });
+
+                  if (pdfResponse.ok) {
+                    const pdfBlob = await pdfResponse.blob();
+                    if (pdfBlob && pdfBlob.size > 0) {
+                      console.log('✅ Certificate downloaded successfully, size:', pdfBlob.size);
+                      return pdfBlob;
+                    } else {
+                      console.warn('⚠️ Certificate blob is empty');
+                      throw new Error("CERTIFICATE_EMPTY");
+                    }
+                  } else {
+                    console.warn('⚠️ Failed to download certificate from URL:', pdfResponse.status);
+                    throw new Error("CERTIFICATE_DOWNLOAD_FAILED");
+                  }
+                } catch (fetchError) {
+                  console.warn('⚠️ Error fetching certificate URL:', fetchError.message);
+                  throw new Error("CERTIFICATE_URL_FETCH_FAILED");
+                }
               } else {
-                console.warn('⚠️ Certificate blob is empty');
-                throw new Error("CERTIFICATE_EMPTY");
+                throw new Error("CERTIFICATE_URL_MISSING");
               }
             } else {
-              console.warn('⚠️ Failed to download certificate from URL:', pdfResponse.status);
-              throw new Error("CERTIFICATE_DOWNLOAD_FAILED");
+              throw new Error(jsonResponse.message || "CERTIFICATE_NOT_AVAILABLE");
             }
-          } catch (fetchError) {
-            console.warn('⚠️ Error fetching certificate URL:', fetchError.message);
-            throw new Error("CERTIFICATE_URL_FETCH_FAILED");
+          } else if (contentType.includes('application/pdf')) {
+            // إذا كان الرد مباشرة PDF
+            const blob = await response.blob();
+            if (!blob || blob.size === 0) {
+              throw new Error("CERTIFICATE_EMPTY");
+            }
+            console.log('✅ PDF received directly, size:', blob.size);
+            return blob;
+          } else {
+            // إذا لم نعرف نوع المحتوى، نحاول كـ PDF
+            console.warn('⚠️ Unknown content type, trying as PDF:', contentType);
+            const blob = await response.blob();
+            if (blob && blob.size > 1000) { // حجم معقول للـ PDF
+              console.log('✅ PDF received (unknown type), size:', blob.size);
+              return blob;
+            }
+            throw new Error("UNKNOWN_CONTENT_TYPE");
           }
-        } else {
-          throw new Error("CERTIFICATE_URL_MISSING");
+
+        } catch (error) {
+          console.error('❌ Failed to get certificate file:', error);
+
+          // إذا كان الخطأ بسبب timeout أو network
+          if (error.name === 'TimeoutError' || error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
+            throw new Error("NETWORK_ERROR");
+          }
+
+          // إذا كان الخطأ معروفاً نرميه كما هو
+          if (error.message.startsWith('CERTIFICATE_') || error.message === 'CERTIFICATE_NOT_FOUND') {
+            throw error;
+          }
+
+          // لأي خطأ آخر
+          throw new Error("CERTIFICATE_FETCH_ERROR");
         }
-      } else {
-        throw new Error(jsonResponse.message || "CERTIFICATE_NOT_AVAILABLE");
-      }
-    } else if (contentType.includes('application/pdf')) {
-      // إذا كان الرد مباشرة PDF
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) {
-        throw new Error("CERTIFICATE_EMPTY");
-      }
-      console.log('✅ PDF received directly, size:', blob.size);
-      return blob;
-    } else {
-      // إذا لم نعرف نوع المحتوى، نحاول كـ PDF
-      console.warn('⚠️ Unknown content type, trying as PDF:', contentType);
-      const blob = await response.blob();
-      if (blob && blob.size > 1000) { // حجم معقول للـ PDF
-        console.log('✅ PDF received (unknown type), size:', blob.size);
-        return blob;
-      }
-      throw new Error("UNKNOWN_CONTENT_TYPE");
-    }
-
-  } catch (error) {
-    console.error('❌ Failed to get certificate file:', error);
-    
-    // إذا كان الخطأ بسبب timeout أو network
-    if (error.name === 'TimeoutError' || error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
-      throw new Error("NETWORK_ERROR");
-    }
-    
-    // إذا كان الخطأ معروفاً نرميه كما هو
-    if (error.message.startsWith('CERTIFICATE_') || error.message === 'CERTIFICATE_NOT_FOUND') {
-      throw error;
-    }
-    
-    // لأي خطأ آخر
-    throw new Error("CERTIFICATE_FETCH_ERROR");
-  }
-},
+      },
 
 
 
-// دالة للتحقق من وجود الشهادة فقط (بدون تحميلها)
-async checkCertificateExists(token, courseId, courseType = 'video') {
-  if (!token) throw new Error("Token is required");
-  if (!courseId) throw new Error("Course id is required");
+      // دالة للتحقق من وجود الشهادة فقط (بدون تحميلها)
+      async checkCertificateExists(token, courseId, courseType = 'video') {
+        if (!token) throw new Error("Token is required");
+        if (!courseId) throw new Error("Course id is required");
 
-  try {
-    const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
-    console.log('🔍 Checking if certificate exists:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Accept": "application/json"
-      }
-    });
+        try {
+          const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
+          console.log('🔍 Checking if certificate exists:', url);
 
-    if (!response.ok) {
-      return false;
-    }
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            }
+          });
 
-    const contentType = response.headers.get('content-type');
-    
-    if (contentType && contentType.includes('application/json')) {
-      const jsonResponse = await response.json();
-      console.log('📄 Certificate check response:', jsonResponse);
-      
-      // إذا كان الـ response فيه success: true و certificate URL، يعني الشهادة موجودة
-      if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
-        if (jsonResponse.data && jsonResponse.data.certificate) {
-          console.log('✅ Certificate exists on server');
-          return true;
+          if (!response.ok) {
+            return false;
+          }
+
+          const contentType = response.headers.get('content-type');
+
+          if (contentType && contentType.includes('application/json')) {
+            const jsonResponse = await response.json();
+            console.log('📄 Certificate check response:', jsonResponse);
+
+            // إذا كان الـ response فيه success: true و certificate URL، يعني الشهادة موجودة
+            if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
+              if (jsonResponse.data && jsonResponse.data.certificate) {
+                console.log('✅ Certificate exists on server');
+                return true;
+              }
+            }
+          } else if (contentType && contentType.includes('application/pdf')) {
+            // إذا كان الرد مباشرة PDF، يعني الشهادة موجودة
+            console.log('✅ Certificate exists (PDF response)');
+            return true;
+          }
+
+          return false;
+        } catch (error) {
+          console.error('❌ Failed to check certificate existence:', error);
+          return false;
         }
-      }
-    } else if (contentType && contentType.includes('application/pdf')) {
-      // إذا كان الرد مباشرة PDF، يعني الشهادة موجودة
-      console.log('✅ Certificate exists (PDF response)');
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('❌ Failed to check certificate existence:', error);
-    return false;
-  }
-},
+      },
 
-// دالة للحصول على رابط الشهادة مباشرة من السيرفر
-async getCertificateUrl(token, courseId, courseType = 'video') {
-  if (!token) throw new Error("Token is required");
-  if (!courseId) throw new Error("Course id is required");
+      // دالة للحصول على رابط الشهادة مباشرة من السيرفر
+      async getCertificateUrl(token, courseId, courseType = 'video') {
+        if (!token) throw new Error("Token is required");
+        if (!courseId) throw new Error("Course id is required");
 
-  try {
-    const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
-    console.log('🔍 Getting certificate URL from:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Accept": "application/json"
-      }
-    });
+        try {
+          const url = buildUrl(`get_certificate_file?course_id=${courseId}&type=${courseType}`);
+          console.log('🔍 Getting certificate URL from:', url);
 
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-    }
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            }
+          });
 
-    const contentType = response.headers.get('content-type');
-    
-    if (contentType && contentType.includes('application/json')) {
-      const jsonResponse = await response.json();
-      console.log('📄 Certificate URL response:', jsonResponse);
-      
-      if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
-        if (jsonResponse.data && jsonResponse.data.certificate) {
-          const certificateUrl = jsonResponse.data.certificate;
-          console.log('✅ Certificate URL found:', certificateUrl);
-          return certificateUrl;
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
+
+          const contentType = response.headers.get('content-type');
+
+          if (contentType && contentType.includes('application/json')) {
+            const jsonResponse = await response.json();
+            console.log('📄 Certificate URL response:', jsonResponse);
+
+            if (jsonResponse && (jsonResponse.code === 200 || jsonResponse.code === 208) && jsonResponse.success) {
+              if (jsonResponse.data && jsonResponse.data.certificate) {
+                const certificateUrl = jsonResponse.data.certificate;
+                console.log('✅ Certificate URL found:', certificateUrl);
+                return certificateUrl;
+              }
+            }
+            throw new Error(jsonResponse.message || "Certificate URL not found in response");
+          } else if (contentType && contentType.includes('application/pdf')) {
+            // إذا كان الرد مباشرة PDF، نرجع blob URL
+            const blob = await response.blob();
+            if (blob && blob.size > 0) {
+              const blobUrl = URL.createObjectURL(blob);
+              console.log('✅ PDF received directly, created blob URL');
+              return blobUrl;
+            }
+            throw new Error("Empty PDF received from server");
+          } else {
+            throw new Error(`Unexpected content type: ${contentType}`);
+          }
+        } catch (error) {
+          console.error('❌ Failed to get certificate URL:', error);
+          throw error;
         }
-      }
-      throw new Error(jsonResponse.message || "Certificate URL not found in response");
-    } else if (contentType && contentType.includes('application/pdf')) {
-      // إذا كان الرد مباشرة PDF، نرجع blob URL
-      const blob = await response.blob();
-      if (blob && blob.size > 0) {
-        const blobUrl = URL.createObjectURL(blob);
-        console.log('✅ PDF received directly, created blob URL');
-        return blobUrl;
-      }
-      throw new Error("Empty PDF received from server");
-    } else {
-      throw new Error(`Unexpected content type: ${contentType}`);
-    }
-  } catch (error) {
-    console.error('❌ Failed to get certificate URL:', error);
-    throw error;
-  }
-},
+      },
 
       // Gemini Chat API
       async getChatStatus(signal = null) {
@@ -1629,7 +1629,103 @@ async getCertificateUrl(token, courseId, courseType = 'video') {
           isFormData: true,
           auth: false // التقديم غالباً متاح للكل حتى لو مش عامل لوجن
         });
-      }
+      },
+
+      // ─── Lesson Interactions (Video Course) ───────────────────────────────────
+
+      async getVideoLessonInteractions(lessonId) {
+        if (!lessonId) throw new Error("lessonId is required");
+        const res = await request(`video_course/lesson/${lessonId}/interactions`, {
+          auth: true,
+          useCache: false,
+        });
+        return res?.data || null;
+      },
+
+      async toggleVideoLessonLike(lessonId) {
+        if (!lessonId) throw new Error("lessonId is required");
+        return await request(`video_lesson/${lessonId}/like`, {
+          method: "POST",
+          auth: true,
+        });
+      },
+
+      async addVideoLessonComment(lessonId, body) {
+        if (!lessonId) throw new Error("lessonId is required");
+        const formData = new FormData();
+        formData.append("body", body);
+        return await request(`video_lesson/${lessonId}/comment`, {
+          method: "POST",
+          auth: true,
+          body: formData,
+          isFormData: true,
+        });
+      },
+
+      async editVideoLessonComment(commentId, body) {
+        if (!commentId) throw new Error("commentId is required");
+        return await request(`video_lesson/video_course/comment/${commentId}`, {
+          method: "PUT",
+          auth: true,
+          body: { body },
+        });
+      },
+
+      async deleteVideoLessonComment(lessonId, commentId) {
+        if (!lessonId || !commentId) throw new Error("lessonId and commentId are required");
+        return await request(`video_lesson/${lessonId}/comment/${commentId}`, {
+          method: "DELETE",
+          auth: true,
+        });
+      },
+
+      // ─── Lesson Interactions (Live Course) ───────────────────────────────────
+
+      async getLiveLessonInteractions(lessonId, batch_id) {
+        if (!lessonId || !batch_id) throw new Error("lessonId and batch_id are required");
+        const res = await request(`live-course/interactions/${batch_id}/${lessonId}`, {
+          auth: true,
+          useCache: false,
+        });
+        return res?.data || null;
+      },
+
+      async toggleLiveLessonLike(lessonId) {
+        if (!lessonId) throw new Error("lessonId is required");
+        return await request(`live_lesson/${lessonId}/like`, {
+          method: "POST",
+          auth: true,
+        });
+      },
+
+      async addLiveLessonComment(lessonId, body) {
+        if (!lessonId) throw new Error("lessonId is required");
+        const formData = new FormData();
+        formData.append("body", body);
+        return await request(`live_lesson/${lessonId}/comment`, {
+          method: "POST",
+          auth: true,
+          body: formData,
+          isFormData: true,
+        });
+      },
+
+      async editLiveLessonComment(lessonId, commentId, body) {
+        if (!lessonId || !commentId) throw new Error("IDs are required");
+        return await request(`live_lesson/${lessonId}/comment/${commentId}`, {
+          method: "PUT",
+          auth: true,
+          body: { body },
+        });
+      },
+
+      async deleteLiveLessonComment(lessonId, commentId) {
+        if (!lessonId || !commentId) throw new Error("lessonId and commentId are required");
+        return await request(`live_lesson/${lessonId}/comment/${commentId}`, {
+          method: "DELETE",
+          auth: true,
+        });
+      },
     }),
     [
       baseUrl,

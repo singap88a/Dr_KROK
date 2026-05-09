@@ -9,6 +9,7 @@ import { PeriodicQuizzesSection } from "./QuizSystem/PeriodicQuizzes";
 import { LessonEndTestsSection } from "./QuizSystem/LessonEndTests";
 import { QuizModal } from "./QuizSystem/QuizModal";
 import { ResultsModal } from "./QuizSystem/ResultsModal";
+import LessonInteractions from "./LessonInteractions";
 
 export default function VideoPlayerSection({
   currentLesson,
@@ -39,7 +40,8 @@ export default function VideoPlayerSection({
   isLinkActive,
   getTimeUntilStart,
   setShowPurchaseModal,
-  isLiveCourse = false
+  isLiveCourse = false,
+  groupId = null,
 }) {
   const { t } = useTranslation();
 
@@ -135,11 +137,10 @@ export default function VideoPlayerSection({
                   target={active ? "_blank" : undefined}
                   rel={active ? "noopener noreferrer" : undefined}
                   onClick={(e) => !active && e.preventDefault()}
-                  className={`group w-full flex items-center justify-center gap-3 px-6 py-4 font-bold text-white transition-all duration-300 rounded-2xl shadow-lg ${
-                    active
-                      ? "bg-gradient-to-r from-primary to-secondary hover:shadow-primary/30 hover:scale-[1.03] active:scale-95"
-                      : "bg-gray-400 cursor-not-allowed opacity-80"
-                  }`}
+                  className={`group w-full flex items-center justify-center gap-3 px-6 py-4 font-bold text-white transition-all duration-300 rounded-2xl shadow-lg ${active
+                    ? "bg-gradient-to-r from-primary to-secondary hover:shadow-primary/30 hover:scale-[1.03] active:scale-95"
+                    : "bg-gray-400 cursor-not-allowed opacity-80"
+                    }`}
                 >
                   <FaVideo className={active ? "animate-bounce" : ""} />
                   {t("liveCourses.joinLiveSession", "Join Live Session")}
@@ -247,11 +248,10 @@ export default function VideoPlayerSection({
               target={active ? "_blank" : undefined}
               rel={active ? "noopener noreferrer" : undefined}
               onClick={(e) => !active && e.preventDefault()}
-              className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 font-bold text-white transition-all duration-300 rounded-2xl shadow-lg ${
-                active
-                  ? "bg-gradient-to-r from-primary to-secondary hover:shadow-xl hover:scale-[1.03] active:scale-95"
-                  : "bg-gray-400 cursor-not-allowed opacity-80"
-              }`}
+              className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 font-bold text-white transition-all duration-300 rounded-2xl shadow-lg ${active
+                ? "bg-gradient-to-r from-primary to-secondary hover:shadow-xl hover:scale-[1.03] active:scale-95"
+                : "bg-gray-400 cursor-not-allowed opacity-80"
+                }`}
             >
               <FaVideo className={active ? "animate-pulse" : ""} />
               {t("liveCourses.viewMeetingLink", "View Meeting Link")}
@@ -322,6 +322,19 @@ export default function VideoPlayerSection({
                     {currentLesson?.title || currentSection?.title}
                   </h3>
 
+                  {/* ── Stats Bar (Likes & Quick Scroll to Comments) ── */}
+                  {currentLesson && (
+                    <LessonInteractions
+                      key={`stats-${currentLesson.id}`}
+                      lessonId={currentLesson.id}
+                      batchLessonId={currentLesson.batch_lesson_id}
+                      isLiveCourse={isLiveCourse}
+                      groupId={groupId}
+                      mode="stats"
+                      hasAccess={hasAccess}
+                    />
+                  )}
+
                   {/* Mark as Completed Button */}
                   {isLoggedIn && currentLesson?.video && onLessonComplete && (
                     <div className="mt-3">
@@ -356,6 +369,21 @@ export default function VideoPlayerSection({
                     </div>
                   )}
 
+                  {/* ── Full Discussion Section (Now directly under Description) ── */}
+                  {currentLesson && (
+                    <div className="mt-4">
+                      <LessonInteractions
+                        key={`full-${currentLesson.id}`}
+                        lessonId={currentLesson.id}
+                        batchLessonId={currentLesson.batch_lesson_id}
+                        isLiveCourse={isLiveCourse}
+                        groupId={groupId}
+                        mode="full"
+                        hasAccess={hasAccess}
+                      />
+                    </div>
+                  )}
+
                   {/* Live Session Schedule & Join Link - Active Content */}
                   {isLiveCourse && renderActiveSessionCard()}
 
@@ -363,10 +391,9 @@ export default function VideoPlayerSection({
                   <LessonAttachments
                     content={currentLesson || currentSection}
                     setSelectedImage={onImageClick}
-                    setShowImagePopup={() => {}}
+                    setShowImagePopup={() => { }}
                     handleFileClick={onFileClick}
                     handleVideoClick={onVideoClick}
-                    type={currentLesson ? "lesson" : "section"}
                   />
 
                   {/* Quizzes */}

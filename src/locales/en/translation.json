@@ -14,7 +14,7 @@
   },
   "contact": {
     "title_fallback": "Contact Us",
-     "phone_label": "Phone / Telegram",
+    "phone_label": "Phone / Telegram",
     "email_label": "Email",
     "address_label": "Address",
     "form": {
@@ -329,7 +329,6 @@
       "error_fetching": "⚠️ Error fetching Purchase Policy."
     },
     "select_city_branch_instruction": "Choose the city and the branch affiliated with the shipping company that will deliver the book to you.",
- 
     "enter_name_error": "Please enter your name.",
     "enter_phone_error": "Please enter your phone number.",
     "invalid_phone_error": "The phone number is invalid; it must contain 1-15 digits, no spaces or other symbols, and can only include an optional + at the start.",
@@ -352,7 +351,7 @@
     "loading_paint_data": "Loading Paint Data...",
     "optional_load_paint_data": "Optional: Load your previous order information",
     "paint_data_unavailable": "Paint order data feature is not available at the moment. Please fill in your details manually.",
-"failed_to_load_paint_data": "Failed to load paint data",
+    "failed_to_load_paint_data": "Failed to load paint data",
     "googlepay": "Google Pay",
     "applepay": "Apple Pay",
     "google-pay": "Google Pay",
@@ -460,6 +459,7 @@
     "retry": "Retry",
     "loading": "Loading...",
     "error": "Error",
+    "more": "more",
     "cancel": "Cancel",
     "continue": "Continue",
     "back": "Back",
@@ -610,7 +610,6 @@
       "male": "Male",
       "female": "Female"
     }
-
   },
   "testYourself": {
     "main": {
@@ -698,7 +697,6 @@
     "instructorCard": "Author of selected articles",
     "selectInstructorInfo": "Select an instructor to view their info here."
   },
-
   "courses": {
     "askInstructor": "Ask the Instructor",
     "askInstructorDescription": "Have questions about this course? Contact the instructor directly for personalized assistance.",
@@ -926,8 +924,7 @@
     "sectionTestResults": "Section Test Results",
     "sectionTestPassed": "Section Test Passed!",
     "continueToNextSection": "Continue to Next Section",
-    "questionResults": "Question Results"
-    ,
+    "questionResults": "Question Results",
     "lessonTestResults": "Lesson Test Results",
     "lessonTest": "Lesson Test",
     "lessonTestPassed": "Lesson Test Passed!",
@@ -1051,30 +1048,30 @@
     "cancel": "Cancel",
     "confirm": "Logout"
   },
-    "liveCourses": {
-      "live": "LIVE",
-      "ended": "ENDED",
-      "liveToday": "LIVE TODAY",
-      "comingSoon": "COMING SOON",
-      "upcoming": "UPCOMING",
-      "joinLive": "Join Live",
-      "viewDetails": "View Details",
-      "batchInformation": "Batch Information",
-      "batchInformationDescription": "Details about your course batch",
-      "joinTelegramGroup": "Join Telegram Group",
-      "batchName": "Batch Name",
-      "unknownInstructor": "Unknown Instructor",
-      "starts": "Starts",
-      "duration": "Duration",
-      "sessionDate": "Session Date",
-      "joinLiveSession": "Join Live Session",
-      "sessionInactive": "Session is Currently Inactive",
-      "viewMeetingLink": "View Meeting Link",
-      "sessionInactiveMessage": "This session is not currently active. Please check the schedule for updates.",
-      "premiumContentLocked": "Premium Content Locked",
-      "premiumContentMessage": "You need to enroll in this course to access all premium lessons and materials.",
-      "enrollNowToUnlock": "Enroll Now to Unlock"
-    },
+  "liveCourses": {
+    "live": "LIVE",
+    "ended": "ENDED",
+    "liveToday": "LIVE TODAY",
+    "comingSoon": "COMING SOON",
+    "upcoming": "UPCOMING",
+    "joinLive": "Join Live",
+    "viewDetails": "View Details",
+    "batchInformation": "Batch Information",
+    "batchInformationDescription": "Details about your course batch",
+    "joinTelegramGroup": "Join Telegram Group",
+    "batchName": "Batch Name",
+    "unknownInstructor": "Unknown Instructor",
+    "starts": "Starts",
+    "duration": "Duration",
+    "sessionDate": "Session Date",
+    "joinLiveSession": "Join Live Session",
+    "sessionInactive": "Session is Currently Inactive",
+    "viewMeetingLink": "View Meeting Link",
+    "sessionInactiveMessage": "This session is not currently active. Please check the schedule for updates.",
+    "premiumContentLocked": "Premium Content Locked",
+    "premiumContentMessage": "You need to enroll in this course to access all premium lessons and materials.",
+    "enrollNowToUnlock": "Enroll Now to Unlock"
+  },
   "installments": {
     "payInInstallments": "Pay in Installments",
     "installmentAmount": "Installment Amount",
@@ -1097,29 +1094,29 @@
       "helpText": "Minimum installment: ₴{{min}} | Total price: ₴{{price}}"
     }
   },
-"video_courses": {
-  "coupon": {
-    "label": "Coupon Code",
-    "placeholder": "Enter coupon code",
-    "apply": "Apply",
-    "invalid": "Invalid coupon",
-    "applied": "Coupon applied successfully!",
-    "discount": "Discount: {{percent}}%",
-    "discount_label": "Coupon discount ({{percent}}%)",
-    "required": "Please enter a coupon code"
-  }
-},
-"live_courses": {
-  "coupon": {
-    "label": "Coupon Code",
-    "placeholder": "Enter coupon code",
-    "apply": "Apply",
-    "invalid": "Invalid coupon",
-    "applied": "Coupon applied successfully!",
-    "discount": "Discount: {{percent}}%",
-    "discount_label": "Coupon discount ({{percent}}%)",
-    "required": "Please enter a coupon code"
-  }
+  "video_courses": {
+    "coupon": {
+      "label": "Coupon Code",
+      "placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "invalid": "Invalid coupon",
+      "applied": "Coupon applied successfully!",
+      "discount": "Discount: {{percent}}%",
+      "discount_label": "Coupon discount ({{percent}}%)",
+      "required": "Please enter a coupon code"
+    }
+  },
+  "live_courses": {
+    "coupon": {
+      "label": "Coupon Code",
+      "placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "invalid": "Invalid coupon",
+      "applied": "Coupon applied successfully!",
+      "discount": "Discount: {{percent}}%",
+      "discount_label": "Coupon discount ({{percent}}%)",
+      "required": "Please enter a coupon code"
+    }
   },
   "orders": {
     "title": "My Orders",
@@ -1200,7 +1197,20 @@
         "back": "Back to Home"
       }
     }
+  },
+  "interactions": {
+    "title": "Lesson Discussion",
+    "discussion": "Lesson Discussion",
+    "comments": "Discussion",
+    "like": "Like",
+    "commentLabel": "Comment",
+    "writeComment": "Share your thoughts or ask a question...",
+    "noComments": "No discussions yet. Be the first to share your thoughts!",
+    "user": "User",
+    "edit": "Edit",
+    "delete": "Remove",
+    "submitComment": "Post Comment",
+    "deleteConfirmTitle": "Delete Comment?",
+    "deleteConfirmDesc": "Are you sure you want to remove this thought? This action cannot be undone."
   }
 }
-
-

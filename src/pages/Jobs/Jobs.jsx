@@ -15,7 +15,7 @@ const Jobs = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { getJobs, submitJobApplication } = useApi();
+  const { getJobs, submitJobApplication, getAuthToken } = useApi();
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +94,14 @@ const Jobs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const token = getAuthToken();
+    if (!token) {
+      toast.info(t("auth.loginRequiredToApply", { defaultValue: "Please login or create an account to submit your application" }));
+      navigate("/login");
+      return;
+    }
+
     if (!files.cv) {
       toast.error(t("jobs.form.cvRequired", { defaultValue: "Please upload your CV" }));
       return;
@@ -113,8 +121,16 @@ const Jobs = () => {
         toast.error(res.message || "Failed to submit application");
       }
     } catch (error) {
-      const msg = error?.data?.message || error?.message || "An error occurred. Please try again.";
-      toast.error(msg);
+      const errorData = error?.data;
+      if (errorData?.errors && Object.keys(errorData.errors).length > 0) {
+        // Display each validation error individually
+        Object.values(errorData.errors).flat().forEach(msg => {
+          toast.error(msg, { duration: 5000 });
+        });
+      } else {
+        const msg = errorData?.message || error?.message || "An error occurred. Please try again.";
+        toast.error(msg);
+      }
     } finally {
       setSubmitting(false);
     }

@@ -386,7 +386,7 @@ export default function LiveCourseLessons() {
 
   const handleLessonClick = async (lesson) => {
     const isFree = lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true;
-    
+
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
         navigate("/login", { state: { from: location.pathname } });
@@ -399,7 +399,7 @@ export default function LiveCourseLessons() {
     setCurrentLesson(lesson);
     setCurrentSection(null);
     saveLastLesson(id, lesson.id);
-    
+
     if (window.innerWidth < 1024) {
       setTimeout(() => {
         const videoSection = document.getElementById("video-player-section");
@@ -408,7 +408,7 @@ export default function LiveCourseLessons() {
         }
       }, 300);
     }
-    
+
     if (isLoggedIn) {
       try {
         const res = await startLiveLessonProgress(id, lesson.id);
@@ -434,7 +434,7 @@ export default function LiveCourseLessons() {
       if (!sectionData) return false;
       if (sectionData.type === "free" || sectionData.type === "Free") return true;
       if (!sectionData.lessons) return false;
-      return sectionData.lessons.some((lesson) => 
+      return sectionData.lessons.some((lesson) =>
         lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
       );
     };
@@ -521,16 +521,16 @@ export default function LiveCourseLessons() {
         }
 
         if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
-          const firstSectionWithFree = courseData.sections.find(section => 
+          const firstSectionWithFree = courseData.sections.find(section =>
             section.type === "free" || section.type === "Free" ||
-            (section.lessons && section.lessons.some(lesson => 
+            (section.lessons && section.lessons.some(lesson =>
               lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
             ))
           );
-          
+
           if (firstSectionWithFree) {
             setExpandedSections(prev => new Set(prev).add(firstSectionWithFree.id));
-            const firstFreeLesson = firstSectionWithFree.lessons.find(lesson => 
+            const firstFreeLesson = firstSectionWithFree.lessons.find(lesson =>
               lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
             );
             if (firstFreeLesson) {
@@ -613,7 +613,7 @@ export default function LiveCourseLessons() {
             const access = await getCourseAccess(id, 'live_course');
             if (access && typeof access === 'object') {
               const enrolled = access.is_enrolled === true;
-              const expired  = access.is_expired  === true;
+              const expired = access.is_expired === true;
               setIsExpired(expired);
               setHasAccess(enrolled && !expired);
             } else {
@@ -711,7 +711,7 @@ export default function LiveCourseLessons() {
       if (!section) return false;
       if (section.type === "free" || section.type === "Free") return true;
       if (!section.lessons) return false;
-      return section.lessons.some((lesson) => 
+      return section.lessons.some((lesson) =>
         lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
       );
     };
@@ -740,7 +740,7 @@ export default function LiveCourseLessons() {
   return (
     <section className="min-h-screen py-10 bg-background text-text dark:bg-background dark:text-text">
       <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        
+
         <CourseHeader
           course={course}
           hasAccess={hasAccess}
@@ -755,7 +755,7 @@ export default function LiveCourseLessons() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {isExpired ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="lg:col-span-3"
@@ -770,7 +770,7 @@ export default function LiveCourseLessons() {
                 <p className="max-w-md mx-auto mb-8 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
                   {t("courses.courseCompletedMessage", "لقد أتممت متطلبات هذه الدورة بنجاح في وقت سابق. نظراً لانتهاء فترة صلاحية الوصول، لا يمكن عرض المحتوى حالياً. نتمنى لك دوام التوفيق والنجاح.")}
                 </p>
-                <Link 
+                <Link
                   to={`/live-courses/${id}`}
                   className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
                 >
@@ -844,6 +844,15 @@ export default function LiveCourseLessons() {
                 getTimeUntilStart={getTimeUntilStart}
                 setShowPurchaseModal={setShowPurchaseModal}
                 isLiveCourse={true}
+                groupId={
+                  course?.batch_info?.batch_id ??
+                  course?.id ??
+                  course?.group_id ??
+                  course?.batch?.id ??
+                  course?.batch_id ??
+                  course?.group?.id ??
+                  null
+                }
               />
             </>
           )}

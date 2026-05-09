@@ -14,7 +14,7 @@
   },
   "contact": {
     "title_fallback": "Зв'яжіться з нами",
-     "phone_label": "Телефон / Telegram",
+    "phone_label": "Телефон / Telegram",
     "email_label": "Електронна пошта",
     "address_label": "Адреса",
     "form": {
@@ -413,10 +413,11 @@
     "close_video": "Закрити відео",
     "no_video": "Відео відсутнє"
   },
-"common": {
+  "common": {
     "retry": "Повторити",
     "loading": "Завантаження...",
     "error": "Помилка",
+    "more": "ще",
     "cancel": "Скасувати",
     "continue": "Продовжити",
     "back": "Назад",
@@ -647,8 +648,8 @@
     "allArticles": "Всі статті",
     "byInstructor": "Статті від {{name}}",
     "count": "Статті",
-"articleCount_one": "  Стаття",
-"articleCount_other": "  Статті",
+    "articleCount_one": "  Стаття",
+    "articleCount_other": "  Статті",
     "showMore": "Показати більше",
     "showLess": "Показати менше",
     "readMore": "Читати далі",
@@ -931,7 +932,6 @@
       "noStudents": "Кращих студентів поки немає."
     }
   },
-
   "orders": {
     "title": "Мої замовлення",
     "totalOrders": "{{count}} загалом замовлень",
@@ -998,8 +998,7 @@
       "previous": "Попереднє",
       "next": "Наступне питання",
       "finish": "Завершити тест",
-     
-"dragMe": "Перетягни мене"
+      "dragMe": "Перетягни мене"
     },
     "results": {
       "title": "Результати тесту",
@@ -1249,5 +1248,20 @@
         "back": "На головну"
       }
     }
+  },
+  "interactions": {
+    "title": "Обговорення уроку",
+    "discussion": "Обговорення уроку",
+    "comments": "Обговорення",
+    "like": "Подобається",
+    "commentLabel": "Коментар",
+    "writeComment": "Поділіться своїми думками або поставте запитання...",
+    "noComments": "Ще немає обговорень. Будьте першим, хто поділиться думками!",
+    "user": "Користувач",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "submitComment": "Надіслати коментар",
+    "deleteConfirmTitle": "Видалити коментар?",
+    "deleteConfirmDesc": "Ви впевнені, що хочете видалити цей коментар? Цю дію неможливо скасувати."
   }
 }

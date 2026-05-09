@@ -7,46 +7,50 @@ const ApplicationSuccess = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen pt-32 pb-12 bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
-      <div className="container mx-auto px-4 max-w-2xl">
-        <div className="bg-white dark:bg-gray-800 rounded-[3.5rem] shadow-2xl p-12 md:p-20 text-center space-y-10 border border-border animate-scaleIn relative overflow-hidden">
+    <div className="h-[calc(100vh-80px)] min-h-[500px] bg-gray-50 dark:bg-gray-950 flex items-center justify-center transition-colors duration-300 p-4">
+      <div className="w-full max-w-4xl">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-border/50 p-8 md:p-12 animate-scaleIn relative overflow-hidden flex flex-col md:flex-row items-center gap-8 md:gap-12">
           {/* Background Decorative Elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none"></div>
 
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-green-500/20 blur-3xl animate-pulse rounded-full"></div>
-            <FaCheckCircle className="relative text-8xl md:text-9xl text-green-500 animate-bounce" />
+          <div className="relative flex-shrink-0">
+            <div className="absolute inset-0 bg-green-500/20 blur-2xl animate-pulse rounded-full"></div>
+            <div className="w-28 h-28 md:w-36 md:h-36 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center relative z-10 border-4 border-white dark:border-gray-800 shadow-md">
+              <FaCheckCircle className="text-6xl md:text-7xl text-green-500 animate-bounce" />
+            </div>
           </div>
           
-          <div className="space-y-4 relative z-10">
-            <h1 className="text-4xl md:text-5xl font-black text-text leading-tight">
-              {t("jobs.form.success.title")}
-            </h1>
-            <h2 className="text-xl md:text-2xl font-bold text-text-secondary opacity-80">
-              {t("jobs.form.success.subtitle")}
-            </h2>
-          </div>
+          <div className="flex-1 text-center md:text-start space-y-6 relative z-10">
+            <div className="space-y-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-text tracking-tight">
+                {t("jobs.form.success.title")}
+              </h1>
+              <h2 className="text-lg md:text-xl font-medium text-text-secondary">
+                {t("jobs.form.success.subtitle")}
+              </h2>
+            </div>
 
-          <p className="text-lg text-text-secondary font-medium leading-relaxed max-w-md mx-auto opacity-70">
-            {t("jobs.form.success.description")}
-          </p>
+            <p className="text-sm text-text-secondary leading-relaxed opacity-80 max-w-lg mx-auto md:mx-0">
+              {t("jobs.form.success.description")}
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10 relative z-10">
-            <Link
-              to="/"
-              className="w-full sm:w-auto px-10 py-5 bg-primary text-white font-black rounded-[1.5rem] shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
-            >
-              <FaHome className="text-lg" />
-              {t("jobs.form.success.back")}
-            </Link>
-            <Link
-              to="/jobs"
-              className="w-full sm:w-auto px-10 py-5 bg-white dark:bg-gray-700 text-text font-black rounded-[1.5rem] border-2 border-border hover:bg-gray-50 dark:hover:bg-gray-600 transition-all flex items-center justify-center gap-3 shadow-lg shadow-black/5"
-            >
-              <FaArrowLeft className="text-lg" />
-              {t("jobs.backToJobs", { defaultValue: "Back to Jobs" })}
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 pt-2">
+              <Link
+                to="/"
+                className="w-full sm:w-auto px-6 py-3 bg-primary text-white text-sm font-semibold rounded-xl shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <FaHome className="text-lg" />
+                {t("jobs.form.success.back")}
+              </Link>
+              <Link
+                to="/jobs"
+                className="w-full sm:w-auto px-6 py-3 bg-gray-50 dark:bg-gray-800 text-text text-sm font-semibold rounded-xl border border-border hover:border-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <FaArrowLeft className="text-lg" />
+                {t("jobs.backToJobs", { defaultValue: "Back to Jobs" })}
+              </Link>
+            </div>
           </div>
         </div>
       </div>
