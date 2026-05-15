@@ -5,6 +5,7 @@ import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import Pagination from '../../components/Common/Pagination';
+import SEO from '../../components/SEO/SEO';
 
 // الصورة الافتراضية للمحاضرين
 const DEFAULT_INSTRUCTOR_IMAGE = '/logo.png';
@@ -147,6 +148,11 @@ export default function TrainerArticlesPage() {
 
   return (
     <div className="min-h-screen text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-gray-100">
+      <SEO 
+        title={selectedInstructor ? `Articles by ${selectedInstructor.name} | KROK` : "KROK News & Articles"}
+        description="Stay updated with the latest KROK news, explained clinical cases, and educational articles from our expert instructors."
+        keywords="KROK News, KROK Explained, KROK Updates, Новини КРОК, Матеріали КРОК, Новини КРОК, КРОК для студентів"
+      />
       <div className="p-4 mx-auto max-w-7xl sm:p-6 lg:p-8">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold sm:text-3xl">{t('articles.title')}</h1>
