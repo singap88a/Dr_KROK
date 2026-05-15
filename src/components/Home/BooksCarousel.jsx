@@ -157,6 +157,7 @@ function BooksCarousel() {
 
                     {/* Favorite Heart */}
                     <button
+                      aria-label={favorites.includes(b.id) ? t("favorites.remove", "Remove from favorites") : t("favorites.add", "Add to favorites")}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleToggleFavorite(b.id);
@@ -164,7 +165,7 @@ function BooksCarousel() {
                       disabled={favoritesLoading}
                       className="absolute z-10 p-2 transition-all duration-200 rounded-full shadow-lg top-3 left-3 bg-white/90 hover:bg-white disabled:opacity-50"
                     >
-                      <FiHeart className={`text-xl transition-colors ${favorites.includes(b.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'}`} />
+                      <FiHeart aria-hidden="true" className={`text-xl transition-colors ${favorites.includes(b.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'}`} />
                     </button>
 
                     <img
@@ -214,6 +215,7 @@ function BooksCarousel() {
                     <button
                       onClick={() => navigate(`/book/${b.id}`)}
                       className="px-4 py-2 mt-5 text-sm font-medium text-white transition rounded-lg bg-primary hover:bg-primary/90"
+                      aria-label={`${t('books.view_details', 'View Details')} - ${b.name}`}
                     >
                       {t('books.view_details')}
                     </button>

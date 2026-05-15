@@ -171,8 +171,9 @@ function InstructorsCarousel() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center w-10 h-10 text-gray-500 transition bg-gray-100 rounded-full hover:bg-primary hover:text-white dark:bg-gray-700 dark:hover:bg-primary"
+                            aria-label={`${t('instructors.followOn')} Facebook - ${ins.name}`}
                           >
-                            <FaFacebookF size={18} />
+                            <FaFacebookF aria-hidden="true" size={18} />
                           </a>
                         )}
                         {ins.instagram && (
@@ -181,8 +182,9 @@ function InstructorsCarousel() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center w-10 h-10 text-gray-500 transition bg-gray-100 rounded-full hover:bg-primary hover:text-white dark:bg-gray-700 dark:hover:bg-primary"
+                            aria-label={`${t('instructors.followOn')} Instagram - ${ins.name}`}
                           >
-                            <FaInstagram size={18} />
+                            <FaInstagram aria-hidden="true" size={18} />
                           </a>
                         )}
                         {ins.youtube && (
@@ -191,16 +193,18 @@ function InstructorsCarousel() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center w-10 h-10 text-gray-500 transition bg-gray-100 rounded-full hover:bg-primary hover:text-white dark:bg-gray-700 dark:hover:bg-primary"
+                            aria-label={`${t('instructors.followOn')} YouTube - ${ins.name}`}
                           >
-                            <FaYoutube size={18} />
+                            <FaYoutube aria-hidden="true" size={18} />
                           </a>
                         )}
                         {ins.email && (
                           <a
                             href={`mailto:${ins.email}`}
                             className="flex items-center justify-center w-10 h-10 text-gray-500 transition bg-gray-100 rounded-full hover:bg-primary hover:text-white dark:bg-gray-700 dark:hover:bg-primary"
+                            aria-label={`${t('instructors.sendEmailTo')} ${ins.name}`}
                           >
-                            <FaEnvelope size={18} />
+                            <FaEnvelope aria-hidden="true" size={18} />
                           </a>
                         )}
                       </div>

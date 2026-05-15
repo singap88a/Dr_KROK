@@ -66,8 +66,7 @@ export default function FeaturedArticles({ articles }) {
     const run = async () => {
       setLoading(true);
       setError("");
-      try {
-        const res = await getBlogs({ page: 1, per_page: 15 });
+        const res = await getBlogs({ page: 1, per_page: 3 });
         if (!isMounted) return;
 
         // Flatten blogs from instructors and sort by date
@@ -161,6 +160,9 @@ export default function FeaturedArticles({ articles }) {
                       src={item.image}
                       alt={item.title}
                       className="object-cover w-full h-full"
+                      width="400"
+                      height="200"
+                      loading="lazy"
                     />
                   </div>
 
@@ -185,6 +187,7 @@ export default function FeaturedArticles({ articles }) {
                     <Link
                       to="/articles"
                       className="w-full px-4 py-2 mt-auto text-sm font-medium text-center text-white transition bg-primary rounded-xl hover:shadow-md hover:brightness-110"
+                      aria-label={`${t("articles.readMore")} - ${item.title}`}
                     >
                       {t("articles.readMore")}
                     </Link>

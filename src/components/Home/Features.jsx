@@ -142,10 +142,11 @@ export default function Features({ features }) {
                 <article 
                   onClick={() => handleFeatureClick(item.id)}
                   className="flex flex-col justify-between h-full min-h-[24px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                  aria-label={`${t('features.learnMore')} - ${item.title}`}
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex items-center justify-center p-4 transition-transform duration-200 rounded-xl bg-accent text-primary group-hover:scale-105">
-                      {item.icon ?? <FiCheckCircle size={24} />}
+                      {item.icon ?? <FiCheckCircle size={24} aria-hidden="true" />}
                     </div>
 
                     <div className="flex-1">
