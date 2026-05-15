@@ -66,6 +66,7 @@ export default function FeaturedArticles({ articles }) {
     const run = async () => {
       setLoading(true);
       setError("");
+      try {
         const res = await getBlogs({ page: 1, per_page: 3 });
         if (!isMounted) return;
 
