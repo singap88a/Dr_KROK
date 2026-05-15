@@ -33,7 +33,7 @@ export default function CoursesPreview({ courses }) {
       setLoading(true);
     }
     setError("");
-    getVideoCourses({ per_page: 10, page: 1 })
+    getVideoCourses({ per_page: 6, page: 1 })
       .then((res) => {
         if (!isMounted) return;
         setApiCourses(Array.isArray(res.data) ? res.data : []);
@@ -170,7 +170,7 @@ export default function CoursesPreview({ courses }) {
                       />
               
                       <button
-                        aria-label="toggle favorite"
+                        aria-label={favoriteIds.includes(`video_course_${course.id}`) ? t("favorites.remove", "Remove from favorites") : t("favorites.add", "Add to favorites")}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -178,7 +178,7 @@ export default function CoursesPreview({ courses }) {
                         }}
                         className="absolute z-10 p-2 transition-all duration-200 bg-white rounded-full shadow top-3 right-3 hover:bg-white/90"
                       >
-                        <FiHeart className={`text-xl ${favoriteIds.includes(`video_course_${course.id}`) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
+                        <FiHeart aria-hidden="true" className={`text-xl ${favoriteIds.includes(`video_course_${course.id}`) ? "text-red-500 fill-red-500" : "text-gray-500"}`} />
                       </button>
                       {hasDiscount && (
                         <span className="absolute px-2 py-1 text-xs font-bold text-white bg-red-600 rounded shadow top-3 left-3">
@@ -203,8 +203,11 @@ export default function CoursesPreview({ courses }) {
                           <div className="flex items-center gap-2">
                             <img
                               src={course.instructorImg}
-                              alt={course.instructor}
+                              alt={course.instructor || "Instructor"}
                               className="w-8 h-8 rounded-full"
+                              width="32"
+                              height="32"
+                              loading="lazy"
                             />
                             <span>{course.instructor}</span>
                           </div>
@@ -230,6 +233,7 @@ export default function CoursesPreview({ courses }) {
                     <Link
                       to={`/courses/${course.id}`}
                       className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"
+                      aria-label={`${t("courses.details", "Details")} - ${course.title}`}
                     >
                       {t("courses.details", "تفاصيل")}
                     </Link>

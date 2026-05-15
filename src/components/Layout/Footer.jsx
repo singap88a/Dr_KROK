@@ -61,8 +61,11 @@ export default function Footer() {
             
                         <img
               src={logoUrl}
-              alt="Dr KROK Logo"
+              alt="Dr KROK Footer Logo"
               className="h-16 cursor-pointer"
+              width="160"
+              height="64"
+              loading="lazy"
               onError={(e) => {
                 e.currentTarget.onerror = null;
                 e.currentTarget.src = "/logo.png";
@@ -146,8 +149,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noreferrer"
                     className="text-2xl transition hover:text-primary"
+                    aria-label={t('footer.followInstagram', 'Follow us on Instagram')}
                   >
-                    <FaInstagram />
+                    <FaInstagram aria-hidden="true" />
                   </a>
                 )}
                 {contactData.tiktok && (
@@ -156,8 +160,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noreferrer"
                     className="text-2xl transition hover:text-primary"
+                    aria-label={t('footer.followTiktok', 'Follow us on TikTok')}
                   >
-                    <FaTiktok />
+                    <FaTiktok aria-hidden="true" />
                   </a>
                 )}
                 {contactData.telegram && (
@@ -166,8 +171,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noreferrer"
                     className="text-2xl transition hover:text-primary"
+                    aria-label={t('footer.followTelegram', 'Follow us on Telegram')}
                   >
-                    <FaTelegramPlane />
+                    <FaTelegramPlane aria-hidden="true" />
                   </a>
                 )}
                 {contactData.youtube && (
@@ -176,8 +182,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noreferrer"
                     className="text-2xl transition hover:text-primary"
+                    aria-label={t('footer.followYoutube', 'Follow us on YouTube')}
                   >
-                    <FaYoutube />
+                    <FaYoutube aria-hidden="true" />
                   </a>
                 )}
               </>

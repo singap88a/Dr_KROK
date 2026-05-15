@@ -182,10 +182,10 @@ export default function Navbar() {
             >
               <img
                 src={currentLang?.flag || "https://flagcdn.com/w20/gb.png"}
-                alt={currentLang?.name || "EN"}
+                alt={`${currentLang?.name || "English"} flag`}
                 className="w-5 h-5 mr-2 rounded-sm"
                 width="20"
-                height="15"
+                height="20"
               />
               {currentLang?.name || "EN"}
               <FaGlobe className="ml-2" aria-hidden="true" />
@@ -204,8 +204,10 @@ export default function Navbar() {
                   >
                     <img
                       src={lang.flag}
-                      alt={lang.name}
+                      alt={`${lang.name} flag`}
                       className="w-5 h-5 mr-2 rounded-sm"
+                      width="20"
+                      height="20"
                     />
                     {lang.name}
                   </button>
@@ -226,8 +228,11 @@ export default function Navbar() {
                       (userData.imageprofile || userData.avatar)) ||
                     "/user.png"
                   }
-                  alt="Profile"
+                  alt={userData ? `${userData.name}'s profile` : "User profile"}
                   className="w-full h-full rounded-full"
+                  width="40"
+                  height="40"
+                  loading="lazy"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
                     if (!e.currentTarget.src.includes('/user.png')) {
@@ -340,7 +345,14 @@ export default function Navbar() {
                             onClick={() => setCartOpen(false)}
                             className="flex-shrink-0"
                           >
-                            <img src={item.image || "/logo.png"} alt={item.name} className="object-cover w-16 h-16 border rounded-lg border-border" />
+                            <img 
+                              src={item.image || "/logo.png"} 
+                              alt={item.name} 
+                              className="object-cover w-16 h-16 border rounded-lg border-border" 
+                              width="64"
+                              height="64"
+                              loading="lazy"
+                            />
                           </Link>
                           <div className="flex-1 min-w-0">
                             <Link 
