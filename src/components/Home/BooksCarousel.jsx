@@ -171,6 +171,9 @@ function BooksCarousel() {
                       src={b.image}
                       alt={b.name}
                       className="object-cover w-full transition-transform duration-500 h-52 hover:scale-110"
+                      loading="lazy"
+                      width="300"
+                      height="208"
                     />
 
                     {/* Bestseller Badge */}

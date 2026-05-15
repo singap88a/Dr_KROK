@@ -1,14 +1,16 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import Hero from "../../components/Home/Hero";
 import Features from "../../components/Home/Features";
-import CoursesPreview from "../../components/Home/CoursesPreview";
-import BooksCarousel from "../../components/Home/BooksCarousel";
-import StatsSection from "../../components/Home/StatsSection";
-import NewsUpdates from "../../components/Home/Articles";
-import InstructorsCarousel from "../../components/Home/InstructorsCarousel";
-import HomeBanners from "../../components/Home/HomeBanners";
-import Live_courses from "../../components/Home/Live_courses";
 import SEO from "../../components/SEO/SEO";
+
+// Lazy-loaded components for below-the-fold content
+const CoursesPreview = lazy(() => import("../../components/Home/CoursesPreview"));
+const BooksCarousel = lazy(() => import("../../components/Home/BooksCarousel"));
+const StatsSection = lazy(() => import("../../components/Home/StatsSection"));
+const NewsUpdates = lazy(() => import("../../components/Home/Articles"));
+const InstructorsCarousel = lazy(() => import("../../components/Home/InstructorsCarousel"));
+const HomeBanners = lazy(() => import("../../components/Home/HomeBanners"));
+const Live_courses = lazy(() => import("../../components/Home/Live_courses"));
 
 export default function DrKrokHome() {
   return (
@@ -21,13 +23,15 @@ export default function DrKrokHome() {
       <Hero />
       <div className="">
         <Features />
-        <CoursesPreview />
-        <BooksCarousel />
-        <StatsSection />
-        <Live_courses/>
-        <NewsUpdates />
-        <HomeBanners/>
-        <InstructorsCarousel/>
+        <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-xl m-8" />}>
+          <CoursesPreview />
+          <BooksCarousel />
+          <StatsSection />
+          <Live_courses/>
+          <NewsUpdates />
+          <HomeBanners/>
+          <InstructorsCarousel/>
+        </Suspense>
       </div>
     </div>
   );

@@ -131,18 +131,19 @@ export default function Navbar() {
           {settingsLoading ? (
             <div className="w-10 h-10 bg-gray-300 rounded animate-pulse sm:h-12 sm:w-12"></div>
           ) : (
-            <Link to="/">
-                        <img
-              src={logoUrl}
-              alt="Dr KROK Logo"
-              className="h-10 cursor-pointer sm:h-12"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = "/logo.png";
-              }}
-            />
+            <Link to="/" aria-label="Dr KROK Home">
+              <img
+                src={logoUrl}
+                alt="Dr KROK Logo"
+                className="h-10 cursor-pointer sm:h-12 w-auto"
+                width="120"
+                height="48"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/logo.png";
+                }}
+              />
             </Link>
-
           )}
         </div>
 
@@ -175,14 +176,19 @@ export default function Navbar() {
             <button
               onClick={() => setLangMenuOpen(!langMenuOpen)}
               className="flex items-center px-3 py-2 text-sm border rounded-lg border-border hover:bg-surface"
+              aria-label={t("navbar.language", "Select Language")}
+              aria-haspopup="true"
+              aria-expanded={langMenuOpen}
             >
               <img
                 src={currentLang?.flag || "https://flagcdn.com/w20/gb.png"}
                 alt={currentLang?.name || "EN"}
                 className="w-5 h-5 mr-2 rounded-sm"
+                width="20"
+                height="15"
               />
               {currentLang?.name || "EN"}
-              <FaGlobe className="ml-2" />
+              <FaGlobe className="ml-2" aria-hidden="true" />
             </button>
 
             {langMenuOpen && (
@@ -278,8 +284,9 @@ export default function Navbar() {
                   setReminderStep('hidden');
                 }}
                 className={`relative p-2 transition rounded-full text-textSecondary hover:bg-surface hover:text-primary ${reminderStep === 'visible' ? 'animate-bounce' : ''}`}
+                aria-label={t("cart.open", "Open Wishlist")}
               >
-                <FaBookmark className="text-xl" />
+                <FaBookmark className="text-xl" aria-hidden="true" />
                 <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs text-white bg-red-500 rounded-full">
                   {cartItems.length}
                 </span>
@@ -373,15 +380,17 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             className="text-xl transition text-textSecondary hover:text-primary"
+            aria-label={darkMode ? t("navbar.lightMode", "Switch to Light Mode") : t("navbar.darkMode", "Switch to Dark Mode")}
           >
-            {darkMode ? <FaSun /> : <FaMoon />}
+            {darkMode ? <FaSun aria-hidden="true" /> : <FaMoon aria-hidden="true" />}
           </button>
 
           <button
             className="text-2xl transition md:hidden text-textSecondary hover:text-primary"
             onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? t("navbar.closeMenu", "Close Menu") : t("navbar.openMenu", "Open Menu")}
           >
-            {menuOpen ? <FaTimes /> : <FaBars />}
+            {menuOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
           </button>
         </div>
       </div>
