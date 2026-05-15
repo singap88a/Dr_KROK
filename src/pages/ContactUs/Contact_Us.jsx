@@ -12,6 +12,7 @@ import {
   FaInstagram,
   FaTiktok,
   FaYoutube,
+  FaTelegram,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useApi } from "../../context/ApiContext";
@@ -177,26 +178,7 @@ export default function ContactUs() {
 
                   {/* Socials */}
                   <div className="flex flex-wrap gap-4 mt-6">
-                    {contactData.facebook && (
-                      <a
-                        href={contactData.facebook}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-3 transition rounded-full bg-surface hover:bg-primary hover:text-white"
-                      >
-                        <FaFacebookF />
-                      </a>
-                    )}
-                    {contactData.x && (
-                      <a
-                        href={contactData.x}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-3 transition rounded-full bg-surface hover:bg-primary hover:text-white"
-                      >
-                        <FaTwitter />
-                      </a>
-                    )}
+             
                     {contactData.iniesta && (
                       <a
                         href={contactData.iniesta}
@@ -225,6 +207,16 @@ export default function ContactUs() {
                         className="p-3 transition rounded-full bg-surface hover:bg-primary hover:text-white"
                       >
                         <FaYoutube />
+                      </a>
+                    )}
+                    {contactData.telegram && (
+                      <a
+                        href={contactData.telegram}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-3 transition rounded-full bg-surface hover:bg-primary hover:text-white"
+                      >
+                        <FaTelegram />
                       </a>
                     )}
                   </div>

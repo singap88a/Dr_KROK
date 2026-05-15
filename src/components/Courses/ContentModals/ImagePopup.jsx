@@ -15,8 +15,7 @@ const ImagePopup = ({ show, image, onClose }) => {
       <img
         src={image}
         alt="Selected lesson"
-        className="max-w-full max-h-full rounded-lg shadow-lg"
-        style={{ width: "600px", height: "400px", objectFit: "contain" }}
+        className="max-w-[95vw] max-h-[95vh] rounded-lg shadow-2xl object-contain bg-white dark:bg-black"
         onClick={(e) => e.stopPropagation()}
       />
       <button

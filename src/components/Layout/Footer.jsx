@@ -63,8 +63,7 @@ export default function Footer() {
               src={logoUrl}
               alt="Dr KROK Footer Logo"
               className="h-16 cursor-pointer"
-              width="160"
-              height="64"
+ 
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.onerror = null;
