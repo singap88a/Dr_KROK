@@ -190,7 +190,7 @@ export default function FeaturedArticles({ articles }) {
                       className="w-full px-4 py-2 mt-auto text-sm font-medium text-center text-white transition bg-primary rounded-xl hover:shadow-md hover:brightness-110"
                       aria-label={`${t("articles.readMore")} - ${item.title}`}
                     >
-                      {t("articles.readMore")}
+                      {t("articles.readMore")} {item.title}
                     </Link>
                   </div>
                 </div>

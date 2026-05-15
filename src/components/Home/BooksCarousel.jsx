@@ -217,7 +217,7 @@ function BooksCarousel() {
                       className="px-4 py-2 mt-5 text-sm font-medium text-white transition rounded-lg bg-primary hover:bg-primary/90"
                       aria-label={`${t('books.view_details', 'View Details')} - ${b.name}`}
                     >
-                      {t('books.view_details')}
+                      {t('books.view_details')} - {b.name}
                     </button>
                   </div>
                 </div>
