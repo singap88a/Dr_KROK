@@ -6,6 +6,7 @@ import { useUser } from "../../context/UserContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
+import SEO from "../../components/SEO/SEO";
 
 export default function Books() {
   const navigate = useNavigate();
@@ -188,6 +189,11 @@ export default function Books() {
 
   return (
     <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
+      <SEO 
+        title="Medical Books & Study Materials | KROK"
+        description="Browse our collection of medical books, KROK booklets, and study materials. Available in PDF and delivery formats for medicine, dentistry, and pharmacy students."
+        keywords="KROK Booklets, KROK Database, KROK Study Materials, KROK PDF, Буклети КРОК, База КРОК, Матеріали КРОК, КРОК PDF, Буклеты КРОК, База КРОК, Материалы КРОК, KROK PDF"
+      />
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">

@@ -5,6 +5,7 @@ import CourseList from './CourseList';
 import CourseDetails from './CourseDetails';
 import TestInterface from './TestInterface';
 import ResultsPage from './ResultsPage';
+import SEO from '../../components/SEO/SEO';
 
 const TestYourself = () => {
   const { getPlacementCourses } = useApi();
@@ -95,52 +96,73 @@ const TestYourself = () => {
     setCourseType('all');
   };
 
-  // Results Page
-  if (testCompleted && results) {
-    return (
-      <ResultsPage 
-        results={results}
-        selectedTest={selectedTest}
-        selectedCourse={selectedCourse}
-        onReset={handleResetTest}
-      />
-    );
-  }
+  // SEO configuration
+  const getSEOConfig = () => {
+    if (testCompleted) {
+      return {
+        title: "Test Results | KROK Practice",
+        description: "Review your KROK practice test results and performance analysis."
+      };
+    }
+    if (testStarted) {
+      return {
+        title: `${selectedTest?.name || 'Exam Simulation'} | KROK Practice`,
+        description: "Take a realistic KROK exam simulation with timing and scoring."
+      };
+    }
+    if (selectedCourse) {
+      return {
+        title: `${selectedCourse.title} | KROK Exams`,
+        description: `Prepare for ${selectedCourse.title} with our interactive mock exams and question database.`
+      };
+    }
+    return {
+      title: "Test Yourself | KROK Exam Simulation",
+      description: "Practice with KROK questions, mock exams, and simulations for KROK 1, 2, 3, M, and B. Pass your medical university exams with confidence."
+    };
+  };
 
-  // Test Page
-  if (testStarted && selectedTest) {
-    return (
-      <TestInterface 
-        selectedTest={selectedTest}
-        selectedCourse={selectedCourse}
-        onTestComplete={handleTestComplete}
-        onBack={() => setTestStarted(false)}
-      />
-    );
-  }
+  const seo = getSEOConfig();
 
-  // Course Details Page
-  if (selectedCourse && !testStarted) {
-    return (
-      <CourseDetails 
-        selectedCourse={selectedCourse}
-        onBack={() => setSelectedCourse(null)}
-        onTestSelect={handleTestSelect}
-      />
-    );
-  }
-
-  // Main Courses Page
   return (
-    <CourseList 
-      courses={filteredCourses}
-      loading={loading}
-      courseType={courseType}
-      onCourseTypeChange={setCourseType}
-      onCourseSelect={handleCourseSelect}
-      onClearFilters={clearFilters}
-    />
+    <>
+      <SEO 
+        title={seo.title}
+        description={seo.description}
+        keywords="KROK Test, KROK Questions, KROK Practice Tests, KROK Mock Exam, KROK Simulation, Тест КРОК, Питання КРОК, Відповіді КРОК, Пробний КРОК, Симуляція КРОК, Тренажер КРОК, Тесты КРОК, Вопросы КРОК, Ответы КРОК, Пробный КРОК"
+      />
+      {testCompleted && results ? (
+        <ResultsPage 
+          results={results}
+          selectedTest={selectedTest}
+          selectedCourse={selectedCourse}
+          onReset={handleResetTest}
+        />
+      ) : testStarted && selectedTest ? (
+        <TestInterface 
+          selectedTest={selectedTest}
+          selectedCourse={selectedCourse}
+          onTestComplete={handleTestComplete}
+          onBack={() => setTestStarted(false)}
+        />
+      ) : selectedCourse ? (
+        <CourseDetails 
+          selectedCourse={selectedCourse}
+          onBack={() => setSelectedCourse(null)}
+          onTestSelect={handleTestSelect}
+        />
+      ) : (
+        <CourseList 
+          courses={filteredCourses}
+          loading={loading}
+          courseType={courseType}
+          onCourseTypeChange={setCourseType}
+          onCourseSelect={handleCourseSelect}
+          onClearFilters={clearFilters}
+        />
+      )}
+    </>
   );
 };
 
-export default TestYourself;
+export default TestYourself;

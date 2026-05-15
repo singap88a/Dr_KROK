@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
 import Pagination from "../../components/Common/Pagination";
+import SEO from "../../components/SEO/SEO";
 
 const PER_PAGE = 12;
 
@@ -101,6 +102,11 @@ function Instructors() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-gray-900 dark:to-gray-950">
+      <SEO 
+        title="Our Instructors | Expert KROK Tutors"
+        description="Meet our team of professional medical instructors and KROK tutors. Get expert guidance and training to pass your medical exams easily."
+        keywords="KROK Tutor, KROK Academy, KROK Preparation Ukraine, Репетитор КРОК, Навчання КРОК, Репетитор КРОК"
+      />
       <div className="container px-4 py-12 mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-10 text-center">

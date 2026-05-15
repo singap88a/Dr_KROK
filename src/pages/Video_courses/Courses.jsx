@@ -14,6 +14,7 @@ import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import Pagination from "../../components/Common/Pagination";
 import VideoCourses from "./VideoCourses";
 import LiveCourses from "../Live_courses/LiveCourses";
+import SEO from "../../components/SEO/SEO";
 
 const PER_PAGE = 12;
 
@@ -207,6 +208,11 @@ export default function Courses() {
 
   return (
     <div className="min-h-screen py-10 transition-colors duration-300 ">
+      <SEO 
+        title={activeTab === "video" ? "Video Courses | KROK Preparation" : "Live Courses | KROK Training"}
+        description={`Explore our comprehensive ${activeTab === "video" ? "recorded video courses" : "interactive live courses"} for KROK preparation. Best study materials for medicine, dentistry, and pharmacy students.`}
+        keywords="KROK Courses, KROK Preparation Course, Best KROK Courses, KROK Training, KROK Lessons Online, KROK Video Lessons, Курси КРОК, Підготовка до КРОК, Онлайн КРОК, Курсы КРОК, Подготовка к КРОК, КРОК онлайн"
+      />
       <div className="px-4 mx-auto max-w-7xl sm:px-0">
         {/* Header */}
         <header className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
