@@ -5,6 +5,7 @@ import Footer from "./components/Layout/Footer";
 import Navbar from "./components/Layout/Navbar";
 import ScrollToTop from "./components/Layout/ScrollToTop";
 import LoadingSpinner from "./components/Common/LoadingSpinner";
+import TelegramIcon from "./components/Layout/TelegramIcon";
 
 // Lazy-loaded components
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -50,90 +51,73 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-text">
-     <ThemeProvider>
-     <ApiProvider>
-      <UserProvider>
-       <CartProvider>
-        <ScrollToTop />
+      <ScrollToTop />
+      <Navbar />
+      <main className="pt-16">
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <LoadingSpinner />
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/auth/callback" element={<SocialCallback />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/books" element={<Books />} />
+            <Route path="/book/:id" element={<BookDetails />} />
+            <Route path="/contact" element={<ContactUs />} />
 
-        <Navbar />
-        <main className="pt-16">
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <LoadingSpinner />
-            </div>
-          }>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              {/* ✅ التصحيح هنا: تغيير المسار إلى /auth/callback بدلاً من /auth/google/callback */}
-              <Route path="/auth/callback" element={<SocialCallback />} />
-              <Route path="/about" element={<About />} />
-              {/* <Route path="/login" element={<Login />} /> */}
-              {/* <Route path="/auth" element={<AuthPage />} /> */}
-              <Route path="/books" element={<Books />} />
-              <Route path="/book/:id" element={<BookDetails />} />
-              <Route path="/contact" element={<ContactUs />} />
+            <Route path="/buynow" element={<BuyNow />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route path="/courses/:id/lessons" element={<CourseLessons />} />
+            <Route path="/courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
+            <Route path="/courses/:id/certificate" element={<Certificate />} />
+            <Route path="/courses/:id/test-results/:scope/:testId" element={<TestResults />} />
+            <Route path="/courses/:id/final-results" element={<TestResults />} />
+            <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
 
-              <Route path="/buynow" element={<BuyNow />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/courses/:id" element={<CourseDetails />} />
-              <Route path="/courses/:id/lessons" element={<CourseLessons />} />
-              <Route path="/courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
-              <Route path="/courses/:id/certificate" element={<Certificate />} />
-              <Route path="/courses/:id/test-results/:scope/:testId" element={<TestResults />} />
-              <Route path="/courses/:id/final-results" element={<TestResults />} />
-              <Route path="/courses/:id/subscribe" element={<CourseSubscription />} />
-
-              <Route path="/live-courses" element={<LiveCourses />} />
-              <Route path="/live-courses/:id" element={<LiveCourseDetails />} />
-              <Route path="/live-courses/:id/subscribe" element={<CourseSubscription />} />
-              <Route path="/live-courses/:id/lessons" element={<LiveCourseLessons />} />
-              <Route path="/live-courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
-              <Route path="/live-courses/:id/final-results" element={<TestResults />} />
-              <Route path="/live-courses/:id/test-results/:scope/:testId" element={<TestResults />} />
-              <Route path="/live-courses/:id/certificate" element={<Certificate />} />
+            <Route path="/live-courses" element={<LiveCourses />} />
+            <Route path="/live-courses/:id" element={<LiveCourseDetails />} />
+            <Route path="/live-courses/:id/subscribe" element={<CourseSubscription />} />
+            <Route path="/live-courses/:id/lessons" element={<LiveCourseLessons />} />
+            <Route path="/live-courses/:id/test/:scope/:testId" element={<CourseTestRunner />} />
+            <Route path="/live-courses/:id/final-results" element={<TestResults />} />
+            <Route path="/live-courses/:id/test-results/:scope/:testId" element={<TestResults />} />
+            <Route path="/live-courses/:id/certificate" element={<Certificate />} />
 
 
-              <Route path="/articles" element={<TrainerArticlesPage />} />
-              <Route path="/gemini" element={<GeminiSingap />} />
-              <Route path="/test" element={<TestYourself />} />
-              <Route path="/privacypolicy" element={<Privacypolicy />} />
-              <Route path="/termsandconditions" element={<TermsAndConditions />} />
-              <Route path="/purchase-policy" element={<PurchasePolicy />} />
-              <Route path="/instructors" element={<Instructors />} />
-              <Route path="/instructors/:id" element={<InstructorDetails />} />
+            <Route path="/articles" element={<TrainerArticlesPage />} />
+            <Route path="/gemini" element={<GeminiSingap />} />
+            <Route path="/test" element={<TestYourself />} />
+            <Route path="/privacypolicy" element={<Privacypolicy />} />
+            <Route path="/termsandconditions" element={<TermsAndConditions />} />
+            <Route path="/purchase-policy" element={<PurchasePolicy />} />
+            <Route path="/instructors" element={<Instructors />} />
+            <Route path="/instructors/:id" element={<InstructorDetails />} />
 
-              {/* Payment Routes */}
-              <Route path="/payment/success" element={<PaymentSuccess />} />
-              <Route path="/payment/failed" element={<PaymentFailed />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failed" element={<PaymentFailed />} />
 
-              {/* Jobs Routes */}
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/application-success" element={<ApplicationSuccess />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/application-success" element={<ApplicationSuccess />} />
 
-              {/* NotFound Catch-all Route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </main>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
       <AI_Icon />
-      <TelegramIcon/>
-      
+      <TelegramIcon />
       {!isChatPage && (
         <>
           <CTA />
           <Footer />
         </>
       )}
-
-       </CartProvider>
-      </UserProvider>
-     </ApiProvider>
-     </ThemeProvider>
     </div>
   );
 }
