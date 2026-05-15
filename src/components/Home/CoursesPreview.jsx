@@ -235,7 +235,7 @@ export default function CoursesPreview({ courses }) {
                       className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"
                       aria-label={`${t("courses.details", "Details")} - ${course.title}`}
                     >
-                      {t("courses.details", "تفاصيل")}
+                      {t("courses.details", "Details")} - {course.title}
                     </Link>
                   </div>
                 </div>
