@@ -156,8 +156,10 @@ export default function Hero() {
               <div className="absolute flex items-center gap-3 px-4 py-3 border shadow-xl bg-surface border-border -bottom-8 -left-8 rounded-xl">
                 <img
                   src="logo.png"
-                  alt="expert"
+                  alt="Dr KROK Expert Illustration"
                   className="w-10 h-10 border-2 rounded-full border-primary"
+                  width="40"
+                  height="40"
                 />
                 <div>
                   <h4 className="text-sm font-semibold text-text">
@@ -167,12 +169,13 @@ export default function Hero() {
                     {t('hero.expert.title')}
                   </p>
                 </div>
-                <Link to="/contact">
-                                <button className="px-3 py-1 ml-3 text-sm text-white rounded-full bg-primary hover:brightness-110">
+                <Link 
+                  to="/contact"
+                  className="px-3 py-1 ml-3 text-sm text-white rounded-full bg-primary hover:brightness-110 transition-all"
+                  aria-label={t('hero.expert.message')}
+                >
                   {t('hero.expert.message')}
-                </button>
                 </Link>
-
               </div>
             </div>
           </div>

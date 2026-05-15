@@ -145,6 +145,9 @@ function InstructorsCarousel() {
                         src={ins.image || "/logo.png"}
                         alt={ins.name}
                         className="object-cover border-4 border-white rounded-full shadow-lg w-28 h-28 dark:border-gray-700"
+                        loading="lazy"
+                        width="112"
+                        height="112"
                         onError={(e) => {
                           e.target.src = "/logo.png";
                         }}

@@ -163,7 +163,10 @@ export default function CoursesPreview({ courses }) {
                       <img
                         src={course.img}
                         alt={course.title}
-                        className="  w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                        width="400"
+                        height="256"
                       />
               
                       <button
