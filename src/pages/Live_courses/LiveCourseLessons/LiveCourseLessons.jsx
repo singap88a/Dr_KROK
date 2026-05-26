@@ -703,6 +703,15 @@ export default function LiveCourseLessons() {
     setQuizResults({});
   }, [currentLesson?.id]);
 
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  }, [loading]);
+
   const sortedSections = useMemo(() => sections, [sections]);
 
   const hasFreeLessons = useMemo(() => {
@@ -811,6 +820,7 @@ export default function LiveCourseLessons() {
                 t={t}
               />
 
+              <div id="video-player-section" className="space-y-6 lg:col-span-2">
               <VideoPlayerSection
                 currentLesson={currentLesson}
                 currentSection={currentSection}
@@ -854,6 +864,7 @@ export default function LiveCourseLessons() {
                   null
                 }
               />
+              </div>
             </>
           )}
         </div>
