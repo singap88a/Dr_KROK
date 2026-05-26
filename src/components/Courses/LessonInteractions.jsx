@@ -154,9 +154,15 @@ export default function LessonInteractions({ lessonId, batchLessonId, isLiveCour
 
   const scrollToComments = () => {
     const element = document.getElementById("lesson-comments-section");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (!element) return;
+    const navOffset = 88;
+    const top = element.getBoundingClientRect().top + window.scrollY - navOffset;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    requestAnimationFrame(() => {
+      const retryTop =
+        element.getBoundingClientRect().top + window.scrollY - navOffset;
+      window.scrollTo({ top: Math.max(0, retryTop), behavior: "smooth" });
+    });
   };
 
   if (!isLoggedIn) return null;
@@ -198,7 +204,7 @@ export default function LessonInteractions({ lessonId, batchLessonId, isLiveCour
   // ── Render Mode: Full Comments Section ───────────────────────────────────
   return (
     <>
-      <div id="lesson-comments-section" className="mt-8 overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-accent/20 dark:bg-accent/5 p-6 sm:p-8 shadow-inner backdrop-blur-sm">
+      <div id="lesson-comments-section" className="mt-8 scroll-mt-24 rounded-[2.5rem] border-2 border-primary/10 bg-accent/20 dark:bg-accent/5 p-6 sm:p-8 shadow-inner">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
         <h3 className="text-lg font-black tracking-tight text-text">

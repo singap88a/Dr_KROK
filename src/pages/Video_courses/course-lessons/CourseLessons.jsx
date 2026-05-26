@@ -452,6 +452,16 @@ export default function CourseLessons() {
     setQuizResults({});
   }, [currentLesson?.id]);
 
+  // Reset scroll after content loads to prevent blank viewport on first paint
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  }, [loading]);
+
   const getPeriodicQuizzes = () => {
     if (!currentLesson || !currentLesson.lesson_end_tests) return [];
     return currentLesson.lesson_end_tests.filter(

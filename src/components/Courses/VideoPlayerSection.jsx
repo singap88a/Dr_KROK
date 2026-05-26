@@ -293,7 +293,7 @@ export default function VideoPlayerSection({
   return (
     <div className="space-y-6 lg:col-span-2">
       {/* Video Player */}
-      <div className="overflow-hidden border rounded-lg bg-surface border-border">
+      <div className="border rounded-lg bg-surface border-border">
         {currentLesson || currentSection ? (
           <div className="relative">
             {showContent ? (
@@ -369,21 +369,6 @@ export default function VideoPlayerSection({
                     </div>
                   )}
 
-                  {/* ── Full Discussion Section (Now directly under Description) ── */}
-                  {currentLesson && (
-                    <div className="mt-4">
-                      <LessonInteractions
-                        key={`full-${currentLesson.id}`}
-                        lessonId={currentLesson.id}
-                        batchLessonId={currentLesson.batch_lesson_id}
-                        isLiveCourse={isLiveCourse}
-                        groupId={groupId}
-                        mode="full"
-                        hasAccess={hasAccess}
-                      />
-                    </div>
-                  )}
-
                   {/* Live Session Schedule & Join Link - Active Content */}
                   {isLiveCourse && renderActiveSessionCard()}
 
@@ -408,6 +393,21 @@ export default function VideoPlayerSection({
                         isLive={isLiveCourse}
                       />
                     </>
+                  )}
+
+                  {/* ── Discussion Section (at the bottom, after all lesson content) ── */}
+                  {currentLesson && (
+                    <div className="mt-6">
+                      <LessonInteractions
+                        key={`full-${currentLesson.id}`}
+                        lessonId={currentLesson.id}
+                        batchLessonId={currentLesson.batch_lesson_id}
+                        isLiveCourse={isLiveCourse}
+                        groupId={groupId}
+                        mode="full"
+                        hasAccess={hasAccess}
+                      />
+                    </div>
                   )}
                 </div>
               </>

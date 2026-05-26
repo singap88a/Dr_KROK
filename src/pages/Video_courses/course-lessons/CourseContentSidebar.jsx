@@ -128,7 +128,7 @@ const CourseContentSidebar = ({
         shadow-2xl lg:shadow-none z-40
         transform transition-transform duration-300 ease-in-out
         border-r border-border lg:border-r-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none lg:pointer-events-auto lg:translate-x-0'}
       `}>
         
         {/* 🔥 زر الإغلاق للشاشات الصغيرة داخل القائمة */}
