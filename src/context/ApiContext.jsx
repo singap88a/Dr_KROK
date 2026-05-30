@@ -1726,6 +1726,29 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           auth: true,
         });
       },
+
+      async getLessonFlashCards(lessonId, page = 1, limit = 100) {
+        if (!lessonId) throw new Error("lessonId is required");
+        return await request(`lesson/${lessonId}/flash-cards?limit=${limit}&page=${page}`, {
+          auth: true,
+          useCache: true,
+        });
+      },
+
+      async getLiveLessonFlashCards(liveLessonId, page = 1, limit = 100) {
+        if (!liveLessonId) throw new Error("liveLessonId is required");
+        return await request(`live-lesson/${liveLessonId}/flash-cards?limit=${limit}&page=${page}`, {
+          auth: true,
+          useCache: true,
+        });
+      },
+
+      async getMyMaterials() {
+        return await request("profile/my-material", {
+          auth: true,
+          useCache: true,
+        });
+      },
     }),
     [
       baseUrl,
