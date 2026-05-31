@@ -44,6 +44,7 @@ const PaymentFailed = lazy(() => import("./pages/Payment/PaymentFailed"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const Jobs = lazy(() => import("./pages/Jobs/Jobs"));
 const ApplicationSuccess = lazy(() => import("./pages/Jobs/ApplicationSuccess"));
+const UniversityRepresentative = lazy(() => import("./pages/UniversityRepresentative/UniversityRepresentative"));
 
 export default function App() {
   const location = useLocation();
@@ -105,6 +106,7 @@ export default function App() {
 
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/application-success" element={<ApplicationSuccess />} />
+            <Route path="/university-representative" element={<UniversityRepresentative />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -10,7 +10,8 @@
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Logout",
-    "joinUs": "Join Us"
+    "joinUs": "Join Us",
+    "representative": "Representatives"
   },
   "contact": {
     "title_fallback": "Contact Us",
@@ -1212,5 +1213,45 @@
     "submitComment": "Post Comment",
     "deleteConfirmTitle": "Delete Comment?",
     "deleteConfirmDesc": "Are you sure you want to remove this thought? This action cannot be undone."
+  },
+  "universityRepresentative": {
+    "applyTitle": "University Representatives",
+    "applySubtitle": "Join Dr. KROK platform as a university representative to track your university's student progress.",
+    "dashboardTitle": "Representatives Dashboard",
+    "studentsList": "Students List",
+    "totalStudents": "Total Students",
+    "completedCourses": "Completed Courses",
+    "inProgressCourses": "In Progress",
+    "passed": "Passed",
+    "failed": "Failed",
+    "notStarted": "Not Started",
+    "searchPlaceholder": "Search students by name, email or phone...",
+    "filterYear": "All Years",
+    "courseProgress": "Course Progress",
+    "lessonsCount": "{{completed}} of {{total}} lessons",
+    "finalTestScore": "Final Test: {{score}}/{{total}} ({{percentage}}%)",
+    "pendingTitle": "Application Pending",
+    "pendingMessage": "Thank you! Your request has been submitted successfully. We are reviewing your application and will get back to you shortly.",
+    "rejectedTitle": "Application Rejected",
+    "rejectedMessage": "We regret to inform you that your application has been rejected. Please review your details and apply again if you wish.",
+    "reapply": "Submit New Application",
+    "submit": "Submit Application",
+    "submitting": "Submitting...",
+    "fields": {
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "whatsapp": "WhatsApp Number",
+      "notes": "Additional Notes",
+      "university": "Select University",
+      "searchUniversity": "Search university..."
+    },
+    "errors": {
+      "name": "Name is required",
+      "email": "Valid email is required",
+      "phone": "Phone number is required",
+      "whatsapp": "WhatsApp is required",
+      "university": "Please select a university"
+    }
   }
 }

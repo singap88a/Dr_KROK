@@ -29,6 +29,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const isRtl = i18n.language === "ar";
 
@@ -251,17 +252,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
         )}
       </div>
 
-      {/* Interactive Search Bar */}
-      <div className="relative max-w-md w-full">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-        <input 
-          type="text" 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={texts.searchPlaceholder}
-          className="w-full pl-9 pr-4 py-2.5 text-sm border rounded-2xl bg-surface/40 border-border focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-inner"
-        />
-      </div>
+
 
       {/* Level Transition Animation Layout */}
       <div className="min-h-[250px]">
@@ -356,32 +347,40 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
                     whileHover={{ y: -2 }}
                     className="p-6 border rounded-[32px] bg-surface border-border shadow-sm hover:shadow-lg transition-all duration-300"
                   >
-                    <div className="flex flex-col lg:flex-row gap-6 items-start">
+                    <div className="flex flex-col gap-4">
+                      {/* Title/Name */}
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-text-secondary">
+                        <span className="inline-flex items-center gap-2 font-bold text-lg text-text">
+                          <FaBookReader className="w-5 h-5 text-primary" />
+                          {mat.name || texts.viewMaterial}
+                        </span>
+                      </div>
+
+                      {/* Image above description */}
                       {mat.image && (
-                        <div className="w-full lg:w-64 h-52 rounded-3xl overflow-hidden border border-border shadow-sm bg-white flex-shrink-0">
+                        <div 
+                          onClick={() => setSelectedImage(mat.image)}
+                          className="w-full max-w-lg h-72 rounded-3xl overflow-hidden border border-border shadow-sm bg-white cursor-pointer relative group/img"
+                        >
                           <img 
                             src={mat.image}
                             alt={mat.name || "Material Thumbnail"}
-                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                            onError={(e) => { e.target.style.display = 'none'; }}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
+                          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-bold gap-2">
+                            <span>🔍</span>
+                            <span>{isRtl ? "اضغط للتكبير" : "Click to zoom"}</span>
+                          </div>
                         </div>
                       )}
 
+                      {/* Description */}
                       <div className="flex-1 min-w-0 space-y-4">
-                        <div className="flex flex-col gap-3">
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-text-secondary">
-                            <span className="inline-flex items-center gap-2 font-semibold text-text">
-                              <FaBookReader className="w-5 h-5 text-primary" />
-                              {mat.name || texts.viewMaterial}
-                            </span>
-                          </div>
-
-                          <div 
-                            className="text-sm text-text-secondary leading-relaxed min-h-[120px] max-w-full break-words"
-                            dangerouslySetInnerHTML={{ __html: mat.description }}
-                          />
-                        </div>
+                        <div 
+                          className="text-sm text-text-secondary leading-relaxed max-w-full break-words"
+                          dangerouslySetInnerHTML={{ __html: mat.description }}
+                        />
 
                         {mat.link && (
                           <div className="pt-4 border-t border-border/40">
@@ -405,6 +404,45 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
           </AnimatePresence>
         )}
       </div>
+
+      {/* Image Zoom Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 cursor-zoom-out"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl max-h-[90vh] bg-surface rounded-3xl overflow-hidden border border-border/40 shadow-2xl p-2 cursor-default flex flex-col items-center justify-center"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute top-4 right-4 p-3 bg-black/50 text-white rounded-full hover:bg-black/80 hover:scale-105 transition-all cursor-pointer z-10"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              <img
+                src={selectedImage}
+                alt="Material Zoomed"
+                className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-md"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
