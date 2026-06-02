@@ -3,6 +3,7 @@ import React from "react";
 import { FaFileAlt, FaVideo, FaImage, FaWhatsapp, FaPlay } from "react-icons/fa"; // إضافة FaPlay هنا
 import { useTranslation } from "react-i18next";
 import InlinePDFViewer from "../ContentModals/InlinePDFViewer";
+import ErrorBoundary from "../../Common/ErrorBoundary";
 
 export const LessonAttachments = ({ 
   content, 
@@ -92,7 +93,22 @@ export const LessonAttachments = ({
                       <h6 className="mb-3 text-base font-semibold text-text">
                         {fileName}
                       </h6>
-                      <InlinePDFViewer url={fileUrl} fileName={fileName} />
+                      <ErrorBoundary 
+                        fallback={
+                          <div className="p-4 border border-dashed border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/15 rounded-lg text-center text-sm text-text-muted">
+                            <p className="mb-2 text-red-600 dark:text-red-400 font-medium">Unable to display PDF preview inside browser.</p>
+                            <a
+                              href={fileUrl}
+                              download
+                              className="inline-block px-4 py-2 bg-primary text-white text-xs font-semibold rounded hover:opacity-90 transition-all"
+                            >
+                              Download File
+                            </a>
+                          </div>
+                        }
+                      >
+                        <InlinePDFViewer key={fileUrl} url={fileUrl} fileName={fileName} />
+                      </ErrorBoundary>
                     </div>
                   ) : (
                     <button
