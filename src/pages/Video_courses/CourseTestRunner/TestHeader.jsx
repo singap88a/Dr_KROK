@@ -1,7 +1,7 @@
 import React from "react";
 
-export default function TestHeader({ test, idx, t }) {
-  const total = test?.quizzes?.length || 1;
+export default function TestHeader({ test, idx, t, totalQuestions }) {
+  const total = totalQuestions || test?.quizzes?.length || 1;
   const progress = ((idx + 1) / total) * 100;
 
   return (

@@ -15,7 +15,7 @@ export default function CourseTestRunner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, completeLessonProgress, completeLiveLessonProgress, addStudentTest, checkStudentTest } =
+  const { getVideoCourseById, getLiveCourseById, completeLessonProgress, completeLiveLessonProgress, addStudentTest, checkStudentTest, invalidateCache } =
     useApi();
 
   const passedState = location.state || {};
@@ -29,6 +29,9 @@ export default function CourseTestRunner() {
   const [dragItem, setDragItem] = useState(null);
   const [previousTestResult, setPreviousTestResult] = useState(null);
   const [checkingPreviousTest, setCheckingPreviousTest] = useState(true);
+  const [activeQuizzes, setActiveQuizzes] = useState([]);
+  const [isRetaking, setIsRetaking] = useState(false);
+  const [hasLoadedFresh, setHasLoadedFresh] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeDropZone, setActiveDropZone] = useState(null);
@@ -56,6 +59,27 @@ export default function CourseTestRunner() {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    return shuffled;
+  };
+
+  // دالة للحصول على الأسئلة العشوائية للمحاولة بناءً على الحد الأقصى
+  const getAttemptQuizzes = (allQuizzes, limitStr) => {
+    console.log("getAttemptQuizzes: total available quizzes =", allQuizzes?.length, "limitStr config =", limitStr);
+    if (!allQuizzes || allQuizzes.length === 0) return [];
+    const limit = limitStr ? parseInt(limitStr, 10) : null;
+    
+    // خلط كل الأسئلة
+    const shuffled = [...allQuizzes];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    if (limit && limit > 0 && limit < shuffled.length) {
+      console.log(`getAttemptQuizzes: Slicing quizzes to limit: ${limit}`);
+      return shuffled.slice(0, limit);
+    }
+    console.log("getAttemptQuizzes: Returning all quizzes without slicing");
     return shuffled;
   };
 
@@ -110,14 +134,17 @@ export default function CourseTestRunner() {
   // التحقق من الاختبار السابق
   useEffect(() => {
     const checkPreviousTest = async () => {
-      if (!test) return;
+      if (!test || isRetaking) return;
       
       try {
         setCheckingPreviousTest(true);
         console.log('🔍 Checking for previous test...');
         
+        const isLiveCourse = location.pathname.includes('live-courses');
         const checkData = {
-          test_id: parseInt(testId)
+          test_id: parseInt(testId),
+          course_id: parseInt(id),
+          type: isLiveCourse ? "live" : "video"
         };
 
         console.log('📤 Sending check data:', checkData);
@@ -139,7 +166,29 @@ export default function CourseTestRunner() {
     if (test) {
       checkPreviousTest();
     }
-  }, [test, id, scope, lessonId, checkStudentTest, location.pathname]);
+  }, [test, id, scope, lessonId, checkStudentTest, location.pathname, isRetaking]);
+
+  // تهيئة الأسئلة العشوائية للمحاولة الحالية بعد تحميل البيانات الجديدة
+  useEffect(() => {
+    if (hasLoadedFresh && test && test.quizzes) {
+      console.log("Initializing activeQuizzes with fresh data. Total quizzes:", test.quizzes.length, "limit:", test.number_student_questions);
+      const selected = getAttemptQuizzes(test.quizzes, test.number_student_questions);
+      setActiveQuizzes(selected);
+    }
+  }, [test, hasLoadedFresh]);
+
+  // دالة لبدء محاولة جديدة
+  const startNewAttempt = () => {
+    setIsRetaking(true);
+    setPreviousTestResult(null);
+    setIdx(0);
+    setAnswers({});
+    setResults(null);
+    if (test && test.quizzes) {
+      const selected = getAttemptQuizzes(test.quizzes, test.number_student_questions);
+      setActiveQuizzes(selected);
+    }
+  };
 
   // Touch Handlers للموبايل
   const handleTouchStart = (e, questionId, answerKey) => {
@@ -237,19 +286,22 @@ export default function CourseTestRunner() {
     setShowImageModal(true);
   };
 
-  const [loading, setLoading] = useState(!test);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   // Load course and discover test if not provided
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      if (test) return;
+      if (hasLoadedFresh) return;
       try {
         setLoading(true);
         const isLiveCourse = location.pathname.includes('live-courses');
+        // إبطال التخزين المؤقت للحصول على البيانات الجديدة فوراً من الباك إند
+        invalidateCache([`video_course/${id}`, `live_course/${id}`]);
         const data = await (isLiveCourse ? getLiveCourseById(id, true) : getVideoCourseById(id, true));
         if (!mounted) return;
+        setHasLoadedFresh(true);
         if (scope === "final") {
           const found = (data.final_tests || []).find(
             (t) => String(t.id) === String(testId)
@@ -271,10 +323,18 @@ export default function CourseTestRunner() {
           setSectionId(foundSectionId);
           setTest(foundTest);
         } else {
-          // find inside lessons
+          // find inside lessons of all sections
           let foundLessonId = null;
           let foundTest = null;
-          for (const l of data.lessons || []) {
+          const allLessons = [...(data.lessons || [])];
+          if (data.sections) {
+            for (const section of data.sections) {
+              if (section.lessons) {
+                allLessons.push(...section.lessons);
+              }
+            }
+          }
+          for (const l of allLessons) {
             const arr = l.lesson_end_tests || [];
             const hit = arr.find((t) => String(t.id) === String(testId));
             if (hit) {
@@ -301,7 +361,7 @@ export default function CourseTestRunner() {
 
   // تحضير السؤال الحالي مع الخلط العشوائي لأسئلة التوصيل
   const currentQuestion = useMemo(() => {
-    const question = (test?.quizzes || [])[idx];
+    const question = (activeQuizzes || [])[idx];
     if (!question) return null;
     
     if (question.type === 'connect') {
@@ -309,11 +369,11 @@ export default function CourseTestRunner() {
     }
     
     return question;
-  }, [test, idx]);
+  }, [activeQuizzes, idx]);
 
   // ✅ تعديل finish علشان ينادي الدالة الجديدة
   const finish = async () => {
-    const quizzes = test?.quizzes || [];
+    const quizzes = activeQuizzes || [];
     const total = quizzes.reduce(
       (acc, q) => acc + parseInt(q.question_score || 1),
       0
@@ -523,6 +583,8 @@ export default function CourseTestRunner() {
         t={t}
         location={location}
         id={id}
+        scope={scope}
+        onRetake={startNewAttempt}
       />
     );
   }
@@ -564,7 +626,7 @@ export default function CourseTestRunner() {
         </div>
 
         <div className="overflow-hidden border shadow rounded-2xl bg-surface border-border">
-          <TestHeader test={test} idx={idx} t={t} />
+          <TestHeader test={test} idx={idx} t={t} totalQuestions={activeQuizzes?.length} />
 
           <div className="p-6">
             <div
@@ -623,7 +685,7 @@ export default function CourseTestRunner() {
               >
                 {t("courses.prev", "Previous")}
               </button>
-              {idx === (test.quizzes?.length || 1) - 1 ? (
+              {idx === (activeQuizzes?.length || 1) - 1 ? (
                 <button
                   onClick={finish}
                   disabled={currentQuestion?.type === "connect" && 

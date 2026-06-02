@@ -1190,6 +1190,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           console.error('❌ Error in checkStudentTest:', error);
 
           const formData = new FormData();
+          formData.append('test_id', testData.test_id?.toString() || "");
           formData.append('course_id', testData.course_id?.toString() || "");
           if (testData.lesson_id) {
             formData.append('lesson_id', testData.lesson_id?.toString() || "");
@@ -1215,6 +1216,14 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
             throw formDataError;
           }
         }
+      },
+
+      async getStudentTestReview(testId, studentTestId) {
+        console.log('🔍 getStudentTestReview called with:', { testId, studentTestId });
+        return await request(`student_test_review?test_id=${testId}&student_test_id=${studentTestId}`, {
+          auth: true,
+          useCache: false
+        });
       },
 
       // Blogs API
