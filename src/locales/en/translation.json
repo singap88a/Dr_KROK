@@ -454,7 +454,10 @@
     "university": "University",
     "watch_video": "Watch Video",
     "close_video": "Close Video",
-    "no_video": "No video available"
+    "no_video": "No video available",
+    "view_all": "View More",
+    "all_reviews": "Customer Reviews",
+    "subtitle": "See what our students are saying about us."
   },
   "common": {
     "retry": "Retry",

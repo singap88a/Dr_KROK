@@ -134,7 +134,7 @@ function BooksCarousel() {
             640: { slidesPerView: 2 },
             1024: { slidesPerView: 4 },
           }}
-          className="pb-12"
+          style={{ paddingBottom: "60px" }}
         >
           {books.slice(0, 5).map((b) => {
             const price = parseFloat(b.price);
@@ -144,7 +144,7 @@ function BooksCarousel() {
             const discountedPrice = discountPercent > 0 ? Math.max(0, price - discountAmount).toFixed(2) : price.toFixed(2);
 
             return (
-              <SwiperSlide key={b.id}>
+              <SwiperSlide key={b.id} className="!h-auto">
                 <div className="flex flex-col h-full transition-transform duration-300 bg-white border border-gray-200 shadow-lg rounded-2xl dark:bg-gray-800 dark:border-gray-700 ">
                   {/* Book Image */}
                   <div className="relative overflow-hidden rounded-t-2xl">
@@ -198,7 +198,7 @@ function BooksCarousel() {
 
 
                     {/* Price Section */}
-                    <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center justify-between mt-auto pt-4">
                       <div>
                         <span className="text-lg font-bold text-primary">
                           ₴{discountedPrice}
@@ -217,7 +217,7 @@ function BooksCarousel() {
                       className="px-4 py-2 mt-5 text-sm font-medium text-white transition rounded-lg bg-primary hover:bg-primary/90"
                       aria-label={`${t('books.view_details', 'View Details')} - ${b.name}`}
                     >
-                      {t('books.view_details')} - {b.name}
+                      {t('books.view_details')}
                     </button>
                   </div>
                 </div>

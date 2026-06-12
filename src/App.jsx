@@ -45,6 +45,7 @@ const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const Jobs = lazy(() => import("./pages/Jobs/Jobs"));
 const ApplicationSuccess = lazy(() => import("./pages/Jobs/ApplicationSuccess"));
 const UniversityRepresentative = lazy(() => import("./pages/UniversityRepresentative/UniversityRepresentative"));
+const TestimonialsPage = lazy(() => import("./pages/Testimonials/Testimonials"));
 
 export default function App() {
   const location = useLocation();
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/books" element={<Books />} />
             <Route path="/book/:id" element={<BookDetails />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/testimonials" element={<TestimonialsPage />} />
 
             <Route path="/buynow" element={<BuyNow />} />
             <Route path="/profile" element={<Profile />} />
