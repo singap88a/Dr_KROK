@@ -136,7 +136,7 @@ export default function FeaturedArticles({ articles }) {
             autoplay={{ delay: 3500, disableOnInteraction: false }}
             loop={true}
             pagination={{ clickable: true }}
-            className="pb-12"
+            style={{ paddingBottom: '60px' }}
           >
             {loading && (
               <SwiperSlide>
@@ -153,8 +153,8 @@ export default function FeaturedArticles({ articles }) {
               </SwiperSlide>
             )}
             {list.map((item) => (
-              <SwiperSlide key={item.id}>
-                <div className="overflow-hidden transition-transform duration-300 bg-white border border-gray-200 shadow-lg rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1">
+              <SwiperSlide key={item.id} className="!h-auto">
+                <div className="flex flex-col h-full overflow-hidden transition-transform duration-300 bg-white border border-gray-200 shadow-lg rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1">
                   {/* Image */}
                   <div className="relative h-48">
                     <img
@@ -190,7 +190,7 @@ export default function FeaturedArticles({ articles }) {
                       className="w-full px-4 py-2 mt-auto text-sm font-medium text-center text-white transition bg-primary rounded-xl hover:shadow-md hover:brightness-110"
                       aria-label={`${t("articles.readMore")} - ${item.title}`}
                     >
-                      {t("articles.readMore")} {item.title}
+                      {t("articles.readMore")}
                     </Link>
                   </div>
                 </div>

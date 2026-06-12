@@ -133,11 +133,11 @@ function InstructorsCarousel() {
               640: { slidesPerView: 2 },
               1024: { slidesPerView: 3 },
             }}
-            className="pb-12"
+            style={{ paddingBottom: '60px' }}
           >
             {instructors.map((ins) => (
-              <SwiperSlide key={ins.id}>
-                <Link to={`/instructors/${ins.id}`} className="block">
+              <SwiperSlide key={ins.id} className="!h-auto">
+                <Link to={`/instructors/${ins.id}`} className="block h-full">
                   <div className="flex flex-col items-center h-full p-8 transition-transform duration-300 border border-gray-200 shadow-xl rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:-translate-y-1">
                     {/* Image */}
                     <div className="flex justify-center">

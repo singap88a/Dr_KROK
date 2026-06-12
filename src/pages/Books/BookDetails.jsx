@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import PDFViewer from "../../components/Books/PDFViewer";
+import ErrorBoundary from "../../components/Common/ErrorBoundary";
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -270,11 +271,26 @@ export default function BookDetails() {
 
       {/* PDF Viewer */}
       {showPdf && currentPdfUrl && (
-        <PDFViewer 
-          url={currentPdfUrl} 
-          onClose={() => setShowPdf(false)} 
-          fileName={book.name}
-        />
+        <ErrorBoundary
+          fallback={
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 text-white p-6">
+              <p className="text-red-400 font-semibold mb-4 text-center">Failed to render book reader preview.</p>
+              <button 
+                onClick={() => setShowPdf(false)} 
+                className="px-6 py-2.5 bg-primary text-white rounded-lg hover:opacity-95 font-semibold"
+              >
+                Close Reader
+              </button>
+            </div>
+          }
+        >
+          <PDFViewer 
+            key={currentPdfUrl}
+            url={currentPdfUrl} 
+            onClose={() => setShowPdf(false)} 
+            fileName={book.name}
+          />
+        </ErrorBoundary>
       )}
     </section>
   );

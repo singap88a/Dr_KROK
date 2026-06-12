@@ -260,6 +260,16 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
 
     const percentage = totalScore > 0 ? (earnedScore / totalScore) * 100 : 0;
 
+    try {
+      const reviewData = {
+        test: selectedTest,
+        answers: userAnswers
+      };
+      localStorage.setItem(`test_yourself_review_${selectedTest.id}`, JSON.stringify(reviewData));
+    } catch (e) {
+      console.error("Failed to save review data to localStorage:", e);
+    }
+
     onTestComplete({
       totalScore,
       earnedScore,

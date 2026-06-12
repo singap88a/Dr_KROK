@@ -10,6 +10,7 @@ import { LessonEndTestsSection } from "./QuizSystem/LessonEndTests";
 import { QuizModal } from "./QuizSystem/QuizModal";
 import { ResultsModal } from "./QuizSystem/ResultsModal";
 import LessonInteractions from "./LessonInteractions";
+import LessonFlashCards from "./LessonFlashCards";
 
 export default function VideoPlayerSection({
   currentLesson,
@@ -393,6 +394,15 @@ export default function VideoPlayerSection({
                         isLive={isLiveCourse}
                       />
                     </>
+                  )}
+
+                  {/* ── Flash Cards Section (Placed above comments) ── */}
+                  {currentLesson && (
+                    <LessonFlashCards
+                      lessonId={currentLesson.id}
+                      isLiveCourse={isLiveCourse}
+                      hasAccess={hasAccess}
+                    />
                   )}
 
                   {/* ── Discussion Section (at the bottom, after all lesson content) ── */}

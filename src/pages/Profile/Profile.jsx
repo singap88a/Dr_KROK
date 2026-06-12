@@ -24,6 +24,7 @@ import {
   FaGraduationCap,
   FaHeart,
   FaBell,
+  FaBook,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
@@ -33,6 +34,7 @@ import MyCourses from "./MyCourses";
 import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
 import MyNotifications from "./MyNotifications";
+import MyMaterials from "./MyMaterials";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
@@ -166,6 +168,7 @@ export default function Profile() {
   const menuItems = [
     { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
     { id: "courses", label: t('profile.sidebar.myCourses'), icon: FaGraduationCap },
+    { id: "materials", label: t('profile.sidebar.myMaterials', 'My Material'), icon: FaBook },
     { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart },
     { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
     { id: "ratings", label: t('profile.sidebar.myRatings'), icon: FaStar },
@@ -338,6 +341,8 @@ export default function Profile() {
         ) : (
           <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />
         );
+      case "materials":
+        return <MyMaterials user={user} setActiveTab={setActiveTab} setForceEdit={setForceEdit} />;
       case "orders":
         return <MyOrders orders={orders} />;
       case "favorites":

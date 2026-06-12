@@ -373,6 +373,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         method: "POST",
         auth: true,
         body: updateData,
+        invalidateCacheOnSuccess: ["profile/my-material", "profile/get-my-profile"]
       });
 
       if (data.success) {

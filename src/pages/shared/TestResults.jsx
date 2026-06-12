@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
-import { FaArrowLeft, FaTrophy, FaRedo, FaCheckCircle, FaClipboardList, FaCertificate, FaSync } from "react-icons/fa";
+import { FaArrowLeft, FaTrophy, FaRedo, FaCheckCircle, FaClipboardList, FaCertificate, FaSync, FaExclamationTriangle, FaTimes } from "react-icons/fa";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import { 
   formatProfessionalDate, 
@@ -43,6 +43,25 @@ export default function TestResults() {
   const sectionId = passedState.sectionId || null;
   
   const actualScope = scope || (location.pathname.includes('/final-results') ? 'final' : null);
+  const [showReview, setShowReview] = useState(false);
+
+  const quizResults = useMemo(() => {
+    if (!results) return null;
+    return results.questions || results.answers?.questions || null;
+  }, [results]);
+
+  const reviewedQuestions = useMemo(() => {
+    if (!quizResults || !test?.quizzes) return [];
+    return quizResults.map(res => {
+      const quiz = test.quizzes.find(q => q.id === res.question_id);
+      return {
+        ...quiz,
+        studentAnswer: res.student_answer,
+        correctAnswer: res.correct_answer,
+        isCorrect: res.is_correct
+      };
+    }).filter(q => q.title);
+  }, [quizResults, test]);
   const userName = userData?.name || t("courses.student", "Student");
 
   const calculatedPercentage = useMemo(() => {
@@ -392,24 +411,15 @@ export default function TestResults() {
               </div>
             )} */}
 
-            <div className="flex flex-col gap-4 md:flex-row md:justify-center">
+            <div className="mb-6">
               {passed ? (
                 <div className="text-center">
                   {actualScope === 'final' ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="flex items-center justify-center gap-2 text-green-600">
-                        <FaCheckCircle className="text-2xl" />
-                        <span className="text-xl font-bold">
-                          {t("courses.finalTestPassed", "Congratulations! You have passed the final test.")}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => navigate(backPath)}
-                        className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-primary/90 hover:shadow-xl"
-                      >
-                        <FaClipboardList />
-                        {t("courses.backToLessons", "Back to Lessons")}
-                      </button>
+                    <div className="flex items-center justify-center gap-2 text-green-600">
+                      <FaCheckCircle className="text-2xl" />
+                      <span className="text-xl font-bold">
+                        {t("courses.finalTestPassed", "Congratulations! You have passed the final test.")}
+                      </span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2 mb-4 text-green-600">
@@ -422,31 +432,174 @@ export default function TestResults() {
                       </span>
                     </div>
                   )}
-                  {actualScope !== 'final' && (
-                    <button
-                      onClick={() => navigate(backPath)}
-                      className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-primary/90 hover:shadow-xl"
-                    >
-                      <FaClipboardList />
-                      {t("courses.continueToNext", "Continue")}
-                    </button>
-                  )}
                 </div>
               ) : (
                 <div className="text-center">
                   <p className="mb-4 text-lg text-red-600">
-                    {t("courses.retakeRequired", "You need to retake the test to pass.")}
+                    {actualScope === 'final'
+                      ? t("courses.finalTestNotPassed", "You did not pass the final test.")
+                      : t("courses.retakeRequired", "You need to retake the test to pass.")}
                   </p>
-                  <button
-                    onClick={() => navigate(backPath)}
-                    className="flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white transition-all rounded-lg shadow-lg bg-primary hover:bg-secondary hover:shadow-xl"
-                    >
-                    <FaRedo />
-                    {t("courses.backToLessons", "Back to Lessons")}
-                  </button>
                 </div>
               )}
             </div>
+
+            {/* Buttons Row */}
+            <div className="flex flex-wrap gap-4 justify-center items-center">
+              {/* Back to Lessons / Action Button */}
+              <button
+                onClick={() => navigate(backPath)}
+                className={`flex items-center justify-center gap-2 px-8 py-3.5 font-semibold text-white transition-all rounded-lg shadow-lg hover:shadow-xl ${
+                  !passed ? "bg-primary hover:bg-secondary" : "bg-primary hover:bg-primary/90"
+                }`}
+              >
+                {actualScope === 'final' ? <FaClipboardList /> : (passed ? <FaClipboardList /> : <FaRedo />)}
+                {actualScope !== 'final' && passed
+                  ? t("courses.continueToNext", "Continue")
+                  : t("courses.backToLessons", "Back to Lessons")}
+              </button>
+
+              {/* Review Questions Button */}
+              {reviewedQuestions && reviewedQuestions.length > 0 && (
+                <button
+                  onClick={() => setShowReview(true)}
+                  className="flex items-center gap-2 px-8 py-3.5 font-semibold text-white bg-secondary hover:bg-secondary/90 transition-all duration-200 rounded-lg shadow-lg hover:shadow-xl"
+                >
+                  <FaClipboardList />
+                  {t("courses.reviewQuestions", "Review Questions")}
+                </button>
+              )}
+            </div>
+
+            {showReview && reviewedQuestions.length > 0 && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-surface border border-border shadow-2xl rounded-2xl overflow-hidden text-left animate-slideUp">
+                  
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-border bg-accent">
+                    <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
+                      <FaClipboardList />
+                      {t("courses.detailedReview", "Detailed Question Review")}
+                    </h3>
+                    <button
+                      onClick={() => setShowReview(false)}
+                      className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all duration-200"
+                    >
+                      <FaTimes size={20} />
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="flex-1 p-6 overflow-y-auto space-y-6">
+                    {reviewedQuestions.map((q, qIdx) => {
+                      const isMcq = q.type === "mcq" || !q.type;
+                      
+                      if (isMcq) {
+                        const answerKeys = [];
+                        let i = 1;
+                        while (q[`answer_${i}`] || q[`answer_${i}_image`]) {
+                          answerKeys.push(`answer_${i}`);
+                          i++;
+                        }
+                        const correctAnswerKey = `answer_${parseInt(q.correct_answer_index) + 1}`;
+                        const studentAnswerKey = q.studentAnswer;
+
+                        return (
+                          <div key={q.id} className="p-6 border rounded-xl bg-accent border-border shadow-sm">
+                            <div className="flex items-start gap-3 mb-4">
+                              <span className="font-bold text-lg text-primary">{qIdx + 1}.</span>
+                              <div
+                                className="font-semibold text-text"
+                                dangerouslySetInnerHTML={{ __html: q.title || "" }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {answerKeys.map((key) => {
+                                const text = q[key];
+                                const img = q[`${key}_image`];
+                                if (!text && !img) return null;
+
+                                const isStudentSelected = studentAnswerKey === key;
+                                const isCorrectChoice = correctAnswerKey === key;
+
+                                let optionStyle = "border-border bg-surface";
+                                let badge = null;
+
+                                if (isCorrectChoice) {
+                                  optionStyle = "border-green-500 bg-green-50 dark:bg-green-950/20";
+                                  badge = <span className="ml-auto text-green-600 font-semibold text-sm flex items-center gap-1"><FaCheckCircle /> {t("courses.correct", "Correct")}</span>;
+                                } else if (isStudentSelected) {
+                                  optionStyle = "border-red-500 bg-red-50 dark:bg-red-950/20";
+                                  badge = <span className="ml-auto text-red-600 font-semibold text-sm flex items-center gap-1"><FaExclamationTriangle /> {t("courses.yourAnswer", "Your Answer")}</span>;
+                                }
+
+                                return (
+                                  <div
+                                    key={key}
+                                    className={`p-4 border-2 rounded-lg transition-all flex items-center gap-3 ${optionStyle}`}
+                                  >
+                                    <div className="flex-1">
+                                      {text && <div className="text-text">{text}</div>}
+                                      {img && (
+                                        <img
+                                          src={img}
+                                          alt="Option"
+                                          className="mt-2 rounded max-h-32 shadow-sm"
+                                        />
+                                      )}
+                                    </div>
+                                    {badge}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        // For match or connect questions
+                        const isCorrect = q.isCorrect;
+                        return (
+                          <div key={q.id} className="p-6 border rounded-xl bg-accent border-border shadow-sm">
+                            <div className="flex items-start gap-3 mb-4">
+                              <span className="font-bold text-lg text-primary">{qIdx + 1}.</span>
+                              <div
+                                className="font-semibold text-text"
+                                dangerouslySetInnerHTML={{ __html: q.title || "" }}
+                              />
+                            </div>
+                            <div className="p-4 rounded-lg bg-surface border border-border space-y-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-text-muted">{t("courses.yourAnswer", "Your Answer")}:</span>
+                                <span className={isCorrect ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                                  {q.studentAnswer || t("courses.noAnswer", "No Answer")}
+                                </span>
+                              </div>
+                              {!isCorrect && (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-text-muted">{t("courses.correctAnswer", "Correct Answer")}:</span>
+                                  <span className="text-green-600 font-bold">{q.correctAnswer}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                    })}
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-4 border-t border-border bg-accent flex justify-end">
+                    <button
+                      onClick={() => setShowReview(false)}
+                      className="px-6 py-2.5 font-semibold text-white bg-primary hover:bg-primary/90 rounded-lg transition-all"
+                    >
+                      {t("common.close", "Close")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

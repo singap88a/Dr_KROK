@@ -192,10 +192,10 @@ export default function Live_courses({ courses }) {
             const isUpcoming = new Date(course.started_at) > new Date();
 
             return (
-              <SwiperSlide key={course.id}>
-                <div className="relative cursor-pointer group">
+              <SwiperSlide key={course.id} className="!h-auto">
+                <div className="relative h-full cursor-pointer group">
                   {/* Main Card */}
-                  <div className="relative overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-lg dark:bg-gray-800 rounded-2xl hover:shadow-xl dark:border-gray-700 group-hover:-translate-y-2">
+                  <div className="relative flex flex-col h-full overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-lg dark:bg-gray-800 rounded-2xl hover:shadow-xl dark:border-gray-700 group-hover:-translate-y-2">
                     
                     {/* Image Section */}
                     <div className="relative h-64 overflow-hidden">
@@ -252,7 +252,7 @@ export default function Live_courses({ courses }) {
     
                     
                     {/* Content Section */}
-                    <div className="p-6">
+                    <div className="flex flex-col flex-grow p-6">
                       {/* Course Meta */}
                       <div className="flex items-center gap-2 mb-3">
                         <span className="px-2 py-1 text-xs font-medium rounded text-primary bg-blue-50 dark:bg-blue-900/30">
@@ -275,7 +275,7 @@ export default function Live_courses({ courses }) {
                       />
                       
                       {/* Live Session Info */}
-                      <div className="p-3 mb-4 border border-blue-100 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+                      <div className="p-3 mb-4 mt-auto border border-blue-100 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2">
                             <FiCalendar className="text-primary" />

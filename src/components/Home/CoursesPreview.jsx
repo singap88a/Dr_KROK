@@ -152,12 +152,12 @@ export default function CoursesPreview({ courses }) {
               ? Math.round(course.discount)
               : 0;
             return (
-              <SwiperSlide key={course.id}>
-                <div className="relative flex flex-col overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 group">
+              <SwiperSlide key={course.id} className="!h-auto">
+                <div className="relative flex flex-col h-full overflow-hidden transition-all duration-300 bg-white border border-gray-200 cursor-pointer rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 group">
                   <Link
                     to={`/courses/${course.id}`}
                     style={{ textDecoration: "none" }}
-                    className="block"
+                    className="flex flex-col flex-1"
                   >
                     <div className="relative h-64 overflow-hidden">
                       <img
@@ -198,7 +198,7 @@ export default function CoursesPreview({ courses }) {
                         className="flex-1 mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3"
                         dangerouslySetInnerHTML={{ __html: course.description }}
                       />
-                      <div className="mb-3 space-y-2 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="mt-auto mb-3 space-y-2 text-xs text-gray-500 dark:text-gray-400">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <img
@@ -235,7 +235,7 @@ export default function CoursesPreview({ courses }) {
                       className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"
                       aria-label={`${t("courses.details", "Details")} - ${course.title}`}
                     >
-                      {t("courses.details", "Details")} - {course.title}
+                      {t("courses.details", "Details")}
                     </Link>
                   </div>
                 </div>

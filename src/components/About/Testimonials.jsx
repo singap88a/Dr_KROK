@@ -4,7 +4,7 @@ import { Pagination as SwiperPagination, Autoplay } from "swiper/modules";
 import { FaStar, FaPlay, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
-import Pagination from "../Common/Pagination";
+import { Link } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -216,14 +216,15 @@ export default function Testimonials() {
         </Swiper>
 
         <div className="flex justify-center mx-auto mt-8 custom-pagination"></div>
-
-        {/* Page-level pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          loading={loading}
-        />
+        
+        <div className="flex justify-center mt-12">
+          <Link
+            to="/testimonials"
+            className="px-8 py-3 text-sm font-semibold text-white transition-all rounded-xl bg-primary hover:shadow-lg hover:bg-primary/90"
+          >
+            {t("testimonials.view_all", "عرض المزيد")}
+          </Link>
+        </div>
       </div>
 
       {/* Video Modal */}
