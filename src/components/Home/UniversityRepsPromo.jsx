@@ -78,7 +78,7 @@ export default function UniversityRepsPromo() {
             </div>
 
             <div className="pt-4">
-              <Link to="/representatives" className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-secondary text-white font-bold rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5">
+              <Link to="/university-representative" className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-secondary text-white font-bold rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5">
                 <span>{tLocal.apply}</span>
                 <FaArrowRight />
               </Link>
