@@ -248,10 +248,10 @@ const Jobs = () => {
                 <div className="space-y-5">
                   <SectionTitle icon={<FaUser />} title={t("jobs.form.personalInfo")} />
                   <div className="grid grid-cols-2 gap-3">
-                    <FieldInput label={t("jobs.form.name")} name="name" icon={<FaUser />} value={formData.name} onChange={handleInputChange} required placeholder="e.g. Ahmed Mohamed" />
+                    <FieldInput label={t("jobs.form.name")} name="name" icon={<FaUser />} value={formData.name} onChange={handleInputChange} required placeholder="e.g. Ivan Petrenko" />
                     <FieldInput label={t("jobs.form.age")} name="age" type="number" icon={<FaCalendarAlt />} value={formData.age} onChange={handleInputChange} required placeholder="e.g. 28" />
-                    <FieldInput label={t("jobs.form.country")} name="country" icon={<FaMapMarkerAlt />} value={formData.country} onChange={handleInputChange} required placeholder="e.g. Egypt" />
-                    <FieldInput label={t("jobs.form.city")} name="city" icon={<FaMapMarkerAlt />} value={formData.city} onChange={handleInputChange} required placeholder="e.g. Cairo" />
+                    <FieldInput label={t("jobs.form.country")} name="country" icon={<FaMapMarkerAlt />} value={formData.country} onChange={handleInputChange} required placeholder="e.g. Ukraine" />
+                    <FieldInput label={t("jobs.form.city")} name="city" icon={<FaMapMarkerAlt />} value={formData.city} onChange={handleInputChange} required placeholder="e.g. Kyiv" />
                   </div>
                 </div>
 
@@ -259,8 +259,8 @@ const Jobs = () => {
                   <SectionTitle icon={<FaEnvelope />} title={t("jobs.form.contactInfo")} />
                   <div className="grid grid-cols-2 gap-3">
                     <FieldInput label={t("jobs.form.email")} name="email" type="email" icon={<FaEnvelope />} value={formData.email} onChange={handleInputChange} required placeholder="email@example.com" />
-                    <FieldInput label={t("jobs.form.phone")} name="phone" type="tel" icon={<FaPhone />} value={formData.phone} onChange={handleInputChange} required placeholder="+20 1xx xxx xxxx" />
-                    <FieldInput label={t("jobs.form.whatsapp")} name="whatsapp" type="tel" icon={<FaWhatsapp />} value={formData.whatsapp} onChange={handleInputChange} required placeholder="+20 1xx xxx xxxx" />
+                    <FieldInput label={t("jobs.form.phone")} name="phone" type="tel" icon={<FaPhone />} value={formData.phone} onChange={handleInputChange} required placeholder="+380 9x xxx xxxx" />
+                    <FieldInput label={t("jobs.form.whatsapp")} name="whatsapp" type="tel" icon={<FaWhatsapp />} value={formData.whatsapp} onChange={handleInputChange} required placeholder="+380 9x xxx xxxx" />
                     <FieldInput label={t("jobs.form.availableFrom")} name="available_from" type="date" icon={<FaCalendarAlt />} value={formData.available_from} onChange={handleInputChange} />
                   </div>
                 </div>
@@ -273,8 +273,8 @@ const Jobs = () => {
                   <FieldInput label={t("jobs.form.degree")} name="degree" icon={<FaGraduationCap />} value={formData.degree} onChange={handleInputChange} required placeholder="e.g. Bachelor's" />
                   <FieldInput label={t("jobs.form.specialization")} name="specialization" icon={<FaGraduationCap />} value={formData.specialization} onChange={handleInputChange} required placeholder="e.g. Medicine" />
                   <FieldInput label={t("jobs.form.experienceYears")} name="experience_years" type="number" icon={<FaClock />} value={formData.experience_years} onChange={handleInputChange} required placeholder="e.g. 3" />
-                  <FieldInput label={t("jobs.form.currentSalary")} name="current_salary" type="number" icon={<FaMoneyBillWave />} value={formData.current_salary} onChange={handleInputChange} placeholder="e.g. 5000" />
-                  <FieldInput label={t("jobs.form.expectedSalary")} name="expected_salary" type="number" icon={<FaMoneyBillWave />} value={formData.expected_salary} onChange={handleInputChange} required placeholder="e.g. 8000" />
+                  <FieldInput label={t("jobs.form.currentSalary")} name="current_salary" type="number" icon={<FaMoneyBillWave />} value={formData.current_salary} onChange={handleInputChange} placeholder="e.g. 15000" />
+                  <FieldInput label={t("jobs.form.expectedSalary")} name="expected_salary" type="number" icon={<FaMoneyBillWave />} value={formData.expected_salary} onChange={handleInputChange} required placeholder="e.g. 20000" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-text-secondary">{t("jobs.form.notes")}</label>

@@ -61,6 +61,9 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
   const [reviewCount, setReviewCount] = useState(0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [cardStates, setCardStates] = useState({}); // Stores 'known' or 'review' for each card
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const isRtl = i18n.language === "ar";
 
@@ -80,23 +83,37 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
       try {
         let response;
         if (isLiveCourse) {
-          response = await getLiveLessonFlashCards(lessonId, 1, 100);
+          response = await getLiveLessonFlashCards(lessonId, 1, 5);
         } else {
-          response = await getLessonFlashCards(lessonId, 1, 100);
+          response = await getLessonFlashCards(lessonId, 1, 5);
         }
 
         if (active) {
           if (response && response.success && response.data && response.data.length > 0) {
             setCards(response.data);
+            setCurrentPage(1);
+            
+            // Determine if there are more pages
+            if (response.data.length < 5) {
+              setHasMore(false);
+            } else if (response.meta && response.meta.last_page === 1) {
+              setHasMore(false);
+            } else if (response.pagination && response.pagination.last_page === 1) {
+              setHasMore(false);
+            } else {
+              setHasMore(true);
+            }
           } else {
             console.log("No flash cards from API, loading high-quality KROK mock cards");
             setCards(getMockFlashCards(lessonId));
+            setHasMore(false);
           }
         }
       } catch (err) {
         console.warn("Failed to fetch flash cards from API, falling back to mock cards:", err.message);
         if (active) {
           setCards(getMockFlashCards(lessonId));
+          setHasMore(false);
         }
       } finally {
         if (active) setLoading(false);
@@ -110,15 +127,46 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
   }, [lessonId, isLiveCourse, getLessonFlashCards, getLiveLessonFlashCards]);
 
   const handleNext = useCallback(() => {
+    if (loadingMore) return;
     setIsFlipped(false);
-    setTimeout(() => {
+    setTimeout(async () => {
       if (currentIndex < cards.length - 1) {
         setCurrentIndex((prev) => prev + 1);
       } else {
-        setSessionCompleted(true);
+        if (hasMore) {
+          setLoadingMore(true);
+          try {
+            const nextPage = currentPage + 1;
+            let response;
+            if (isLiveCourse) {
+              response = await getLiveLessonFlashCards(lessonId, nextPage, 5);
+            } else {
+              response = await getLessonFlashCards(lessonId, nextPage, 5);
+            }
+            if (response && response.success && response.data && response.data.length > 0) {
+              setCards((prev) => [...prev, ...response.data]);
+              setCurrentPage(nextPage);
+              setCurrentIndex((prev) => prev + 1);
+              
+              if (response.data.length < 5) setHasMore(false);
+              if (response.meta && response.meta.last_page <= nextPage) setHasMore(false);
+              if (response.pagination && response.pagination.last_page <= nextPage) setHasMore(false);
+            } else {
+              setHasMore(false);
+              setSessionCompleted(true);
+            }
+          } catch (err) {
+            console.error("Failed to load more cards:", err);
+            setSessionCompleted(true);
+          } finally {
+            setLoadingMore(false);
+          }
+        } else {
+          setSessionCompleted(true);
+        }
       }
     }, 150);
-  }, [currentIndex, cards.length]);
+  }, [currentIndex, cards.length, hasMore, loadingMore, currentPage, lessonId, isLiveCourse, getLiveLessonFlashCards, getLessonFlashCards]);
 
   const handlePrev = useCallback(() => {
     setIsFlipped(false);
@@ -435,10 +483,13 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
 
             <button 
               onClick={handleNext}
-              className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 hover:border-primary rounded-xl text-xs font-bold transition-all active:scale-95"
+              disabled={loadingMore}
+              className={`flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 hover:border-primary rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                loadingMore ? "opacity-50 cursor-wait" : ""
+              }`}
             >
-              <span>{texts.next}</span>
-              <FaArrowRight className={isRtl ? "rotate-180" : ""} />
+              <span>{loadingMore ? (isRtl ? "جاري التحميل..." : "Loading...") : texts.next}</span>
+              {!loadingMore && <FaArrowRight className={isRtl ? "rotate-180" : ""} />}
             </button>
           </div>
         </div>

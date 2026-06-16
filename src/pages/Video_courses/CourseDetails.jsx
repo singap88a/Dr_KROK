@@ -499,9 +499,6 @@ export default function CourseDetails() {
                     <p className="text-sm font-semibold sm:text-base">
                       {review.client?.name || 'Anonymous'}
                     </p>
-                    <p className="text-xs text-text-muted">
-                      {formatDate(review.created_at)}
-                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mb-2 text-yellow-400">

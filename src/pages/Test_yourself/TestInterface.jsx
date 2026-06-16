@@ -8,6 +8,7 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const shuffledQuestionsRef = useRef({}); // استخدام useRef بدل useState
 
   const timerRef = useRef(null);
@@ -186,6 +187,7 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
   };
 
   const finishTest = () => {
+    setIsSubmitting(true);
     let totalScore = 0;
     let earnedScore = 0;
     let correctAnswersCount = 0;
@@ -270,25 +272,27 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
       console.error("Failed to save review data to localStorage:", e);
     }
 
-    onTestComplete({
-      totalScore,
-      earnedScore,
-      percentage,
-      totalQuestions: totalQuestionsCount,
-      correctAnswers: correctAnswersCount,
-      answeredQuestions,
-      notAnsweredQuestions: totalQuestionsCount - answeredQuestions,
-      connectQuestions: connectQuestionsCount,
-      connectCorrect,
-      connectWrong,
-      connectAnswered,
-      connectNotAnswered: connectQuestionsCount - connectAnswered,
-      mcqQuestions: mcqQuestionsCount,
-      mcqCorrect,
-      mcqWrong,
-      mcqAnswered,
-      mcqNotAnswered: mcqQuestionsCount - mcqAnswered
-    });
+    setTimeout(() => {
+      onTestComplete({
+        totalScore,
+        earnedScore,
+        percentage,
+        totalQuestions: totalQuestionsCount,
+        correctAnswers: correctAnswersCount,
+        answeredQuestions,
+        notAnsweredQuestions: totalQuestionsCount - answeredQuestions,
+        connectQuestions: connectQuestionsCount,
+        connectCorrect,
+        connectWrong,
+        connectAnswered,
+        connectNotAnswered: connectQuestionsCount - connectAnswered,
+        mcqQuestions: mcqQuestionsCount,
+        mcqCorrect,
+        mcqWrong,
+        mcqAnswered,
+        mcqNotAnswered: mcqQuestionsCount - mcqAnswered
+      });
+    }, 1000);
   };
 
   const calculateConnectScore = (question, userAnswer) => {
@@ -388,11 +392,13 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
               <button
                 onClick={nextQuestion}
                 disabled={
-                  currentQuestion.type === 'connect'
+                  isSubmitting ||
+                  (currentQuestion.type === 'connect'
                     ? Object.keys(userAnswers[currentQuestion.id] || {}).length < minimumAnswersRequired
-                    : !userAnswers[currentQuestion.id]
+                    : !userAnswers[currentQuestion.id])
                 }
                 className={`flex items-center px-8 py-3 font-medium text-white transition-all duration-300 transform shadow-lg bg-primary hover:bg-blue-700 rounded-xl hover:scale-105 ${
+                  isSubmitting ||
                   (currentQuestion.type === 'connect'
                     ? Object.keys(userAnswers[currentQuestion.id] || {}).length < minimumAnswersRequired
                     : !userAnswers[currentQuestion.id]
@@ -401,10 +407,19 @@ const TestInterface = ({ selectedTest, selectedCourse, onTestComplete, onBack })
               >
                 {currentQuestionIndex === selectedTest.quizzes.length - 1 ? (
                   <>
-                    {t('testYourself.test.finish', 'Finish Test')}
-                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>{t("common.loading", "Loading...")}</span>
+                      </div>
+                    ) : (
+                      <>
+                        {t('testYourself.test.finish', 'Finish Test')}
+                        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
