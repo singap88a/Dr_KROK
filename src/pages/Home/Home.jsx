@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import Hero from "../../components/Home/Hero";
 import Features from "../../components/Home/Features";
+import UniversityRepsPromo from "../../components/Home/UniversityRepsPromo";
 import SEO from "../../components/SEO/SEO";
 
 // Lazy-loaded components for below-the-fold content
@@ -23,6 +24,7 @@ export default function DrKrokHome() {
       <Hero />
       <div className="">
         <Features />
+        <UniversityRepsPromo />
         <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-xl m-8" />}>
           <CoursesPreview />
           <BooksCarousel />

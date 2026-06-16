@@ -37,6 +37,7 @@ export default function CourseTestRunner() {
   const [activeDropZone, setActiveDropZone] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // اكتشاف إذا كان الجهاز موبايل
   useEffect(() => {
@@ -373,6 +374,7 @@ export default function CourseTestRunner() {
 
   // ✅ تعديل finish علشان ينادي الدالة الجديدة
   const finish = async () => {
+    setIsSubmitting(true);
     const quizzes = activeQuizzes || [];
     const total = quizzes.reduce(
       (acc, q) => acc + parseInt(q.question_score || 1),
@@ -500,27 +502,23 @@ export default function CourseTestRunner() {
       }
     }
 
-    setResults({ total, earned, percentage, questions });
-
-    setTimeout(() => {
-      const basePath = isLiveCourse ? '/live-courses' : '/courses';
-      if (scope === "final") {
-        navigate(`${basePath}/${id}/final-results`, {
-          replace: true,
-          state: { results: { total, earned, percentage, answers: resultsData }, test },
-        });
-      } else if (scope === "lesson") {
-        navigate(`${basePath}/${id}/test-results/lesson/${testId}`, {
-          replace: true,
-          state: { results: resultsData, test, lessonId },
-        });
-      } else if (scope === "section") {
-        navigate(`${basePath}/${id}/test-results/section/${testId}`, {
-          replace: true,
-          state: { results: resultsData, test, sectionId },
-        });
-      }
-    }, 1000);
+    const basePath = isLiveCourse ? '/live-courses' : '/courses';
+    if (scope === "final") {
+      navigate(`${basePath}/${id}/final-results`, {
+        replace: true,
+        state: { results: { total, earned, percentage, answers: resultsData }, test },
+      });
+    } else if (scope === "lesson") {
+      navigate(`${basePath}/${id}/test-results/lesson/${testId}`, {
+        replace: true,
+        state: { results: resultsData, test, lessonId },
+      });
+    } else if (scope === "section") {
+      navigate(`${basePath}/${id}/test-results/section/${testId}`, {
+        replace: true,
+        state: { results: resultsData, test, sectionId },
+      });
+    }
   };
 
   const markDoneAndBack = async () => {
@@ -688,16 +686,23 @@ export default function CourseTestRunner() {
               {idx === (activeQuizzes?.length || 1) - 1 ? (
                 <button
                   onClick={finish}
-                  disabled={currentQuestion?.type === "connect" && 
-                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired}
+                  disabled={isSubmitting || (currentQuestion?.type === "connect" && 
+                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired)}
                   className={`px-4 py-2 text-white rounded ${
-                    currentQuestion?.type === "connect" && 
-                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired
+                    isSubmitting || (currentQuestion?.type === "connect" && 
+                    Object.keys(answers[currentQuestion.id] || {}).length < minimumAnswersRequired)
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-primary hover:bg-secondary"
                   }`}
                 >
-                  {t("courses.finishTest", "Finish Test")}
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>{t("common.loading", "Loading...")}</span>
+                    </div>
+                  ) : (
+                    t("courses.finishTest", "Finish Test")
+                  )}
                 </button>
               ) : (
                 <button

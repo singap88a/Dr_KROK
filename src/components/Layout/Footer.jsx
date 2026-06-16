@@ -101,6 +101,8 @@ export default function Footer() {
             <li><a href="/courses" className="transition hover:text-primary">{t('footer.courses')}</a></li>
             <li><a href="/about" className="transition hover:text-primary">{t('footer.about')}</a></li>
             <li><a href="/contact" className="transition hover:text-primary">{t('footer.contact')}</a></li>
+            <li><a href="/university-representative" className="transition hover:text-primary">{t('navbar.representative', 'Representatives')}</a></li>
+            <li><a href="/jobs" className="transition hover:text-primary">{t('navbar.joinUs', 'Join Us')}</a></li>
           </ul>
         </div>
 

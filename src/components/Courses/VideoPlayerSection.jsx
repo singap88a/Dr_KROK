@@ -1,5 +1,5 @@
 import React from "react";
-import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap } from "react-icons/fa";
+import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -339,16 +339,35 @@ export default function VideoPlayerSection({
                   {/* Mark as Completed Button */}
                   {isLoggedIn && currentLesson?.video && onLessonComplete && (
                     <div className="mt-3">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onLessonComplete(currentLesson.id);
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-white rounded bg-primary hover:bg-secondary"
-                      >
-                        {t("courses.markCompleted", "Mark as Completed")}
-                      </button>
+                      {(() => {
+                        const isCompleted = lessonStatuses && lessonStatuses[currentLesson.id] && 
+                          (lessonStatuses[currentLesson.id].progress_status === 'completed' || lessonStatuses[currentLesson.id].percentage >= 100);
+                        
+                        return (
+                          <button
+                            onClick={(e) => {
+                              if (isCompleted) return;
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onLessonComplete(currentLesson.id);
+                            }}
+                            disabled={isCompleted}
+                            className={`px-4 py-2 text-sm font-medium text-white rounded transition-colors ${
+                              isCompleted 
+                                ? "bg-green-600 cursor-not-allowed opacity-90" 
+                                : "bg-primary hover:bg-secondary"
+                            }`}
+                          >
+                            {isCompleted 
+                              ? (
+                                <span className="flex items-center gap-2">
+                                  <FaCheckCircle /> {t("courses.lessonCompleted", "Lesson Completed")}
+                                </span>
+                              )
+                              : t("courses.markCompleted", "Mark as Completed")}
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
 

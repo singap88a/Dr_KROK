@@ -1,6 +1,8 @@
 import React from "react";
 
 export default function MultipleChoiceQuestion({ currentQuestion, answers, setAnswers }) {
+  if (!currentQuestion) return null;
+
   const answerKeys = (() => {
     const keys = [];
     let i = 1;
