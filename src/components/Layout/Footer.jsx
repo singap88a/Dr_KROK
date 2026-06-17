@@ -212,7 +212,7 @@ export default function Footer() {
                   components={{
                     developer: (
                       <a 
-                        href="https://www.facebook.com/share/1APKTJ2EMB/" 
+                        href="https://icodetech7.com" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="icode-teck-container group inline-flex items-center mx-1 font-black text-sm md:text-base bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent hover:scale-110 transition-all duration-300 cursor-pointer pointer-events-auto"

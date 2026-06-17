@@ -89,8 +89,8 @@ export default function UniversityRepsPromo() {
           <div className="w-full lg:w-5/12 max-w-md shrink-0">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white dark:border-gray-800 transform rotate-1 hover:rotate-0 transition-transform duration-500">
               <img 
-                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop" 
-                alt="University Students" 
+                src="/university_management.png" 
+                alt="University Management and Tracking" 
                 className="w-full h-auto object-cover aspect-video sm:aspect-square lg:aspect-auto lg:h-[320px]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">

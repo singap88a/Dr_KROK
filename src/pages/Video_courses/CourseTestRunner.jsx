@@ -132,12 +132,15 @@ export default function CourseTestRunner() {
     };
   };
 
+  const checkedTestIdRef = useRef(null);
+
   // التحقق من الاختبار السابق
   useEffect(() => {
     const checkPreviousTest = async () => {
-      if (!test || isRetaking) return;
+      if (!test || isRetaking || checkedTestIdRef.current === testId) return;
       
       try {
+        checkedTestIdRef.current = testId;
         setCheckingPreviousTest(true);
         console.log('🔍 Checking for previous test...');
         

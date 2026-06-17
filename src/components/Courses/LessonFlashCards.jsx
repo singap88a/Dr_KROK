@@ -550,7 +550,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
 
           <button 
             onClick={handleRestart}
-            className="w-full py-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-secondary text-white font-bold rounded-2xl shadow-lg hover:shadow-primary/30 transition-all duration-300 active:scale-[0.98]"
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-primary/30 transition-all duration-300 active:scale-[0.98]"
           >
             {texts.restart}
           </button>
