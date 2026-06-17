@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaChartBar, FaClipboardList, FaSync, FaTimes } from "react-icons/fa";
 import { useApi } from "../../../context/ApiContext";
 
@@ -48,44 +48,52 @@ export default function PreviousTestResult({ test, previousTestResult, navigate,
   const percentage = result.total_score > 0 ? (parseFloat(result.score) / parseFloat(result.total_score)) * 100 : 0;
   const passed = result.passed === 1;
 
-  const handleToggleReview = async () => {
-    if (showReview) {
-      setShowReview(false);
-      return;
-    }
+  useEffect(() => {
+    let isMounted = true;
+    const fetchReviewData = async () => {
+      if (reviewQuestions.length > 0) return;
+      try {
+        setLoadingReview(true);
+        setReviewError("");
+        const response = await getStudentTestReview(test.id, result.id);
+        
+        if (!isMounted) return;
 
-    if (reviewQuestions.length > 0) {
-      setShowReview(true);
-      return;
-    }
+        let rawQuestions = null;
+        if (response && (response.success || response.code === 200)) {
+          if (Array.isArray(response.data)) {
+            rawQuestions = response.data;
+          } else if (response.data && Array.isArray(response.data.questions)) {
+            rawQuestions = response.data.questions;
+          }
+        }
 
-    try {
-      setLoadingReview(true);
-      setReviewError("");
-      const response = await getStudentTestReview(test.id, result.id);
-      
-      let rawQuestions = null;
-      if (response && (response.success || response.code === 200)) {
-        if (Array.isArray(response.data)) {
-          rawQuestions = response.data;
-        } else if (response.data && Array.isArray(response.data.questions)) {
-          rawQuestions = response.data.questions;
+        if (rawQuestions) {
+          const translated = rawQuestions.map(translateReviewQuestion);
+          setReviewQuestions(translated);
+        } else {
+          setReviewError(response?.message || t("courses.failedToLoadReview", "Failed to load review questions"));
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error fetching test review:", error);
+        setReviewError(error?.message || t("courses.failedToLoadReview", "Failed to load review questions"));
+      } finally {
+        if (isMounted) {
+          setLoadingReview(false);
         }
       }
+    };
 
-      if (rawQuestions) {
-        const translated = rawQuestions.map(translateReviewQuestion);
-        setReviewQuestions(translated);
-        setShowReview(true);
-      } else {
-        setReviewError(response?.message || t("courses.failedToLoadReview", "Failed to load review questions"));
-      }
-    } catch (error) {
-      console.error("Error fetching test review:", error);
-      setReviewError(error?.message || t("courses.failedToLoadReview", "Failed to load review questions"));
-    } finally {
-      setLoadingReview(false);
-    }
+    fetchReviewData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [test.id, result.id, getStudentTestReview, t]);
+
+  const handleToggleReview = () => {
+    setShowReview(!showReview);
   };
 
   return (
