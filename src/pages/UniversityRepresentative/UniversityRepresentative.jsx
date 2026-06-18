@@ -1,163 +1,60 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { FaLock } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
-import LoadingSpinner from "../../components/Common/LoadingSpinner";
 
 // Sub-components
 import RepApplicationForm from "../../components/UniversityRepresentative/RepApplicationForm";
-import RepPendingStatus from "../../components/UniversityRepresentative/RepPendingStatus";
-import RepRejectedStatus from "../../components/UniversityRepresentative/RepRejectedStatus";
-import RepDashboard from "../../components/UniversityRepresentative/RepDashboard";
+import { FaInfoCircle } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function UniversityRepresentative() {
   const { t, i18n } = useTranslation();
   const { request } = useApi();
   const { isLoggedIn, userData } = useUser();
+  const selectedRole = userData?.role || localStorage.getItem("DR_KROK_selected_role");
 
-  // Representative state
-  const [repId, setRepId] = useState(null);
-  const [status, setStatus] = useState(null); // 'pending' | 'rejected' | 'approved' | null
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [guestName, setGuestName] = useState("");
-
-  // Load repId from localStorage on mount/login
-  useEffect(() => {
-    let storedRepId = null;
-    let storedGuestName = "";
-    if (isLoggedIn && userData?.id) {
-      storedRepId = localStorage.getItem(`dr_krok_rep_id_${userData.id}`) || localStorage.getItem("dr_krok_rep_id");
-    } else {
-      storedRepId = localStorage.getItem("dr_krok_rep_id");
-      storedGuestName = localStorage.getItem("dr_krok_rep_guest_name") || "";
-    }
-
-    if (storedRepId) {
-      setRepId(parseInt(storedRepId));
-      if (storedGuestName) setGuestName(storedGuestName);
-    } else {
-      setLoading(false);
-    }
-  }, [isLoggedIn, userData]);
-
-  // Fetch status and student list
-  const fetchStatusAndStudents = useCallback(async (id) => {
-    try {
-      setLoading(true);
-      const res = await request(`university-representative/students?rep_id=${id}`, {
-        auth: isLoggedIn,
-        useCache: false
-      });
-      if (res && res.success) {
-        const data = res.data || {};
-        setStatus(data.status);
-        setStudents(data.students || []);
-      } else {
-        setStatus(null);
-      }
-    } catch (err) {
-      console.error("Error fetching representative status:", err);
-      // In case of 404 or other errors (e.g. rep_id deleted on backend), reset state
-      setStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [request, isLoggedIn]);
-
-  useEffect(() => {
-    if (repId) {
-      fetchStatusAndStudents(repId);
-    }
-  }, [repId, fetchStatusAndStudents]);
-
-  const handleApplySuccess = (newRepId, applicantName) => {
-    if (isLoggedIn && userData?.id) {
-      localStorage.setItem(`dr_krok_rep_id_${userData.id}`, String(newRepId));
-    }
-    localStorage.setItem("dr_krok_rep_id", String(newRepId));
-    if (!isLoggedIn) {
-      localStorage.setItem("dr_krok_rep_guest_name", applicantName);
-      setGuestName(applicantName);
-    }
-    setRepId(newRepId);
-  };
-
-  const handleReapply = () => {
-    if (userData?.id) {
-      localStorage.removeItem(`dr_krok_rep_id_${userData.id}`);
-    }
-    localStorage.removeItem("dr_krok_rep_id");
-    localStorage.removeItem("dr_krok_rep_guest_name");
-    setRepId(null);
-    setStatus(null);
-    setStudents([]);
-    setGuestName("");
-  };
-
-  // Format date helper
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString(i18n.language === "ua" ? "uk-UA" : "en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  if (loading) {
-    return <LoadingSpinner size="lg" />;
-  }
-
-  // 1. Pending Request State
-  if (status === "pending") {
+  if (selectedRole === "student") {
     return (
-      <RepPendingStatus
-        t={t}
-        repId={repId}
-        onRefresh={fetchStatusAndStudents}
-      />
+      <div className="container px-4 py-20 mx-auto max-w-2xl">
+        <div className="p-8 text-center border border-blue-200 bg-blue-50 rounded-2xl shadow-sm dark:bg-blue-900/20 dark:border-blue-800">
+          <div className="flex justify-center mb-4 text-blue-600 dark:text-blue-400">
+            <FaInfoCircle className="text-5xl" />
+          </div>
+          <h2 className="text-2xl font-bold text-text">
+            {t("universityRepresentative.studentAccessTitle", "University Representative Area")}
+          </h2>
+          <p className="mt-3 text-text-secondary leading-relaxed">
+            {t(
+              "universityRepresentative.studentAccessMessage",
+              "This section is for university representatives only. If you are a student, you can continue using your profile and courses. If you want to request access as a representative, you need to create or switch to a representative account."
+            )}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+            <Link
+              to="/profile"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition"
+            >
+              {t("profile.title", "My Profile")}
+            </Link>
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-border bg-surface text-text font-semibold hover:bg-surface/80 transition"
+            >
+              {t("auth.register.title", "Register")}
+            </Link>
+          </div>
+        </div>
+      </div>
     );
   }
-
-  // 2. Rejected Request State
-  if (status === "rejected") {
-    return (
-      <RepRejectedStatus
-        t={t}
-        onReapply={handleReapply}
-      />
-    );
-  }
-
-  // 3. Approved Dashboard State
-  if (status === "approved") {
-    return (
-      <RepDashboard
-        t={t}
-        i18n={i18n}
-        students={students}
-        userData={userData}
-        guestName={guestName}
-        formatDate={formatDate}
-      />
-    );
-  }
-
-  // 4. Default: Render Form
   return (
     <RepApplicationForm
       t={t}
       request={request}
       isLoggedIn={isLoggedIn}
       userData={userData}
-      onSubmitSuccess={handleApplySuccess}
+      onSubmitSuccess={() => {}}
     />
   );
 }

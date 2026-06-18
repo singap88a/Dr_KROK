@@ -24,7 +24,9 @@ export default function RegisterPage() {
     password: "",
     confirm: "",
     university: "",
+    role: "student",
   });
+  const isUniversityRep = form.role === "university_rep";
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -109,19 +111,21 @@ export default function RegisterPage() {
         form.name,
         form.email,
         form.otp,
-        form.password,
-        form.confirm,
-        form.university
+      form.password,
+      form.confirm,
+      form.university,
+      form.role === "university_representative" ? "university_rep" : form.role
       );
 
       if (data.success) {
         userRegister(data.data.token, data.data);
         localStorage.setItem('DR_KROK_show_completion_modal', 'true');
+        localStorage.setItem('DR_KROK_selected_role', form.role === "university_representative" ? "university_rep" : form.role);
         toast.success("🎉 Account created successfully!", {
           position: "top-right",
         });
         setTimeout(() => {
-          navigate("/profile", { replace: true });
+        navigate(form.role === "university_rep" || form.role === "university_representative" ? "/university-representative" : "/profile", { replace: true });
         }, 1500);
       } else {
         toast.error("❌ Registration failed: " + (data.message || "Please try again."), {
@@ -224,6 +228,42 @@ export default function RegisterPage() {
                     readOnly
                     className="block w-full px-4 py-2 mt-1 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
                   />
+                </div>
+
+                {/* Account Type */}
+                <div>
+                  <label className="text-sm font-medium">{t('auth.register.account_type', 'Account Type')}</label>
+                  <div className="flex flex-col gap-2 mt-2 sm:flex-row">
+                    <label className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 transition flex-1 ${form.role === 'student' ? 'border-primary bg-primary/5' : 'border-gray-300 bg-background'}`}>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="student"
+                        checked={form.role === 'student'}
+                        onChange={(e) => setForm({ ...form, role: e.target.value })}
+                        className="shrink-0"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold leading-tight">{t('auth.register.student', 'Student')}</span>
+                        <span className="block text-[11px] text-gray-500 leading-tight">{t('auth.register.student_hint', 'Regular student account')}</span>
+                      </span>
+                    </label>
+
+                    <label className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 transition flex-1 ${form.role === 'university_representative' ? 'border-primary bg-primary/5' : 'border-gray-300 bg-background'}`}>
+                      <input
+                        type="radio"
+                        name="role"
+                      value="university_rep"
+                      checked={isUniversityRep}
+                      onChange={(e) => setForm({ ...form, role: e.target.value })}
+                      className="shrink-0"
+                    />
+                      <span>
+                        <span className="block text-sm font-semibold leading-tight">{t('auth.register.university_rep', 'University Rep')}</span>
+                        <span className="block text-[11px] text-gray-500 leading-tight">{t('auth.register.university_rep_hint', 'Can submit a request')}</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 {/* OTP Code */}

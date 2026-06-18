@@ -387,10 +387,10 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
     });
   }, [request]);
 
-  const register = useCallback(async (name, email, otp, password, password_confirmation, university) => {
+  const register = useCallback(async (name, email, otp, password, password_confirmation, university, role = "student") => {
     return await request("auth/register", {
       method: "POST",
-      body: { name, email, otp, password, password_confirmation, university }
+      body: { name, email, otp, password, password_confirmation, university, role }
     });
   }, [request]);
 

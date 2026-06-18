@@ -46,6 +46,7 @@ const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const Jobs = lazy(() => import("./pages/Jobs/Jobs"));
 const ApplicationSuccess = lazy(() => import("./pages/Jobs/ApplicationSuccess"));
 const UniversityRepresentative = lazy(() => import("./pages/UniversityRepresentative/UniversityRepresentative"));
+const UniversityStudents = lazy(() => import("./pages/UniversityRepresentative/UniversityStudents"));
 const TestimonialsPage = lazy(() => import("./pages/Testimonials/Testimonials"));
 
 export default function App() {
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/application-success" element={<ApplicationSuccess />} />
             <Route path="/university-representative" element={<UniversityRepresentative />} />
+            <Route path="/profile/university-students" element={<UniversityStudents />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

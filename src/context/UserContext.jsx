@@ -79,6 +79,7 @@ export const UserProvider = ({ children }) => {
       expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours in milliseconds
     };
     localStorage.setItem("DR_KROK_tokenData", JSON.stringify(tokenData));
+    localStorage.setItem("DR_KROK_user", JSON.stringify(user));
     localStorage.setItem("DR_KROK_userName", user.name);
     setIsLoggedIn(true);
     setUserData(user);
