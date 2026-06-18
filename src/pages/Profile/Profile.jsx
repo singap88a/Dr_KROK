@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
@@ -25,6 +25,7 @@ import {
   FaHeart,
   FaBell,
   FaBook,
+  FaBuilding,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
@@ -35,6 +36,7 @@ import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
 import MyNotifications from "./MyNotifications";
 import MyMaterials from "./MyMaterials";
+import UniversityStudents from "../UniversityRepresentative/UniversityStudents";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
@@ -42,9 +44,10 @@ import ProfileCompletionModal from "./ProfileCompletionModal";
 
 export default function Profile() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
-  const { updateUser, logout } = useUser();
-  const { getOrders, getMyCourses, getMyProfile, getNotifications } = useApi();
+  const { updateUser, logout, userData } = useUser();
+  const { getOrders, getMyCourses, getMyProfile, getNotifications, request } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +60,8 @@ export default function Profile() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [forceEdit, setForceEdit] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const selectedRole = user?.role || userData?.role || localStorage.getItem("DR_KROK_selected_role");
+  const isRepRole = selectedRole === "university_rep" || selectedRole === "university_representative";
 
   // Fetch notifications count
   const updateNotificationsCount = useCallback(async () => {
@@ -168,6 +173,13 @@ export default function Profile() {
   const menuItems = [
     { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
     { id: "courses", label: t('profile.sidebar.myCourses'), icon: FaGraduationCap },
+    ...(selectedRole === "university_rep" || selectedRole === "university_representative" ? [
+      {
+        id: "university_students",
+        label: t("universityRepresentative.studentsList", "My University Students"),
+        icon: FaGraduationCap,
+      }
+    ] : []),
     { id: "materials", label: t('profile.sidebar.myMaterials', 'My Material'), icon: FaBook },
     { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart },
     { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
@@ -247,9 +259,16 @@ export default function Profile() {
               <li key={item.id}>
                 <button
                   onClick={() => {
-                    setActiveTab(item.id);
                     setIsMobileMenuOpen(false);
-                    if (item.id === "logout") handleLogout();
+                    if (item.id === "logout") {
+                      handleLogout();
+                      return;
+                    }
+                    if (item.id === "university_students") {
+                      setActiveTab(item.id);
+                      return;
+                    }
+                    setActiveTab(item.id);
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     activeTab === item.id
@@ -356,6 +375,8 @@ export default function Profile() {
         }} />;
       case "notifications":
         return <MyNotifications />;
+      case "university_students":
+        return <UniversityStudents />;
       case "profile":
         return <MyProfile user={user} initialIsEditing={forceEdit} onProfileUpdate={(updated)=>{
           const merged = {

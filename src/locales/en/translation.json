@@ -698,6 +698,11 @@
     "showMore": "Show more",
     "showLess": "Show less",
     "readMore": "Read More",
+    "backToArticles": "Back to Articles",
+    "notFound": "Article not found",
+    "viewProfile": "View Profile",
+    "instructor": "Instructor",
+    "publishedOn": "Published on",
     "instructorCard": "Author of selected articles",
     "selectInstructorInfo": "Select an instructor to view their info here."
   },

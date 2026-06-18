@@ -8,6 +8,7 @@ import "swiper/css/pagination";
 import { Link } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
+import { getArticlePath } from "../../utils/articleUtils";
 
 const parseDateString = (dateString) => {
   if (!dateString) return 0;
@@ -94,10 +95,12 @@ export default function FeaturedArticles({ articles }) {
   const apiMapped = useMemo(() => {
     return (fetched || []).map((b) => ({
       id: b.id,
+      slug: b.slug,
       title: b.name,
       description: b.description,
       date: formatDateString(b.created_at),
       image: b.image,
+      altText: b.alt_text || b.name,
     }));
   }, [fetched]);
 
@@ -156,22 +159,24 @@ export default function FeaturedArticles({ articles }) {
               <SwiperSlide key={item.id} className="!h-auto">
                 <div className="flex flex-col h-full overflow-hidden transition-transform duration-300 bg-white border border-gray-200 shadow-lg rounded-2xl dark:bg-gray-800 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1">
                   {/* Image */}
-                  <div className="relative h-48">
+                  <Link to={getArticlePath(item)} className="relative block h-48">
                     <img
                       src={item.image}
-                      alt={item.title}
+                      alt={item.altText || item.title}
                       className="object-cover w-full h-full"
                       width="400"
                       height="200"
                       loading="lazy"
                     />
-                  </div>
+                  </Link>
 
                   {/* Content */}
                   <div className="flex flex-col h-full p-5">
-                    <h3 className="mb-2 text-lg font-semibold line-clamp-1">
-                      {item.title}
-                    </h3>
+                    <Link to={getArticlePath(item)}>
+                      <h3 className="mb-2 text-lg font-semibold line-clamp-1 transition hover:text-primary">
+                        {item.title}
+                      </h3>
+                    </Link>
                     <div 
                       className="mb-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-3 prose prose-sm dark:prose-invert max-w-none"
                       dangerouslySetInnerHTML={{ __html: item.description }}
@@ -186,7 +191,7 @@ export default function FeaturedArticles({ articles }) {
 
                     {/* CTA Button */}
                     <Link
-                      to="/articles"
+                      to={getArticlePath(item)}
                       className="w-full px-4 py-2 mt-auto text-sm font-medium text-center text-white transition bg-primary rounded-xl hover:shadow-md hover:brightness-110"
                       aria-label={`${t("articles.readMore")} - ${item.title}`}
                     >
