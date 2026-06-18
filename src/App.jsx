@@ -24,6 +24,7 @@ const CourseTestRunner = lazy(() => import("./pages/Video_courses/CourseTestRunn
 const Certificate = lazy(() => import("./pages/shared/Certificate"));
 const TestResults = lazy(() => import("./pages/shared/TestResults"));
 const TrainerArticlesPage = lazy(() => import("./pages/Articles/Articles"));
+const ArticleDetail = lazy(() => import("./pages/Articles/ArticleDetail"));
 const GeminiSingap = lazy(() => import("./pages/GeminiSingap/GeminiSingap"));
 const AI_Icon = lazy(() => import("./pages/GeminiSingap/Icon_Gemini"));
 const TestYourself = lazy(() => import("./pages/Test_yourself/TestYourself"));
@@ -95,6 +96,7 @@ export default function App() {
 
 
             <Route path="/articles" element={<TrainerArticlesPage />} />
+            <Route path="/articles/:slug" element={<ArticleDetail />} />
             <Route path="/gemini" element={<GeminiSingap />} />
             <Route path="/test" element={<TestYourself />} />
             <Route path="/privacypolicy" element={<Privacypolicy />} />

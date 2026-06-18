@@ -1241,6 +1241,64 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         };
       },
 
+      async getBlogBySlug(slugOrId) {
+        if (!slugOrId) throw new Error("Article slug is required");
+
+        let decoded = slugOrId;
+        try {
+          decoded = decodeURIComponent(slugOrId);
+        } catch {
+          decoded = slugOrId;
+        }
+
+        try {
+          const direct = await request(`blog/${encodeURIComponent(decoded)}`, { useCache: true });
+          const blogData = direct?.data;
+          if (blogData?.id) {
+            return {
+              ...blogData,
+              instructor: blogData.instructor || blogData.instructor_id || null,
+            };
+          }
+        } catch {
+          // Fall back to paginated list search
+        }
+
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+          const response = await request(`blog?page=${page}&per_page=50`, { useCache: true });
+          const instructors = Array.isArray(response?.data) ? response.data : [];
+
+          for (const instructor of instructors) {
+            for (const blog of instructor.blogs || []) {
+              const matchesSlug = blog.slug && blog.slug === decoded;
+              const matchesId = String(blog.id) === decoded || String(blog.id) === slugOrId;
+
+              if (matchesSlug || matchesId) {
+                return {
+                  ...blog,
+                  instructor: {
+                    id: instructor.id,
+                    name: instructor.name,
+                    image: instructor.image,
+                    facebook: instructor.facebook,
+                    instagram: instructor.instagram,
+                    youtube: instructor.youtube,
+                  },
+                };
+              }
+            }
+          }
+
+          totalPages = response?.pagination?.total_pages || 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        throw new Error("Article not found");
+      },
+
       // Reviews API
       async submitCourseReview(courseId, rating, comment, type = 'video_course') {
         const formData = new FormData();

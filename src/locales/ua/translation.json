@@ -657,6 +657,11 @@
     "showMore": "Показати більше",
     "showLess": "Показати менше",
     "readMore": "Читати далі",
+    "backToArticles": "Назад до статей",
+    "notFound": "Статтю не знайдено",
+    "viewProfile": "Переглянути профіль",
+    "instructor": "Викладач",
+    "publishedOn": "Опубліковано",
     "instructorCard": "Автор вибраних статей",
     "selectInstructorInfo": "Оберіть викладача, щоб переглянути інформацію тут."
   },
