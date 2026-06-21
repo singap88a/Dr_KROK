@@ -457,7 +457,8 @@
     "no_video": "No video available",
     "view_all": "View More",
     "all_reviews": "Customer Reviews",
-    "subtitle": "See what our students are saying about us."
+    "subtitle": "See what our students are saying about us.",
+    "read_more": "Read More"
   },
   "common": {
     "retry": "Retry",
@@ -1226,7 +1227,7 @@
     "applyTitle": "University Representatives",
     "applySubtitle": "Join Dr. KROK platform as a university representative to track your university's student progress.",
     "dashboardTitle": "Representatives Dashboard",
-    "studentsList": "Students List",
+    "studentsList": "My university students",
     "totalStudents": "Total Students",
     "completedCourses": "Completed Courses",
     "inProgressCourses": "In Progress",

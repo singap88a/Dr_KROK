@@ -266,9 +266,6 @@ export default function TrainerArticlesPage() {
               <h3 className="text-lg font-semibold">
                 {selectedInstructor ? t('articles.byInstructor', { name: selectedInstructor.name }) : t('articles.allArticles')}
               </h3>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {totalItems} {t('articles.count')}
-              </span>
             </div>
 
             {loading ? (

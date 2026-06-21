@@ -104,15 +104,15 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
               setHasMore(true);
             }
           } else {
-            console.log("No flash cards from API, loading high-quality KROK mock cards");
-            setCards(getMockFlashCards(lessonId));
+            console.log("No flash cards from API for this lesson.");
+            setCards([]);
             setHasMore(false);
           }
         }
       } catch (err) {
-        console.warn("Failed to fetch flash cards from API, falling back to mock cards:", err.message);
+        console.warn("Failed to fetch flash cards from API:", err.message);
         if (active) {
-          setCards(getMockFlashCards(lessonId));
+          setCards([]);
           setHasMore(false);
         }
       } finally {

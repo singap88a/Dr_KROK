@@ -117,29 +117,7 @@ export default function RepApplicationForm({ t, request, isLoggedIn, userData, o
           </p>
         </div>
 
-        <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 via-surface to-secondary/10 p-4 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-text">
-                {t("universityRepresentative.followUpTitle", "Need to follow your request?")}
-              </p>
-              <p className="text-xs leading-relaxed text-text-secondary">
-                {t(
-                  "universityRepresentative.followUpDescription",
-                  "Open your profile to view My University Students and track the status of your representative request."
-                )}
-              </p>
-            </div>
-            <Link
-              to="/profile"
-              state={{ activeTab: "university_students" }}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary/90 hover:shadow-lg"
-            >
-              {t("universityRepresentative.goToStudents", "My University Students")}
-              <FaArrowRight className="text-xs" />
-            </Link>
-          </div>
-        </div>
+
 
         {profileMissing && (
           <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900">

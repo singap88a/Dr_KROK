@@ -20,11 +20,12 @@ const DEFAULT_INSTRUCTOR_IMAGE = '/logo.png';
 export default function ArticleDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { getBlogBySlug } = useApi();
+  const { getBlogBySlug, getBlogs } = useApi();
   const { t, i18n } = useTranslation();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [recentArticles, setRecentArticles] = useState([]);
 
   const currentLang = (i18n?.language || 'en').split('-')[0];
 
@@ -67,6 +68,33 @@ export default function ArticleDetail() {
       isMounted = false;
     };
   }, [slug, getBlogBySlug, navigate, t]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRecentArticles = async () => {
+      try {
+        const response = await getBlogs({ page: 1, per_page: 5 });
+        const instructorsArray = response.data || response;
+        
+        const allBlogs = instructorsArray.flatMap(instructor => 
+          (instructor.blogs || []).map(blog => ({
+            ...blog,
+            instructor_id: {
+              id: instructor.id,
+              name: instructor.name,
+              image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
+            },
+          }))
+        );
+
+        if (isMounted) setRecentArticles(allBlogs);
+      } catch (e) {
+        console.error("Failed to fetch recent articles", e);
+      }
+    };
+    fetchRecentArticles();
+    return () => { isMounted = false; };
+  }, [getBlogs]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -117,49 +145,20 @@ export default function ArticleDetail() {
         url={canonicalUrl}
       />
 
-      {/* Hero banner */}
-      {article.image && (
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="relative mx-auto mt-8 sm:mt-10 lg:mt-12 overflow-hidden rounded-3xl max-w-7xl h-64 sm:h-80 lg:h-96 shadow-lg">
-            <img
-              src={article.image}
-              alt={imageAlt}
-              className="object-cover w-full h-full"
-              onError={(e) => { e.target.parentElement.style.display = 'none'; }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 mx-auto max-w-7xl sm:p-8">
-              <Link
-                to="/articles"
-                className="inline-flex items-center gap-2 mb-4 text-sm text-white/80 transition hover:text-white"
-              >
-                <FaArrowLeft />
-                {t('articles.backToArticles')}
-              </Link>
-              <h1 className="max-w-4xl text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
-                {article.name}
-              </h1>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <article className="p-4 mx-auto max-w-7xl sm:p-6 lg:p-8">
-        {!article.image && (
-          <>
-            <Link
-              to="/articles"
-              className="inline-flex items-center gap-2 mb-6 text-sm text-gray-600 transition hover:text-primary dark:text-gray-300"
-            >
-              <FaArrowLeft />
-              {t('articles.backToArticles')}
-            </Link>
-            <h1 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">{article.name}</h1>
-          </>
-        )}
+      <article className="p-4 mx-auto max-w-7xl sm:p-6 lg:p-8 mt-4 sm:mt-8">
+        <Link
+          to="/articles"
+          className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-gray-600 transition hover:text-primary dark:text-gray-300"
+        >
+          <FaArrowLeft />
+          {t('articles.backToArticles')}
+        </Link>
+        <h1 className="mb-4 text-3xl font-extrabold text-gray-900 sm:text-4xl lg:text-5xl dark:text-white leading-tight">
+          {article.name}
+        </h1>
 
         {/* Meta bar */}
-        <div className="flex flex-wrap items-center gap-4 py-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center gap-4 py-4 mb-8 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <FaRegCalendarAlt />
             <time>{formatDate(article.created_at)}</time>
@@ -195,7 +194,18 @@ export default function ArticleDetail() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Main content */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 space-y-8">
+            {article.image && (
+              <div className="overflow-hidden rounded-2xl shadow-sm bg-gray-50 dark:bg-gray-800 flex justify-center border border-gray-100 dark:border-gray-700">
+                <img
+                  src={article.image}
+                  alt={imageAlt}
+                  className="w-full h-auto max-h-[70vh] object-contain rounded-2xl"
+                  onError={(e) => { e.target.parentElement.style.display = 'none'; }}
+                />
+              </div>
+            )}
+            
             <div
               className="prose prose-lg dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-a:text-primary prose-img:rounded-2xl prose-p:leading-relaxed"
               dangerouslySetInnerHTML={{ __html: article.description }}
@@ -204,16 +214,8 @@ export default function ArticleDetail() {
 
           {/* Sidebar */}
           <aside className="lg:col-span-4">
-            <div className="sticky p-6 space-y-5 bg-white border border-gray-100 shadow-sm top-24 dark:bg-gray-800 rounded-2xl dark:border-gray-700">
-              {article.image && (
-                <img
-                  src={article.image}
-                  alt={imageAlt}
-                  className="object-cover w-full rounded-xl max-h-48"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              )}
-
+            <div className="sticky p-6 space-y-8 bg-white border border-gray-100 shadow-sm top-24 dark:bg-gray-800 rounded-2xl dark:border-gray-700">
+              
               {instructor.name && (
                 <div>
                   <p className="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
@@ -266,14 +268,37 @@ export default function ArticleDetail() {
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                <p className="mb-1 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                  {t('articles.publishedOn')}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {formatDate(article.created_at)}
-                </p>
-              </div>
+              {recentArticles?.filter(a => a.id !== article?.id).length > 0 && (
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <p className="mb-4 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                    {t('articles.otherArticles', 'Other Articles')}
+                  </p>
+                  <div className="space-y-4">
+                    {recentArticles.filter(a => a.id !== article?.id).slice(0, 10).map((relatedArt) => (
+                      <Link 
+                        key={relatedArt.id} 
+                        to={getArticlePath(relatedArt)} 
+                        className="flex items-center gap-3 group"
+                      >
+                        {relatedArt.image && (
+                          <img 
+                            src={relatedArt.image} 
+                            alt={relatedArt.name} 
+                            className="object-cover w-16 h-16 rounded-lg"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                        )}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors line-clamp-2">
+                            {relatedArt.name}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">{formatDate(relatedArt.created_at)}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
         </div>

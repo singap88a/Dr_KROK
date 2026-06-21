@@ -36,7 +36,7 @@ import MyFavorites from "./MyFavorites";
 import MyRatings from "./MyRatings";
 import MyNotifications from "./MyNotifications";
 import MyMaterials from "./MyMaterials";
-import UniversityStudents from "../UniversityRepresentative/UniversityStudents";
+import UniversityStudents from "./UniversityStudents";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
@@ -172,14 +172,14 @@ export default function Profile() {
 
   const menuItems = [
     { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
-    { id: "courses", label: t('profile.sidebar.myCourses'), icon: FaGraduationCap },
     ...(selectedRole === "university_rep" || selectedRole === "university_representative" ? [
       {
         id: "university_students",
-        label: t("universityRepresentative.studentsList", "My University Students"),
+        label: t("universityRepresentative.studentsList", "My university students"),
         icon: FaGraduationCap,
       }
     ] : []),
+    { id: "courses", label: t('profile.sidebar.myCourses'), icon: FaGraduationCap },
     { id: "materials", label: t('profile.sidebar.myMaterials', 'My Material'), icon: FaBook },
     { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart },
     { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
