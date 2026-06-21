@@ -46,7 +46,7 @@ const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const Jobs = lazy(() => import("./pages/Jobs/Jobs"));
 const ApplicationSuccess = lazy(() => import("./pages/Jobs/ApplicationSuccess"));
 const UniversityRepresentative = lazy(() => import("./pages/UniversityRepresentative/UniversityRepresentative"));
-const UniversityStudents = lazy(() => import("./pages/UniversityRepresentative/UniversityStudents"));
+const UniversityStudents = lazy(() => import("./pages/Profile/UniversityStudents"));
 const TestimonialsPage = lazy(() => import("./pages/Testimonials/Testimonials"));
 
 export default function App() {

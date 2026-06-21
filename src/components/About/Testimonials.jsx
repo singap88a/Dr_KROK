@@ -23,6 +23,8 @@ export default function Testimonials() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [selectedTestimonialForText, setSelectedTestimonialForText] = useState(null);
+
   const fetchTestimonials = async (page = 1) => {
     try {
       setLoading(true);
@@ -68,6 +70,9 @@ export default function Testimonials() {
     setShowVideoModal(false);
     setSelectedVideo(null);
   };
+
+  const openTextModal = (item) => setSelectedTestimonialForText(item);
+  const closeTextModal = () => setSelectedTestimonialForText(null);
 
   if (loading) {
     return (
@@ -126,98 +131,109 @@ export default function Testimonials() {
   }
 
   return (
-    <section id="testimonials-section" className="relative w-full py-10 transition-colors duration-300">
-      <div className="mx-auto max-w-7xl">
+    <section id="testimonials-section" className="relative w-full py-16 transition-colors duration-300">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="mb-12 text-3xl font-bold text-center">
           {t("testimonials.title")}
         </h2>
 
-        <Swiper
-          modules={[SwiperPagination, Autoplay]}
-          pagination={{
-            clickable: true,
-            dynamicBullets: true,
-            dynamicMainBullets: 4,
-            el: ".custom-pagination"
-          }}
-          autoplay={{ delay: 4000 }}
-          spaceBetween={30}
-          breakpoints={{
-            640: { slidesPerView: 1 },
-            1024: { slidesPerView: 3 },
-          }}
-        >
-          {testimonials.map((item) => (
-            <SwiperSlide key={item.id}>
-              <div className="flex flex-col justify-between h-full p-6 border shadow-lg bg-surface dark:bg-background rounded-2xl border-border min-h-[242px]">
-                {/* الصورة + البيانات */}
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="object-cover w-20 h-20 border-4 rounded-full border-primary"
-                        onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/96x96?text=No+Image";
-                        }}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center w-20 h-20 bg-gray-200 border-4 rounded-full border-primary dark:bg-gray-700">
-                        <span className="text-xl font-bold text-primary">
-                          {item.name.charAt(0).toUpperCase()}
+        <div className="relative">
+          <Swiper
+            className="pb-20"
+            modules={[SwiperPagination, Autoplay]}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true,
+              dynamicMainBullets: 4,
+            }}
+            autoplay={{ delay: 4000 }}
+            spaceBetween={30}
+            breakpoints={{
+              640: { slidesPerView: 1 },
+              1024: { slidesPerView: 3 },
+            }}
+          >
+            {testimonials.map((item) => (
+              <SwiperSlide key={item.id} className="h-auto">
+                <div className="flex flex-col h-full p-6 mb-10 transition-shadow border shadow-sm bg-surface dark:bg-background rounded-2xl border-border hover:shadow-md">
+                  {/* الصورة + البيانات */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex-shrink-0">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="object-cover w-16 h-16 border-2 rounded-full border-primary"
+                          onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/96x96?text=No+Image";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-16 h-16 bg-gray-200 border-2 rounded-full border-primary dark:bg-gray-700">
+                          <span className="text-xl font-bold text-primary">
+                            {item.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col">
+                      <h3 className="mb-1 text-lg font-semibold">{item.name}</h3>
+                      {item.university && (
+                        <span className="mb-2 text-xs text-text-muted">
+                          {item.university}
                         </span>
-                      </div>
+                      )}
+
+                      {item.rating && (
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className={i < item.rating ? "text-yellow-400" : "text-gray-300"}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* الوصف */}
+                  <div className="flex-grow">
+                    <p className="text-sm leading-relaxed text-left text-text-secondary line-clamp-3">
+                      {item.description}
+                    </p>
+                    {item.description && item.description.length > 120 && (
+                      <button
+                        onClick={() => openTextModal(item)}
+                        className="mt-2 text-sm font-medium text-primary hover:underline"
+                      >
+                        {t("testimonials.read_more", "عرض المزيد")}
+                      </button>
                     )}
                   </div>
 
-                  <div className="flex flex-col">
-                    <h3 className="mb-1 text-lg font-semibold">{item.name}</h3>
-                    {item.university && (
-                      <span className="mb-2 text-sm text-text-muted">
-                        {item.university}
-                      </span>
-                    )}
-
-                    {item.rating && (
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar
-                            key={i}
-                            className={i < item.rating ? "text-yellow-400" : "text-gray-300"}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {/* Video Button */}
+                  {item.video && item.video.trim() !== "" && (
+                    <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-700">
+                      <button
+                        onClick={() => openVideoModal(item.video)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
+                        title={t("testimonials.watch_video")}
+                      >
+                        <FaPlay className="text-xs" />
+                        {t("testimonials.watch_video")}
+                      </button>
+                    </div>
+                  )}
                 </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
-                {/* الوصف */}
-                <p className="mt-4 text-sm leading-relaxed text-left text-text-secondary line-clamp-2">
-                  {item.description}
-                </p>
+        </div>
 
-                {/* Video Button */}
-                {item.video && item.video.trim() !== "" && (
-                  <div className="mt-4">
-                    <button
-                      onClick={() => openVideoModal(item.video)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
-                      title={t("testimonials.watch_video")}
-                    >
-                      <FaPlay className="text-xs" />
-                      {t("testimonials.watch_video")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        <div className="flex justify-center mx-auto mt-8 custom-pagination"></div>
-        
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-8">
           <Link
             to="/testimonials"
             className="px-8 py-3 text-sm font-semibold text-white transition-all rounded-xl bg-primary hover:shadow-lg hover:bg-primary/90"
@@ -229,25 +245,74 @@ export default function Testimonials() {
 
       {/* Video Modal */}
       {showVideoModal && selectedVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="relative w-full max-w-4xl p-4 mx-4 bg-white rounded-lg dark:bg-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
+          <div className="relative w-full max-w-4xl p-2 mx-auto bg-white rounded-xl dark:bg-gray-800 shadow-2xl">
             <button
               onClick={closeVideoModal}
-              className="absolute z-10 p-2 text-gray-500 top-2 right-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="absolute z-10 p-2 text-gray-500 top-2 right-2 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-white dark:bg-gray-800 rounded-full shadow-md"
               title={t("testimonials.close_video")}
             >
               <FaTimes className="text-xl" />
             </button>
 
-            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <div className="relative w-full rounded-lg overflow-hidden" style={{ paddingBottom: "56.25%" }}>
               <iframe
                 src={selectedVideo}
                 title="Testimonial Video"
-                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                className="absolute top-0 left-0 w-full h-full"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text Modal */}
+      {selectedTestimonialForText && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="relative w-full max-w-lg p-6 mx-auto bg-white rounded-2xl dark:bg-gray-800 shadow-xl max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={closeTextModal}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            >
+              <FaTimes className="text-xl" />
+            </button>
+            
+            <div className="flex items-center gap-4 mb-6">
+              {selectedTestimonialForText.image ? (
+                <img
+                  src={selectedTestimonialForText.image}
+                  alt={selectedTestimonialForText.name}
+                  className="w-16 h-16 rounded-full border-2 border-primary object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-16 h-16 bg-gray-200 border-2 rounded-full border-primary dark:bg-gray-700">
+                  <span className="text-xl font-bold text-primary">
+                    {selectedTestimonialForText.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h3 className="text-xl font-bold">{selectedTestimonialForText.name}</h3>
+                {selectedTestimonialForText.rating && (
+                  <div className="flex mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar
+                        key={i}
+                        className={i < selectedTestimonialForText.rating ? "text-yellow-400 text-sm" : "text-gray-300 text-sm"}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="prose dark:prose-invert">
+              <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                {selectedTestimonialForText.description}
+              </p>
             </div>
           </div>
         </div>

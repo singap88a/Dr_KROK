@@ -86,34 +86,14 @@ export default function UniversityStudents() {
         <div className="p-8 bg-surface border border-border rounded-2xl shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-primary/10 text-primary">
-              <FaBuilding />
+              <FaUsers />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{t("universityRepresentative.studentsList", "My University Students")}</h1>
-              <p className="text-text-secondary">
-                {t(
-                  "universityRepresentative.studentsHint",
-                  "This page appears after your representative request is created. Use the request page to submit university details and notes."
-                )}
+              <h1 className="text-2xl font-bold">{t("universityRepresentative.studentsList", "My university students")}</h1>
+              <p className="text-text-secondary mt-1">
+                {t("universityRepresentative.noStudentsData", "You don't have any students or there is no data available.")}
               </p>
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              to="/profile"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-background text-text font-semibold hover:bg-surface transition"
-            >
-              <FaArrowLeft />
-              {t("profile.title", "My Profile")}
-            </Link>
-            <Link
-              to="/university-representative"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition"
-            >
-              <FaUsers />
-              {t("universityRepresentative.submit", "Submit Request")}
-            </Link>
           </div>
         </div>
       </div>

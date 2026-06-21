@@ -14,6 +14,7 @@ export default function Testimonials() {
   const [error, setError] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedTestimonialForText, setSelectedTestimonialForText] = useState(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,6 +63,9 @@ export default function Testimonials() {
     setSelectedVideo(null);
   };
 
+  const openTextModal = (item) => setSelectedTestimonialForText(item);
+  const closeTextModal = () => setSelectedTestimonialForText(null);
+
   if (loading && testimonials.length === 0) {
     return (
       <section className="min-h-[60vh] flex items-center justify-center">
@@ -109,9 +113,9 @@ export default function Testimonials() {
           <>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((item) => (
-                <div key={item.id} className="flex flex-col justify-between h-full p-6 transition-transform duration-300 bg-white border border-gray-200 shadow-lg dark:bg-gray-800 rounded-2xl dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 min-h-[242px]">
+                <div key={item.id} className="flex flex-col h-full p-6 transition-transform duration-300 bg-white border border-gray-200 shadow-lg dark:bg-gray-800 rounded-2xl dark:border-gray-700 hover:shadow-xl hover:-translate-y-1">
                   {/* Avatar & Info */}
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-4 mb-4">
                     <div className="flex-shrink-0">
                       {item.image ? (
                         <img
@@ -153,13 +157,23 @@ export default function Testimonials() {
                   </div>
 
                   {/* Description */}
-                  <p className="mt-4 text-sm leading-relaxed text-left text-gray-600 dark:text-gray-300 line-clamp-4">
-                    {item.description}
-                  </p>
+                  <div className="flex-grow">
+                    <p className="text-sm leading-relaxed text-left text-gray-600 dark:text-gray-300 line-clamp-4">
+                      {item.description}
+                    </p>
+                    {item.description && item.description.length > 150 && (
+                      <button
+                        onClick={() => openTextModal(item)}
+                        className="mt-2 text-sm font-medium text-primary hover:underline"
+                      >
+                        {t("testimonials.read_more", "عرض المزيد")}
+                      </button>
+                    )}
+                  </div>
 
                   {/* Video Button */}
                   {item.video && item.video.trim() !== "" && (
-                    <div className="mt-4">
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                       <button
                         onClick={() => openVideoModal(item.video)}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-white transition-colors rounded-lg bg-primary hover:bg-primary/90"
@@ -208,6 +222,55 @@ export default function Testimonials() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text Modal */}
+      {selectedTestimonialForText && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg p-6 mx-auto bg-white shadow-xl rounded-2xl dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={closeTextModal}
+              className="absolute text-gray-500 top-4 right-4 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            >
+              <FaTimes className="text-xl" />
+            </button>
+            
+            <div className="flex items-center gap-4 mb-6">
+              {selectedTestimonialForText.image ? (
+                <img
+                  src={selectedTestimonialForText.image}
+                  alt={selectedTestimonialForText.name}
+                  className="object-cover w-16 h-16 border-2 rounded-full border-primary"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-16 h-16 bg-gray-200 border-2 rounded-full border-primary dark:bg-gray-700">
+                  <span className="text-xl font-bold text-primary">
+                    {selectedTestimonialForText.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedTestimonialForText.name}</h3>
+                {selectedTestimonialForText.rating && (
+                  <div className="flex mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar
+                        key={i}
+                        className={i < selectedTestimonialForText.rating ? "text-yellow-400 text-sm" : "text-gray-300 text-sm dark:text-gray-600"}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="prose dark:prose-invert">
+              <p className="text-base leading-relaxed text-gray-700 whitespace-pre-line dark:text-gray-300">
+                {selectedTestimonialForText.description}
+              </p>
             </div>
           </div>
         </div>
