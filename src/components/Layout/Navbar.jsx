@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark, FaBriefcase } from "react-icons/fa";
+import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark, FaBriefcase, FaChevronDown, FaBook, FaBookOpen, FaStethoscope, FaTshirt } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
@@ -114,7 +114,16 @@ export default function Navbar() {
     { path: "/", label: "navbar.home" },
     { path: "/courses", label: "navbar.courses" },
     { path: "/articles", label: "navbar.blogs" },
-    { path: "/books", label: "navbar.books" },
+    { 
+      label: "navbar.store", 
+      dropdown: true,
+      items: [
+        { path: "/store/books", label: "navbar.books", icon: FaBook },
+        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt },
+        { path: "/store/booklets", label: "navbar.booklets", icon: FaBookOpen },
+        { path: "/store/medical-tools", label: "navbar.medicalTools", icon: FaStethoscope }
+      ]
+    },
     { path: "/about", label: "navbar.about" },
     { path: "/contact", label: "navbar.contact" },
     { path: "/jobs", label: "navbar.joinUs" },
@@ -148,26 +157,64 @@ export default function Navbar() {
         </div>
 
         <ul className="hidden space-x-8 font-medium md:flex text-textSecondary">
-          {navItems.map((item) => (
-            <li key={item.path} className="group">
-              <Link
-                to={item.path}
-                className={`relative transition hover:text-primary ${
-                  location.pathname === item.path
-                    ? "font-bold text-primary"
-                    : ""
-                }`}
-              >
-                {t(item.label)}
-                <span
-                  className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${
-                    location.pathname === item.path
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
+          {navItems.map((item, idx) => (
+            item.dropdown ? (
+              <li key={idx} className="relative group">
+                <button
+                  className={`relative flex items-center gap-1 transition hover:text-primary ${
+                    location.pathname.startsWith('/store')
+                      ? "font-bold text-primary"
+                      : ""
                   }`}
-                ></span>
-              </Link>
-            </li>
+                >
+                  {t(item.label)}
+                  <FaChevronDown className="w-3 h-3 mt-1" />
+                  <span
+                    className={`absolute -bottom-2 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                      location.pathname.startsWith('/store')
+                        ? "w-full"
+                        : "w-0 group-hover:w-full"
+                    }`}
+                  ></span>
+                </button>
+                <div className="absolute left-0 invisible pt-6 opacity-0 group-hover:opacity-100 group-hover:visible transition-all duration-300 w-56 z-50">
+                  <div className="overflow-hidden border rounded-xl shadow-xl bg-background border-border">
+                    {item.items.map((subItem) => (
+                      <Link
+                        key={subItem.path}
+                        to={subItem.path}
+                        className={`flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-surface hover:text-primary ${
+                          location.pathname === subItem.path ? "font-bold text-primary bg-surface" : ""
+                        }`}
+                      >
+                        {subItem.icon && <subItem.icon className="text-lg opacity-80" />}
+                        {t(subItem.label)}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            ) : (
+              <li key={item.path} className="group">
+                <Link
+                  to={item.path}
+                  className={`relative transition hover:text-primary ${
+                    location.pathname === item.path
+                      ? "font-bold text-primary"
+                      : ""
+                  }`}
+                >
+                  {t(item.label)}
+                  <span
+                    className={`absolute -bottom-2 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                      location.pathname === item.path
+                        ? "w-full"
+                        : "w-0 group-hover:w-full"
+                    }`}
+                  ></span>
+                </Link>
+              </li>
+            )
           ))}
         </ul>
 
@@ -414,15 +461,40 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           ></div>
           <div className="relative z-50 px-4 py-4 space-y-4 border-t md:hidden bg-background border-border">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMenuOpen(false)}
-                className="block font-bold transition text-textSecondary hover:text-primary"
-              >
-                {t(item.label)}
-              </Link>
+            {navItems.map((item, idx) => (
+              item.dropdown ? (
+                <div key={idx} className="space-y-2">
+                  <div className="block font-bold text-textSecondary">
+                    {t(item.label)}
+                  </div>
+                  <div className="flex flex-col pl-4 border-l-2 space-y-3 border-border">
+                    {item.items.map((subItem) => (
+                      <Link
+                        key={subItem.path}
+                        to={subItem.path}
+                        onClick={() => setMenuOpen(false)}
+                        className={`flex items-center gap-3 text-sm font-medium transition text-textSecondary hover:text-primary ${
+                          location.pathname === subItem.path ? "text-primary" : ""
+                        }`}
+                      >
+                        {subItem.icon && <subItem.icon className="text-lg opacity-80" />}
+                        {t(subItem.label)}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={`block font-bold transition text-textSecondary hover:text-primary ${
+                    location.pathname === item.path ? "text-primary" : ""
+                  }`}
+                >
+                  {t(item.label)}
+                </Link>
+              )
             ))}
 
             {isLoggedIn ? (

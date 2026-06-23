@@ -2,19 +2,19 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiUser, FiPhone, FiMapPin, FiHome, FiCreditCard, FiRefreshCw } from "react-icons/fi";
 import { FaCcVisa, FaApplePay, FaGooglePay, FaBookmark } from "react-icons/fa";
-import { useApi } from "../../context/ApiContext";
-import { useUser } from "../../context/UserContext";
-import { useCart } from "../../context/CartContext";
+import { useApi } from "../../../context/ApiContext";
+import { useUser } from "../../../context/UserContext";
+import { useCart } from "../../../context/CartContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from "react-toastify";
-import CitySelector from "../../components/Common/CitySelector";
-import CouponInput from "../../components/Common/CouponInput";
-import IncompleteProfileModal from "../../components/Modals/IncompleteProfileModal";
-import SaveBeforeLoginModal from "../../components/Modals/SaveBeforeLoginModal";
+import CitySelector from "../../../components/Common/CitySelector";
+import CouponInput from "../../../components/Common/CouponInput";
+import IncompleteProfileModal from "../../../components/Modals/IncompleteProfileModal";
+import SaveBeforeLoginModal from "../../../components/Modals/SaveBeforeLoginModal";
 
 import he from "he";
 
-export default function BuyNowPage() {
+export default function StoreCheckout() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { request, invalidateCache } = useApi();
@@ -32,9 +32,15 @@ export default function BuyNowPage() {
     }
   }, [invalidateCache]);
 
-  const book = state?.book;
-  // استخرج نوع الكتاب من book.type مباشرة
-  const bookType = book?.type?.toLowerCase() === "delivery" ? 1 : 2;
+  const item = state?.item || state?.book || state?.tool || state?.clothes;
+  const productType = state?.productType || 'book';
+  const idKey = (productType === 'book' || productType === 'booklet') ? 'book_id' : (productType === 'medical_tool' ? 'tool_id' : 'apparel_id');
+  const isBookType = productType === 'book' || productType === 'booklet';
+  const itemType = item?.type?.toLowerCase() === "delivery" ? 1 : (isBookType ? 2 : 1);
+  const checkoutApi = isBookType ? 'place_order_book' : (productType === 'medical_tool' ? 'place_medical_tool_order' : 'place_apparel_order');
+  
+  const selectedColor = state?.color || '';
+  const selectedSize = state?.size || '';
 
   const [mainImage, setMainImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +56,7 @@ export default function BuyNowPage() {
     city: "",
     city_id: "",
     branch_id: "",
-    book_id: ""
+    item_id: ""
   });
 
   // Branches data
@@ -80,13 +86,13 @@ export default function BuyNowPage() {
   const [showSaveWarning, setShowSaveWarning] = useState(false);
 
   useEffect(() => {
-    if (book?.images) {
-      const images = Object.values(book.images);
+    if (item?.images) {
+      const images = Object.values(item.images);
       setMainImage(images[0]?.original_url || null);
     }
-  }, [book]);
+  }, [item]);
 
-  // Set client_id and book_id from user data and book
+  // Set client_id and item_id from user data and item
   useEffect(() => {
     if (userData?.id) {
       setFormData(prev => ({
@@ -94,13 +100,13 @@ export default function BuyNowPage() {
         client_id: userData.id.toString()
       }));
     }
-    if (book?.id) {
+    if (item?.id) {
       setFormData(prev => ({
         ...prev,
-        book_id: book.id.toString()
+        item_id: item.id.toString()
       }));
     }
-  }, [userData, book]);
+  }, [userData, item]);
 
   // Handle city selection and populate branches
   const handleCitySelect = async (city) => {
@@ -177,7 +183,7 @@ export default function BuyNowPage() {
     }
   };
 
-  if (!book) {
+  if (!item) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background text-text">
         <div className="text-center">
@@ -193,9 +199,9 @@ export default function BuyNowPage() {
     );
   }
 
-  const images = Object.values(book.images || {});
-  const priceNumber = parseFloat(book.price) || 0;
-  const discountPercent = parseFloat(book.discount) || 0;
+  const images = Object.values(item.images || {});
+  const priceNumber = parseFloat(item.price) || 0;
+  const discountPercent = parseFloat(item.discount) || 0;
   const discountAmount = discountPercent > 0 ? (priceNumber * discountPercent / 100) : 0;
   const finalPrice = priceNumber - discountAmount;
 
@@ -212,26 +218,26 @@ export default function BuyNowPage() {
   };
 
   const handleAddToCart = () => {
-    if (!book) return;
+    if (!item) return;
     
     addToCart({
-      id: book.id,
-      type: "book",
-      name: book.name,
+      id: item.id,
+      type: "item",
+      name: item.name,
       image: mainImage || "/logo.png",
       price: discountedPrice.toFixed(2),
-      url: "/buynow",
-      stateData: { book: book, bookType: bookType }
+      url: "/store/checkout",
+      stateData: { item: item, itemType: itemType, productType: productType }
     });
   };
 
   const handleLoginClick = (e) => {
     e?.preventDefault();
-    const isItemInCart = cartItems?.some(i => i.id === book.id && i.type === "book");
+    const isItemInCart = cartItems?.some(i => i.id === item.id && i.type === "item");
     if (!isItemInCart) {
       setShowSaveWarning(true);
     } else {
-      const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+      const returnPath = item?.id ? `/item/${item.id}` : location.pathname;
       navigate('/login', { state: { from: returnPath } });
     }
   };
@@ -239,13 +245,13 @@ export default function BuyNowPage() {
   const handleSaveAndLogin = () => {
     handleAddToCart();
     setShowSaveWarning(false);
-    const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+    const returnPath = item?.id ? `/item/${item.id}` : location.pathname;
     navigate('/login', { state: { from: returnPath } });
   };
 
   const handleContinueToLogin = () => {
     setShowSaveWarning(false);
-    const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+    const returnPath = item?.id ? `/item/${item.id}` : location.pathname;
     navigate('/login', { state: { from: returnPath } });
   };
 
@@ -311,7 +317,7 @@ const handleDeliveryOrder = async (e) => {
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
-        const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+        const returnPath = item?.id ? `/item/${item.id}` : location.pathname;
         setTimeout(() => navigate('/login', { state: { from: returnPath } }), 1200);
         return;
       }
@@ -325,7 +331,7 @@ const handleDeliveryOrder = async (e) => {
       formDataToSend.append('phone1', formData.phone1);
       formDataToSend.append('phone2', formData.phone2 || '');
       formDataToSend.append('city', formData.city);
-      formDataToSend.append('book_id', formData.book_id);
+      formDataToSend.append(idKey, item.id);
       formDataToSend.append('city_id', formData.city_id);
       formDataToSend.append('region_id', formData.branch_id);
       if (couponId) {
@@ -337,12 +343,17 @@ const handleDeliveryOrder = async (e) => {
         phone1: formData.phone1,
         phone2: formData.phone2,
         city: formData.city,
-        book_id: formData.book_id,
+        [idKey]: item.id,
         city_id: formData.city_id,
         region_id: formData.branch_id
       });
+      
+      if (productType === 'medical_clothes') {
+        formDataToSend.append('color', selectedColor);
+        formDataToSend.append('size', selectedSize);
+      }
 
-      const response = await request('place_order_book', {
+      const response = await request(checkoutApi, {
         method: 'POST',
         body: formDataToSend,
         auth: true,
@@ -357,7 +368,7 @@ const handleDeliveryOrder = async (e) => {
       }
 
       if (response?.data?.payment_url) {
-        removeFromCart(book.id, "book");
+        removeFromCart(item.id, "item");
         setSuccess(t('books.order_placed_successfully_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
           window.location.href = response.data.payment_url;
@@ -414,14 +425,14 @@ const handleDeliveryOrder = async (e) => {
       if (!isLoggedIn || !token) {
         setError(t('books.login_required'));
         setLoading(false);
-        const returnPath = book?.id ? `/book/${book.id}` : location.pathname;
+        const returnPath = item?.id ? `/item/${item.id}` : location.pathname;
         setTimeout(() => navigate('/login', { state: { from: returnPath } }), 1200);
         return;
       }
 
       // جهز البيانات المطلوبة فقط
       const formDataToSend = new FormData();
-      formDataToSend.append('book_id', book.id);
+      formDataToSend.append(idKey, item.id);
       formDataToSend.append('quantity', 1);
       formDataToSend.append('type', 'PDF');
       if (couponId) {
@@ -432,7 +443,7 @@ const handleDeliveryOrder = async (e) => {
         formDataToSend.append('client_id', userData.id.toString());
       }
 
-      const response = await request('place_order_book', {
+      const response = await request(checkoutApi, {
         method: 'POST',
         body: formDataToSend,
         auth: true,
@@ -445,7 +456,7 @@ const handleDeliveryOrder = async (e) => {
       }
 
       if (response?.data?.payment_url) {
-        removeFromCart(book.id, "book");
+        removeFromCart(item.id, "item");
         setSuccess(t('books.purchase_successful_redirecting') || "Order created! Redirecting to payment...");
         setTimeout(() => {
           window.location.href = response.data.payment_url;
@@ -520,7 +531,7 @@ const handleDeliveryOrder = async (e) => {
               {mainImage ? (
                 <img
                   src={mainImage}
-                  alt={book.name}
+                  alt={item.name}
                   className="object-cover w-full h-96"
                 />
               ) : (
@@ -556,8 +567,8 @@ const handleDeliveryOrder = async (e) => {
             )}
 
             <div className="p-6 border rounded-2xl border-border bg-surface">
-              <h1 className="text-2xl font-bold">{book.name}</h1>
-              <p className="mt-1 text-sm text-text-secondary">by {book.author}</p>
+              <h1 className="text-2xl font-bold">{item.name}</h1>
+              <p className="mt-1 text-sm text-text-secondary">by {item.author}</p>
 
               <div className="flex items-center justify-between mt-4">
                 <div>
@@ -572,25 +583,25 @@ const handleDeliveryOrder = async (e) => {
                     </span>
                   </div>
                   <div className="text-xs text-text-secondary">
-                    {bookType === 1 ? t('books.delivery_included') : t('books.pdf_download')}
+                    {itemType === 1 ? t('books.delivery_included') : t('books.pdf_download')}
                   </div>
                 </div>
 
                 <div className="text-sm text-text-secondary">
-                  {book.pages_count} {t('books.pages')}
+                  {item.pages_count} {t('books.pages')}
                 </div>
               </div>
 
               <div className="mt-4 text-sm text-text-secondary">
-                <p><strong>{t('books.language')}:</strong> {book.language}</p>
-                <p><strong>{t('books.category')}:</strong> {book.category?.name}</p>
-                <p><strong>{t('books.type')}:</strong> {bookType === 1 ? t('books.delivery') : t('books.pdf_only')}</p>
+                <p><strong>{t('books.language')}:</strong> {item.language}</p>
+                <p><strong>{t('books.category')}:</strong> {item.category?.name}</p>
+                <p><strong>{t('books.type')}:</strong> {itemType === 1 ? t('books.delivery') : t('books.pdf_only')}</p>
               </div>
 
               <div 
                    className={`mt-4 leading-relaxed text-text-secondary ${!isExpanded ? 'line-clamp-4' : ''}`}
-                   dangerouslySetInnerHTML={{ __html: book.description }} />
-              {book.description && book.description.length > 200 && (
+                   dangerouslySetInnerHTML={{ __html: item.description }} />
+              {item.description && item.description.length > 200 && (
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="mt-2 font-medium underline text-primary hover:text-primary/80"
@@ -608,10 +619,10 @@ const handleDeliveryOrder = async (e) => {
         <main className="order-1 lg:order-2">
           <div className="p-6 border shadow-md rounded-2xl border-border bg-surface">
             <h2 className="text-2xl font-bold">
-              {bookType === 1 ? t('books.delivery_order') : t('books.purchase_pdf')}
+              {itemType === 1 ? t('books.delivery_order') : t('books.purchase_pdf')}
             </h2>
             <p className="mt-1 text-text-secondary">
-              {bookType === 1 ? t('books.fill_delivery_info') : t('books.select_payment_method')}
+              {itemType === 1 ? t('books.fill_delivery_info') : t('books.select_payment_method')}
             </p>
 
             {/* Coupon Input */}
@@ -648,7 +659,7 @@ const handleDeliveryOrder = async (e) => {
             )}
 
             {/* Fetch Paint Data Button */}
-            {bookType === 1 && (
+            {itemType === 1 && isBookType && (
               <div className="mt-4">
                 <button
                   onClick={fetchPaintOrderData}
@@ -667,7 +678,7 @@ const handleDeliveryOrder = async (e) => {
             {/* Order summary */}
             <div className="p-4 mt-6 border rounded-lg bg-background/60 border-border">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-text-secondary">{book.name}</div>
+                <div className="text-sm text-text-secondary">{item.name}</div>
                 <div className="font-semibold">₴{finalPrice.toFixed(2)}</div>
               </div>
               {couponDiscount > 0 && (
@@ -682,7 +693,7 @@ const handleDeliveryOrder = async (e) => {
                   </div>
                 </>
               )}
-              {bookType === 1 && (
+              {itemType === 1 && (
                 <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
                   <div>{t('books.delivery')}</div>
                   <div>{t('books.free')}</div>
@@ -695,7 +706,7 @@ const handleDeliveryOrder = async (e) => {
             </div>
 
             {/* Delivery Form */}
-            {bookType === 1 && (
+            {itemType === 1 && (
               <form onSubmit={handleDeliveryOrder} className="mt-6 space-y-4">
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
@@ -894,7 +905,7 @@ const handleDeliveryOrder = async (e) => {
             )}
 
             {/* PDF Purchase */}
-            {bookType === 2 && (
+            {itemType === 2 && (
               <div className="mt-6">
                 <h3 className="mb-4 text-lg font-semibold">{t('books.select_payment_method')}</h3>
                 <div className="flex gap-4">
@@ -1025,7 +1036,7 @@ const handleDeliveryOrder = async (e) => {
       <IncompleteProfileModal 
         isOpen={showProfileModal} 
         onClose={() => setShowProfileModal(false)}
-        showSaveOption={!cartItems?.some(i => i.id === book?.id && i.type === "book")}
+        showSaveOption={!cartItems?.some(i => i.id === item?.id && i.type === "item")}
         onSave={handleAddToCart}
       />
     </section>
