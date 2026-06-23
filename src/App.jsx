@@ -9,9 +9,14 @@ import TelegramIcon from "./components/Layout/TelegramIcon";
 
 // Lazy-loaded components
 const Home = lazy(() => import("./pages/Home/Home"));
-const Books = lazy(() => import("./pages/Books/Books"));
-const BookDetails = lazy(() => import("./pages/Books/BookDetails"));
-const BuyNow = lazy(() => import("./pages/Books/BuyNow"));
+const StoreDetails = lazy(() => import("./pages/Store/Shared/StoreDetails"));
+const StoreCheckout = lazy(() => import("./pages/Store/Shared/StoreCheckout"));
+
+const Books = lazy(() => import("./pages/Store/BooksAndBooklets/Books"));
+const Booklets = lazy(() => import("./pages/Store/BooksAndBooklets/Booklets"));
+const MedicalTools = lazy(() => import("./pages/Store/MedicalTools/MedicalTools"));
+const MedicalClothes = lazy(() => import("./pages/Store/MedicalClothes/MedicalClothes"));
+const MedicalClothesDetails = lazy(() => import("./pages/Store/MedicalClothes/MedicalClothesDetails"));
 const ContactUs = lazy(() => import("./pages/ContactUs/Contact_Us"));
 const About = lazy(() => import("./pages/About/About"));
 const Profile = lazy(() => import("./pages/Profile/Profile"));
@@ -70,12 +75,25 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/auth/callback" element={<SocialCallback />} />
             <Route path="/about" element={<About />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/book/:id" element={<BookDetails />} />
+            
+            {/* Store Routes */}
+            <Route path="/store/books" element={<Books />} />
+            <Route path="/store/booklets" element={<Booklets />} />
+            <Route path="/store/books/:id" element={<StoreDetails productType="book" apiPath="books" checkoutRoute="/store/checkout" />} />
+            <Route path="/store/booklets/:id" element={<StoreDetails productType="booklet" apiPath="books" checkoutRoute="/store/checkout" />} />
+            
+            <Route path="/store/medical-tools" element={<MedicalTools />} />
+            <Route path="/store/medical-tools/:id" element={<StoreDetails productType="medical_tool" apiPath="medical-tools" checkoutRoute="/store/checkout" />} />
+            
+            <Route path="/store/medical-clothes" element={<MedicalClothes />} />
+            <Route path="/store/medical-clothes/:id" element={<MedicalClothesDetails />} />
+            
+            <Route path="/store/checkout" element={<StoreCheckout />} />
+            <Route path="/buynow" element={<StoreCheckout />} />
+
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/testimonials" element={<TestimonialsPage />} />
 
-            <Route path="/buynow" element={<BuyNow />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetails />} />
