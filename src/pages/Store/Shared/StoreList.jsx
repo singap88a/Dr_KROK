@@ -40,7 +40,8 @@ export default function StoreList({
   const [sortBy, setSortBy] = useState('default');
 
   const isBookType = productType === 'book' || productType === 'booklet';
-  const favoriteType = isBookType ? 'book' : productType;
+  const favoriteType = productType === 'medical_clothes' ? 'apparel' : 
+                       isBookType ? 'book' : productType;
 
   const fetchCategories = useCallback(async () => {
     if (productType !== 'book' && productType !== 'medical_clothes') return;

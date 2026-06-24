@@ -119,9 +119,9 @@ export default function Navbar() {
       dropdown: true,
       items: [
         { path: "/store/books", label: "navbar.books", icon: FaBook },
-        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt },
         { path: "/store/booklets", label: "navbar.booklets", icon: FaBookOpen },
-        { path: "/store/medical-tools", label: "navbar.medicalTools", icon: FaStethoscope }
+        { path: "/store/medical-tools", label: "navbar.medicalTools", icon: FaStethoscope },
+        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt }
       ]
     },
     { path: "/about", label: "navbar.about" },
