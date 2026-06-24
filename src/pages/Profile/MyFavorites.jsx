@@ -49,11 +49,23 @@ export default function MyFavorites() {
       const detailedFavorites = await Promise.all(
         favoritesData.map(async (favorite) => {
           try {
-            if (favorite.type === 'book') {
+            if (favorite.type === 'book' || favorite.type === 'booklet') {
               const bookResponse = await request(`books/${favorite.table_id}`);
               return {
                 ...favorite,
                 bookData: bookResponse.data
+              };
+            } else if (favorite.type === 'medical_tool') {
+              const toolResponse = await request(`medical-tools/${favorite.table_id}`);
+              return {
+                ...favorite,
+                bookData: toolResponse.data
+              };
+            } else if (favorite.type === 'apparel') {
+              const apparelResponse = await request(`apparels/${favorite.table_id}`);
+              return {
+                ...favorite,
+                bookData: apparelResponse.data
               };
             } else if (favorite.type === 'video_course') {
               // Use resilient course fetcher that handles multiple backend routes
@@ -147,35 +159,26 @@ export default function MyFavorites() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setActiveFilter("all")}
-            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "all" ? "bg-primary text-white" : "bg-surface text-text"}`}
-            title={t("favorites.filterAll", "All")}
-          >
-            {t("favorites.filterAll", "All")}
-          </button>
-          <button
-            onClick={() => setActiveFilter("book")}
-            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "book" ? "bg-primary text-white" : "bg-surface text-text"}`}
-            title={t("favorites.filterBooks", "Books")}
-          >
-            <FiBook className="inline mr-1" /> {t("favorites.filterBooks", "Books")}
-          </button>
-          <button
-            onClick={() => setActiveFilter("video_course")}
-            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "video_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
-            title={t("favorites.filterCourses", "Courses")}
-          >
-            <FiUser className="inline mr-1" /> {t("favorites.filterCourses", "Courses")}
-          </button>
-          <button
-            onClick={() => setActiveFilter("live_course")}
-            className={`px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${activeFilter === "live_course" ? "bg-primary text-white" : "bg-surface text-text"}`}
-            title={t("favorites.filterLiveCourses", "Live Courses")}
-          >
-            <FiUser className="inline mr-1" /> {t("favorites.filterLiveCourses", "Live Courses")}
-          </button>
+        <div className="flex items-center">
+          <div className="relative">
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className="appearance-none pl-4 pr-10 py-2.5 text-sm font-semibold border rounded-xl bg-surface text-text border-border focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer hover:border-primary transition-colors"
+            >
+              <option value="all">{t("favorites.filterAll", "All Items")}</option>
+              <option value="book">{t("favorites.filterBooks", "Books & Booklets")}</option>
+              <option value="medical_tool">{t("navbar.medicalTools", "Medical Tools")}</option>
+              <option value="apparel">{t("navbar.medicalClothes", "Medical Clothes")}</option>
+              <option value="video_course">{t("favorites.filterCourses", "Video Courses")}</option>
+              <option value="live_course">{t("favorites.filterLiveCourses", "Live Courses")}</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-secondary">
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -219,8 +222,8 @@ export default function MyFavorites() {
                   </button>
 
                   {/* Type Badge */}
-                  <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-lg bottom-3 left-3 bg-primary/80">
-                    {item.type === 'live_course' ? t("favorites.liveCourse") : t("favorites.course")}
+                  <div className="absolute px-3 py-1.5 text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider rounded-full bottom-3 left-3 backdrop-blur-md bg-black/60 border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                    {item.type === 'live_course' ? t("favorites.filterLiveCourses", "Live Course") : t("favorites.filterCourses", "Video Course")}
                   </div>
                 </div>
 
@@ -265,7 +268,7 @@ export default function MyFavorites() {
             // If it's a book, use the existing generic card design
             const bookData = item.bookData || item;
             const images = bookData.images ? Object.values(bookData.images) : [];
-            const mainImage = images.length > 0 ? images[0].original_url : bookData.image || "/user.png";
+            const mainImage = bookData.main_image || bookData.image || (images.length > 0 ? (images[0].original_url || images[0].url) : "/logo.png");
 
             return (
               <div
@@ -273,14 +276,14 @@ export default function MyFavorites() {
                 className="relative overflow-hidden transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1"
               >
                 {/* Item Image */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800">
                   <img
                     src={mainImage}
                     alt={bookData.name || bookData.title}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/user.png";
+                      e.currentTarget.src = "/logo.png";
                     }}
                   />
 
@@ -293,12 +296,13 @@ export default function MyFavorites() {
                     <FiHeart className="w-5 h-5 text-red-500 fill-red-500" />
                   </button>
 
-                  {/* Type Badge - Only show if not book */}
-                  {item.type !== 'book' && (
-                    <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-lg bottom-3 left-3 bg-primary/80">
-                      {item.type === 'live_course' ? t("favorites.liveCourse") : t("favorites.course")}
-                    </div>
-                  )}
+                  {/* Type Badge */}
+                  <div className="absolute px-3 py-1.5 text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider rounded-full bottom-3 left-3 backdrop-blur-md bg-black/60 border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                    {item.type === 'book' ? t("favorites.filterBooks", "Book / Booklet") : 
+                     item.type === 'medical_tool' ? t("navbar.medicalTools", "Medical Tool") :
+                     item.type === 'apparel' ? t("navbar.medicalClothes", "Medical Clothes") :
+                     item.type}
+                  </div>
                 </div>
 
                 {/* Item Content */}
@@ -334,7 +338,13 @@ export default function MyFavorites() {
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => navigate(item.type === 'book' ? `/book/${item.table_id}` : `/courses/${item.table_id}`)}
+                      onClick={() => navigate(
+                        item.type === 'book' ? `/book/${item.table_id}` : 
+                        item.type === 'booklet' ? `/store/booklets/${item.table_id}` :
+                        item.type === 'medical_tool' ? `/store/medical-tools/${item.table_id}` :
+                        item.type === 'apparel' ? `/store/medical-clothes/${item.table_id}` :
+                        `/courses/${item.table_id}`
+                      )}
                       className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
                     >
                       <FiEye />

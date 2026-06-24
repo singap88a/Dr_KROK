@@ -88,7 +88,9 @@ export default function StoreCheckout() {
   useEffect(() => {
     if (item?.images) {
       const images = Object.values(item.images);
-      setMainImage(images[0]?.original_url || null);
+      setMainImage(images[0]?.url || images[0]?.original_url || item.main_image || item.image || null);
+    } else if (item) {
+      setMainImage(item.main_image || item.image || null);
     }
   }, [item]);
 
@@ -549,15 +551,15 @@ const handleDeliveryOrder = async (e) => {
                 {images.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setMainImage(img.original_url)}
+                    onClick={() => setMainImage(img.url || img.original_url)}
                     className={`w-20 h-16 overflow-hidden rounded-lg border ${
-                      mainImage === img.original_url
+                      mainImage === (img.url || img.original_url)
                         ? "border-primary ring-2 ring-primary"
                         : "border-border"
                     }`}
                   >
                     <img
-                      src={img.original_url}
+                      src={img.url || img.original_url}
                       className="object-cover w-full h-full"
                       alt={`thumb-${i}`}
                     />
@@ -827,9 +829,9 @@ const handleDeliveryOrder = async (e) => {
                       return (
                         <div
                           key={method.id}
-                          className="flex flex-col items-center flex-1 min-w-[100px] p-4 border rounded-xl border-border bg-background/60 hover:border-primary transition-colors cursor-pointer group"
+                          className="flex flex-col items-center flex-1 min-w-[100px] p-4 border rounded-xl border-border bg-background/60"
                         >
-                          <IconComponent className={`text-3xl mb-2 ${method.color} group-hover:scale-110 transition-transform`} />
+                          <IconComponent className={`text-3xl mb-2 ${method.color}`} />
                           <span className="text-sm font-medium">{t(`books.${method.id}`)}</span>
                         </div>
                       );

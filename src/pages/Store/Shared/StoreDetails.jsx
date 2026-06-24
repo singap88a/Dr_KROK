@@ -28,7 +28,8 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isBookType = productType === 'book' || productType === 'booklet';
-  const favoriteType = isBookType ? 'book' : productType;
+  const favoriteType = productType === 'medical_clothes' ? 'apparel' : 
+                       isBookType ? 'book' : productType;
 
   useEffect(() => {
     const fetchItemDetails = async () => {
