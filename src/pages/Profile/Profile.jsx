@@ -60,8 +60,33 @@ export default function Profile() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [forceEdit, setForceEdit] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [unreadOrdersMessagesCount, setUnreadOrdersMessagesCount] = useState(0);
   const selectedRole = user?.role || userData?.role || localStorage.getItem("DR_KROK_selected_role");
   const isRepRole = selectedRole === "university_rep" || selectedRole === "university_representative";
+
+  const updateOrdersMessagesCount = useCallback(() => {
+    try {
+      const savedReadIds = JSON.parse(localStorage.getItem("dr_krok_read_messages") || "[]");
+      let unreadCount = 0;
+      orders.forEach(order => {
+        if (order.messages && Array.isArray(order.messages)) {
+          unreadCount += order.messages.filter(m => !savedReadIds.includes(m.id)).length;
+        }
+      });
+      setUnreadOrdersMessagesCount(unreadCount);
+    } catch (e) {
+      console.warn("Failed to calculate unread orders messages count", e);
+    }
+  }, [orders]);
+
+  useEffect(() => {
+    updateOrdersMessagesCount();
+    
+    // Listen for order messages updates
+    const handleUpdate = () => updateOrdersMessagesCount();
+    window.addEventListener('orders-messages-updated', handleUpdate);
+    return () => window.removeEventListener('orders-messages-updated', handleUpdate);
+  }, [updateOrdersMessagesCount]);
 
   // Fetch notifications count
   const updateNotificationsCount = useCallback(async () => {
@@ -181,7 +206,7 @@ export default function Profile() {
     ] : []),
     { id: "courses", label: t('profile.sidebar.myCourses'), icon: FaGraduationCap },
     { id: "materials", label: t('profile.sidebar.myMaterials', 'My Material'), icon: FaBook },
-    { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart },
+    { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart, badge: unreadOrdersMessagesCount },
     { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
     { id: "ratings", label: t('profile.sidebar.myRatings'), icon: FaStar },
     { id: "notifications", label: t('profile.sidebar.myNotifications', 'My Notifications'), icon: FaBell, badge: unreadNotificationsCount },
