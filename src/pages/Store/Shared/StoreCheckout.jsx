@@ -36,7 +36,8 @@ export default function StoreCheckout() {
   const productType = state?.productType || 'book';
   const idKey = (productType === 'book' || productType === 'booklet') ? 'book_id' : (productType === 'medical_tool' ? 'tool_id' : 'apparel_id');
   const isBookType = productType === 'book' || productType === 'booklet';
-  const itemType = item?.type?.toLowerCase() === "delivery" ? 1 : (isBookType ? 2 : 1);
+  const isDelivery = item?.type?.toLowerCase().trim() === "delivery" || item?.type?.toLowerCase().trim() === t('books.delivery')?.toLowerCase().trim();
+  const itemType = isDelivery ? 1 : (isBookType ? 2 : 1);
   const checkoutApi = isBookType ? 'place_order_book' : (productType === 'medical_tool' ? 'place_medical_tool_order' : 'place_apparel_order');
   
   const selectedColor = state?.color || '';

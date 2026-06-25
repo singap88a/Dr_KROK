@@ -419,6 +419,7 @@ const MyOrders = ({ orders }) => {
 
   useEffect(() => {
     localStorage.setItem("dr_krok_read_messages", JSON.stringify(readMessageIds));
+    window.dispatchEvent(new Event('orders-messages-updated'));
   }, [readMessageIds]);
 
   const truncateText = (text, maxWords = 4) => {
