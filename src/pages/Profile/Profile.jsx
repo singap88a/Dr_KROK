@@ -26,6 +26,7 @@ import {
   FaBell,
   FaBook,
   FaBuilding,
+  FaEnvelope,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
@@ -304,9 +305,20 @@ export default function Profile() {
                   <Icon className="text-lg" />
                   <span className="font-medium">{item.label}</span>
                   {item.badge > 0 && (
-                    <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse shadow-sm">
-                      {item.badge}
-                    </span>
+                    <div className="ml-auto relative flex items-center justify-center">
+                      {item.id === "orders" ? (
+                        <>
+                          <FaEnvelope className={`text-xl ${activeTab === item.id ? "text-white/90" : "text-primary/80"}`} />
+                          <span className="absolute -top-1.5 -right-2 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-red-500 rounded-full animate-pulse shadow-sm border border-surface">
+                            {item.badge}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse shadow-sm">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </button>
               </li>

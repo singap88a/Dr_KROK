@@ -31,13 +31,13 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const isRtl = i18n.language === "ar";
+  const isUa = i18n.language === "ua";
 
-  // Check if year is incomplete
-  const hasSelectedYear = user?.college_year && user.college_year.trim() !== "";
+  // Check if required info (year and specialization) is complete
+  const hasRequiredInfo = user?.college_year && user.college_year.trim() !== "" && (user?.specialization?.id || user?.specialization_id);
 
   useEffect(() => {
-    if (!hasSelectedYear) {
+    if (!hasRequiredInfo) {
       setLoading(false);
       return;
     }
@@ -61,23 +61,23 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
     };
 
     fetchMaterials();
-  }, [hasSelectedYear, getMyMaterials]);
+  }, [hasRequiredInfo, getMyMaterials]);
 
   // Multilingual translations
   const texts = {
-    title: t("profile.materials.title", isRtl ? "موادي الدراسية" : "My Study Materials"),
-    subtitle: t("profile.materials.subtitle", isRtl ? "تصفح جميع المواد والملفات المخصصة لسنتك الدراسية." : "Browse all study materials customized for your academic year."),
-    warningTitle: t("profile.materials.warningTitle", isRtl ? "الرجاء تحديد سنتك الدراسية" : "Academic Year Required"),
-    warningDesc: t("profile.materials.warningDesc", isRtl ? "لعرض المواد الدراسية الخاصة بك، يجب أولاً تحديد سنتك الدراسية أو فرقتك في ملفك الشخصي حتى نتمكن من تخصيص المحتوى المناسب لك." : "To view your customized study materials, please set your academic year in your profile first."),
-    completeButton: t("profile.materials.completeButton", isRtl ? "تحديث الملف الشخصي الآن" : "Update Profile Now"),
-    searchPlaceholder: t("profile.materials.searchPlaceholder", isRtl ? "بحث في المواد والملفات..." : "Search subjects or folders..."),
-    subjectCardLabel: t("profile.materials.subjectCardLabel", isRtl ? "مجلد دراسي" : "Folder"),
-    emptyMaterials: t("profile.materials.emptyMaterials", isRtl ? "لا توجد مواد دراسية متوفرة حالياً لهذه الفئة." : "No materials available in this section."),
-    viewMaterial: t("profile.materials.viewMaterial", isRtl ? "عرض الملف" : "View Material"),
-    foldersCount: t("profile.materials.foldersCount", isRtl ? "مجلد" : "folders"),
-    filesCount: t("profile.materials.filesCount", isRtl ? "ملف" : "files"),
-    breadcrumbRoot: t("profile.materials.breadcrumbRoot", isRtl ? "المواد الدراسية" : "Study Materials"),
-    goBack: t("profile.materials.goBack", isRtl ? "رجوع" : "Back"),
+    title: t("profile.materials.title", isUa ? "Мої навчальні матеріали" : "My Study Materials"),
+    subtitle: t("profile.materials.subtitle", isUa ? "Переглядайте всі навчальні матеріали для вашого курсу." : "Browse all study materials customized for your academic year."),
+    warningTitle: t("profile.materials.warningTitle", isUa ? "Потрібен академічний рік та спеціалізація" : "Academic Year and Specialization Required"),
+    warningDesc: t("profile.materials.warningDesc", isUa ? "Щоб переглянути навчальні матеріали, спочатку вкажіть ваш академічний рік та спеціалізацію у профілі." : "To view your customized study materials, please set your academic year and specialization in your profile first."),
+    completeButton: t("profile.materials.completeButton", isUa ? "Оновити профіль зараз" : "Update Profile Now"),
+    searchPlaceholder: t("profile.materials.searchPlaceholder", isUa ? "Пошук предметів або папок..." : "Search subjects or folders..."),
+    subjectCardLabel: t("profile.materials.subjectCardLabel", isUa ? "Папка" : "Folder"),
+    emptyMaterials: t("profile.materials.emptyMaterials", isUa ? "Немає доступних матеріалів у цьому розділі." : "No materials available in this section."),
+    viewMaterial: t("profile.materials.viewMaterial", isUa ? "Переглянути матеріал" : "View Material"),
+    foldersCount: t("profile.materials.foldersCount", isUa ? "папок" : "folders"),
+    filesCount: t("profile.materials.filesCount", isUa ? "файлів" : "files"),
+    breadcrumbRoot: t("profile.materials.breadcrumbRoot", isUa ? "Навчальні матеріали" : "Study Materials"),
+    goBack: t("profile.materials.goBack", isUa ? "Назад" : "Back"),
   };
 
   const handleSubjectSelect = (sub) => {
@@ -105,8 +105,8 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
     setSearchQuery("");
   };
 
-  // Warning screen if year is missing
-  if (!hasSelectedYear) {
+  // Warning screen if required info is missing
+  if (!hasRequiredInfo) {
     return (
       <div className="pt-10 flex flex-col items-center justify-center min-h-[450px] p-6 text-center">
         <motion.div
@@ -212,7 +212,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
             onClick={level === "materials" ? resetToFolders : resetToSubjects}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-text bg-accent/40 rounded-xl hover:bg-accent border border-border/20 transition-all active:scale-95 self-start md:self-auto"
           >
-            <FaArrowLeft className={isRtl ? "rotate-180" : ""} />
+            <FaArrowLeft />
             {texts.goBack}
           </button>
         )}
@@ -230,7 +230,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
 
         {selectedSubject && (
           <>
-            <FaChevronRight className={`text-[9px] mx-1 shrink-0 ${isRtl ? "rotate-180" : ""}`} />
+            <FaChevronRight className="text-[9px] mx-1 shrink-0" />
             <span 
               onClick={resetToFolders}
               className={`cursor-pointer hover:text-primary transition-colors flex items-center gap-1 ${level === 'folders' ? 'text-primary font-bold' : ''}`}
@@ -243,7 +243,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
 
         {selectedFolder && (
           <>
-            <FaChevronRight className={`text-[9px] mx-1 shrink-0 ${isRtl ? "rotate-180" : ""}`} />
+            <FaChevronRight className="text-[9px] mx-1 shrink-0" />
             <span className="text-primary font-bold flex items-center gap-1 max-w-[150px] truncate">
               <FaFolderOpen className="text-xs text-yellow-500 shrink-0" />
               {selectedFolder.name}
@@ -327,7 +327,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
                         </p>
                       </div>
                     </div>
-                    <FaChevronRight className={`text-text-muted text-xs group-hover:translate-x-1 transition-transform ${isRtl ? "rotate-180 group-hover:-translate-x-1" : ""}`} />
+                    <FaChevronRight className="text-text-muted text-xs group-hover:translate-x-1 transition-transform" />
                   </motion.div>
                 ))}
               </motion.div>
@@ -370,7 +370,7 @@ export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
                           />
                           <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-bold gap-2">
                             <span>🔍</span>
-                            <span>{isRtl ? "اضغط للتكبير" : "Click to zoom"}</span>
+                            <span>{isUa ? "Натисніть, щоб збільшити" : "Click to zoom"}</span>
                           </div>
                         </div>
                       )}
