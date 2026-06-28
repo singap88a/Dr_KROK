@@ -34,8 +34,40 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
   useEffect(() => {
     const fetchItemDetails = async () => {
       try {
-        const response = await request(`${apiPath}/${id}`);
-        const itemData = response.data;
+        let response;
+        let itemData = null;
+        
+        try {
+          response = await request(`${apiPath}/${id}`);
+          // Handle different backend response structures
+          if (response && Array.isArray(response.data)) {
+              itemData = response.data.find(item => item.slug === id || String(item.id) === String(id));
+          } else if (response && response.data) {
+              itemData = response.data;
+          } else if (response && !response.data && response.id) {
+              itemData = response;
+          }
+        } catch (err) {
+          console.warn("Failed to fetch specific item, trying to fetch the list as fallback", err);
+        }
+
+        // Fallback: If item not found (e.g. backend doesn't support fetching by slug yet)
+        if (!itemData) {
+            try {
+                const listResponse = await request(apiPath);
+                if (listResponse && Array.isArray(listResponse.data)) {
+                    itemData = listResponse.data.find(item => item.slug === id || String(item.id) === String(id));
+                } else if (Array.isArray(listResponse)) {
+                    itemData = listResponse.find(item => item.slug === id || String(item.id) === String(id));
+                }
+            } catch (fallbackErr) {
+                console.error("Fallback fetch failed", fallbackErr);
+            }
+        }
+
+        if (!itemData) {
+            throw new Error("Item not found");
+        }
         if (itemData.description) {
             itemData.description = he.decode(itemData.description);
         }

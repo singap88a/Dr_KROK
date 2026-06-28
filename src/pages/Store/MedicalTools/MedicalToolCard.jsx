@@ -64,7 +64,7 @@ export default function MedicalToolCard({ item, isFavorite, onToggleFavorite, is
             </div>
             
             <button
-                onClick={() => navigate(`${detailsRoute}/${item.id}`)}
+                onClick={() => navigate(`${detailsRoute}/${item.slug}`)}
                 className="px-5 py-2.5 text-sm font-semibold text-white transition rounded-full bg-primary hover:bg-primary-focus hover:-translate-y-0.5 active:translate-y-0"
             >
                 {t('books.view_details', 'View Details')}

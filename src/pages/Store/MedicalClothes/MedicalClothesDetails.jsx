@@ -60,11 +60,39 @@ export default function MedicalClothesDetails() {
     const fetchDetails = async () => {
       try {
         setLoading(true);
-        // Assuming the detail endpoint is apparels/{id}
-        const response = await request(`apparels/${id}`);
-        if (response.success && response.data) {
-          setItem(response.data);
-          setActiveImage(response.data.main_image);
+        let response;
+        let itemData = null;
+
+        try {
+          response = await request(`apparels/${id}`);
+          if (response && Array.isArray(response.data)) {
+            itemData = response.data.find(item => item.slug === id || String(item.id) === String(id));
+          } else if (response && response.data) {
+            itemData = response.data;
+          } else if (response && !response.data && response.id) {
+            itemData = response;
+          }
+        } catch (err) {
+          console.warn("Failed to fetch specific item, trying fallback", err);
+        }
+
+        // Fallback to fetching list
+        if (!itemData) {
+          try {
+            const listResponse = await request(`apparels`);
+            if (listResponse && Array.isArray(listResponse.data)) {
+              itemData = listResponse.data.find(item => item.slug === id || String(item.id) === String(id));
+            } else if (Array.isArray(listResponse)) {
+              itemData = listResponse.find(item => item.slug === id || String(item.id) === String(id));
+            }
+          } catch (fallbackErr) {
+            console.error("Fallback fetch failed", fallbackErr);
+          }
+        }
+
+        if (itemData) {
+          setItem(itemData);
+          setActiveImage(itemData.main_image);
         } else {
           setError("Item not found");
         }

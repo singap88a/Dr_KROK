@@ -47,6 +47,7 @@ export default function Courses() {
       if (!mounted) return;
       const mapped = (res.data || []).map((c) => ({
         id: c.id,
+        slug: c.slug,
         type: "video",
         title: c.title,
         description: c.description,
@@ -84,6 +85,7 @@ export default function Courses() {
       if (!mounted) return;
       const mapped = (res.data || []).map((c) => ({
         id: c.id,
+        slug: c.slug,
         type: "live",
         title: c.title,
         description: c.description,
@@ -184,11 +186,11 @@ export default function Courses() {
   }, [visible, query, showBestsellers]);
 
   function goToDetails(course) {
-    if (!course?.id) return;
+    if (!course?.id && !course?.slug) return;
     if (activeTab === "live") {
-      navigate(`/live-courses/${course.id}`);
+      navigate(`/live-courses/${course.slug || course.id}`);
     } else {
-      navigate(`/courses/${course.id}`);
+      navigate(`/courses/${course.slug || course.id}`);
     }
   }
 
