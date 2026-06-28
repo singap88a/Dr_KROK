@@ -528,50 +528,70 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
 
       async getVideoCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
+        let itemData = null;
         try {
           const response = await request(`video_course/${id}`, { auth, useCache: true });
-          return response?.data || null;
+          if (response && response.data && (response.data.id || response.data.title)) itemData = response.data;
+          else if (response && (response.id || response.title)) itemData = response;
         } catch (err) {
           if (err?.status === 404) {
-            const candidates = [
-              `courses/video/${id}`,
-              `courses/${id}`,
-            ];
+            const candidates = [ `courses/video/${id}`, `courses/${id}` ];
             for (const path of candidates) {
               try {
                 const res2 = await request(path, { auth, useCache: true });
-                if (res2?.data) return res2.data;
-              } catch {
-                // try next
-              }
+                if (res2?.data && (res2.data.id || res2.data.title)) { itemData = res2.data; break; }
+              } catch { /* try next */ }
             }
           }
-          throw err;
         }
+        
+        if (!itemData) {
+          try {
+            const listRes = await request(`video_courses?per_page=100`, { useCache: true });
+            if (listRes && Array.isArray(listRes.data)) {
+              itemData = listRes.data.find(c => c.slug === id || String(c.id) === String(id));
+            }
+          } catch (fallbackErr) {
+             console.error("Fallback fetch for video course failed", fallbackErr);
+          }
+        }
+        
+        if (!itemData) throw new Error("Course not found");
+        return itemData;
       },
 
       async getLiveCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
+        let itemData = null;
         try {
           const response = await request(`live_course/${id}`, { auth, useCache: true });
-          return response?.data || null;
+          if (response && response.data && (response.data.id || response.data.title)) itemData = response.data;
+          else if (response && (response.id || response.title)) itemData = response;
         } catch (err) {
           if (err?.status === 404) {
-            const candidates = [
-              `courses/live/${id}`,
-              `courses/${id}`,
-            ];
+            const candidates = [ `courses/live/${id}`, `courses/${id}` ];
             for (const path of candidates) {
               try {
                 const res2 = await request(path, { auth, useCache: true });
-                if (res2?.data) return res2.data;
-              } catch {
-                // try next
-              }
+                if (res2?.data && (res2.data.id || res2.data.title)) { itemData = res2.data; break; }
+              } catch { /* try next */ }
             }
           }
-          throw err;
         }
+        
+        if (!itemData) {
+          try {
+            const listRes = await request(`live_courses?per_page=100`, { useCache: true });
+            if (listRes && Array.isArray(listRes.data)) {
+              itemData = listRes.data.find(c => c.slug === id || String(c.id) === String(id));
+            }
+          } catch (fallbackErr) {
+             console.error("Fallback fetch for live course failed", fallbackErr);
+          }
+        }
+        
+        if (!itemData) throw new Error("Course not found");
+        return itemData;
       },
 
       async getLiveCourseLessons(courseId) {

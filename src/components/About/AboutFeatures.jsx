@@ -123,13 +123,13 @@ export default function AboutFeatures({ features }) {
             }}
             autoplay={{ delay: 2500, disableOnInteraction: false }}
             pagination={{ clickable: true }}
-            className="pb-12"
+            className=""
           >
             {list.map((item) => (
-              <SwiperSlide key={item.id}>
+              <SwiperSlide key={item.id} className="!h-auto flex pb-12">
                 <article 
                   onClick={() => handleFeatureClick(item.id)}
-                  className="flex flex-col justify-between h-full min-h-[28px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                  className="w-full flex flex-col justify-between h-full min-h-[28px] p-6 transition-all duration-300 border group rounded-2xl bg-surface border-border hover:shadow-xl hover:-translate-y-1 cursor-pointer"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex items-center justify-center p-4 transition-transform duration-200 rounded-xl bg-accent text-primary group-hover:scale-105">

@@ -105,13 +105,14 @@ export default function CourseLessons() {
   // دالة محسنة لتحديث حالة الدرس
   const updateLessonStatus = useCallback(
     async (lessonId) => {
-      if (!isLoggedIn) return;
+      if (!isLoggedIn || !course?.id) return;
+      const realId = course.id;
 
       try {
         const [updatedCourseProgress, updatedLessonProgress] =
           await Promise.all([
-            getCourseProgressDetails(id),
-            getLessonProgress(id, lessonId),
+            getCourseProgressDetails(realId),
+            getLessonProgress(realId, lessonId),
           ]);
 
         if (updatedCourseProgress) {
@@ -136,7 +137,7 @@ export default function CourseLessons() {
         console.error(`Error updating lesson ${lessonId} status:`, error);
       }
     },
-    [isLoggedIn, id, getCourseProgressDetails, getLessonProgress]
+    [isLoggedIn, course?.id, getCourseProgressDetails, getLessonProgress]
   );
 
   // دالة محسنة لإكمال الدرس - تحديث فوري للواجهة
@@ -184,10 +185,13 @@ export default function CourseLessons() {
       },
     }));
 
+    if (!course?.id) return;
+    const realId = course.id;
+
     try {
-      const res = await markLessonAsCompleted(id, lessonId);
+      const res = await markLessonAsCompleted(realId, lessonId);
       if (res) {
-        const updatedProgress = await getCourseProgressDetails(id);
+        const updatedProgress = await getCourseProgressDetails(realId);
         if (updatedProgress) {
           setCourseProgress(updatedProgress);
 
@@ -226,12 +230,14 @@ export default function CourseLessons() {
         setLessons(courseData.lessons || []);
         setSections(courseData.sections || []);
 
+        const realId = courseData.id;
+
         // 🔥 التعديل الأول: كل السيكشنز مقفولة في البداية
         setExpandedSections(new Set());
         console.log("🔒 All sections locked by default");
 
         // 🔥 التعديل الثاني: جلب آخر درس من localStorage
-        const lastLessonId = getLastLesson(id);
+        const lastLessonId = getLastLesson(realId);
         let targetLesson = null;
         let targetSection = null;
 
@@ -290,7 +296,7 @@ export default function CourseLessons() {
 
         if (isLoggedIn) {
           try {
-            const courseProgressDetails = await getCourseProgressDetails(id);
+            const courseProgressDetails = await getCourseProgressDetails(realId);
             if (courseProgressDetails) {
               setCourseProgress(courseProgressDetails);
 
@@ -321,7 +327,7 @@ export default function CourseLessons() {
           } catch (error) {
             console.log("Failed to load course progress details:", error);
             try {
-              const oldProgress = await getCourseProgress(id);
+              const oldProgress = await getCourseProgress(realId);
               setCourseProgress(oldProgress);
             } catch {
               // ignore
@@ -336,7 +342,7 @@ export default function CourseLessons() {
           setHasAccess(is_enrolled === true && expired === false);
         } else if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id, 'video_course');
+            const access = await getCourseAccess(realId, 'video_course');
             if (access && typeof access === 'object') {
               const enrolled = access.is_enrolled === true;
               const expired  = access.is_expired  === true;
@@ -360,7 +366,7 @@ export default function CourseLessons() {
           setCurrentLesson(targetLesson);
           if (isLoggedIn) {
             try {
-              const res = await startLessonProgress(id, targetLesson.id);
+              const res = await startLessonProgress(realId, targetLesson.id);
               if (res?.course_progress) setCourseProgress(res.course_progress);
               if (res?.lesson) {
                 setLessonStatuses((prev) => ({
@@ -376,7 +382,7 @@ export default function CourseLessons() {
             }
           }
           // حفظ الدرس الحالي كآخر درس
-          saveLastLesson(id, targetLesson.id);
+          saveLastLesson(realId, targetLesson.id);
         } else if (targetSection) {
           setCurrentSection(targetSection);
         } else if (courseData.sections && courseData.sections.length > 0) {
@@ -557,8 +563,11 @@ export default function CourseLessons() {
     setCurrentLesson(lesson);
     setCurrentSection(null);
     
+    if (!course?.id) return;
+    const realId = course.id;
+
     // 🔥 حفظ آخر درس تم النقر عليه
-    saveLastLesson(id, lesson.id);
+    saveLastLesson(realId, lesson.id);
     
     // 🔥 التمركز التلقائي للفيديو في الموبايل
     if (window.innerWidth < 1024) {
@@ -576,7 +585,7 @@ export default function CourseLessons() {
     
     if (isLoggedIn) {
       try {
-        const res = await startLessonProgress(id, lesson.id);
+        const res = await startLessonProgress(realId, lesson.id);
         if (res?.course_progress) setCourseProgress(res.course_progress);
         if (res?.lesson) {
           setLessonStatuses((prev) => ({

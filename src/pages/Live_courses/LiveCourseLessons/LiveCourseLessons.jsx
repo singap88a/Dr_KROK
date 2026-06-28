@@ -261,11 +261,12 @@ export default function LiveCourseLessons() {
 
   const updateLessonStatus = useCallback(
     async (lessonId) => {
-      if (!isLoggedIn) return;
+      if (!isLoggedIn || !course?.id) return;
+      const realId = course.id;
       try {
         const [updatedCourseProgress, updatedLessonProgress] = await Promise.all([
-          getLiveCourseProgressDetails(id),
-          getLiveLessonProgress(id, lessonId),
+          getLiveCourseProgressDetails(realId),
+          getLiveLessonProgress(realId, lessonId),
         ]);
 
         if (updatedCourseProgress) {
@@ -289,7 +290,7 @@ export default function LiveCourseLessons() {
         console.error(`Error updating lesson ${lessonId} status:`, error);
       }
     },
-    [isLoggedIn, id, getLiveCourseProgressDetails, getLiveLessonProgress]
+    [isLoggedIn, course?.id, getLiveCourseProgressDetails, getLiveLessonProgress]
   );
 
   const handleLessonComplete = async (lessonId) => {
@@ -346,8 +347,11 @@ export default function LiveCourseLessons() {
       },
     }));
 
+    if (!course?.id) return;
+    const realId = course.id;
+
     try {
-      const response = await completeLiveLessonProgress(id, lessonId, "lesson");
+      const response = await completeLiveLessonProgress(realId, lessonId, "lesson");
       if (response.success) {
         if (response.data && response.data.lesson) {
           setLessonStatuses((prev) => ({
@@ -359,7 +363,7 @@ export default function LiveCourseLessons() {
           }));
         }
 
-        const updatedProgress = await getLiveCourseProgressDetails(id);
+        const updatedProgress = await getLiveCourseProgressDetails(realId);
         if (updatedProgress) {
           setCourseProgress(updatedProgress);
           if (updatedProgress.sections_progress) {
@@ -398,7 +402,11 @@ export default function LiveCourseLessons() {
 
     setCurrentLesson(lesson);
     setCurrentSection(null);
-    saveLastLesson(id, lesson.id);
+
+    if (!course?.id) return;
+    const realId = course.id;
+
+    saveLastLesson(realId, lesson.id);
 
     if (window.innerWidth < 1024) {
       setTimeout(() => {
@@ -411,7 +419,7 @@ export default function LiveCourseLessons() {
 
     if (isLoggedIn) {
       try {
-        const res = await startLiveLessonProgress(id, lesson.id);
+        const res = await startLiveLessonProgress(realId, lesson.id);
         if (res?.course_progress) setCourseProgress(res.course_progress);
         if (res?.lesson) {
           setLessonStatuses((prev) => ({
@@ -480,7 +488,6 @@ export default function LiveCourseLessons() {
     }
   };
 
-  // Data Loading
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
@@ -490,6 +497,8 @@ export default function LiveCourseLessons() {
         const courseData = await getLiveCourseById(id, isLoggedIn);
         if (!mounted) return;
         setCourse(courseData);
+
+        const realId = courseData.id;
 
         if (courseData.server_time) {
           const serverTime = new Date(courseData.server_time).getTime();
@@ -502,7 +511,7 @@ export default function LiveCourseLessons() {
 
         setExpandedSections(new Set());
 
-        const lastLessonId = getLastLesson(id);
+        const lastLessonId = getLastLesson(realId);
         let targetLesson = null;
         let targetSection = null;
 
@@ -566,7 +575,7 @@ export default function LiveCourseLessons() {
 
         if (isLoggedIn) {
           try {
-            const courseProgressDetails = await getLiveCourseProgressDetails(id);
+            const courseProgressDetails = await getLiveCourseProgressDetails(realId);
             if (courseProgressDetails) {
               setCourseProgress(courseProgressDetails);
               const updatedStatuses = { ...lessonStatuses };
@@ -595,7 +604,7 @@ export default function LiveCourseLessons() {
             }
           } catch {
             try {
-              const oldProgress = await getLiveCourseProgress(id);
+              const oldProgress = await getLiveCourseProgress(realId);
               setCourseProgress(oldProgress);
             } catch {
               // ignore
@@ -610,7 +619,7 @@ export default function LiveCourseLessons() {
           setHasAccess(is_enrolled === true && expired === false);
         } else if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id, 'live_course');
+            const access = await getCourseAccess(realId, 'live_course');
             if (access && typeof access === 'object') {
               const enrolled = access.is_enrolled === true;
               const expired = access.is_expired === true;
@@ -633,7 +642,7 @@ export default function LiveCourseLessons() {
           setCurrentLesson(targetLesson);
           if (isLoggedIn) {
             try {
-              const res = await startLiveLessonProgress(id, targetLesson.id);
+              const res = await startLiveLessonProgress(realId, targetLesson.id);
               if (res?.course_progress) setCourseProgress(res.course_progress);
               if (res?.lesson) {
                 setLessonStatuses((prev) => ({
@@ -648,7 +657,7 @@ export default function LiveCourseLessons() {
               /* noop */
             }
           }
-          saveLastLesson(id, targetLesson.id);
+          saveLastLesson(realId, targetLesson.id);
         } else if (targetSection) {
           setCurrentSection(targetSection);
         } else if (courseData.sections && courseData.sections.length > 0) {
