@@ -175,6 +175,13 @@ export default function LiveCourseLessons() {
 
     if (foundQuiz) {
       e.target.pause();
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(err => console.warn(err));
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
       setProcessedQuizzes((prev) => new Set([...prev, foundQuiz.id]));
       setQuizModal({
         isOpen: true,

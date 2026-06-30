@@ -3,6 +3,7 @@ import { FaCopy, FaStop, FaTrash, FaRedo, FaPaperPlane, FaTooth, FaTeeth, FaNote
 import { useTheme } from "../../context/ThemeContext";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
+import { useTranslation } from "react-i18next";
 
 const GeminiSingap = () => {
   const typingIntervalsRef = useRef({});
@@ -11,6 +12,7 @@ const GeminiSingap = () => {
   const { darkMode } = useTheme();
   const { getChatStatus, sendChatMessage } = useApi();
   const { isLoggedIn } = useUser();
+  const { i18n } = useTranslation();
 
   const [inputValue, setInputValue] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -28,15 +30,15 @@ const GeminiSingap = () => {
   // Suggestions
   const suggestions = [
     {
-      text: "What are the stages of dental caries development?",
+      text: i18n.language === "ua" ? "Коли цього року відбудеться іспит КРОК?" : "When will the KROK examination be held this year?",
       icon: <FaTooth className="text-xl" />,
     },
     {
-      text: "Explain the anatomy of the periodontium.",
+      text: i18n.language === "ua" ? "Який мінімальний прохідний бал необхідно набрати для успішного складання іспиту КРОК 1?" : "What is the minimum passing score for the KROK 1 examination?",
       icon: <FaTeeth className="text-xl" />,
     },
     {
-      text: "What are the indications for root canal treatment?",
+      text: i18n.language === "ua" ? "Що таке іспит КРОК 2 і чим він відрізняється від КРОК 1?" : "What is the KROK 2 examination, and how does it differ from KROK 1?",
       icon: <FaNotesMedical className="text-xl" />,
     },
   ];
@@ -374,7 +376,7 @@ const GeminiSingap = () => {
                 <div className={`p-2.5 rounded-xl mb-3 ${darkMode ? 'bg-background' : 'bg-blue-50 text-blue-600'}`}>
                   {suggestion.icon}
                 </div>
-                <h4 className="text-sm font-medium leading-relaxed">{suggestion.text}</h4>
+                <h4 className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{suggestion.text}</h4>
               </button>
             ))}
           </div>

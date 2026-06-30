@@ -44,7 +44,7 @@ export default function StoreList({
                        isBookType ? 'book' : productType;
 
   const fetchCategories = useCallback(async () => {
-    if (productType !== 'book' && productType !== 'medical_clothes') return;
+    if (!isBookType && productType !== 'medical_clothes' && productType !== 'medical_tool') return;
     try {
       const endpoint = productType === 'medical_clothes' ? 'categoryApparel' : 'categories';
       const response = await request(endpoint);
@@ -52,7 +52,7 @@ export default function StoreList({
     } catch (err) {
       console.error("Failed to fetch categories", err);
     }
-  }, [request, productType]);
+  }, [request, productType, isBookType]);
 
   useEffect(() => {
     fetchCategories();
@@ -70,6 +70,8 @@ export default function StoreList({
         path = `categories/${selectedCategory}/${apiPath}?page=${page}&product_type=${productType}`;
       } else if (productType === 'medical_clothes' && selectedCategory) {
         path = `apparel-categories/${selectedCategory}/apparels?page=${page}`;
+      } else if (productType === 'medical_tool' && selectedCategory) {
+        path = `categories/${selectedCategory}/${apiPath}?page=${page}`;
       }
       
       const response = await request(path, { useCache: false });
@@ -112,6 +114,11 @@ export default function StoreList({
 
     if (!isBookType) return matchesSearch;
 
+    let matchesCategory = true;
+    if (productType === 'booklet' && selectedCategory) {
+      matchesCategory = item.categories?.some(c => c.id === selectedCategory) || false;
+    }
+
     const bType = item.type?.toLowerCase().trim();
     const fType = typeFilter.toLowerCase();
 
@@ -129,7 +136,7 @@ export default function StoreList({
       matchesType = item.is_bestseller === true;
     }
 
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesCategory;
   });
 
   const handlePageChange = (newPage) => {
@@ -220,7 +227,7 @@ export default function StoreList({
             </h2>
             
             <div className="flex flex-wrap gap-3">
-              {(productType === 'book' || productType === 'medical_clothes') && (
+              {(isBookType || productType === 'medical_clothes' || productType === 'medical_tool') && (
                 <div className="relative">
                   <button
                     onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}

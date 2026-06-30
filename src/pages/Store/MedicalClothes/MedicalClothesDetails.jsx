@@ -112,7 +112,7 @@ export default function MedicalClothesDetails() {
       return;
     }
     try {
-      const response = await toggleFavorite(id, "medical_clothes");
+      const response = await toggleFavorite(item.id, "apparel");
       setIsFavorite(response.message === "Added to favorites");
       toast.success(response.message);
     } catch (err) {
