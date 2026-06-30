@@ -7,6 +7,23 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
   const { t } = useTranslation();
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const dialogRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (quizModal.isOpen && quizModal.currentQuiz) {
+      if (dialogRef.current && !dialogRef.current.open) {
+        try {
+          dialogRef.current.showModal();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    } else {
+      if (dialogRef.current && dialogRef.current.open) {
+        dialogRef.current.close();
+      }
+    }
+  }, [quizModal.isOpen, quizModal.currentQuiz]);
 
   if (!quizModal.isOpen || !quizModal.currentQuiz) return null;
 
@@ -65,8 +82,12 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden transition-all transform shadow-2xl bg-surface dark:bg-surface-dark rounded-2xl animate-in fade-in zoom-in duration-300">
+    <dialog
+      ref={dialogRef}
+      onCancel={(e) => e.preventDefault()}
+      className="m-auto p-0 bg-transparent border-none w-[calc(100%-2rem)] max-w-md backdrop:bg-black/60 backdrop:backdrop-blur-sm z-[9999]"
+    >
+      <div className="w-full flex flex-col overflow-hidden transition-all transform shadow-2xl bg-surface dark:bg-surface-dark rounded-2xl animate-in fade-in zoom-in duration-300">
         {/* Header */}
         <div className="shrink-0 p-3 sm:p-4 text-white bg-primary dark:bg-primary-dark">
           <div className="flex items-center justify-between">
@@ -235,6 +256,6 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };

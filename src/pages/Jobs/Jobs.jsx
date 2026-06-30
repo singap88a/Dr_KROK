@@ -21,6 +21,7 @@ const Jobs = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [files, setFiles] = useState({ photo: null, cv: null });
 
   const photoInputRef = useRef(null);
@@ -61,7 +62,8 @@ const Jobs = () => {
 
   const handleSelectJob = (job) => {
     setSelectedJob(job);
-    const title = job ? cleanDescription(job.description).split('.')[0] : "General Application";
+    setIsExpanded(false);
+    const title = job ? (job.title || cleanDescription(job.description).split('.')[0]) : "General Application";
     setFormData(prev => ({
       ...prev,
       job_id: job ? job.id : "",
@@ -90,6 +92,46 @@ const Jobs = () => {
   const cleanDescription = (html) => {
     if (!html) return "";
     return html.replace(/<[^>]*>?/gm, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\t|\r|\n/g, ' ').trim();
+  };
+
+  const renderDescription = (text) => {
+    if (!text) return null;
+    
+    if (text.includes('<p>') || text.includes('<br>') || text.includes('<li>')) {
+      return <div dangerouslySetInnerHTML={{ __html: text }} className="prose dark:prose-invert prose-sm max-w-none text-text-secondary" />;
+    }
+
+    const lines = text.split(/\r?\n/);
+    let elements = [];
+    let currentList = [];
+
+    lines.forEach((line, index) => {
+      if (line.trim() === '') return;
+
+      if (line.startsWith('\t') || line.startsWith('  ') || line.trim().startsWith('-') || line.trim().startsWith('•')) {
+        currentList.push(
+          <li key={`li-${index}`} className="ml-5 list-disc text-text-secondary leading-relaxed">
+            {line.replace(/^[\t\s\-•]+/, '').trim()}
+          </li>
+        );
+      } else {
+        if (currentList.length > 0) {
+          elements.push(<ul key={`ul-${index}`} className="mb-4 space-y-1.5">{currentList}</ul>);
+          currentList = [];
+        }
+        elements.push(
+          <h3 key={`p-${index}`} className="font-bold text-text mt-6 mb-3 text-[15px]">
+            {line.trim()}
+          </h3>
+        );
+      }
+    });
+
+    if (currentList.length > 0) {
+      elements.push(<ul key={`ul-end`} className="mb-4 space-y-1.5">{currentList}</ul>);
+    }
+
+    return <div className="text-sm">{elements}</div>;
   };
 
   const handleSubmit = async (e) => {
@@ -201,7 +243,7 @@ const Jobs = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`font-semibold text-xs truncate transition-colors ${selectedJob?.id === job.id ? "text-primary" : "text-text"}`}>
-                      {cleanDescription(job.description).split('.')[0]}
+                      {job.title || cleanDescription(job.description).split('.')[0]}
                     </p>
                     <p className="text-[10px] text-text-secondary opacity-50 mt-0.5 truncate">
                       {cleanDescription(job.description).split('.')[1]?.trim() || "View details"}
@@ -220,17 +262,29 @@ const Jobs = () => {
         <div className="px-4 md:px-8 lg:px-12 py-8">
           
           {/* Job Header */}
-          <div className="mb-6 space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-semibold border border-primary/20">
-              {selectedJob ? `Job #${selectedJob.id}` : "Open Application"}
-            </div>
+          <div className="mb-6 space-y-3">
             <h1 className="text-2xl md:text-3xl font-bold text-text leading-tight">
-              {selectedJob ? cleanDescription(selectedJob.description).split('.')[0] : t("jobs.generalApply")}
+              {selectedJob ? (selectedJob.title || cleanDescription(selectedJob.description).split('.')[0]) : t("jobs.generalApply")}
             </h1>
             {selectedJob && (
-              <p className="text-sm text-text-secondary opacity-70 max-w-xl leading-relaxed line-clamp-2">
-                {cleanDescription(selectedJob.description)}
-              </p>
+              <div className="relative">
+                <div 
+                  className={`transition-all duration-300 ${!isExpanded ? "max-h-[250px] overflow-hidden relative" : ""}`}
+                >
+                  {renderDescription(selectedJob.description)}
+                  {!isExpanded && selectedJob.description && selectedJob.description.length > 250 && (
+                    <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-gray-50 dark:from-gray-950 to-transparent pointer-events-none"></div>
+                  )}
+                </div>
+                {selectedJob.description && selectedJob.description.length > 250 && (
+                  <button 
+                    onClick={() => setIsExpanded(!isExpanded)} 
+                    className="mt-2 text-primary text-sm font-semibold hover:underline"
+                  >
+                    {isExpanded ? "Show Less" : "Show More"}
+                  </button>
+                )}
+              </div>
             )}
             {!selectedJob && (
               <p className="text-sm text-text-secondary opacity-60 max-w-xl">
