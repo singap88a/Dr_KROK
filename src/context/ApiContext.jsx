@@ -549,7 +549,17 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           try {
             const listRes = await request(`video_courses?per_page=100`, { useCache: true });
             if (listRes && Array.isArray(listRes.data)) {
-              itemData = listRes.data.find(c => c.slug === id || String(c.id) === String(id));
+              const found = listRes.data.find(c => c.slug === id || String(c.id) === String(id));
+              if (found) {
+                if (found.id) {
+                  try {
+                    const fullRes = await request(`video_course/${found.id}`, { auth, useCache: true });
+                    itemData = fullRes?.data || found;
+                  } catch { itemData = found; }
+                } else {
+                  itemData = found;
+                }
+              }
             }
           } catch (fallbackErr) {
              console.error("Fallback fetch for video course failed", fallbackErr);
@@ -583,7 +593,17 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           try {
             const listRes = await request(`live_courses?per_page=100`, { useCache: true });
             if (listRes && Array.isArray(listRes.data)) {
-              itemData = listRes.data.find(c => c.slug === id || String(c.id) === String(id));
+              const found = listRes.data.find(c => c.slug === id || String(c.id) === String(id));
+              if (found) {
+                if (found.id) {
+                  try {
+                    const fullRes = await request(`live_course/${found.id}`, { auth, useCache: true });
+                    itemData = fullRes?.data || found;
+                  } catch { itemData = found; }
+                } else {
+                  itemData = found;
+                }
+              }
             }
           } catch (fallbackErr) {
              console.error("Fallback fetch for live course failed", fallbackErr);
