@@ -43,16 +43,13 @@ export default function UniversityStudents() {
   }, [isLoggedIn, request]);
 
   useEffect(() => {
-    const storedRepId = isLoggedIn && userData?.id
-      ? localStorage.getItem(`dr_krok_rep_id_${userData.id}`) || localStorage.getItem("dr_krok_rep_id")
-      : localStorage.getItem("dr_krok_rep_id");
-
-    const storedGuestName = localStorage.getItem("dr_krok_rep_guest_name") || "";
-
-    if (storedRepId) {
-      setRepId(parseInt(storedRepId, 10));
-      if (storedGuestName) setGuestName(storedGuestName);
-      loadRepState(storedRepId);
+    if (isLoggedIn && userData?.id) {
+      // Try to get representative ID if it exists in userData, otherwise fallback to user ID
+      const id = userData.representative_id || userData.university_representative?.id || userData.id;
+      
+      setRepId(id);
+      setGuestName(userData.name || "");
+      loadRepState(id);
     } else {
       setLoading(false);
     }
