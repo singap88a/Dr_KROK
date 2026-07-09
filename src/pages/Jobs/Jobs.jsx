@@ -63,7 +63,7 @@ const Jobs = () => {
   const handleSelectJob = (job) => {
     setSelectedJob(job);
     setIsExpanded(false);
-    const title = job ? (job.title || cleanDescription(job.description).split('.')[0]) : "General Application";
+    const title = job ? (job.name || job.title || cleanDescription(job.description).split('.')[0]) : "General Application";
     setFormData(prev => ({
       ...prev,
       job_id: job ? job.id : "",
@@ -243,7 +243,7 @@ const Jobs = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`font-semibold text-xs truncate transition-colors ${selectedJob?.id === job.id ? "text-primary" : "text-text"}`}>
-                      {job.title || cleanDescription(job.description).split('.')[0]}
+                      {job.name || job.title || cleanDescription(job.description).split('.')[0]}
                     </p>
                     <p className="text-[10px] text-text-secondary opacity-50 mt-0.5 truncate">
                       {cleanDescription(job.description).split('.')[1]?.trim() || "View details"}
@@ -264,7 +264,7 @@ const Jobs = () => {
           {/* Job Header */}
           <div className="mb-6 space-y-3">
             <h1 className="text-2xl md:text-3xl font-bold text-text leading-tight">
-              {selectedJob ? (selectedJob.title || cleanDescription(selectedJob.description).split('.')[0]) : t("jobs.generalApply")}
+              {selectedJob ? (selectedJob.name || selectedJob.title || cleanDescription(selectedJob.description).split('.')[0]) : t("jobs.generalApply")}
             </h1>
             {selectedJob && (
               <div className="relative">
