@@ -19,16 +19,21 @@ export default function UniversityStudents() {
   const [students, setStudents] = useState([]);
   const [guestName, setGuestName] = useState("");
 
-  const loadRepState = useCallback(async (id) => {
+  const loadRepState = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await request(`university-representative/students?rep_id=${id}`, {
+      // Backend should infer the representative from the Auth Token
+      const res = await request(`university-representative/students`, {
         auth: isLoggedIn,
         useCache: false,
       });
       if (res?.success) {
         setStatus(res.data?.status || null);
         setStudents(res.data?.students || []);
+        // Update repId from response if available
+        if (res.data?.rep_id) {
+          setRepId(res.data.rep_id);
+        }
       } else {
         setStatus(null);
         setStudents([]);
@@ -43,13 +48,9 @@ export default function UniversityStudents() {
   }, [isLoggedIn, request]);
 
   useEffect(() => {
-    if (isLoggedIn && userData?.id) {
-      // Try to get representative ID if it exists in userData, otherwise fallback to user ID
-      const id = userData.representative_id || userData.university_representative?.id || userData.id;
-      
-      setRepId(id);
-      setGuestName(userData.name || "");
-      loadRepState(id);
+    if (isLoggedIn) {
+      setGuestName(userData?.name || "");
+      loadRepState();
     } else {
       setLoading(false);
     }
@@ -77,26 +78,6 @@ export default function UniversityStudents() {
     );
   }
 
-  if (!repId) {
-    return (
-      <div className="container px-4 py-10 mx-auto max-w-4xl">
-        <div className="p-8 bg-surface border border-border rounded-2xl shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-primary/10 text-primary">
-              <FaUsers />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{t("universityRepresentative.studentsList", "My university students")}</h1>
-              <p className="text-text-secondary mt-1">
-                {t("universityRepresentative.noStudentsData", "You don't have any students or there is no data available.")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (status === "pending") {
     return <RepPendingStatus t={t} repId={repId} onRefresh={loadRepState} />;
   }
@@ -118,13 +99,21 @@ export default function UniversityStudents() {
     );
   }
 
+  // Fallback if status is null or missing
   return (
     <div className="container px-4 py-10 mx-auto max-w-4xl">
       <div className="p-8 bg-surface border border-border rounded-2xl shadow-sm space-y-4">
-        <h1 className="text-2xl font-bold">{t("universityRepresentative.studentsList", "My University Students")}</h1>
-        <p className="text-text-secondary">
-          {t("universityRepresentative.pendingMessage", "Your request has been submitted successfully. We will review it shortly.")}
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-primary/10 text-primary">
+            <FaUsers />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">{t("universityRepresentative.studentsList", "My university students")}</h1>
+            <p className="text-text-secondary mt-1">
+              {t("universityRepresentative.noStudentsData", "You don't have any students or there is no data available.")}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
