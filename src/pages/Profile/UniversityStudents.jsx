@@ -18,34 +18,38 @@ export default function UniversityStudents() {
   const [status, setStatus] = useState(null);
   const [students, setStudents] = useState([]);
   const [guestName, setGuestName] = useState("");
+  const [debugError, setDebugError] = useState("");
 
   const loadRepState = useCallback(async () => {
     try {
       setLoading(true);
-      // Backend should infer the representative from the Auth Token
-      const res = await request(`university-representative/students`, {
-        auth: isLoggedIn,
+      setDebugError("");
+      // Add a timestamp to bypass any browser/CDN caching on production
+      const timestamp = new Date().getTime();
+      const res = await request(`university-representative/students?t=${timestamp}`, {
+        auth: true,
         useCache: false,
       });
       if (res?.success) {
         setStatus(res.data?.status || null);
         setStudents(res.data?.students || []);
-        // Update repId from response if available
         if (res.data?.rep_id) {
           setRepId(res.data.rep_id);
         }
       } else {
         setStatus(null);
         setStudents([]);
+        setDebugError(JSON.stringify(res));
       }
     } catch (error) {
       console.error("Failed to load university students", error);
       setStatus(null);
       setStudents([]);
+      setDebugError(error?.message || "Network Error");
     } finally {
       setLoading(false);
     }
-  }, [isLoggedIn, request]);
+  }, [request]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -114,6 +118,18 @@ export default function UniversityStudents() {
             </p>
           </div>
         </div>
+        
+        {/* Debug Info for Production Troubleshooting */}
+        {process.env.NODE_ENV === "production" || true ? (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left overflow-auto text-xs text-red-800">
+            <p className="font-bold mb-2">Technical Debug Info (Please screenshot if issue persists):</p>
+            <p><strong>status state:</strong> {String(status)}</p>
+            <p><strong>isLoggedIn:</strong> {String(isLoggedIn)}</p>
+            <p><strong>debugError:</strong> {String(debugError)}</p>
+            <p><strong>students array length:</strong> {students?.length}</p>
+            <p><strong>userData exists:</strong> {String(!!userData)}</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
