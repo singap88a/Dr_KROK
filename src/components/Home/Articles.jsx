@@ -99,7 +99,7 @@ export default function FeaturedArticles({ articles }) {
       title: b.name,
       description: b.description,
       date: formatDateString(b.created_at),
-      image: b.image,
+      image: b.images?.[0] || b.image,
       altText: b.alt_text || b.name,
     }));
   }, [fetched]);

@@ -26,7 +26,7 @@ function BooksCarousel() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await request("books");
+        const response = await request("books?product_type=book");
         const decodedBooks = (response.data || []).map(b => ({
           ...b,
           description: b.description ? he.decode(b.description) : ""

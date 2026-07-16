@@ -22,9 +22,9 @@ function ArticleCard({ blog, formatDate, onImageError }) {
       className="flex flex-col h-full overflow-hidden transition-all duration-300 bg-white border border-gray-100 shadow-sm group dark:bg-gray-800 rounded-2xl dark:border-gray-700 hover:shadow-lg hover:-translate-y-1"
     >
       <div className="relative h-36 overflow-hidden bg-gray-100 dark:bg-gray-700">
-        {blog.image ? (
+        {(blog.images && blog.images.length > 0) || blog.image ? (
           <img
-            src={blog.image}
+            src={blog.images?.[0] || blog.image}
             alt={imageAlt}
             className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             onError={(e) => { e.target.style.display = 'none'; }}
@@ -72,27 +72,26 @@ export default function TrainerArticlesPage() {
   const { getBlogs } = useApi();
   const { t, i18n } = useTranslation();
   const [instructors, setInstructors] = useState([]);
-  const [blogs, setBlogs] = useState([]);
+  const [allExtractedBlogs, setAllExtractedBlogs] = useState([]);
   const [selectedInstructorId, setSelectedInstructorId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const PER_PAGE = 15;
 
   const currentLang = (i18n?.language || 'en').split('-')[0];
 
-  const load = useCallback(async (page = 1, instructorId = null) => {
+  const load = useCallback(async (instructorId = null) => {
     setLoading(true);
     setError('');
     try {
-      const params = { page, per_page: PER_PAGE };
+      const params = { per_page: 100 };
       if (instructorId) params.instructor_id = instructorId;
       const blogsResponse = await getBlogs(params);
       if (blogsResponse && blogsResponse.data) {
-        if (page === 1 && !instructorId) {
+        if (!instructorId) {
           const instructorsFromBlogs = blogsResponse.data.map(instructor => ({
             id: instructor.id,
             name: instructor.name,
@@ -118,17 +117,12 @@ export default function TrainerArticlesPage() {
             }))
           );
 
-        const pag = blogsResponse.pagination;
-        if (pag) {
-          setTotalPages(pag.total_pages || 1);
-          setTotalItems(instructorId ? allBlogs.length : (pag.total_items || 0));
-          setCurrentPage(pag.current_page || page);
-        }
-
-        setBlogs(allBlogs);
+        setAllExtractedBlogs(allBlogs);
+        setTotalPages(Math.ceil(allBlogs.length / PER_PAGE) || 1);
+        setCurrentPage(1);
       } else {
-        setBlogs([]);
-        if (page === 1 && !instructorId) setInstructors([]);
+        setAllExtractedBlogs([]);
+        if (!instructorId) setInstructors([]);
       }
     } catch (e) {
       setError(e?.message || t('articles.error'));
@@ -138,21 +132,24 @@ export default function TrainerArticlesPage() {
   }, [getBlogs, t]);
 
   useEffect(() => {
-    load(1, null);
+    load(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    load(page, selectedInstructorId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleInstructorSelect = (id) => {
     setSelectedInstructorId(id);
-    setCurrentPage(1);
-    load(1, id);
+    load(id);
   };
+
+  const currentBlogs = useMemo(() => {
+    const start = (currentPage - 1) * PER_PAGE;
+    return allExtractedBlogs.slice(start, start + PER_PAGE);
+  }, [allExtractedBlogs, currentPage]);
 
   const selectedInstructor = useMemo(() => {
     return instructors.find(i => String(i.id) === String(selectedInstructorId)) || null;
@@ -276,14 +273,14 @@ export default function TrainerArticlesPage() {
               <div className="p-6 text-center text-red-600 bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">
                 {t('articles.error')}
               </div>
-            ) : !blogs.length ? (
+            ) : !currentBlogs.length ? (
               <div className="p-6 text-center bg-white border border-gray-100 dark:bg-gray-800 rounded-2xl dark:border-gray-700">
                 {t('articles.noArticles')}
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {blogs.map((b) => (
+                  {currentBlogs.map((b) => (
                     <ArticleCard
                       key={b.id}
                       blog={b}
