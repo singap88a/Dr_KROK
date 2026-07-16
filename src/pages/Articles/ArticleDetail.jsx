@@ -11,6 +11,11 @@ import {
 } from 'react-icons/fa';
 import { useApi } from '../../context/ApiContext';
 import { useTranslation } from 'react-i18next';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import SEO from '../../components/SEO/SEO';
 import { getArticlePath, stripHtml } from '../../utils/articleUtils';
@@ -195,16 +200,40 @@ export default function ArticleDetail() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Main content */}
           <div className="lg:col-span-8 space-y-8">
-            {article.image && (
+            {(article.images && article.images.length > 0) || article.image ? (
               <div className="overflow-hidden rounded-2xl shadow-sm bg-gray-50 dark:bg-gray-800 flex justify-center border border-gray-100 dark:border-gray-700">
-                <img
-                  src={article.image}
-                  alt={imageAlt}
-                  className="w-full h-auto max-h-[70vh] object-contain rounded-2xl"
-                  onError={(e) => { e.target.parentElement.style.display = 'none'; }}
-                />
+                {article.images && article.images.length > 1 ? (
+                  <Swiper
+                    modules={[Navigation, Pagination]}
+                    navigation
+                    pagination={{ clickable: true }}
+                    className="w-full [&_.swiper-button-next]:bg-white/90 dark:[&_.swiper-button-next]:bg-gray-800/90 [&_.swiper-button-next]:w-10 [&_.swiper-button-next]:h-10 [&_.swiper-button-next]:rounded-full [&_.swiper-button-next]:shadow-lg [&_.swiper-button-prev]:bg-white/90 dark:[&_.swiper-button-prev]:bg-gray-800/90 [&_.swiper-button-prev]:w-10 [&_.swiper-button-prev]:h-10 [&_.swiper-button-prev]:rounded-full [&_.swiper-button-prev]:shadow-lg [&_.swiper-pagination-bullet-active]:bg-primary"
+                    style={{
+                      '--swiper-navigation-color': 'var(--primary)',
+                      '--swiper-navigation-size': '16px'
+                    }}
+                  >
+                    {article.images.map((img, idx) => (
+                      <SwiperSlide key={idx} className="flex justify-center bg-gray-50 dark:bg-gray-800">
+                        <img
+                          src={img}
+                          alt={`${imageAlt} - ${idx + 1}`}
+                          className="w-full h-auto max-h-[70vh] object-contain rounded-2xl"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+                ) : (
+                  <img
+                    src={article.images?.[0] || article.image}
+                    alt={imageAlt}
+                    className="w-full h-auto max-h-[70vh] object-contain rounded-2xl"
+                    onError={(e) => { e.target.parentElement.style.display = 'none'; }}
+                  />
+                )}
               </div>
-            )}
+            ) : null}
             
             <div
               className="prose prose-lg dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-a:text-primary prose-img:rounded-2xl prose-p:leading-relaxed"
@@ -280,14 +309,14 @@ export default function ArticleDetail() {
                         to={getArticlePath(relatedArt)} 
                         className="flex items-center gap-3 group"
                       >
-                        {relatedArt.image && (
+                        {(relatedArt.images && relatedArt.images.length > 0) || relatedArt.image ? (
                           <img 
-                            src={relatedArt.image} 
+                            src={relatedArt.images?.[0] || relatedArt.image} 
                             alt={relatedArt.name} 
                             className="object-cover w-16 h-16 rounded-lg"
                             onError={(e) => { e.target.style.display = 'none'; }}
                           />
-                        )}
+                        ) : null}
                         <div>
                           <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors line-clamp-2">
                             {relatedArt.name}
