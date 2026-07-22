@@ -94,10 +94,10 @@ export default function Features({ features }) {
         navigate("/courses");
         break;
       case 2: // Live Courses
-        navigate("courses");
+        navigate("/courses");
         break;
       case 3: // Books
-        navigate("/books");
+        navigate("/store/books");
         break;
       case 4: // Quizzes
         navigate("/test");
