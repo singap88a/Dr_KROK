@@ -192,7 +192,7 @@ export default function StoreCheckout() {
         <div className="text-center">
           <p className="text-lg text-red-500">{t('books.no_book_selected')}</p>
           <button
-            onClick={() => navigate("/books")}
+            onClick={() => navigate("/store/books")}
             className="px-6 py-2 mt-4 text-white rounded-lg bg-primary"
           >
             {t('books.back_to_books')}
