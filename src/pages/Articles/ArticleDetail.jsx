@@ -79,18 +79,12 @@ export default function ArticleDetail() {
     const fetchRecentArticles = async () => {
       try {
         const response = await getBlogs({ page: 1, per_page: 5 });
-        const instructorsArray = response.data || response;
+        const blogsArray = response.data || response;
         
-        const allBlogs = instructorsArray.flatMap(instructor => 
-          (instructor.blogs || []).map(blog => ({
-            ...blog,
-            instructor_id: {
-              id: instructor.id,
-              name: instructor.name,
-              image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
-            },
-          }))
-        );
+        const allBlogs = Array.isArray(blogsArray) ? blogsArray.map(blog => ({
+          ...blog,
+          instructor_id: blog.instructor || {},
+        })) : [];
 
         if (isMounted) setRecentArticles(allBlogs);
       } catch (e) {

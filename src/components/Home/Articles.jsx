@@ -72,7 +72,7 @@ export default function FeaturedArticles({ articles }) {
         if (!isMounted) return;
 
         // Flatten blogs from instructors and sort by date
-        const allBlogs = (res.data || []).flatMap(instructor => instructor.blogs || []);
+        const allBlogs = Array.isArray(res.data) ? res.data : [];
         const sortedBlogs = allBlogs.sort((a, b) => parseDateString(b.created_at) - parseDateString(a.created_at));
         const decodedBlogs = sortedBlogs.slice(0, 3).map(b => ({
           ...b,
