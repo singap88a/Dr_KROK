@@ -91,31 +91,36 @@ export default function TrainerArticlesPage() {
       if (instructorId) params.instructor_id = instructorId;
       const blogsResponse = await getBlogs(params);
       if (blogsResponse && blogsResponse.data) {
+        const blogsList = Array.isArray(blogsResponse.data) ? blogsResponse.data : [];
+
         if (!instructorId) {
-          const instructorsFromBlogs = blogsResponse.data.map(instructor => ({
-            id: instructor.id,
-            name: instructor.name,
-            image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
-            blogs: instructor.blogs || [],
-            facebook: instructor.facebook,
-            instagram: instructor.instagram,
-            youtube: instructor.youtube,
-          }));
-          setInstructors(instructorsFromBlogs);
+          const instructorMap = new Map();
+          blogsList.forEach(blog => {
+            const inst = blog.instructor;
+            if (inst) {
+              if (!instructorMap.has(inst.id)) {
+                instructorMap.set(inst.id, {
+                  id: inst.id,
+                  name: inst.name,
+                  image: inst.image || DEFAULT_INSTRUCTOR_IMAGE,
+                  blogs: [],
+                  facebook: inst.facebook,
+                  instagram: inst.instagram,
+                  youtube: inst.youtube,
+                });
+              }
+              instructorMap.get(inst.id).blogs.push(blog);
+            }
+          });
+          setInstructors(Array.from(instructorMap.values()));
         }
 
-        const allBlogs = blogsResponse.data
-          .filter(instructor => !instructorId || String(instructor.id) === String(instructorId))
-          .flatMap(instructor =>
-            (instructor.blogs || []).map(blog => ({
-              ...blog,
-              instructor_id: {
-                id: instructor.id,
-                name: instructor.name,
-                image: instructor.image || DEFAULT_INSTRUCTOR_IMAGE,
-              },
-            }))
-          );
+        const allBlogs = blogsList
+          .filter(blog => !instructorId || (blog.instructor && String(blog.instructor.id) === String(instructorId)))
+          .map(blog => ({
+            ...blog,
+            instructor_id: blog.instructor || {}
+          }));
 
         setAllExtractedBlogs(allBlogs);
         setTotalPages(Math.ceil(allBlogs.length / PER_PAGE) || 1);
