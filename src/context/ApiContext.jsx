@@ -380,7 +380,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   }, [request]);
 
   const login = useCallback(async (email, password, type = null) => {
-    const body = type === "google" ? { type: "google" } : { email, password };
+    const { getDeviceInfo } = await import('../utils/device');
+    const deviceData = getDeviceInfo();
+    const body = type === "google" 
+      ? { type: "google", ...deviceData } 
+      : { email, password, ...deviceData };
     return await request("auth/login", {
       method: "POST",
       body
@@ -388,9 +392,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   }, [request]);
 
   const register = useCallback(async (name, email, otp, password, password_confirmation, university, role = "student") => {
+    const { getDeviceInfo } = await import('../utils/device');
+    const deviceData = getDeviceInfo();
     return await request("auth/register", {
       method: "POST",
-      body: { name, email, otp, password, password_confirmation, university, role }
+      body: { name, email, otp, password, password_confirmation, university, role, ...deviceData }
     });
   }, [request]);
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Lottie from "lottie-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import { useApi } from "../../../context/ApiContext";
@@ -8,6 +8,8 @@ import loginAnimation from "../../../components/animations/Login_animation.json"
 import { toast } from "react-toastify";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { getDeviceInfo } from "../../../utils/device";
+import DeviceErrorModal from "../../../components/auth/DeviceErrorModal";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -17,8 +19,19 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showDeviceError, setShowDeviceError] = useState(false);
+  const [deviceErrorMessage, setDeviceErrorMessage] = useState("");
   const { login: userLogin } = useUser();
   const { login: apiLogin } = useApi();
+  const [searchParams] = useSearchParams();
+
+  React.useEffect(() => {
+    const errorMsg = searchParams.get("deviceError");
+    if (errorMsg) {
+      setDeviceErrorMessage(errorMsg);
+      setShowDeviceError(true);
+    }
+  }, [searchParams]);
 
   function validate() {
     const e = {};
@@ -49,11 +62,21 @@ export default function LoginPage() {
           navigate("/profile", { replace: true });
         }, 1500);
       } else {
-        toast.error("❌ Login failed: " + data.message, { position: "top-right" });
+        if (data.message && (data.message.toLowerCase().includes('device') || data.message.toLowerCase().includes('mobile') || data.message.toLowerCase().includes('laptop'))) {
+          setDeviceErrorMessage(data.message);
+          setShowDeviceError(true);
+        } else {
+          toast.error("❌ Login failed: " + data.message, { position: "top-right" });
+        }
       }
     } catch (err) {
       console.error(err);
-      toast.error("⚠️ Server connection error!", { position: "top-right" });
+      if (err.message && (err.message.toLowerCase().includes('device') || err.message.toLowerCase().includes('mobile') || err.message.toLowerCase().includes('laptop') || err.message.toLowerCase().includes('registered on another'))) {
+        setDeviceErrorMessage(err.message);
+        setShowDeviceError(true);
+      } else {
+        toast.error(err.message || "⚠️ Server connection error!", { position: "top-right" });
+      }
     } finally {
       setLoading(false);
     }
@@ -67,8 +90,15 @@ export default function LoginPage() {
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
+    const deviceData = getDeviceInfo();
+    const queryParams = new URLSearchParams({
+      callback: callbackUrl,
+      device_id: deviceData.device_id,
+      device_type: deviceData.device_type,
+      device_name: deviceData.device_name
+    }).toString();
     
-    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}`;
+    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?${queryParams}`;
     
     console.log("Redirecting to Google OAuth:", googleAuthUrl);
     window.location.href = googleAuthUrl;
@@ -76,6 +106,11 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
+      <DeviceErrorModal 
+        isOpen={showDeviceError} 
+        onClose={() => setShowDeviceError(false)} 
+        errorMessage={deviceErrorMessage} 
+      />
       <div className="container p-6 mx-auto">
         <div className="grid max-w-5xl grid-cols-1 mx-auto overflow-hidden shadow-xl bg-surface rounded-2xl md:grid-cols-2">
           {/* Left: Animation */}
@@ -178,7 +213,14 @@ export default function LoginPage() {
                   }
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
-                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?callback=${encodeURIComponent(callbackUrl)}`;
+                  const deviceData = getDeviceInfo();
+                  const queryParams = new URLSearchParams({
+                    callback: callbackUrl,
+                    device_id: deviceData.device_id,
+                    device_type: deviceData.device_type,
+                    device_name: deviceData.device_name
+                  }).toString();
+                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?${queryParams}`;
                   
                   console.log("Redirecting to Apple OAuth:", appleAuthUrl);
                   window.location.href = appleAuthUrl;
