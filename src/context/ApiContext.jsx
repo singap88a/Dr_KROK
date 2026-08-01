@@ -1731,6 +1731,14 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         return await request(path, { auth: true, useCache: true });
       },
 
+      async getMyOrderMessages(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        const path = query.toString() ? `profile/my-order-messages?${query.toString()}` : "profile/my-order-messages";
+        return await request(path, { auth: true, useCache: false });
+      },
+
+
       async getJobs() {
         return await request("job", { useCache: true });
       },
