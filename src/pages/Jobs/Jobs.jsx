@@ -12,7 +12,7 @@ import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import { toast } from "react-toastify";
 
 const Jobs = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { getJobs, submitJobApplication, getAuthToken } = useApi();
@@ -58,7 +58,7 @@ const Jobs = () => {
       }
     };
     fetchJobs();
-  }, [getJobs]);
+  }, [getJobs, i18n.language]);
 
   const handleSelectJob = (job) => {
     setSelectedJob(job);

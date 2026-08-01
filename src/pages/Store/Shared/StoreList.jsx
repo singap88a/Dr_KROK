@@ -75,8 +75,25 @@ export default function StoreList({
       }
       
       const response = await request(path, { useCache: false });
-      setItems(response.data || []);
-      setPagination(response.pagination || null);
+      
+      const newItems = response.data || [];
+      let apiPagination = response.pagination;
+
+      // Fallback for endpoints like medical-tools that do not return pagination object
+      if (!apiPagination && Array.isArray(newItems)) {
+        const perPage = 15; // default page size
+        const isFullPage = newItems.length === perPage;
+        apiPagination = {
+          current_page: page,
+          total_pages: isFullPage ? page + 1 : page,
+          total_items: isFullPage ? `${page * perPage}+` : (page - 1) * perPage + newItems.length,
+          prev_page_url: page > 1 ? true : null,
+          next_page_url: isFullPage ? true : null,
+        };
+      }
+
+      setItems(newItems);
+      setPagination(apiPagination);
     } catch (err) {
       setError(err.message);
     } finally {
