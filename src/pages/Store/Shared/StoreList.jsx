@@ -82,13 +82,27 @@ export default function StoreList({
       // Fallback for endpoints like medical-tools that do not return pagination object
       if (!apiPagination && Array.isArray(newItems)) {
         const perPage = 15; // default page size
-        const isFullPage = newItems.length === perPage;
+        let totalItems = newItems.length;
+        
+        try {
+          // Fetch with large limit just to get the total count for accurate pagination
+          const countPath = path.split('?')[0] + '?limit=1000';
+          const countRes = await request(countPath, { useCache: true });
+          if (countRes && countRes.data && Array.isArray(countRes.data)) {
+            totalItems = countRes.data.length;
+          }
+        } catch (e) {
+          console.warn('Could not fetch total count for fallback pagination');
+        }
+
+        const totalPages = Math.ceil(totalItems / perPage) || 1;
+
         apiPagination = {
           current_page: page,
-          total_pages: isFullPage ? page + 1 : page,
-          total_items: isFullPage ? `${page * perPage}+` : (page - 1) * perPage + newItems.length,
+          total_pages: totalPages,
+          total_items: totalItems,
           prev_page_url: page > 1 ? true : null,
-          next_page_url: isFullPage ? true : null,
+          next_page_url: page < totalPages ? true : null,
         };
       }
 
