@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { getDeviceInfo } from "../../../utils/device";
-import DeviceErrorModal from "../../../components/auth/DeviceErrorModal";
+import DeviceErrorModal from "../../../components/Auth/DeviceErrorModal";
 
 export default function LoginPage() {
   const { t } = useTranslation();
