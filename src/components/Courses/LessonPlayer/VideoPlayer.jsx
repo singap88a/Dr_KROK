@@ -1,8 +1,68 @@
 // LessonPlayer/VideoPlayer.jsx
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaVideo, FaPlay } from "react-icons/fa"; // إضافة FaPlay هنا
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
+import { useUser } from "../../../context/UserContext";
+
+/**
+ * VideoWatermark – renders dynamic, highly visible watermark labels
+ * over the video. Shows the student's name and email separately.
+ * Swaps positions between top and bottom every 60 seconds.
+ */
+const VideoWatermark = () => {
+  const { userData } = useUser();
+  const [isSwapped, setIsSwapped] = useState(false);
+
+  // Swap positions every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsSwapped((prev) => !prev);
+    }, 60000); // 60 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!userData?.name && !userData?.email) return null;
+
+  // Safe positions: Extreme Top-Right and Bottom-Right (or Left) to avoid slide text in center
+  const posTop = { top: "4%", right: "2%" };
+  const posBottom = { bottom: "15%", left: "2%" }; // Left side to balance out
+
+  const commonStyle = {
+    position: "absolute",
+    transition: "all 1.5s ease-in-out",
+    fontSize: "clamp(10px, 1.2vw, 14px)",
+    fontWeight: 600,
+    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+    letterSpacing: "0.05em",
+    color: "rgba(255, 255, 255, 0.95)", // Clean white text
+    backgroundColor: "rgba(0, 0, 0, 0.45)", // Semi-transparent black pill
+    border: "1px solid rgba(255, 255, 255, 0.1)", // Subtle border to make it pop
+    backdropFilter: "blur(4px)",
+    padding: "5px 12px",
+    borderRadius: "8px",
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    zIndex: 20,
+    whiteSpace: "nowrap",
+  };
+
+  return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+      {userData?.email && (
+        <div style={{ ...commonStyle, ...(isSwapped ? posBottom : posTop) }}>
+          {userData.email}
+        </div>
+      )}
+      {userData?.name && (
+        <div style={{ ...commonStyle, ...(isSwapped ? posTop : posBottom) }}>
+          {userData.name}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const VideoPlayer = ({ 
   currentLesson, 
@@ -45,15 +105,19 @@ export const VideoPlayer = ({
   }
 
   return (
-    <video
-      src={videoSrc}
-      controls
-      className="w-full h-full"
-      poster={currentLesson?.image || currentSection?.images?.[0]}
-      onTimeUpdate={handleVideoTimeUpdate}
-      onEnded={handleVideoEnd}
-      controlsList="nodownload"
-      onContextMenu={(e) => e.preventDefault()}
-    />
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <video
+        src={videoSrc}
+        controls
+        className="w-full h-full"
+        poster={currentLesson?.image || currentSection?.images?.[0]}
+        onTimeUpdate={handleVideoTimeUpdate}
+        onEnded={handleVideoEnd}
+        controlsList="nodownload"
+        onContextMenu={(e) => e.preventDefault()}
+      />
+      {/* Anti-piracy watermark overlay */}
+      <VideoWatermark />
+    </div>
   );
 };

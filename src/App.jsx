@@ -37,6 +37,7 @@ const LoginPage = lazy(() => import("./pages/auth/Login/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/Register/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPassword/ForgotPasswordPage"));
 const SocialCallback = lazy(() => import("./pages/auth/SocialCallback"));
+const AuthError = lazy(() => import("./pages/auth/AuthError"));
 const Privacypolicy = lazy(() => import("./pages/Privacypolicy/Privacypolicy"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions/TermsAndConditions"));
 const PurchasePolicy = lazy(() => import("./pages/PurchasePolicy/PurchasePolicy"));
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/auth/callback" element={<SocialCallback />} />
+            <Route path="/auth/error" element={<AuthError />} />
             <Route path="/about" element={<About />} />
             
             {/* Store Routes */}

@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import he from "he";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { getDeviceInfo } from "../../../utils/device";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -150,8 +151,16 @@ export default function RegisterPage() {
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
+    const deviceData = getDeviceInfo();
+    const queryParams = new URLSearchParams({
+      callback: callbackUrl,
+      register: 'true',
+      device_id: deviceData.device_id,
+      device_type: deviceData.device_type,
+      device_name: deviceData.device_name
+    }).toString();
     
-    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+    const googleAuthUrl = `https://admin.dr-krok.com/api/auth/google/redirect?${queryParams}`;
     
     console.log("Redirecting to Google OAuth for registration:", googleAuthUrl);
     window.location.href = googleAuthUrl;
@@ -406,7 +415,15 @@ export default function RegisterPage() {
                   }
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
-                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?callback=${encodeURIComponent(callbackUrl)}&register=true`;
+                  const deviceData = getDeviceInfo();
+                  const queryParams = new URLSearchParams({
+                    callback: callbackUrl,
+                    register: 'true',
+                    device_id: deviceData.device_id,
+                    device_type: deviceData.device_type,
+                    device_name: deviceData.device_name
+                  }).toString();
+                  const appleAuthUrl = `https://admin.dr-krok.com/api/auth/apple?${queryParams}`;
                   
                   console.log("Redirecting to Apple OAuth for registration:", appleAuthUrl);
                   window.location.href = appleAuthUrl;

@@ -48,7 +48,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { updateUser, logout, userData } = useUser();
-  const { getOrders, getMyCourses, getMyProfile, getNotifications, request } = useApi();
+  const { getOrders, getMyCourses, getMyProfile, getNotifications, getMyOrderMessages, request } = useApi();
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,7 @@ export default function Profile() {
   const [forceEdit, setForceEdit] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [unreadOrdersMessagesCount, setUnreadOrdersMessagesCount] = useState(0);
+  const [unreadOrderMessagesTabCount, setUnreadOrderMessagesTabCount] = useState(0);
   const selectedRole = user?.role || userData?.role || localStorage.getItem("DR_KROK_selected_role");
   const isRepRole = selectedRole === "university_rep" || selectedRole === "university_representative";
 
@@ -108,10 +109,32 @@ export default function Profile() {
     updateNotificationsCount();
     
     // Listen for notification updates
-    const handleUpdate = () => updateNotificationsCount();
+    const handleUpdate = () => {
+      updateNotificationsCount();
+      updateOrderMessagesTabCount();
+    };
     window.addEventListener('notifications-updated', handleUpdate);
     return () => window.removeEventListener('notifications-updated', handleUpdate);
   }, [updateNotificationsCount]);
+
+  // Fetch new order messages count
+  const updateOrderMessagesTabCount = useCallback(async () => {
+    try {
+      const res = await getMyOrderMessages();
+      if (res.success) {
+        const messages = res.data?.messages || [];
+        const savedReadIds = JSON.parse(localStorage.getItem("dr_krok_read_order_messages") || "[]");
+        const unreadCount = messages.filter(m => !savedReadIds.includes(m.id)).length;
+        setUnreadOrderMessagesTabCount(unreadCount);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch order messages count", e);
+    }
+  }, [getMyOrderMessages]);
+
+  useEffect(() => {
+    updateOrderMessagesTabCount();
+  }, [updateOrderMessagesTabCount]);
 
   const isProfileIncomplete = (u) => {
     return !u?.phone || (!u?.university_id && !u?.university?.id) || !u?.college_year;
@@ -210,7 +233,7 @@ export default function Profile() {
     { id: "orders", label: t('profile.sidebar.myOrders'), icon: FaShoppingCart, badge: unreadOrdersMessagesCount },
     { id: "favorites", label: t('profile.sidebar.myFavorites'), icon: FaHeart },
     { id: "ratings", label: t('profile.sidebar.myRatings'), icon: FaStar },
-    { id: "notifications", label: t('profile.sidebar.myNotifications', 'My Notifications'), icon: FaBell, badge: unreadNotificationsCount },
+    { id: "notifications", label: t('profile.sidebar.myNotifications', 'My Notifications'), icon: FaBell, badge: unreadNotificationsCount + unreadOrderMessagesTabCount },
     { id: "logout", label: t('profile.sidebar.logout'), icon: FaSignOutAlt },
   ];
 

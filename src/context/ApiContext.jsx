@@ -380,7 +380,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   }, [request]);
 
   const login = useCallback(async (email, password, type = null) => {
-    const body = type === "google" ? { type: "google" } : { email, password };
+    const { getDeviceInfo } = await import('../utils/device');
+    const deviceData = getDeviceInfo();
+    const body = type === "google" 
+      ? { type: "google", ...deviceData } 
+      : { email, password, ...deviceData };
     return await request("auth/login", {
       method: "POST",
       body
@@ -388,9 +392,11 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
   }, [request]);
 
   const register = useCallback(async (name, email, otp, password, password_confirmation, university, role = "student") => {
+    const { getDeviceInfo } = await import('../utils/device');
+    const deviceData = getDeviceInfo();
     return await request("auth/register", {
       method: "POST",
-      body: { name, email, otp, password, password_confirmation, university, role }
+      body: { name, email, otp, password, password_confirmation, university, role, ...deviceData }
     });
   }, [request]);
 
@@ -1724,6 +1730,14 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         const path = query.toString() ? `profile/my-notifications?${query.toString()}` : "profile/my-notifications";
         return await request(path, { auth: true, useCache: true });
       },
+
+      async getMyOrderMessages(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        const path = query.toString() ? `profile/my-order-messages?${query.toString()}` : "profile/my-order-messages";
+        return await request(path, { auth: true, useCache: false });
+      },
+
 
       async getJobs() {
         return await request("job", { useCache: true });
