@@ -4,6 +4,7 @@ import { FaAward, FaLock, FaBars, FaTimes } from "react-icons/fa";
 import SectionItem from "../../../components/Courses/Sidebar/SectionItem";
 import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
+import i18n from "../../../i18n";
 
 const CourseContentSidebar = ({
   sections,
@@ -123,7 +124,7 @@ const CourseContentSidebar = ({
       {/* 🔥 القائمة الجانبية مع إمكانية الإخفاء */}
       <div className={`
         lg:col-span-1 space-y-3
-        fixed lg:static top-0 left-0 h-screen lg:h-auto
+        fixed lg:static top-0 lg:top-auto left-0 h-screen lg:h-auto
         w-80 lg:w-auto bg-surface lg:bg-transparent
         shadow-2xl lg:shadow-none z-40
         transform transition-transform duration-300 ease-in-out
@@ -145,12 +146,16 @@ const CourseContentSidebar = ({
         </div>
 
         {/* محتوى القائمة */}
-        <div className="p-4 lg:p-0 h-[calc(100vh-80px)] lg:h-auto overflow-y-auto sidebar-content">
-          <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
-            {t("courses.courseContent", "Course Content")}
-          </h3>
+        <div 
+          className="p-4 lg:p-0 h-[calc(100vh-80px)] lg:h-auto overflow-y-auto sidebar-content custom-sidebar-scrollbar"
+          style={{ direction: "ltr" }}
+        >
+          <div style={{ direction: i18n.language === "ar" ? "rtl" : "ltr" }} className="w-full">
+            <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
+              {t("courses.courseContent", "Course Content")}
+            </h3>
 
-          <div className="space-y-2">
+            <div className="space-y-2">
             {sortedSections.map((section) => (
               <SectionItem
                 key={`section-${section.id}`}
@@ -276,6 +281,7 @@ const CourseContentSidebar = ({
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>

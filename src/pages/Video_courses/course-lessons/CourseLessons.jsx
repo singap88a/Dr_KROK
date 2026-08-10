@@ -724,27 +724,32 @@ export default function CourseLessons() {
             </div>
           ) : (
             <>
-              <div className="space-y-6 lg:col-span-1">
-                <CourseContentSidebar
-                  sections={sections}
-                  lessons={lessons}
-                  course={course}
-                  courseProgress={courseProgress}
-                  expandedSections={expandedSections}
-                  currentLesson={currentLesson}
-                  currentSection={currentSection}
-                  lessonStatuses={lessonStatuses}
-                  hasAccess={hasAccess}
-                  isLoggedIn={isLoggedIn}
-                  sectionProgress={sectionProgress}
-                  calculateTotalProgress={calculateTotalProgress}
-                  calculateSectionProgress={calculateSectionProgress}
-                  onLessonClick={handleLessonClick}
-                  onSectionClick={handleSectionClick}
-                  onToggleSection={toggleSection}
-                  hasFreeLessons={hasFreeLessons}
-                  navigate={navigate}
-                />
+              <div 
+                className="space-y-6 lg:col-span-1 lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto pr-2 custom-sidebar-scrollbar"
+                style={{ direction: "ltr" }}
+              >
+                <div style={{ direction: i18n.language === "ar" ? "rtl" : "ltr" }} className="w-full">
+                  <CourseContentSidebar
+                    sections={sections}
+                    lessons={lessons}
+                    course={course}
+                    courseProgress={courseProgress}
+                    expandedSections={expandedSections}
+                    currentLesson={currentLesson}
+                    currentSection={currentSection}
+                    lessonStatuses={lessonStatuses}
+                    hasAccess={hasAccess}
+                    isLoggedIn={isLoggedIn}
+                    sectionProgress={sectionProgress}
+                    calculateTotalProgress={calculateTotalProgress}
+                    calculateSectionProgress={calculateSectionProgress}
+                    onLessonClick={handleLessonClick}
+                    onSectionClick={handleSectionClick}
+                    onToggleSection={toggleSection}
+                    hasFreeLessons={hasFreeLessons}
+                    navigate={navigate}
+                  />
+                </div>
               </div>
 
               {/* Video Section with integrated Quizzes + Instructor Card */}
