@@ -3,10 +3,7 @@ name: Build and Deploy to Production
 on:
   push:
     branches:
-      - frontend # بيراقب برانش الفرونت عندك
-
-permissions:
-  contents: write  
+      - frontend
 
 jobs:
   build-and-deploy:
@@ -29,7 +26,7 @@ jobs:
       - name: Deploy to Production Branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          token: ${{ secrets.DEPLOY_TOKEN }} # 👈 استخدام الـ Token الشخصي بدلاً من Token الافتراضي
           branch: production
           folder: dist
           clean: true
