@@ -24,6 +24,10 @@ export default function AuthPage() {
     e.preventDefault();
     if (!validate()) return;
     // For demo: simply log the payload. Replace with real API call.
+
+        // For demo: simply log the payload. Replace with real API call.
+    // For demo: simply log the payload. Replace with real API call.
+
     const payload = { mode, ...form };
     console.log("submit", payload);
     alert((mode === "login" ? "Sign in" : "Create account") + " — demo: check console");
