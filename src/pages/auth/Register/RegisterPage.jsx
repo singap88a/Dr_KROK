@@ -60,6 +60,7 @@ export default function RegisterPage() {
     }
   }, [showTerms, request]);
 
+  // ✅ استدعاء API عند فتح البوباب
 
   function validate() {
     const e = {};
