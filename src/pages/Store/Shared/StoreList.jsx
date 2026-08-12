@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import LoadingSpinner from "../../../components/Common/LoadingSpinner";
 import SEO from "../../../components/SEO/SEO";
+import FlashOfferBanner from "../../../components/Home/FlashOfferBanner";
 
 export default function StoreList({ 
   productType, 
@@ -251,6 +252,9 @@ export default function StoreList({
         description={seoDesc || "Browse our store."}
       />
       <div className="mx-auto max-w-7xl">
+        {/* Dynamic Type-specific Flash Offer Banner */}
+        <FlashOfferBanner type={productType} />
+
         <div className="flex flex-col items-center justify-between gap-6 mb-10 md:flex-row">
           <div className="flex flex-col gap-4">
             <h2 className="text-3xl font-bold md:text-4xl">
