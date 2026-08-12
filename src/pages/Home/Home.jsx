@@ -12,6 +12,7 @@ const NewsUpdates = lazy(() => import("../../components/Home/Articles"));
 const InstructorsCarousel = lazy(() => import("../../components/Home/InstructorsCarousel"));
 const HomeBanners = lazy(() => import("../../components/Home/HomeBanners"));
 const Live_courses = lazy(() => import("../../components/Home/Live_courses"));
+const FlashOffers = lazy(() => import("../../components/Home/FlashOffers"));
 
 export default function DrKrokHome() {
   return (
@@ -27,6 +28,7 @@ export default function DrKrokHome() {
         <UniversityRepsPromo />
         <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-xl m-8" />}>
           <CoursesPreview />
+          <FlashOffers />
           <BooksCarousel />
           <StatsSection />
           <Live_courses/>

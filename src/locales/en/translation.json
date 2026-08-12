@@ -1,4 +1,25 @@
 {
+  "flashOffers": {
+    "title": "Flash Offers",
+    "subtitle": "Limited-time deals — don't miss out!",
+    "loading": "Loading offers...",
+    "noOffers": "No flash offers available right now.",
+    "buyNow": "Buy Now",
+    "off": "OFF",
+    "originalPrice": "Original Price",
+    "offerPrice": "Offer Price",
+    "endsIn": "Ends in",
+    "days": "d",
+    "hours": "h",
+    "minutes": "m",
+    "seconds": "s",
+    "all": "All",
+    "books": "Books",
+    "booklets": "Booklets",
+    "medicalTools": "Medical Tools",
+    "apparel": "Apparel",
+    "expired": "Expired"
+  },
   "navbar": {
     "home": "Home",
     "courses": "Courses",
