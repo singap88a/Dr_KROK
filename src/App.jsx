@@ -17,6 +17,7 @@ const Booklets = lazy(() => import("./pages/Store/BooksAndBooklets/Booklets"));
 const MedicalTools = lazy(() => import("./pages/Store/MedicalTools/MedicalTools"));
 const MedicalClothes = lazy(() => import("./pages/Store/MedicalClothes/MedicalClothes"));
 const MedicalClothesDetails = lazy(() => import("./pages/Store/MedicalClothes/MedicalClothesDetails"));
+const FlashOffersPage = lazy(() => import("./pages/Store/FlashOffersPage"));
 const ContactUs = lazy(() => import("./pages/ContactUs/Contact_Us"));
 const About = lazy(() => import("./pages/About/About"));
 const Profile = lazy(() => import("./pages/Profile/Profile"));
@@ -79,6 +80,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             
             {/* Store Routes */}
+            <Route path="/store/flash-offers" element={<FlashOffersPage />} />
             <Route path="/store/books" element={<Books />} />
             <Route path="/store/booklets" element={<Booklets />} />
             <Route path="/store/books/:id" element={<StoreDetails productType="book" apiPath="books" checkoutRoute="/store/checkout" />} />
