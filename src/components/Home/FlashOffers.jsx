@@ -17,10 +17,6 @@ export default function FlashOffers() {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState({}); // Stores ticking seconds by offer ID
-  
-  // Navigation element state bindings for Swiper
-  const [prevEl, setPrevEl] = useState(null);
-  const [nextEl, setNextEl] = useState(null);
 
   // Fetch offers
   useEffect(() => {
@@ -139,7 +135,7 @@ export default function FlashOffers() {
       <div className="container px-4 mx-auto max-w-7xl">
         
         {/* Header section */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white md:text-4xl flex items-center gap-2">
               <span className="relative flex h-3 w-3">
@@ -148,45 +144,30 @@ export default function FlashOffers() {
               </span>
               {t("flashOffers.title")}
             </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">
+            <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm md:text-base">
               {t("flashOffers.subtitle")}
             </p>
           </div>
 
-          {/* Header Top-Right Square Navigation Controls */}
-          {offers.length > 1 && (
-            <div className="flex gap-2">
-              <button
-                ref={(node) => setPrevEl(node)}
-                className="p-3 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
-                aria-label="Previous Offer"
-              >
-                <FiChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                ref={(node) => setNextEl(node)}
-                className="p-3 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
-                aria-label="Next Offer"
-              >
-                <FiChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+          {/* View All Button */}
+          <button
+            onClick={() => navigate("/store/flash-offers")}
+            className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-white font-semibold text-sm md:text-base rounded-xl transition duration-300 hover:shadow-lg hover:shadow-primary/30 flex items-center gap-1.5"
+          >
+            <FiShoppingBag className="text-sm md:text-base" />
+            {t("flashOffers.viewAll")}
+          </button>
         </div>
 
         {/* Offers Slider / Carousel */}
         <div className="relative group">
           <Swiper
-            modules={[Autoplay, Navigation, Pagination]}
+            modules={[Autoplay, Pagination]}
             spaceBetween={24}
             slidesPerView={1}
             loop={offers.length > 1}
             autoplay={{ delay: 6000, disableOnInteraction: false }}
             pagination={{ clickable: true, dynamicBullets: true }}
-            navigation={{
-              prevEl,
-              nextEl,
-            }}
             className="overflow-hidden rounded-3xl shadow-xl shadow-cyan-500/5"
           >
             {offers.map((offer) => {

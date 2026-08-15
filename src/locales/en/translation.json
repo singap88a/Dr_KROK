@@ -18,7 +18,8 @@
     "booklets": "Booklets",
     "medicalTools": "Medical Tools",
     "apparel": "Apparel",
-    "expired": "Expired"
+    "expired": "Expired",
+    "viewAll": "View All Deals"
   },
   "navbar": {
     "home": "Home",
