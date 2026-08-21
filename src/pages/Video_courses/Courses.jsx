@@ -211,9 +211,9 @@ export default function Courses() {
   return (
     <div className="min-h-screen py-10 transition-colors duration-300 ">
       <SEO 
-        title={activeTab === "video" ? "Video Courses | KROK Preparation" : "Live Courses | KROK Training"}
+        title={activeTab === "video" ? "Video Courses" : "Live Courses"}
         description={`Explore our comprehensive ${activeTab === "video" ? "recorded video courses" : "interactive live courses"} for KROK preparation. Best study materials for medicine, dentistry, and pharmacy students.`}
-        keywords="KROK Courses, KROK Preparation Course, Best KROK Courses, KROK Training, KROK Lessons Online, KROK Video Lessons, Курси КРОК, Підготовка до КРОК, Онлайн КРОК, Курсы КРОК, Подготовка к КРОК, КРОК онлайн"
+        url={activeTab === "video" ? "/courses" : "/live-courses"}
       />
       <div className="px-4 mx-auto max-w-7xl sm:px-0">
         {/* Header */}

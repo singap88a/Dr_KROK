@@ -17,6 +17,7 @@ import {
 import { toast } from "react-toastify";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
+import SEO from "../../components/SEO/SEO";
 
 export default function ContactUs() {
   const { request } = useApi();
@@ -94,6 +95,11 @@ export default function ContactUs() {
 
   return (
     <div>
+      <SEO 
+        title="Contact Us"
+        description="Get in touch with DR-KROK support and administration team for inquiries about KROK preparation, courses, and platform features."
+        url="/contact"
+      />
       {/* Hero Section */}
       <div
         className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] bg-cover bg-center overflow-hidden"

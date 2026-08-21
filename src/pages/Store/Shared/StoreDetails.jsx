@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import LoadingSpinner from "../../../components/Common/LoadingSpinner";
 import PDFViewer from "../../../components/Books/PDFViewer";
 import ErrorBoundary from "../../../components/Common/ErrorBoundary";
+import SEO from "../../../components/SEO/SEO";
 
 export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
   const { id } = useParams();
@@ -153,6 +154,11 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
 
   return (
     <section className="min-h-screen px-4 py-12 transition-colors duration-300 md:px-10 lg:px-20 bg-background text-text">
+      <SEO 
+        title={item.name}
+        description={item.description ? item.description.replace(/<[^>]*>?/gm, '').slice(0, 160) : undefined}
+        image={mainImage}
+      />
       <div className="max-w-6xl mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 text-text-secondary hover:text-primary">
           <FiArrowLeft /> {t('books.back')}
