@@ -39,6 +39,7 @@ import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import LeaveReview from "../../components/Courses/LeaveReview.jsx";
 import TopStudentsSlider from "../../components/Common/TopStudentsSlider";
+import SEO from "../../components/SEO/SEO";
 
 export default function LiveCourseDetails() {
   const { id } = useParams();
@@ -229,6 +230,12 @@ export default function LiveCourseDetails() {
 
   return (
     <section className="min-h-screen px-4 py-20 bg-background sm:px-6 md:px-12 text-text">
+      <SEO 
+        title={course.title}
+        description={course.description ? course.description.replace(/<[^>]*>?/gm, '').slice(0, 160) : undefined}
+        image={imageUrl}
+        url={`/live-courses/${id}`}
+      />
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
         <div className="relative w-full overflow-hidden shadow-lg rounded-2xl lg:mx-0 h-fit lg:self-start">

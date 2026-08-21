@@ -129,7 +129,7 @@ const TestYourself = () => {
       <SEO 
         title={seo.title}
         description={seo.description}
-        keywords="KROK Test, KROK Questions, KROK Practice Tests, KROK Mock Exam, KROK Simulation, Тест КРОК, Питання КРОК, Відповіді КРОК, Пробний КРОК, Симуляція КРОК, Тренажер КРОК, Тесты КРОК, Вопросы КРОК, Ответы КРОК, Пробный КРОК"
+        url="/test"
       />
       {testCompleted && results ? (
         <ResultsPage 

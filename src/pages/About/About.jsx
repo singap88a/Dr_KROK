@@ -3,11 +3,16 @@ import OurStory from "../../components/About/OurStory";
 import Mission_Vision from "../../components/About/Mission_Vision";
 import AboutFeatures from "../../components/About/AboutFeatures";
 import Testimonials from "../../components/About/Testimonials";
+import SEO from "../../components/SEO/SEO";
 
 export default function About() {
   return (
     <section className="min-h-screen text-text">
-      {/* Hero Section */}
+      <SEO 
+        title="About Us"
+        description="Learn about DR-KROK mission, vision, and values empowering medical, dental, and pharmacy students in KROK exam preparation."
+        url="/about"
+      />
       <div className="">
         <Heroabout
           title="About Us"

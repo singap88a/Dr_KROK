@@ -37,6 +37,7 @@ import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import LeaveReview from "../../components/Courses/LeaveReview.jsx";
 import TopStudentsSlider from "../../components/Common/TopStudentsSlider";
+import SEO from "../../components/SEO/SEO";
 
 export default function CourseDetails() {
   const { id } = useParams();
@@ -254,6 +255,12 @@ export default function CourseDetails() {
 
   return (
     <section className="min-h-screen px-4 py-8 bg-background sm:px-6 md:px-12 text-text pt-20">
+      <SEO 
+        title={course.title}
+        description={course.description ? course.description.replace(/<[^>]*>?/gm, '').slice(0, 160) : undefined}
+        image={imageUrl}
+        url={`/courses/${id}`}
+      />
       <div className="grid max-w-6xl gap-8 mx-auto lg:grid-cols-2 lg:gap-10">
         {/* صورة أو فيديو */}
         <div className="relative w-full h-[500px] overflow-hidden shadow-lg rounded-2xl lg:mx-0">

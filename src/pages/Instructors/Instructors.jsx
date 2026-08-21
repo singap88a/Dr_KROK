@@ -103,9 +103,9 @@ function Instructors() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-gray-900 dark:to-gray-950">
       <SEO 
-        title="Our Instructors | Expert KROK Tutors"
+        title="Our Instructors"
         description="Meet our team of professional medical instructors and KROK tutors. Get expert guidance and training to pass your medical exams easily."
-        keywords="KROK Tutor, KROK Academy, KROK Preparation Ukraine, Репетитор КРОК, Навчання КРОК, Репетитор КРОК"
+        url="/instructors"
       />
       <div className="container px-4 py-12 mx-auto max-w-7xl">
         {/* Header */}
