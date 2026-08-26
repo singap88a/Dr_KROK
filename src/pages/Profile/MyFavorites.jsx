@@ -339,10 +339,10 @@ export default function MyFavorites() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => navigate(
-                        item.type === 'book' ? `/book/${item.table_id}` : 
-                        item.type === 'booklet' ? `/store/booklets/${item.table_id}` :
-                        item.type === 'medical_tool' ? `/store/medical-tools/${item.table_id}` :
-                        item.type === 'apparel' ? `/store/medical-clothes/${item.table_id}` :
+                        item.type === 'book' ? `/store/books/${item.table_id}` : 
+                        item.type === 'booklet' ? `/store/booklets/${bookData.slug || item.table_id}` :
+                        item.type === 'medical_tool' ? `/store/medical-tools/${bookData.slug || item.table_id}` :
+                        item.type === 'apparel' ? `/store/medical-clothes/${bookData.slug || item.table_id}` :
                         `/courses/${item.table_id}`
                       )}
                       className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"

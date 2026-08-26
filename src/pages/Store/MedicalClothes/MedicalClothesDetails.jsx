@@ -79,7 +79,7 @@ export default function MedicalClothesDetails() {
         // Fallback to fetching list
         if (!itemData) {
           try {
-            const listResponse = await request(`apparels`);
+            const listResponse = await request(`apparels?limit=1000`);
             if (listResponse && Array.isArray(listResponse.data)) {
               itemData = listResponse.data.find(item => item.slug === id || String(item.id) === String(id));
             } else if (Array.isArray(listResponse)) {
@@ -93,6 +93,11 @@ export default function MedicalClothesDetails() {
         if (itemData) {
           setItem(itemData);
           setActiveImage(itemData.main_image);
+          
+          // Auto-redirect from ID to slug in URL if slug exists
+          if (id && !isNaN(id) && itemData.slug) {
+            navigate(`/store/medical-clothes/${itemData.slug}`, { replace: true });
+          }
         } else {
           setError("Item not found");
         }
@@ -103,7 +108,7 @@ export default function MedicalClothesDetails() {
       }
     };
     fetchDetails();
-  }, [id, request]);
+  }, [id, request, navigate]);
 
   const handleToggleFavorite = async () => {
     if (!isLoggedIn) {

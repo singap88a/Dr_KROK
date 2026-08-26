@@ -33,6 +33,20 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
                        isBookType ? 'book' : productType;
 
   useEffect(() => {
+    const checkFavoriteStatus = async (numericId) => {
+      if (!isLoggedIn || !numericId) return;
+      try {
+        const response = await request("favorites", { auth: true });
+        const favorites = response.data || [];
+        const isItemFavorite = favorites.some(fav => 
+          fav.table_id === parseInt(numericId) && fav.type === favoriteType
+        );
+        setIsFavorite(isItemFavorite);
+      } catch (err) {
+        console.error("Failed to check favorite status:", err);
+      }
+    };
+
     const fetchItemDetails = async () => {
       try {
         let response;
@@ -55,7 +69,7 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
         // Fallback: If item not found (e.g. backend doesn't support fetching by slug yet)
         if (!itemData) {
             try {
-                const listResponse = await request(apiPath);
+                const listResponse = await request(`${apiPath}${apiPath.includes('?') ? '&' : '?'}limit=1000`);
                 if (listResponse && Array.isArray(listResponse.data)) {
                     itemData = listResponse.data.find(item => item.slug === id || String(item.id) === String(id));
                 } else if (Array.isArray(listResponse)) {
@@ -75,32 +89,31 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
         setItem(itemData);
         const images = Object.values(itemData.images || {});
         setMainImage(images[0]?.url || images[0]?.original_url || itemData.main_image || itemData.image || "");
+        
+        // Check favorite status with the correct numeric ID
+        checkFavoriteStatus(itemData.id);
+
+        // Auto-redirect from ID to slug in URL if slug exists (only for booklets and medical tools)
+        if (id && !isNaN(id) && itemData.slug) {
+          let routePrefix = '';
+          if (productType === 'booklet') routePrefix = 'booklets';
+          else if (productType === 'medical_tool') routePrefix = 'medical-tools';
+          
+          if (routePrefix) {
+            navigate(`/store/${routePrefix}/${itemData.slug}`, { replace: true });
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    
-    const checkFavoriteStatus = async () => {
-      if (!isLoggedIn) return;
-      try {
-        const response = await request("favorites", { auth: true });
-        const favorites = response.data || [];
-        const isItemFavorite = favorites.some(fav => 
-          fav.table_id === parseInt(id) && fav.type === favoriteType
-        );
-        setIsFavorite(isItemFavorite);
-      } catch (err) {
-        console.error("Failed to check favorite status:", err);
-      }
-    };
 
     if (id) {
       fetchItemDetails();
-      checkFavoriteStatus();
     }
-  }, [id, request, i18n.language, isLoggedIn, apiPath, favoriteType]);
+  }, [id, request, i18n.language, isLoggedIn, apiPath, favoriteType, navigate, productType]);
 
   const handleViewPdf = (url) => {
     setCurrentPdfUrl(url);

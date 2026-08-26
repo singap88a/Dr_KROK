@@ -59,7 +59,7 @@ export default function BookCard({ item, isFavorite, onToggleFavorite, isLoading
         </div>
 
         <button
-          onClick={() => navigate(`${detailsRoute}/${item.id}`)}
+          onClick={() => navigate(`${detailsRoute}/${item.product_type === 'booklet' ? (item.slug || item.id) : item.id}`)}
           className="px-4 py-2 mt-auto font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110"
         >
           {t('books.view_details', 'View Details')}
