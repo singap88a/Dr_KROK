@@ -1,5 +1,5 @@
 import React from "react";
-import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle } from "react-icons/fa";
+import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaRegCopy, FaFileAlt } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -44,7 +44,35 @@ export default function VideoPlayerSection({
   isLiveCourse = false,
   groupId = null,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [activeTab, setActiveTab] = React.useState("about");
+
+  const content = currentLesson || currentSection;
+  const hasAttachments = content && (
+    (content.images && content.images.length > 0) ||
+    (content.files && content.files.length > 0) ||
+    (content.video_related && content.video_related.length > 0)
+  );
+
+  const hasQuizzes = currentLesson && (
+    (currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0) ||
+    (currentLesson.periodic_quizzes && currentLesson.periodic_quizzes.length > 0)
+  );
+
+  const tabs = [
+    { id: "about", label: t("courses.tabs.about", "About"), icon: <FaFileAlt className="text-xs" /> },
+    ...(hasAttachments ? [{ id: "attachments", label: t("courses.tabs.attachments", "Files"), icon: <FaPaperclip className="text-xs" /> }] : []),
+    ...(hasQuizzes ? [{ id: "quizzes", label: t("courses.tabs.quizzes", "Quizzes"), icon: <FaGraduationCap className="text-xs" /> }] : []),
+    ...(currentLesson ? [{ id: "flashcards", label: t("courses.tabs.flashcards", "Flashcards"), icon: <FaRegCopy className="text-xs" /> }] : []),
+    ...(currentLesson ? [{ id: "comments", label: t("courses.tabs.comments", "Discussions"), icon: <FaComments className="text-xs" /> }] : []),
+  ];
+
+  React.useEffect(() => {
+    const isTabAvailable = tabs.some(tab => tab.id === activeTab);
+    if (!isTabAvailable) {
+      setActiveTab("about");
+    }
+  }, [currentLesson?.id, currentSection?.id, hasAttachments, hasQuizzes]);
 
   const shouldShowContent = () => {
     if (currentLesson) {
@@ -371,73 +399,109 @@ export default function VideoPlayerSection({
                     </div>
                   )}
 
-                  {/* Session description */}
-                  {(currentLesson?.description || currentSection?.description) && (
-                    <div className="mt-3 text-sm text-text-secondary">
-                      <div
-                        className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
-                        dangerouslySetInnerHTML={{ __html: currentLesson?.description || currentSection?.description }}
-                      />
-                      {(currentLesson?.description || currentSection?.description || "").length > 150 && (
+                  {/* ── Tab Bar Navigation ── */}
+                  <div className="relative flex flex-wrap bg-gray-100/60 dark:bg-gray-800/40 p-1.5 rounded-2xl my-6 gap-1 border border-border/10">
+                    {tabs.map((tab) => {
+                      const isActive = activeTab === tab.id;
+                      return (
                         <button
-                          onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                          className="mt-1 text-sm font-medium underline text-primary hover:text-primary/80 cursor-pointer"
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`relative flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-colors duration-300 whitespace-nowrap outline-none select-none ${
+                            isActive
+                              ? "text-white animate-in scale-in-95 duration-100"
+                              : "text-text-secondary hover:text-text"
+                          }`}
                         >
-                          {isDescriptionExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeTabIndicator"
+                              className="absolute inset-0 bg-primary rounded-xl"
+                              style={{ originY: "0px" }}
+                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                            />
+                          )}
+                          <span className="relative z-10 flex items-center gap-2">
+                            {tab.icon}
+                            <span>{tab.label}</span>
+                          </span>
                         </button>
-                      )}
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
 
-                  {/* Live Session Schedule & Join Link - Active Content */}
-                  {isLiveCourse && renderActiveSessionCard()}
+                  {/* ── Tab Contents ── */}
+                  <div className="mt-4 animate-in fade-in duration-300">
+                    {activeTab === "about" && (
+                      <div className="space-y-4">
+                        {/* Session description */}
+                        {(currentLesson?.description || currentSection?.description) && (
+                          <div className="text-sm text-text-secondary">
+                            <div
+                              className={`leading-relaxed ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}
+                              dangerouslySetInnerHTML={{ __html: currentLesson?.description || currentSection?.description }}
+                            />
+                            {(currentLesson?.description || currentSection?.description || "").length > 250 && (
+                              <button
+                                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                className="mt-2 text-sm font-semibold underline text-primary hover:text-primary/80 cursor-pointer"
+                              >
+                                {isDescriptionExpanded ? t("common.showLess", "Show Less") : t("common.showMore", "Show More")}
+                              </button>
+                            )}
+                          </div>
+                        )}
 
-                  {/* Attachments */}
-                  <LessonAttachments
-                    content={currentLesson || currentSection}
-                    setSelectedImage={onImageClick}
-                    setShowImagePopup={() => { }}
-                    handleFileClick={onFileClick}
-                    handleVideoClick={onVideoClick}
-                  />
+                        {/* Live Session Schedule & Join Link */}
+                        {isLiveCourse && renderActiveSessionCard()}
+                      </div>
+                    )}
 
-                  {/* Quizzes */}
-                  {currentLesson && (
-                    <>
-                      <PeriodicQuizzesSection lesson={currentLesson} />
-                      <LessonEndTestsSection
-                        lesson={currentLesson}
-                        lessonStatuses={lessonStatuses}
-                        id={id}
-                        course={course}
-                        isLive={isLiveCourse}
+                    {activeTab === "attachments" && hasAttachments && (
+                      <LessonAttachments
+                        content={currentLesson || currentSection}
+                        setSelectedImage={onImageClick}
+                        setShowImagePopup={() => { }}
+                        handleFileClick={onFileClick}
+                        handleVideoClick={onVideoClick}
                       />
-                    </>
-                  )}
+                    )}
 
-                  {/* ── Flash Cards Section (Placed above comments) ── */}
-                  {currentLesson && (
-                    <LessonFlashCards
-                      lessonId={currentLesson.id}
-                      isLiveCourse={isLiveCourse}
-                      hasAccess={hasAccess}
-                    />
-                  )}
+                    {activeTab === "quizzes" && hasQuizzes && currentLesson && (
+                      <div className="space-y-6">
+                        <PeriodicQuizzesSection lesson={currentLesson} />
+                        <LessonEndTestsSection
+                          lesson={currentLesson}
+                          lessonStatuses={lessonStatuses}
+                          id={id}
+                          course={course}
+                          isLive={isLiveCourse}
+                        />
+                      </div>
+                    )}
 
-                  {/* ── Discussion Section (at the bottom, after all lesson content) ── */}
-                  {currentLesson && (
-                    <div className="mt-6">
-                      <LessonInteractions
-                        key={`full-${currentLesson.id}`}
+                    {activeTab === "flashcards" && currentLesson && (
+                      <LessonFlashCards
                         lessonId={currentLesson.id}
-                        batchLessonId={currentLesson.batch_lesson_id}
                         isLiveCourse={isLiveCourse}
-                        groupId={groupId}
-                        mode="full"
                         hasAccess={hasAccess}
                       />
-                    </div>
-                  )}
+                    )}
+
+                    {activeTab === "comments" && currentLesson && (
+                      <div className="mt-4">
+                        <LessonInteractions
+                          key={`full-${currentLesson.id}`}
+                          lessonId={currentLesson.id}
+                          batchLessonId={currentLesson.batch_lesson_id}
+                          isLiveCourse={isLiveCourse}
+                          groupId={groupId}
+                          mode="full"
+                          hasAccess={hasAccess}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (

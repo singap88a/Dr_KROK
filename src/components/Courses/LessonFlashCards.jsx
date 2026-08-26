@@ -65,7 +65,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const isRtl = i18n.language === "ar";
+  const isRtl = i18n.dir() === "rtl";
 
   // Load cards from API or fallback to mock
   useEffect(() => {
@@ -247,27 +247,27 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
 
   // Multilingual Text Dictionary
   const texts = {
-    title: t("flashcards.title", isRtl ? "بطاقات الاستذكار للدرس" : "Lesson Flash Cards"),
-    subtitle: t("flashcards.subtitle", isRtl ? "اختبر معلوماتك وراجع أهم النقاط بسرعة فائقة!" : "Review core concepts and test your knowledge quickly!"),
-    flipTip: t("flashcards.flipTip", isRtl ? "انقر على البطاقة لقلبها ورؤية الإجابة" : "Click card to flip and reveal the answer"),
-    knewIt: t("flashcards.knewIt", isRtl ? "كنت أعرفها" : "I knew this"),
-    reviewAgain: t("flashcards.reviewAgain", isRtl ? "احتاج لمراجعتها" : "Review again"),
-    next: t("flashcards.next", isRtl ? "التالي" : "Next"),
-    prev: t("flashcards.prev", isRtl ? "السابق" : "Prev"),
-    restart: t("flashcards.restart", isRtl ? "البدء من جديد" : "Restart Quiz"),
-    completedTitle: t("flashcards.completedTitle", isRtl ? "رائع! أنهيت المراجعة بنجاح 🎉" : "Excellent! You finished reviewing 🎉"),
-    completedDesc: t("flashcards.completedDesc", isRtl ? "لقد مررت على جميع بطاقات الاستذكار في هذا الدرس بنجاح." : "You have successfully studied all the cards in this deck."),
-    statsTitle: t("flashcards.statsTitle", isRtl ? "إحصائيات الجلسة" : "Session Summary"),
-    statsKnew: t("flashcards.statsKnew", isRtl ? "نقاط متقنة:" : "Mastered:"),
-    statsReview: t("flashcards.statsReview", isRtl ? "بحاجة لمراجعة:" : "Needs Review:"),
-    statsProgress: t("flashcards.statsProgress", isRtl ? "نسبة الإتقان:" : "Mastery Rate:"),
-    keyboardHelp: t("flashcards.keyboardHelp", isRtl ? "اختصارات لوحة المفاتيح" : "Keyboard Shortcuts"),
-    keyboardSpace: t("flashcards.keyboardSpace", isRtl ? "المسافة / إدخال : لقلب البطاقة" : "Space / Enter : Flip card"),
-    keyboardArrows: t("flashcards.keyboardArrows", isRtl ? "الأسهم الجانبية : الانتقال للبطاقات" : "Left / Right Arrows : Prev / Next"),
-    keyboardReview: t("flashcards.keyboardReview", isRtl ? "مفتاح 1 / R : وضع علامة مراجعة" : "Key 1 / R : Mark for review"),
-    keyboardKnew: t("flashcards.keyboardKnew", isRtl ? "مفتاح 2 / K : وضع علامة إتقان" : "Key 2 / K : Mark as mastered"),
-    cardOf: t("flashcards.cardOf", isRtl ? "بطاقة {current} من {total}" : "Card {current} of {total}"),
-    loading: t("flashcards.loading", isRtl ? "جاري تحميل بطاقات الاستذكار..." : "Loading flash cards...")
+    title: t("flashcards.title", "Lesson Flash Cards"),
+    subtitle: t("flashcards.subtitle", "Review core concepts and test your knowledge quickly!"),
+    flipTip: t("flashcards.flipTip", "Click card to flip and reveal the answer"),
+    knewIt: t("flashcards.knewIt", "I knew this"),
+    reviewAgain: t("flashcards.reviewAgain", "Review again"),
+    next: t("flashcards.next", "Next"),
+    prev: t("flashcards.prev", "Prev"),
+    restart: t("flashcards.restart", "Restart Quiz"),
+    completedTitle: t("flashcards.completedTitle", "Excellent! You finished reviewing 🎉"),
+    completedDesc: t("flashcards.completedDesc", "You have successfully studied all the cards in this deck."),
+    statsTitle: t("flashcards.statsTitle", "Session Summary"),
+    statsKnew: t("flashcards.statsKnew", "Mastered:"),
+    statsReview: t("flashcards.statsReview", "Needs Review:"),
+    statsProgress: t("flashcards.statsProgress", "Mastery Rate:"),
+    keyboardHelp: t("flashcards.keyboardHelp", "Keyboard Shortcuts"),
+    keyboardSpace: t("flashcards.keyboardSpace", "Space / Enter : Flip card"),
+    keyboardArrows: t("flashcards.keyboardArrows", "Left / Right Arrows : Prev / Next"),
+    keyboardReview: t("flashcards.keyboardReview", "Key 1 / R : Mark for review"),
+    keyboardKnew: t("flashcards.keyboardKnew", "Key 2 / K : Mark as mastered"),
+    cardOf: t("flashcards.cardOf", "Card {current} of {total}"),
+    loading: t("flashcards.loading", "Loading flash cards...")
   };
 
   if (loading) {
@@ -332,7 +332,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
             <h3 className="text-xl font-bold text-text flex items-center gap-2">
               {texts.title}
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
-                {cards.length} {isRtl ? "بطاقات" : "cards"}
+                {t("flashcards.cardsCount", { count: cards.length })}
               </span>
             </h3>
             <p className="text-xs text-text-muted mt-0.5">{texts.subtitle}</p>
@@ -365,8 +365,8 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
           {/* Progress Bar Container */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-semibold text-text-muted">
-              <span>{texts.cardOf.replace("{current}", currentIndex + 1).replace("{total}", cards.length)}</span>
-              <span>{progressPercentage}% {isRtl ? "مكتمل" : "completed"}</span>
+              <span>{texts.cardOf.replace("{{current}}", currentIndex + 1).replace("{current}", currentIndex + 1).replace("{{total}}", cards.length).replace("{total}", cards.length)}</span>
+              <span>{progressPercentage}% {t("flashcards.completed", "completed")}</span>
             </div>
             <div className="w-full h-2.5 bg-accent/30 rounded-full overflow-hidden border border-border/20">
               <div 
@@ -387,7 +387,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted">
                   <span className="uppercase tracking-wider flex items-center gap-1">
                     <FaLightbulb className="text-yellow-500 animate-pulse" />
-                    {isRtl ? "سؤال الاستذكار" : "Question Card"}
+                    {t("flashcards.questionCard", "Question Card")}
                   </span>
                   <span className="px-2 py-0.5 rounded bg-accent/50 text-[10px]">
                     {currentIndex + 1} / {cards.length}
@@ -425,7 +425,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                 <div className="flex justify-between items-center text-xs font-semibold text-primary">
                   <span className="uppercase tracking-wider flex items-center gap-1">
                     <FaCheck className="text-secondary" />
-                    {isRtl ? "الإجابة النموذجية" : "Model Answer"}
+                    {t("flashcards.modelAnswer", "Model Answer")}
                   </span>
                   <span className="px-2 py-0.5 rounded bg-primary/10 text-[10px]">
                     {currentIndex + 1} / {cards.length}
@@ -478,7 +478,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
             </button>
 
             <span className="text-xs font-semibold text-text-muted">
-              {isRtl ? "مفتاح المسافة للقلب" : "Press Space to Flip"}
+              {t("flashcards.spaceToFlip", "Press Space to Flip")}
             </span>
 
             <button 
@@ -488,7 +488,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                 loadingMore ? "opacity-50 cursor-wait" : ""
               }`}
             >
-              <span>{loadingMore ? (isRtl ? "جاري التحميل..." : "Loading...") : texts.next}</span>
+              <span>{loadingMore ? t("flashcards.loading", "Loading...") : texts.next}</span>
               {!loadingMore && <FaArrowRight className={isRtl ? "rotate-180" : ""} />}
             </button>
           </div>

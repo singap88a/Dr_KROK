@@ -21,6 +21,34 @@
     "expired": "Expired",
     "viewAll": "View All Deals"
   },
+  "flashcards": {
+    "title": "Lesson Flash Cards",
+    "subtitle": "Review core concepts and test your knowledge quickly!",
+    "flipTip": "Click card to flip and reveal the answer",
+    "knewIt": "I knew this",
+    "reviewAgain": "Review again",
+    "next": "Next",
+    "prev": "Prev",
+    "restart": "Restart Quiz",
+    "completedTitle": "Excellent! You finished reviewing 🎉",
+    "completedDesc": "You have successfully studied all the cards in this deck.",
+    "statsTitle": "Session Summary",
+    "statsKnew": "Mastered:",
+    "statsReview": "Needs Review:",
+    "statsProgress": "Mastery Rate:",
+    "keyboardHelp": "Keyboard Shortcuts",
+    "keyboardSpace": "Space / Enter : Flip card",
+    "keyboardArrows": "Left / Right Arrows : Prev / Next",
+    "keyboardReview": "Key 1 / R : Mark for review",
+    "keyboardKnew": "Key 2 / K : Mark as mastered",
+    "cardOf": "Card {{current}} of {{total}}",
+    "loading": "Loading flash cards...",
+    "cardsCount": "{{count}} cards",
+    "completed": "completed",
+    "spaceToFlip": "Press Space to Flip",
+    "questionCard": "Question Card",
+    "modelAnswer": "Model Answer"
+  },
   "navbar": {
     "home": "Home",
     "courses": "Courses",
@@ -734,6 +762,13 @@
     "selectInstructorInfo": "Select an instructor to view their info here."
   },
   "courses": {
+    "tabs": {
+      "about": "About",
+      "attachments": "Files",
+      "quizzes": "Quizzes",
+      "flashcards": "Flashcards",
+      "comments": "Discussions"
+    },
     "askInstructor": "Ask the Instructor",
     "askInstructorDescription": "Have questions about this course? Contact the instructor directly for personalized assistance.",
     "courseCompletedTitle": "Course Successfully Passed!",
