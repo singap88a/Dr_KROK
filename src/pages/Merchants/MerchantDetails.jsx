@@ -406,11 +406,11 @@ export default function MerchantDetails() {
           <main className="flex-1 min-w-0">
             
             {/* Search and Filters */}
-            <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200/80 dark:border-gray-800 p-4 mb-5 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200/80 dark:border-gray-800 p-3 sm:p-4 mb-5 shadow-sm min-w-0 overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 w-full min-w-0">
                 
                 {/* Search */}
-                <div className="relative w-full md:w-72">
+                <div className="relative w-full md:flex-1 md:max-w-md">
                   <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
                   <input
                     type="text"
@@ -430,7 +430,7 @@ export default function MerchantDetails() {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+                <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-1.5 overflow-x-auto pb-1 md:pb-0 hide-scrollbar w-full md:w-auto min-w-0">
                   {FILTERS.map((f) => {
                     const cnt = counts[f.key];
                     if (f.key !== "all" && cnt === 0) return null;
@@ -439,7 +439,7 @@ export default function MerchantDetails() {
                       <button
                         key={f.key}
                         onClick={() => setActiveFilter(f.key)}
-                        className={`whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                        className={`flex-1 md:flex-none justify-center md:justify-start whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-2 md:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                           active
                             ? "bg-primary text-white shadow-sm"
                             : "bg-[#f5f5f7] dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -469,7 +469,7 @@ export default function MerchantDetails() {
 
             {/* Products Grid */}
             {filtered.length > 0 ? (
-              <div className="grid gap-5 grid-cols-2 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((item) => (
                   <ProductCard key={`${item._category}-${item.id}`} item={item} />
                 ))}

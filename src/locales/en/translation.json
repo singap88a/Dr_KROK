@@ -668,7 +668,8 @@
     "viewDetails": "View Details",
     "removedFromFavorites": "Removed from favorites",
     "failedToRemove": "Failed to remove from favorites",
-    "failedToLoad": "Failed to load favorites"
+    "failedToLoad": "Failed to load favorites",
+    "filterCenterCourses": "Center Courses"
   },
   "instructors": {
     "title": "Our Instructors",
@@ -1080,32 +1081,51 @@
       "score": "Score",
       "percentage": "Percentage",
       "noStudents": "No top students yet."
-    }
+    },
+    "centerCourse": "Center Course"
   },
   "orders": {
     "title": "My Orders",
-    "totalOrders": "{{count}} total orders",
+    "totalOrders_one": "{{count}} Order",
+    "totalOrders_other": "{{count}} Orders",
     "all": "All",
     "books": "Books",
     "courses": "Courses",
-    "live_course": "Live Course",
-    "pdf": "PDF",
-    "delivery": "Delivery",
-    "type": "Type",
-    "number": "#",
     "item": "Item",
+    "type": "Type",
     "price": "Price",
     "status": "Status",
     "date": "Date",
+    "delivery": "Delivery",
+    "pdf": "PDF",
+    "delivery_to": "Delivery to",
     "statuses": {
       "pending": "Pending",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
       "processing": "Processing",
       "shipped": "Shipped",
       "delivered": "Delivered",
+      "completed": "Completed",
       "paid": "Paid",
-      "payment": "Payment Pending"
+      "cancelled": "Cancelled",
+      "payment": "Payment Processing",
+      "pending_desc": "Your order has been received and is waiting for processing.",
+      "processing_desc": "Your order is being prepared for shipment.",
+      "shipped_desc": "Your order has been shipped and is on its way.",
+      "delivered_desc": "Your order has been successfully delivered.",
+      "paid_desc": "Payment has been successfully processed.",
+      "cancelled_desc": "Your order has been cancelled.",
+      "payment_desc": "Payment is being processed.",
+      "unavailable": "Status information not available.",
+      "unknown": "Unknown"
+    },
+    "messages": {
+      "title": "Order Messages",
+      "no_messages": "No messages for this order yet.",
+      "delivery_paid": "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours",
+      "delivery_completed": "Your order has reached the shipping company, you can go to receive it now",
+      "pdf_completed": "Your order has been completed successfully and you can now download the file as PDF",
+      "course_completed": "This course is now fully yours, you can watch it now",
+      "course_pending": "This course is now yours, but the remaining course amount is pending"
     }
   },
   "subscription": {
@@ -1232,50 +1252,6 @@
       "required": "Please enter a coupon code"
     }
   },
-  "orders": {
-    "title": "My Orders",
-    "totalOrders_one": "{{count}} Order",
-    "totalOrders_other": "{{count}} Orders",
-    "all": "All",
-    "books": "Books",
-    "courses": "Courses",
-    "item": "Item",
-    "type": "Type",
-    "price": "Price",
-    "status": "Status",
-    "date": "Date",
-    "delivery": "Delivery",
-    "pdf": "PDF",
-    "delivery_to": "Delivery to",
-    "statuses": {
-      "pending": "Pending",
-      "processing": "Processing",
-      "shipped": "Shipped",
-      "delivered": "Delivered",
-      "completed": "Completed",
-      "paid": "Paid",
-      "cancelled": "Cancelled",
-      "payment": "Payment Processing",
-      "pending_desc": "Your order has been received and is waiting for processing.",
-      "processing_desc": "Your order is being prepared for shipment.",
-      "shipped_desc": "Your order has been shipped and is on its way.",
-      "delivered_desc": "Your order has been successfully delivered.",
-      "paid_desc": "Payment has been successfully processed.",
-      "cancelled_desc": "Your order has been cancelled.",
-      "payment_desc": "Payment is being processed.",
-      "unavailable": "Status information not available.",
-      "unknown": "Unknown"
-    },
-    "messages": {
-      "title": "Order Messages",
-      "no_messages": "No messages for this order yet.",
-      "delivery_paid": "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours",
-      "delivery_completed": "Your order has reached the shipping company, you can go to receive it now",
-      "pdf_completed": "Your order has been completed successfully and you can now download the file as PDF",
-      "course_completed": "This course is now fully yours, you can watch it now",
-      "course_pending": "This course is now yours, but the remaining course amount is pending"
-    }
-  },
   "jobs": {
     "title": "Careers",
     "generalApply": "General Application",
@@ -1366,5 +1342,13 @@
       "whatsapp": "WhatsApp is required",
       "university": "Please select a university"
     }
+  },
+  "centerCourses": {
+    "label": "CENTER COURSE",
+    "upcoming": "UPCOMING",
+    "full": "FULL",
+    "ended": "ENDED",
+    "comingSoon": "STARTING SOON",
+    "students": "Students"
   }
 }

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 export default function MyFavorites() {
-  const { getFavorites, toggleFavorite, request, getVideoCourseById, getLiveCourseById } = useApi();
+  const { getFavorites, toggleFavorite, request, getVideoCourseById, getLiveCourseById, getCenterCourseById } = useApi();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [favorites, setFavorites] = useState([]);
@@ -80,6 +80,12 @@ export default function MyFavorites() {
               return {
                 ...favorite,
                 courseData: liveCourse
+              };
+            } else if (favorite.type === 'center_course') {
+              const centerCourse = await getCenterCourseById(favorite.table_id);
+              return {
+                ...favorite,
+                courseData: centerCourse
               };
             }
             return favorite;
@@ -172,6 +178,7 @@ export default function MyFavorites() {
               <option value="apparel">{t("navbar.medicalClothes", "Medical Clothes")}</option>
               <option value="video_course">{t("favorites.filterCourses", "Video Courses")}</option>
               <option value="live_course">{t("favorites.filterLiveCourses", "Live Courses")}</option>
+              <option value="center_course">{t("favorites.filterCenterCourses", "Center Courses")}</option>
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-secondary">
               <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -185,8 +192,8 @@ export default function MyFavorites() {
       {/* Favorites Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredFavorites.map((item) => {
-          // If it's a video course, render the same card style as books
-          if (item.type === 'video_course' || item.type === 'live_course') {
+          // If it's a video course, live course, or center course, render the same card style as books
+          if (item.type === 'video_course' || item.type === 'live_course' || item.type === 'center_course') {
             const c = item.courseData || item;
             const images = c.images ? Object.values(c.images) : [];
             const mainImage = images.length > 0 ? images[0].original_url : (c.image || "/logo.png");
@@ -223,7 +230,7 @@ export default function MyFavorites() {
 
                   {/* Type Badge */}
                   <div className="absolute px-3 py-1.5 text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider rounded-full bottom-3 left-3 backdrop-blur-md bg-black/60 border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
-                    {item.type === 'live_course' ? t("favorites.filterLiveCourses", "Live Course") : t("favorites.filterCourses", "Video Course")}
+                    {item.type === 'live_course' ? t("favorites.filterLiveCourses", "Live Course") : item.type === 'center_course' ? t("favorites.filterCenterCourses", "Center Course") : t("favorites.filterCourses", "Video Course")}
                   </div>
                 </div>
 
@@ -254,7 +261,7 @@ export default function MyFavorites() {
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => navigate(item.type === 'live_course' ? `/live-courses/${item.table_id}` : `/courses/${item.table_id}`)}
+                      onClick={() => navigate(item.type === 'live_course' ? `/live-courses/${item.table_id}` : item.type === 'center_course' ? `/center-courses/${item.table_id}` : `/courses/${item.table_id}`)}
                       className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
                     >
                       <FiEye />

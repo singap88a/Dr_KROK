@@ -45,11 +45,12 @@ export default function CourseSubscription() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, request, getAuthToken } = useApi();
+  const { getVideoCourseById, getLiveCourseById, getCenterCourseById, getCourseAccess, subscribeToCourse, subscribeToLiveCourse, subscribeToCenterCourse, request, getAuthToken } = useApi();
   const { isLoggedIn, userData } = useUser();
   const { addToCart, cartItems, removeFromCart } = useCart();
 
   const isLiveCourse = location.pathname.includes('live-courses');
+  const isCenterCourse = location.pathname.includes('center-courses');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -95,14 +96,14 @@ export default function CourseSubscription() {
         setError("");
 
         // Load course details
-        const courseData = await (isLiveCourse ? getLiveCourseById(id) : getVideoCourseById(id));
+        const courseData = await (isCenterCourse ? getCenterCourseById(id) : isLiveCourse ? getLiveCourseById(id) : getVideoCourseById(id));
         if (!mounted) return;
         setCourse(courseData);
 
         // Check access if logged in
         if (isLoggedIn) {
           try {
-            const access = await getCourseAccess(id, isLiveCourse ? 'live_course' : 'video_course');
+            const access = await getCourseAccess(id, isCenterCourse ? 'center_course' : isLiveCourse ? 'live_course' : 'video_course');
             setHasAccess(access);
           } catch {
             // If access check fails, assume no access for paid content
@@ -125,7 +126,7 @@ export default function CourseSubscription() {
     return () => {
       mounted = false;
     };
-  }, [id, isLiveCourse, getVideoCourseById, getLiveCourseById, getCourseAccess, isLoggedIn]);
+  }, [id, isLiveCourse, isCenterCourse, getVideoCourseById, getLiveCourseById, getCenterCourseById, getCourseAccess, isLoggedIn]);
 
   // Fetch purchase policy when modal is opened
   useEffect(() => {
@@ -252,7 +253,9 @@ export default function CourseSubscription() {
     try {
       let response;
 
-      if (isLiveCourse) {
+      if (isCenterCourse) {
+        response = await subscribeToCenterCourse(id, selectedPayment, finalAmount, couponId);
+      } else if (isLiveCourse) {
         response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId);
       } else {
         response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId);
@@ -262,11 +265,11 @@ export default function CourseSubscription() {
 
       if (response && response.success) {
         if (response.data?.payment_url) {
-          removeFromCart(id, isLiveCourse ? 'live_course' : 'course');
+          removeFromCart(id, isCenterCourse ? 'center_course' : isLiveCourse ? 'live_course' : 'course');
           // Redirect to the payment URL from the response
           window.location.href = response.data.payment_url;
         } else if (response.data?.invoice_url) {
-          removeFromCart(id, isLiveCourse ? 'live_course' : 'course');
+          removeFromCart(id, isCenterCourse ? 'center_course' : isLiveCourse ? 'live_course' : 'course');
           // Fallback for invoice_url if that's still used in some cases
           window.location.href = response.data.invoice_url;
         } else {
@@ -348,12 +351,12 @@ export default function CourseSubscription() {
 
     addToCart({
       id: course.id,
-      type: isLiveCourse ? "live_course" : "course",
-      name: course.title,
-      image: imageUrl,
-      price: discountedPrice.toFixed(2),
-      url: window.location.pathname
+      title: course.title,
+      price: discountedPrice,
+      type: isCenterCourse ? 'center_course' : isLiveCourse ? 'live_course' : 'course',
+      image: imageUrl
     });
+    toast.success(t("courses.addedToCart", "Course added to cart"));
   };
 
   const handleLoginClick = (e) => {

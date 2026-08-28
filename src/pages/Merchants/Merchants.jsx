@@ -105,27 +105,6 @@ function MerchantCard({ merchant }) {
   );
 }
 
-function SkeletonCard() {
-  return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden animate-pulse">
-      <div className="p-5 flex items-center gap-4 border-b border-gray-100 dark:border-gray-800">
-        <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-2/3" />
-          <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
-        </div>
-      </div>
-      <div className="p-4 space-y-3">
-        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full" />
-        <div className="h-px bg-gray-100 dark:bg-gray-800" />
-        <div className="flex justify-between items-center">
-          <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-16" />
-          <div className="w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-full" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Merchants() {
   const { t } = useTranslation();
@@ -235,8 +214,8 @@ export default function Merchants() {
         {!error && (
           <>
             {loading ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: PER_PAGE }).map((_, i) => <SkeletonCard key={i} />)}
+              <div className="flex items-center justify-center py-20">
+                <div className="w-10 h-10 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-24">
