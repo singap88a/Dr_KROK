@@ -459,6 +459,25 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
     return response.data;
   }, [request]);
 
+  // Merchant API functions
+  const getMerchants = useCallback(async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", params.page);
+    if (params.per_page) query.set("per_page", params.per_page);
+    const path = query.toString() ? `merchants?${query.toString()}` : "merchants";
+    const response = await request(path, { useCache: true });
+    return {
+      data: Array.isArray(response?.data) ? response.data : [],
+      pagination: response?.pagination || null,
+      raw: response,
+    };
+  }, [request]);
+
+  const getMerchantById = useCallback(async (id) => {
+    const response = await request(`merchants/${id}`, { useCache: true });
+    return response.data;
+  }, [request]);
+
   const value = useMemo(
     () => ({
       baseUrl,
@@ -476,6 +495,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      getMerchants,
+      getMerchantById,
       clearCache,
       invalidateCache,
       updateCache,
@@ -1884,6 +1905,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      getMerchants,
+      getMerchantById,
       clearCache,
       invalidateCache,
       updateCache,
