@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaPlay,
@@ -15,6 +15,12 @@ import {
   FaCommentDots,
   FaBell,
   FaShoppingCart,
+  FaList,
+  FaMapMarkerAlt,
+  FaFileAlt,
+  FaTshirt,
+  FaStethoscope,
+  FaChevronDown,
 } from "react-icons/fa";
 
 // Custom Tooltip Component
@@ -363,17 +369,7 @@ const normalizeOrders = (orders) => {
   if (!Array.isArray(orders)) return [];
   return orders.map((o) => {
     if (o && typeof o === "object" && "order_id" in o) {
-      let type = "book";
-      const lowerType = (o.type || "").toLowerCase();
-      if (lowerType === "video_course") {
-        type = "course";
-      } else if (lowerType === "live_course") {
-        type = "live_course";
-      } else if (lowerType === "pdf") {
-        type = "pdf";
-      } else if (lowerType === "delivery") {
-        type = "delivery";
-      }
+      const type = (o.type || "book").toLowerCase();
       return {
         id: o.order_id,
         item: o.title || "Order item",
@@ -423,6 +419,30 @@ const MyOrders = ({ orders }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
   const [selectedOrderForMessages, setSelectedOrderForMessages] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  
+  const filterOptions = [
+    { value: "all", label: t("orders.all", "All"), icon: <FaList className="text-gray-500 dark:text-gray-400" /> },
+    { value: "video_course", label: t("orders.video_course", "Video Course"), icon: <FaPlay className="text-blue-500" /> },
+    { value: "live_course", label: t("orders.live_course", "Live Course"), icon: <FaVideo className="text-red-500" /> },
+    { value: "center_course", label: t("orders.center_course", "Center Course"), icon: <FaMapMarkerAlt className="text-teal-500" /> },
+    { value: "book", label: t("orders.book", "Book"), icon: <FaBook className="text-purple-500" /> },
+    { value: "booklet", label: t("orders.booklet", "Booklet"), icon: <FaFileAlt className="text-indigo-500" /> },
+    { value: "medical_clothes", label: t("orders.medical_clothes", "Medical Clothes"), icon: <FaTshirt className="text-pink-500" /> },
+    { value: "medical_tools", label: t("orders.medical_tools", "Medical Tools"), icon: <FaStethoscope className="text-emerald-500" /> },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const [readMessageIds, setReadMessageIds] = useState(() => {
     try {
       const saved = localStorage.getItem("dr_krok_read_messages");
@@ -484,11 +504,7 @@ const MyOrders = ({ orders }) => {
   const filteredOrders =
     filterType === "all"
       ? normalizedOrders
-      : normalizedOrders.filter((order) => {
-          if (filterType === "book") return order.type === "book" || order.type === "pdf" || order.type === "delivery";
-          if (filterType === "course") return order.type === "course" || order.type === "live_course";
-          return true;
-        });
+      : normalizedOrders.filter((order) => order.type === filterType);
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {
     const aId = parseInt(a.id) || 0;
@@ -510,38 +526,45 @@ const MyOrders = ({ orders }) => {
         </span>
       </div>
 
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-2 mb-4 sm:gap-4">
-        <button
-          className={`px-4 py-2 rounded-lg text-sm sm:text-base transition-colors ${
-            filterType === "all"
-              ? "bg-primary text-white"
-              : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-          }`}
-          onClick={() => setFilterType("all")}
+      {/* Custom Filter Dropdown */}
+      <div className="relative mb-6 z-20" ref={dropdownRef}>
+        <div 
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center justify-between w-full sm:w-[280px] px-5 py-3 bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl shadow-sm hover:border-primary/50 dark:hover:border-primary/50 cursor-pointer transition-all duration-300"
         >
-          {t("orders.all")}
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg text-sm sm:text-base transition-colors ${
-            filterType === "book"
-              ? "bg-primary text-white"
-              : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-          }`}
-          onClick={() => setFilterType("book")}
-        >
-          {t("orders.books")}
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg text-sm sm:text-base transition-colors ${
-            filterType === "course"
-              ? "bg-primary text-white"
-              : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-          }`}
-          onClick={() => setFilterType("course")}
-        >
-          {t("orders.courses")}
-        </button>
+          <div className="flex items-center gap-3">
+            {filterOptions.find(opt => opt.value === filterType)?.icon}
+            <span className="font-bold text-gray-700 dark:text-gray-200">
+              {filterOptions.find(opt => opt.value === filterType)?.label}
+            </span>
+          </div>
+          <FaChevronDown className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+        </div>
+
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <div className="absolute left-0 mt-2 w-full sm:w-[280px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-fadeIn origin-top">
+            {filterOptions.map((option) => (
+              <div
+                key={option.value}
+                onClick={() => {
+                  setFilterType(option.value);
+                  setIsDropdownOpen(false);
+                }}
+                className={`flex items-center gap-3 px-5 py-3 cursor-pointer transition-colors ${
+                  filterType === option.value 
+                    ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-primary" 
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700 border-l-4 border-transparent"
+                }`}
+              >
+                {option.icon}
+                <span className={`font-semibold ${filterType === option.value ? "text-primary" : "text-gray-600 dark:text-gray-300"}`}>
+                  {option.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Orders Table (Desktop) */}
@@ -574,10 +597,12 @@ const MyOrders = ({ orders }) => {
                   <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        {order.type === "course" ? (
+                        {["video_course", "course"].includes(order.type) ? (
                           <FaPlay className="text-primary" />
                         ) : order.type === "live_course" ? (
                           <FaVideo className="text-primary" />
+                        ) : order.type === "center_course" ? (
+                          <FaPlay className="text-primary" />
                         ) : order.type === "pdf" ? (
                           <FaFilePdf className="text-primary" />
                         ) : order.type === "delivery" ? (
@@ -604,11 +629,7 @@ const MyOrders = ({ orders }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 capitalize">
-                      {order.type === "course"
-                        ? t("orders.courses")
-                        : order.type === "book"
-                        ? t("orders.books")
-                        : t(`orders.${order.type}`) || order.type}
+                      {order.type.replace('_', ' ')}
                     </td>
                     <td className="px-6 py-4 font-medium">
                       ₴{Number(order.price).toFixed(2)}
@@ -681,10 +702,12 @@ const MyOrders = ({ orders }) => {
               </div>
 
               <div className="flex items-center gap-3 mb-3">
-                {order.type === "course" ? (
+                {["video_course", "course"].includes(order.type) ? (
                   <FaPlay className="text-lg text-primary" />
                 ) : order.type === "live_course" ? (
                   <FaVideo className="text-lg text-primary" />
+                ) : order.type === "center_course" ? (
+                  <FaPlay className="text-lg text-primary" />
                 ) : order.type === "pdf" ? (
                   <FaFilePdf className="text-lg text-primary" />
                 ) : order.type === "delivery" ? (
@@ -711,11 +734,7 @@ const MyOrders = ({ orders }) => {
               <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 <p>
                   <span className="font-medium">{t("orders.type")}:</span>{" "}
-                  {order.type === "course"
-                    ? t("orders.courses")
-                    : order.type === "book"
-                    ? t("orders.books")
-                    : t(`orders.${order.type}`) || order.type}
+                  <span className="capitalize">{order.type.replace('_', ' ')}</span>
                 </p>
                 <p>
                   <span className="font-medium">{t("orders.price")}:</span> ₴
