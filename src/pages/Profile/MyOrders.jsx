@@ -14,6 +14,7 @@ import {
   FaDownload,
   FaCommentDots,
   FaBell,
+  FaShoppingCart,
 } from "react-icons/fa";
 
 // Custom Tooltip Component
@@ -302,6 +303,20 @@ const MessagesModal = ({ isOpen, onClose, order, readMessageIds, setReadMessageI
                 }`}
               >
                 <p className="text-sm font-medium text-gray-800">{msg.message}</p>
+                {msg.payment_link && (
+                  <div className="mt-3 mb-1">
+                    <a
+                      href={msg.payment_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors shadow-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FaShoppingCart />
+                      {t("orders.messages.pay_now", "Pay Now")} {msg.payment_amount ? `(${msg.payment_amount} ₴)` : ""}
+                    </a>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs text-gray-500">
                     {new Date(msg.sent_at).toLocaleString()}

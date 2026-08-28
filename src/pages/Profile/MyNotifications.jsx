@@ -334,6 +334,20 @@ const MyNotifications = () => {
                         }`}>
                           {msg.message}
                         </p>
+                        {msg.payment_link && (
+                          <div className="mt-4">
+                            <a
+                              href={msg.payment_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl transition-colors shadow-md shadow-orange-500/20"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <FaShoppingCart />
+                              {t("orders.messages.pay_now", "Pay Now")} {msg.payment_amount ? `(${msg.payment_amount} ₴)` : ""}
+                            </a>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Meta Tags */}
