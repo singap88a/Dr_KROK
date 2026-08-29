@@ -1219,6 +1219,7 @@
     "payInstallment": "Pay ${{amount}} Installment",
     "installmentModal": {
       "title": "Pay in Installments",
+      "subtitle": "Enter the amount you'd like to pay now. Minimum is {{minPct}}% of the total price.",
       "amountLabel": "Installment Amount",
       "amountPlaceholder": "Enter installment amount",
       "apply": "Apply Installment",
@@ -1226,6 +1227,14 @@
       "errorMin": "Minimum installment amount is ₴{{min}}",
       "errorMax": "Installment amount cannot exceed the total price (₴{{price}})",
       "helpText": "Minimum installment: ₴{{min}} | Total price: ₴{{price}}"
+    },
+    "cancelInstallment": "Cancel",
+    "optional": "Optional",
+    "setupInstallment": "Setup Installment Plan",
+    "amountToPayNow": "Amount to Pay Now",
+    "noInstallment": {
+      "title": "Installments Unavailable",
+      "message": "This item does not support installment payments at the moment."
     }
   },
   "video_courses": {

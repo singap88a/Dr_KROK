@@ -86,6 +86,77 @@ export default function StoreCheckout() {
   // Save before login modal state
   const [showSaveWarning, setShowSaveWarning] = useState(false);
 
+  // Installment states
+  const [useInstallment, setUseInstallment] = useState(false);
+  const [installmentAmount, setInstallmentAmount] = useState("");
+  const [installmentError, setInstallmentError] = useState("");
+  const [showInstallmentModal, setShowInstallmentModal] = useState(false);
+  const [showNoInstallmentPopup, setShowNoInstallmentPopup] = useState(false);
+  
+  const isPdfBook = isBookType && !isDelivery;
+
+  const handleOpenInstallmentModal = () => {
+    const depositPct = Number(item?.course_deposit_percentage || 0);
+    if (depositPct === 0) {
+      setShowNoInstallmentPopup(true);
+      return;
+    }
+    setShowInstallmentModal(true);
+    setInstallmentAmount("");
+    setInstallmentError("");
+  };
+
+  const handleCloseInstallmentModal = () => {
+    setShowInstallmentModal(false);
+    setInstallmentAmount("");
+    setInstallmentError("");
+    setUseInstallment(false);
+  };
+
+  const validateInstallmentAmount = (amount) => {
+    // We need to calculate discountedPrice dynamically to validate properly
+    // It's already calculated below as `discountedPrice`, but we'll recalculate here or use the state if we move it
+    const priceNumber = parseFloat(item.price) || 0;
+    const discountPercent = parseFloat(item.discount) || 0;
+    const discountAmount = discountPercent > 0 ? (priceNumber * discountPercent / 100) : 0;
+    const finalPrice = priceNumber - discountAmount;
+    const couponDisc = finalPrice * (couponDiscount / 100);
+    const dPrice = finalPrice - couponDisc;
+
+    const depositPct = Number(item?.course_deposit_percentage || 50);
+    const minAmount = dPrice * (depositPct / 100);
+    const numericAmount = Number(amount);
+
+    if (numericAmount < minAmount) {
+      return t('installments.installmentModal.errorMin', { min: minAmount.toFixed(2) }, `Minimum installment amount is ₴${minAmount.toFixed(2)}`);
+    }
+
+    if (numericAmount > dPrice) {
+      return t('installments.installmentModal.errorMax', { price: dPrice.toFixed(2) }, `Installment amount cannot exceed the total price (₴${dPrice.toFixed(2)})`);
+    }
+
+    return null;
+  };
+
+  const handleApplyInstallment = () => {
+    const validationError = validateInstallmentAmount(installmentAmount);
+
+    if (validationError) {
+      setInstallmentError(validationError);
+      return;
+    }
+
+    setUseInstallment(true);
+    setShowInstallmentModal(false);
+    setInstallmentError("");
+  };
+
+  const handleCancelInstallment = () => {
+    setUseInstallment(false);
+    setInstallmentAmount("");
+    setInstallmentError("");
+  };
+
   useEffect(() => {
     if (item?.images) {
       const images = Object.values(item.images);
@@ -258,6 +329,8 @@ export default function StoreCheckout() {
     navigate('/login', { state: { from: returnPath } });
   };
 
+  const finalAmountToPay = useInstallment ? installmentAmount : discountedPrice.toFixed(2);
+
 
 
 
@@ -340,6 +413,10 @@ const handleDeliveryOrder = async (e) => {
       if (couponId) {
         formDataToSend.append('coupon_id', couponId.toString());
       }
+      
+      // Add amount and deposit_amount for installments
+      formDataToSend.append('amount', finalAmountToPay.toString());
+      formDataToSend.append('deposit_amount', finalAmountToPay.toString());
 
       console.log('Sending order data:', {
         client_name: formData.client_name,
@@ -702,10 +779,53 @@ const handleDeliveryOrder = async (e) => {
                   <div>{t('books.free')}</div>
                 </div>
               )}
-              <div className="flex items-center justify-between mt-4 text-lg font-semibold">
-                <div>{t('books.total')}</div>
-                <div className={couponDiscount > 0 ? "text-green-600" : ""}>₴{discountedPrice.toFixed(2)}</div>
-              </div>
+                {/* Total Line */}
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200">
+                  <span className="text-lg font-bold text-gray-900">{t('books.total')}</span>
+                  <span className="text-xl font-black text-primary">₴{discountedPrice.toFixed(2)}</span>
+                </div>
+                
+                {/* Installment Options (if not PDF book) */}
+                {!isPdfBook && (
+                  <div className="mt-6 border border-primary/20 rounded-xl p-4 bg-primary/5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-primary">{t('installments.payInInstallments', 'Pay in Installments')}</h4>
+                      {useInstallment ? (
+                        <button
+                          onClick={handleCancelInstallment}
+                          className="text-sm text-red-500 hover:text-red-700 underline"
+                        >
+                          {t('installments.cancelInstallment', 'Cancel')}
+                        </button>
+                      ) : (
+                        <span className="text-sm text-gray-500">{t('installments.optional', 'Optional')}</span>
+                      )}
+                    </div>
+                    
+                    {useInstallment ? (
+                      <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-primary/30">
+                        <span className="text-sm font-medium text-gray-700">
+                          {t('installments.installmentAmount', 'Installment Amount')}
+                        </span>
+                        <span className="font-bold text-primary">₴{Number(installmentAmount).toFixed(2)}</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleOpenInstallmentModal}
+                        className="w-full py-2 px-4 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-lg font-medium transition-colors"
+                      >
+                        {t('installments.setupInstallment', 'Setup Installment Plan')}
+                      </button>
+                    )}
+                  </div>
+                )}
+                
+                {useInstallment && (
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200 bg-orange-50 p-3 rounded-lg">
+                    <span className="font-bold text-orange-800">{t('installments.amountToPayNow', 'Amount to Pay Now')}</span>
+                    <span className="text-xl font-black text-orange-600">₴{Number(installmentAmount).toFixed(2)}</span>
+                  </div>
+                )}
             </div>
 
             {/* Delivery Form */}
@@ -1042,6 +1162,98 @@ const handleDeliveryOrder = async (e) => {
         showSaveOption={!cartItems?.some(i => i.id === item?.id && i.type === "item")}
         onSave={handleAddToCart}
       />
+
+      {/* Custom Modals from Installment Logic */}
+      {showInstallmentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-fadeIn">
+            <button
+              onClick={handleCloseInstallmentModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {t('installments.installmentModal.title', 'Setup Installment')}
+              </h3>
+              <p className="text-gray-600">
+                {t('installments.installmentModal.subtitle', { minPct: item?.course_deposit_percentage || 50 }, `Enter the amount you'd like to pay now. Minimum is ${item?.course_deposit_percentage || 50}% of the total price.`)}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('installments.installmentModal.amountLabel', 'Payment Amount (₴)')}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₴</span>
+                  <input
+                    type="number"
+                    value={installmentAmount}
+                    onChange={(e) => {
+                      setInstallmentAmount(e.target.value);
+                      if (installmentError) setInstallmentError("");
+                    }}
+                    className={`w-full pl-8 pr-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all ${
+                      installmentError ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'border-gray-200 focus:border-primary focus:bg-white'
+                    }`}
+                    placeholder={(discountedPrice * (Number(item?.course_deposit_percentage || 50) / 100)).toFixed(2)}
+                  />
+                </div>
+                {installmentError && (
+                  <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                    <FiRefreshCw className="w-4 h-4" /> {installmentError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleCloseInstallmentModal}
+                  className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                >
+                  {t('common.cancel', 'Cancel')}
+                </button>
+                <button
+                  onClick={handleApplyInstallment}
+                  className="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all"
+                >
+                  {t('common.apply', 'Apply')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNoInstallmentPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-fadeIn text-center">
+            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {t('installments.noInstallment.title', 'Installments Unavailable')}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {t('installments.noInstallment.message', 'This item does not support installment payments at the moment.')}
+            </p>
+            <button
+              onClick={() => setShowNoInstallmentPopup(false)}
+              className="w-full py-3 px-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors"
+            >
+              {t('common.close', 'Close')}
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
