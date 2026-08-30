@@ -55,6 +55,9 @@ const ApplicationSuccess = lazy(() => import("./pages/Jobs/ApplicationSuccess"))
 const UniversityRepresentative = lazy(() => import("./pages/UniversityRepresentative/UniversityRepresentative"));
 const UniversityStudents = lazy(() => import("./pages/Profile/UniversityStudents"));
 const TestimonialsPage = lazy(() => import("./pages/Testimonials/Testimonials"));
+const Merchants = lazy(() => import("./pages/Merchants/Merchants"));
+const MerchantDetails = lazy(() => import("./pages/Merchants/MerchantDetails"));
+const CenterCourseDetails = lazy(() => import("./pages/Center_courses/CenterCourseDetails"));
 
 export default function App() {
   const location = useLocation();
@@ -117,6 +120,8 @@ export default function App() {
             <Route path="/live-courses/:id/test-results/:scope/:testId" element={<TestResults />} />
             <Route path="/live-courses/:id/certificate" element={<Certificate />} />
 
+            <Route path="/center-courses/:id" element={<CenterCourseDetails />} />
+            <Route path="/center-courses/:id/subscribe" element={<CourseSubscription />} />
 
             <Route path="/articles" element={<TrainerArticlesPage />} />
             <Route path="/articles/:slug" element={<ArticleDetail />} />
@@ -135,6 +140,9 @@ export default function App() {
             <Route path="/application-success" element={<ApplicationSuccess />} />
             <Route path="/university-representative" element={<UniversityRepresentative />} />
             <Route path="/profile/university-students" element={<UniversityStudents />} />
+
+            <Route path="/merchants" element={<Merchants />} />
+            <Route path="/merchants/:id" element={<MerchantDetails />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

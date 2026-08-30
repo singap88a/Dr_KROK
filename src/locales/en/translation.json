@@ -21,6 +21,76 @@
     "expired": "Expired",
     "viewAll": "View All Deals"
   },
+  "merchantsPage": {
+    "title": "Merchants",
+    "description": "Browse all merchants on Dr. KROK platform.",
+    "searchList": "Search by name, email or specialty...",
+    "searchProducts": "Search products...",
+    "sellersAvailable_one": "{{count}} seller available",
+    "sellersAvailable_other": "{{count}} sellers available",
+    "viewStore": "View store",
+    "allMerchants": "All Merchants",
+    "yearsExp": "Years Exp.",
+    "products": "Products",
+    "gender": "Gender",
+    "expertise": "Expertise",
+    "email": "Email",
+    "phone": "Phone",
+    "about": "About Merchant",
+    "filters": {
+      "all": "All",
+      "tools": "Medical Tools",
+      "apparel": "Apparel",
+      "books": "Books & Booklets"
+    },
+    "showingProducts_one": "Showing {{count}} product",
+    "showingProducts_other": "Showing {{count}} products",
+    "forSearch": " for \"{{term}}\"",
+    "inFilter": " in {{filter}}",
+    "noProductsFound": "No products found",
+    "noProductsAvail": "No products available",
+    "noProductsSearchDesc": "We couldn't find anything matching \"{{term}}\". Try adjusting your filters.",
+    "noProductsCatDesc": "This merchant hasn't listed any products in this category yet.",
+    "clearAllFilters": "Clear All Filters",
+    "noResultsFound": "No results found",
+    "noMerchantsYet": "No merchants yet",
+    "nothingMatches": "Nothing matches \"{{term}}\"",
+    "checkBackSoon": "Check back soon.",
+    "clearSearch": "Clear search",
+    "failedToLoadList": "Failed to load merchants",
+    "failedToLoadDetails": "Could not load this merchant.",
+    "retry": "Retry",
+    "best": "Best",
+    "outOfStock": "Out of stock"
+  },
+  "flashcards": {
+    "title": "Lesson Flash Cards",
+    "subtitle": "Review core concepts and test your knowledge quickly!",
+    "flipTip": "Click card to flip and reveal the answer",
+    "knewIt": "I knew this",
+    "reviewAgain": "Review again",
+    "next": "Next",
+    "prev": "Prev",
+    "restart": "Restart Quiz",
+    "completedTitle": "Excellent! You finished reviewing 🎉",
+    "completedDesc": "You have successfully studied all the cards in this deck.",
+    "statsTitle": "Session Summary",
+    "statsKnew": "Mastered:",
+    "statsReview": "Needs Review:",
+    "statsProgress": "Mastery Rate:",
+    "keyboardHelp": "Keyboard Shortcuts",
+    "keyboardSpace": "Space / Enter : Flip card",
+    "keyboardArrows": "Left / Right Arrows : Prev / Next",
+    "keyboardReview": "Key 1 / R : Mark for review",
+    "keyboardKnew": "Key 2 / K : Mark as mastered",
+    "cardOf": "Card {{current}} of {{total}}",
+    "loading": "Loading flash cards...",
+    "cardsCount": "{{count}} cards",
+    "completed": "completed",
+    "spaceToFlip": "Press Space to Flip",
+    "questionCard": "Question Card",
+    "modelAnswer": "Model Answer"
+  },
   "navbar": {
     "home": "Home",
     "courses": "Courses",
@@ -37,6 +107,7 @@
     "settings": "Settings",
     "logout": "Logout",
     "joinUs": "Vacancies",
+    "merchants": "Merchants",
     "representative": "Representatives"
   },
   "contact": {
@@ -202,7 +273,7 @@
     "cta": {
       "getStarted": "Get Started",
       "goToCourses": "Go to Courses",
-      "startTest": "Start Level Tests Now"
+      "startTest": "Randomize"
     },
     "expert": {
       "name": "Dr KROK",
@@ -597,7 +668,8 @@
     "viewDetails": "View Details",
     "removedFromFavorites": "Removed from favorites",
     "failedToRemove": "Failed to remove from favorites",
-    "failedToLoad": "Failed to load favorites"
+    "failedToLoad": "Failed to load favorites",
+    "filterCenterCourses": "Center Courses"
   },
   "instructors": {
     "title": "Our Instructors",
@@ -734,6 +806,13 @@
     "selectInstructorInfo": "Select an instructor to view their info here."
   },
   "courses": {
+    "tabs": {
+      "about": "About",
+      "attachments": "Files",
+      "quizzes": "Quizzes",
+      "flashcards": "Flashcards",
+      "comments": "Discussions"
+    },
     "askInstructor": "Ask the Instructor",
     "askInstructorDescription": "Have questions about this course? Contact the instructor directly for personalized assistance.",
     "courseCompletedTitle": "Course Successfully Passed!",
@@ -1002,32 +1081,51 @@
       "score": "Score",
       "percentage": "Percentage",
       "noStudents": "No top students yet."
-    }
+    },
+    "centerCourse": "Center Course"
   },
   "orders": {
     "title": "My Orders",
-    "totalOrders": "{{count}} total orders",
+    "totalOrders_one": "{{count}} Order",
+    "totalOrders_other": "{{count}} Orders",
     "all": "All",
     "books": "Books",
     "courses": "Courses",
-    "live_course": "Live Course",
-    "pdf": "PDF",
-    "delivery": "Delivery",
-    "type": "Type",
-    "number": "#",
     "item": "Item",
+    "type": "Type",
     "price": "Price",
     "status": "Status",
     "date": "Date",
+    "delivery": "Delivery",
+    "pdf": "PDF",
+    "delivery_to": "Delivery to",
     "statuses": {
       "pending": "Pending",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
       "processing": "Processing",
       "shipped": "Shipped",
       "delivered": "Delivered",
+      "completed": "Completed",
       "paid": "Paid",
-      "payment": "Payment Pending"
+      "cancelled": "Cancelled",
+      "payment": "Payment Processing",
+      "pending_desc": "Your order has been received and is waiting for processing.",
+      "processing_desc": "Your order is being prepared for shipment.",
+      "shipped_desc": "Your order has been shipped and is on its way.",
+      "delivered_desc": "Your order has been successfully delivered.",
+      "paid_desc": "Payment has been successfully processed.",
+      "cancelled_desc": "Your order has been cancelled.",
+      "payment_desc": "Payment is being processed.",
+      "unavailable": "Status information not available.",
+      "unknown": "Unknown"
+    },
+    "messages": {
+      "title": "Order Messages",
+      "no_messages": "No messages for this order yet.",
+      "delivery_paid": "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours",
+      "delivery_completed": "Your order has reached the shipping company, you can go to receive it now",
+      "pdf_completed": "Your order has been completed successfully and you can now download the file as PDF",
+      "course_completed": "This course is now fully yours, you can watch it now",
+      "course_pending": "This course is now yours, but the remaining course amount is pending"
     }
   },
   "subscription": {
@@ -1121,6 +1219,7 @@
     "payInstallment": "Pay ${{amount}} Installment",
     "installmentModal": {
       "title": "Pay in Installments",
+      "subtitle": "Enter the amount you'd like to pay now. Minimum is {{minPct}}% of the total price.",
       "amountLabel": "Installment Amount",
       "amountPlaceholder": "Enter installment amount",
       "apply": "Apply Installment",
@@ -1128,6 +1227,14 @@
       "errorMin": "Minimum installment amount is ₴{{min}}",
       "errorMax": "Installment amount cannot exceed the total price (₴{{price}})",
       "helpText": "Minimum installment: ₴{{min}} | Total price: ₴{{price}}"
+    },
+    "cancelInstallment": "Cancel",
+    "optional": "Optional",
+    "setupInstallment": "Setup Installment Plan",
+    "amountToPayNow": "Amount to Pay Now",
+    "noInstallment": {
+      "title": "Installments Unavailable",
+      "message": "This item does not support installment payments at the moment."
     }
   },
   "video_courses": {
@@ -1152,50 +1259,6 @@
       "discount": "Discount: {{percent}}%",
       "discount_label": "Coupon discount ({{percent}}%)",
       "required": "Please enter a coupon code"
-    }
-  },
-  "orders": {
-    "title": "My Orders",
-    "totalOrders_one": "{{count}} Order",
-    "totalOrders_other": "{{count}} Orders",
-    "all": "All",
-    "books": "Books",
-    "courses": "Courses",
-    "item": "Item",
-    "type": "Type",
-    "price": "Price",
-    "status": "Status",
-    "date": "Date",
-    "delivery": "Delivery",
-    "pdf": "PDF",
-    "delivery_to": "Delivery to",
-    "statuses": {
-      "pending": "Pending",
-      "processing": "Processing",
-      "shipped": "Shipped",
-      "delivered": "Delivered",
-      "completed": "Completed",
-      "paid": "Paid",
-      "cancelled": "Cancelled",
-      "payment": "Payment Processing",
-      "pending_desc": "Your order has been received and is waiting for processing.",
-      "processing_desc": "Your order is being prepared for shipment.",
-      "shipped_desc": "Your order has been shipped and is on its way.",
-      "delivered_desc": "Your order has been successfully delivered.",
-      "paid_desc": "Payment has been successfully processed.",
-      "cancelled_desc": "Your order has been cancelled.",
-      "payment_desc": "Payment is being processed.",
-      "unavailable": "Status information not available.",
-      "unknown": "Unknown"
-    },
-    "messages": {
-      "title": "Order Messages",
-      "no_messages": "No messages for this order yet.",
-      "delivery_paid": "This order has been completed and will be delivered to the shipping company at the specified branch and city within 48 hours",
-      "delivery_completed": "Your order has reached the shipping company, you can go to receive it now",
-      "pdf_completed": "Your order has been completed successfully and you can now download the file as PDF",
-      "course_completed": "This course is now fully yours, you can watch it now",
-      "course_pending": "This course is now yours, but the remaining course amount is pending"
     }
   },
   "jobs": {
@@ -1288,5 +1351,50 @@
       "whatsapp": "WhatsApp is required",
       "university": "Please select a university"
     }
+  },
+  "centerCourses": {
+    "label": "CENTER COURSE",
+    "upcoming": "UPCOMING",
+    "full": "FULL",
+    "ended": "ENDED",
+    "comingSoon": "STARTING SOON",
+    "students": "Students"
+  },
+  "embroidery": {
+    "add_embroidery": "Add embroidery to your item",
+    "fee_label": "Additional fee",
+    "free": "Free",
+    "embroidery_fee": "Embroidery",
+    "price_added": "Embroidery cost added to total",
+    "name_label": "Name or text to embroider",
+    "name_placeholder": "e.g. Dr. Ahmed",
+    "color_label": "Thread colour",
+    "font_label": "Font style",
+    "enter_name": "Please enter the name to embroider",
+    "select_color": "Please select an embroidery thread colour",
+    "select_font": "Please select an embroidery font"
+  },
+  "essay": {
+    "totalScore": "Total Score",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "yourAnswer": "Your Answer",
+    "noAnswer": "No answer provided",
+    "modelAnswer": "Model Answer",
+    "keywords": "Keywords",
+    "matched": "matched",
+    "summaryTitle": "Essay Summary",
+    "retake": "Retake",
+    "question": "Question",
+    "keywordsHint": "Your answer must include at least",
+    "keywordOf": "key concept(s) to be marked correct",
+    "worth": "Worth",
+    "pts": "pts",
+    "writeAnswer": "Write your answer below",
+    "placeholder": "Type your detailed answer here...",
+    "words": "words",
+    "chars": "characters",
+    "submitNext": "Submit & Next",
+    "submitFinish": "Submit & Finish"
   }
 }

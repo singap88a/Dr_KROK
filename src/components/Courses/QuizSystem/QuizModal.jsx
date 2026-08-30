@@ -118,6 +118,7 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
           <div className="mb-4">
             <h4 className="mb-3 text-sm font-semibold leading-relaxed text-text dark:text-text-dark">
               <div
+                className="text-start [&>p]:text-start [&>div]:text-start"
                 dangerouslySetInnerHTML={{
                   __html: currentQuiz.title || t("courses.question", "Question"),
                 }}

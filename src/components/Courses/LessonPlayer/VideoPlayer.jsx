@@ -1,6 +1,6 @@
 // LessonPlayer/VideoPlayer.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { FaVideo, FaPlay } from "react-icons/fa"; // إضافة FaPlay هنا
+import { FaVideo, FaPlay, FaExpand, FaCompress } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
 import { useUser } from "../../../context/UserContext";
@@ -71,6 +71,9 @@ export const VideoPlayer = ({
   handleVideoEnd 
 }) => {
   const { t } = useTranslation();
+  const containerRef = useRef(null);
+  const videoRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const videoSrc = currentLesson?.video || currentSection?.video;
 
@@ -104,20 +107,65 @@ export const VideoPlayer = ({
     );
   }
 
+  const toggleFullscreen = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen().catch(err => console.warn(err));
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (videoRef.current && videoRef.current.webkitEnterFullscreen) {
+        // Fallback for iOS
+        videoRef.current.webkitEnterFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div ref={containerRef} style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#000" }} className="group">
       <video
-        src={videoSrc}
+        ref={videoRef}
+        src={videoSrc.includes('#t=') ? videoSrc : `${videoSrc}#t=0.001`}
+        preload="metadata"
         controls
-        className="w-full h-full"
-        poster={currentLesson?.image || currentSection?.images?.[0]}
+        className="w-full h-full custom-video-player"
+        poster={currentLesson?.image || currentSection?.images?.[0] || undefined}
         onTimeUpdate={handleVideoTimeUpdate}
         onEnded={handleVideoEnd}
-        controlsList="nodownload"
+        controlsList="nodownload nofullscreen"
         onContextMenu={(e) => e.preventDefault()}
       />
       {/* Anti-piracy watermark overlay */}
       <VideoWatermark />
+
+      {/* Custom Fullscreen Button */}
+      <button 
+        onClick={toggleFullscreen} 
+        className="absolute bottom-16 right-4 z-[60] p-2.5 text-white bg-black/50 hover:bg-black/80 rounded-full transition-opacity opacity-0 group-hover:opacity-100"
+        title="Toggle Fullscreen"
+      >
+        {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
+      </button>
     </div>
   );
 };

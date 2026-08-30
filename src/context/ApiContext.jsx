@@ -459,6 +459,25 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
     return response.data;
   }, [request]);
 
+  // Merchant API functions
+  const getMerchants = useCallback(async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", params.page);
+    if (params.per_page) query.set("per_page", params.per_page);
+    const path = query.toString() ? `merchants?${query.toString()}` : "merchants";
+    const response = await request(path, { useCache: true });
+    return {
+      data: Array.isArray(response?.data) ? response.data : [],
+      pagination: response?.pagination || null,
+      raw: response,
+    };
+  }, [request]);
+
+  const getMerchantById = useCallback(async (id) => {
+    const response = await request(`merchants/${id}`, { useCache: true });
+    return response.data;
+  }, [request]);
+
   const value = useMemo(
     () => ({
       baseUrl,
@@ -476,6 +495,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      getMerchants,
+      getMerchantById,
       clearCache,
       invalidateCache,
       updateCache,
@@ -614,6 +635,35 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           } catch (fallbackErr) {
              console.error("Fallback fetch for live course failed", fallbackErr);
           }
+        }
+        
+        if (!itemData) throw new Error("Course not found");
+        return itemData;
+      },
+
+      async getCenterCourses(params = {}) {
+        const query = new URLSearchParams();
+        if (params.page) query.set("page", params.page);
+        if (params.per_page) query.set("per_page", params.per_page);
+        if (params.filter) query.set("filter", params.filter);
+        const path = query.toString() ? `center-courses?${query.toString()}` : "center-courses";
+        const response = await request(path, { useCache: true });
+        return {
+          data: Array.isArray(response?.data) ? response.data : [],
+          pagination: response?.pagination || null,
+          raw: response,
+        };
+      },
+
+      async getCenterCourseById(id, auth = false) {
+        if (!id) throw new Error("Course id is required");
+        let itemData = null;
+        try {
+          const response = await request(`center-courses/${id}`, { auth, useCache: true });
+          if (response && response.data && (response.data.id || response.data.title)) itemData = response.data;
+          else if (response && (response.id || response.title)) itemData = response;
+        } catch (err) {
+          // ignore
         }
         
         if (!itemData) throw new Error("Course not found");
@@ -1138,6 +1188,51 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         }
       },
 
+      // Center course subscription
+      async subscribeToCenterCourse(courseId, paymentMethod, amount, couponId = null) {
+        const formData = new FormData();
+
+        const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
+        const userId = userData.id || userData.user_id || userData.client_id || courseId;
+
+        formData.append('client_id', userId.toString());
+        formData.append('course_id', courseId.toString());
+        formData.append('payment_method', paymentMethod);
+        formData.append('amount', amount.toString());
+        formData.append('deposit_amount', amount.toString());
+        if (couponId) {
+          formData.append('coupon_id', couponId);
+        }
+
+        try {
+          const result = await request('place_center_course', {
+            method: 'POST',
+            body: formData,
+            auth: true,
+            isFormData: true,
+            invalidateCacheOnSuccess: [
+              `profile/get-my-courses`,
+              `center-courses/${courseId}`,
+              `course/${courseId}`,
+              `center-courses`,
+              'my-courses'
+            ]
+          });
+
+          globalEvents.emit('dataUpdated', {
+            type: 'purchaseSuccess',
+            courseId: courseId,
+            courseType: 'center_course',
+            source: 'subscribeToCenterCourse'
+          });
+
+          return result;
+        } catch (error) {
+          console.error("Purchase error for center course:", error);
+          throw error;
+        }
+      },
+
       // Get user's enrolled courses
       async getMyCourses() {
         const response = await request("profile/get-my-courses", { auth: true });
@@ -1375,7 +1470,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
             `ratings`,
             `courses/${courseId}`,
             `video_course/${courseId}`,
-            `live_course/${courseId}`
+            `live_course/${courseId}`,
+            `center_course/${courseId}`
           ]
         });
       },
@@ -1870,6 +1966,42 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           useCache: true,
         });
       },
+
+      // ─── Essay Questions ──────────────────────────────────────────────────────
+
+      async getLessonEssayQuestions(lessonId, lessonType = "video", page = 1, limit = 15) {
+        if (!lessonId) throw new Error("lessonId is required");
+        const endpoint = lessonType === "live"
+          ? `live-lesson/${lessonId}/essay-questions?limit=${limit}&page=${page}`
+          : `lesson/${lessonId}/essay-questions?limit=${limit}&page=${page}`;
+        
+        // Try with auth first (sends token if user is logged in)
+        // If that fails (401/403), retry without auth for free lessons
+        try {
+          const res = await request(endpoint, { auth: true, useCache: false });
+          return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        } catch {
+          try {
+            const res = await request(endpoint, { auth: false, useCache: false });
+            return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+          } catch {
+            return [];
+          }
+        }
+      },
+
+      async submitEssayAnswer({ essayQuestionId, studentAnswer, isCorrect, scoreAchieved }) {
+        return await request("essay-questions/submit", {
+          method: "POST",
+          auth: true,
+          body: {
+            essay_question_id: essayQuestionId,
+            student_answer: studentAnswer,
+            is_correct: isCorrect,
+            score_achieved: scoreAchieved,
+          },
+        });
+      },
     }),
     [
       baseUrl,
@@ -1884,6 +2016,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       toggleFavorite,
       getInstructors,
       getInstructorById,
+      getMerchants,
+      getMerchantById,
       clearCache,
       invalidateCache,
       updateCache,

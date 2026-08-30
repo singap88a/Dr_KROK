@@ -124,3 +124,7 @@
   background-color: var(--secondary);
 }
 
+/* Hide native fullscreen button to allow custom wrapper fullscreen (watermark visibility) */
+.custom-video-player::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}

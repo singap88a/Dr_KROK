@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiHeart, FiCheck, FiImage } from "react-icons/fi";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { FiArrowLeft, FiHeart, FiCheck, FiImage, FiScissors, FiBriefcase, FiMail, FiPhone, FiChevronRight } from "react-icons/fi";
 import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
 import { useTranslation } from 'react-i18next';
@@ -56,6 +56,12 @@ export default function MedicalClothesDetails() {
   const [activeImage, setActiveImage] = useState("");
   const [showSizeChart, setShowSizeChart] = useState(false);
 
+  // --- Embroidery State ---
+  const [wantsEmbroidery, setWantsEmbroidery] = useState(false);
+  const [embroideryName, setEmbroideryName] = useState("");
+  const [embroideryColor, setEmbroideryColor] = useState("");
+  const [embroideryFont, setEmbroideryFont] = useState("");
+
   useEffect(() => {
     const fetchDetails = async () => {
       try {
@@ -79,7 +85,7 @@ export default function MedicalClothesDetails() {
         // Fallback to fetching list
         if (!itemData) {
           try {
-            const listResponse = await request(`apparels`);
+            const listResponse = await request(`apparels?limit=1000`);
             if (listResponse && Array.isArray(listResponse.data)) {
               itemData = listResponse.data.find(item => item.slug === id || String(item.id) === String(id));
             } else if (Array.isArray(listResponse)) {
@@ -93,6 +99,11 @@ export default function MedicalClothesDetails() {
         if (itemData) {
           setItem(itemData);
           setActiveImage(itemData.main_image);
+          
+          // Auto-redirect from ID to slug in URL if slug exists
+          if (id && !isNaN(id) && itemData.slug) {
+            navigate(`/store/medical-clothes/${itemData.slug}`, { replace: true });
+          }
         } else {
           setError("Item not found");
         }
@@ -103,7 +114,7 @@ export default function MedicalClothesDetails() {
       }
     };
     fetchDetails();
-  }, [id, request]);
+  }, [id, request, navigate]);
 
   const handleToggleFavorite = async () => {
     if (!isLoggedIn) {
@@ -130,13 +141,38 @@ export default function MedicalClothesDetails() {
       return;
     }
 
+    // Validate embroidery fields if user opted in
+    if (wantsEmbroidery) {
+      if (!embroideryName.trim()) {
+        toast.error(t('embroidery.enter_name', 'Please enter the name to embroider'));
+        return;
+      }
+      if (!embroideryColor) {
+        toast.error(t('embroidery.select_color', 'Please select an embroidery thread colour'));
+        return;
+      }
+      if (!embroideryFont) {
+        toast.error(t('embroidery.select_font', 'Please select an embroidery font'));
+        return;
+      }
+    }
+
     navigate('/store/checkout', {
       state: {
         item: item,
         productType: 'medical_clothes',
         itemType: 1, // Delivery
         color: selectedColor,
-        size: selectedSize
+        size: selectedSize,
+        embroidery: wantsEmbroidery
+          ? {
+              has_embroidery: true,
+              embroidery_name: embroideryName.trim(),
+              embroidery_color: embroideryColor,
+              embroidery_font: embroideryFont,
+              embroidery_price: item.embroidery_price || 0
+            }
+          : { has_embroidery: false }
       }
     });
   };
@@ -157,6 +193,8 @@ export default function MedicalClothesDetails() {
   }
 
   const allImages = [item.main_image, ...(item.gallery?.map(g => g.url) || [])].filter(Boolean);
+  const embroideryTotal = wantsEmbroidery ? (item.embroidery_price || 0) : 0;
+  const displayPrice = (item.final_price || 0) + embroideryTotal;
 
   return (
     <ErrorBoundary>
@@ -204,7 +242,7 @@ export default function MedicalClothesDetails() {
               {item.brand && <p className="mb-4 text-lg text-primary">{item.brand}</p>}
 
               <div className="flex items-end gap-4 mb-6">
-                <span className="text-4xl font-black text-primary">₴{item.final_price?.toFixed(2)}</span>
+                <span className="text-4xl font-black text-primary">₴{displayPrice.toFixed(2)}</span>
                 {item.discount > 0 && (
                   <>
                     <span className="text-xl text-gray-400 line-through mb-1">₴{item.price}</span>
@@ -212,6 +250,11 @@ export default function MedicalClothesDetails() {
                       {item.discount}% OFF
                     </span>
                   </>
+                )}
+                {wantsEmbroidery && item.embroidery_price > 0 && (
+                  <span className="text-sm text-emerald-600 font-medium mb-1">
+                    + ₴{item.embroidery_price} {t('embroidery.embroidery_fee', 'embroidery')}
+                  </span>
                 )}
               </div>
 
@@ -265,6 +308,129 @@ export default function MedicalClothesDetails() {
                 </div>
               )}
 
+              {/* ── Embroidery Section ── */}
+              {item.has_embroidery && (
+                <div className="mb-8">
+                  <div className="border border-border rounded-2xl overflow-hidden">
+                    {/* Embroidery Toggle Header */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWantsEmbroidery(prev => !prev);
+                        if (wantsEmbroidery) {
+                          setEmbroideryName("");
+                          setEmbroideryColor("");
+                          setEmbroideryFont("");
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between p-4 transition-colors ${wantsEmbroidery ? 'bg-primary text-white' : 'bg-surface hover:bg-primary/5 text-text'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${wantsEmbroidery ? 'bg-white border-white' : 'border-gray-400'}`}>
+                          {wantsEmbroidery && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                        </div>
+                        <div className="text-left">
+                          <p className="font-semibold">
+                            {t('embroidery.add_embroidery', 'Add embroidery to your item')}
+                          </p>
+                          <p className={`text-xs mt-0.5 ${wantsEmbroidery ? 'text-white/80' : 'text-text-secondary'}`}>
+                            {item.embroidery_price > 0
+                              ? `${t('embroidery.fee_label', 'Additional fee')}: +₴${item.embroidery_price}`
+                              : t('embroidery.free', 'Free')}
+                          </p>
+                        </div>
+                      </div>
+                      <FiScissors className={`text-xl flex-shrink-0 ${wantsEmbroidery ? 'text-white' : 'text-primary'}`} />
+                    </button>
+
+                    {/* Embroidery Options (shown when toggled ON) */}
+                    {wantsEmbroidery && (
+                      <div className="p-5 space-y-5 bg-background border-t border-border">
+
+                        {/* Name Input */}
+                        <div>
+                          <label className="block text-sm font-semibold text-text-secondary mb-2">
+                            {t('embroidery.name_label', 'Name or text to embroider')} *
+                          </label>
+                          <input
+                            id="embroidery-name-input"
+                            type="text"
+                            value={embroideryName}
+                            onChange={e => setEmbroideryName(e.target.value)}
+                            maxLength={50}
+                            placeholder={t('embroidery.name_placeholder', 'e.g. Dr. Ahmed')}
+                            className="w-full px-4 py-3 border rounded-xl border-border bg-surface text-text focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                          />
+                          <p className="text-xs text-text-secondary mt-1 text-right">{embroideryName.length}/50</p>
+                        </div>
+
+                        {/* Thread Color Picker */}
+                        {item.embroidery_colors && item.embroidery_colors.length > 0 && (
+                          <div>
+                            <label className="block text-sm font-semibold text-text-secondary mb-2">
+                              {t('embroidery.color_label', 'Thread colour')} *
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {item.embroidery_colors.map(color => (
+                                <button
+                                  key={color}
+                                  type="button"
+                                  onClick={() => setEmbroideryColor(color)}
+                                  className={`px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-all ${
+                                    embroideryColor === color
+                                      ? 'border-primary bg-primary text-white shadow-md scale-105'
+                                      : 'border-border bg-surface text-text hover:border-primary/50'
+                                  }`}
+                                >
+                                  {embroideryColor === color && <FiCheck className="inline mr-1 text-xs" />}
+                                  {color}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Font Selector */}
+                        {item.embroidery_fonts && item.embroidery_fonts.length > 0 && (
+                          <div>
+                            <label className="block text-sm font-semibold text-text-secondary mb-2">
+                              {t('embroidery.font_label', 'Font style')} *
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {item.embroidery_fonts.map(font => (
+                                <button
+                                  key={font}
+                                  type="button"
+                                  onClick={() => setEmbroideryFont(font)}
+                                  className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${
+                                    embroideryFont === font
+                                      ? 'border-primary bg-primary text-white shadow-md scale-105'
+                                      : 'border-border bg-surface text-text hover:border-primary/50'
+                                  }`}
+                                >
+                                  {embroideryFont === font && <FiCheck className="inline mr-1 text-xs" />}
+                                  {font}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Price Preview */}
+                        {item.embroidery_price > 0 && (
+                          <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                            <span className="text-sm font-medium text-emerald-700">
+                              {t('embroidery.price_added', 'Embroidery cost added to total')}
+                            </span>
+                            <span className="text-base font-bold text-emerald-700">+₴{item.embroidery_price}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleBuyNow}
                 disabled={!item.in_stock}
@@ -280,9 +446,45 @@ export default function MedicalClothesDetails() {
                   dangerouslySetInnerHTML={{ __html: item.description }}
                 />
               </div>
+
+              {/* ── Vendor / Instructor Clean Box ── */}
+              {item.instructor && (
+                <div className="mt-10 border-t border-border pt-8">
+                  <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-5">
+                    {t('store.sold_by', 'Sold by')}
+                  </p>
+                  <div className="flex items-start gap-4">
+                    <Link to={`/merchants/${item.instructor.id}`} className="shrink-0">
+                      <img
+                        src={item.instructor.image || "/user.png"}
+                        alt={item.instructor.name}
+                        className="w-14 h-14 rounded-full object-cover border border-border"
+                        onError={(e) => { e.currentTarget.src = "/user.png"; }}
+                      />
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/merchants/${item.instructor.id}`} className="hover:text-primary transition-colors">
+                        <h4 className="font-bold text-base text-text">{item.instructor.name}</h4>
+                      </Link>
+                      {item.instructor.job_title && (
+                        <p className="text-sm text-text-secondary mt-0.5 truncate">{item.instructor.job_title}</p>
+                      )}
+                      <Link
+                        to={`/merchants/${item.instructor.id}`}
+                        className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-primary hover:underline"
+                      >
+                        {t('store.view_merchant_profile', 'View Merchant Profile')}
+                        <FiChevronRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+
 
         {/* Size Chart Modal */}
         {showSizeChart && (

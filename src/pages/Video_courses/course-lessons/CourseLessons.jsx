@@ -80,6 +80,7 @@ export default function CourseLessons() {
   const [answeredQuizzes, setAnsweredQuizzes] = useState(new Set());
   const [quizResults, setQuizResults] = useState({});
   const [processedQuizzes, setProcessedQuizzes] = useState(new Set());
+  const [processedTimes, setProcessedTimes] = useState(new Set());
 
   // Progress Hook
   const { calculateTotalProgress: calcTotalProgress, calculateSectionProgress: calcSectionProgress } = useLessonProgress();
@@ -455,6 +456,7 @@ export default function CourseLessons() {
   useEffect(() => {
     setProcessedQuizzes(new Set());
     setAnsweredQuizzes(new Set());
+    setProcessedTimes(new Set());
     setQuizResults({});
   }, [currentLesson?.id]);
 
@@ -477,6 +479,8 @@ export default function CourseLessons() {
 
   const handleVideoTimeUpdate = (e) => {
     const time = Math.floor(e.target.currentTime);
+    if (processedTimes.has(time)) return;
+
     const periodicQuizzes = getPeriodicQuizzes();
     let foundQuiz = null;
     let foundTest = null;
@@ -506,6 +510,7 @@ export default function CourseLessons() {
         }
       }
       setProcessedQuizzes((prev) => new Set([...prev, foundQuiz.id]));
+      setProcessedTimes((prev) => new Set([...prev, time]));
       setQuizModal({
         isOpen: true,
         currentQuiz: foundQuiz,

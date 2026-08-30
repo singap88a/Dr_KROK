@@ -72,7 +72,7 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-1 text-xs font-medium rounded text-primary bg-blue-50 dark:bg-blue-900/30">
-                  {course.category}
+                  {typeof course.category === 'object' ? course.category?.name : course.category}
                 </span>
                 <span className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded dark:bg-gray-700 dark:text-gray-300">
                   {course.level}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiHeart, FiGrid, FiTag } from "react-icons/fi";
+import { FiBook, FiUser, FiStar, FiGlobe, FiArrowLeft, FiHeart, FiGrid, FiTag, FiBriefcase, FiMail, FiPhone, FiChevronRight } from "react-icons/fi";
 import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
 import he from 'he';
@@ -33,6 +33,20 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
                        isBookType ? 'book' : productType;
 
   useEffect(() => {
+    const checkFavoriteStatus = async (numericId) => {
+      if (!isLoggedIn || !numericId) return;
+      try {
+        const response = await request("favorites", { auth: true });
+        const favorites = response.data || [];
+        const isItemFavorite = favorites.some(fav => 
+          fav.table_id === parseInt(numericId) && fav.type === favoriteType
+        );
+        setIsFavorite(isItemFavorite);
+      } catch (err) {
+        console.error("Failed to check favorite status:", err);
+      }
+    };
+
     const fetchItemDetails = async () => {
       try {
         let response;
@@ -55,7 +69,7 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
         // Fallback: If item not found (e.g. backend doesn't support fetching by slug yet)
         if (!itemData) {
             try {
-                const listResponse = await request(apiPath);
+                const listResponse = await request(`${apiPath}${apiPath.includes('?') ? '&' : '?'}limit=1000`);
                 if (listResponse && Array.isArray(listResponse.data)) {
                     itemData = listResponse.data.find(item => item.slug === id || String(item.id) === String(id));
                 } else if (Array.isArray(listResponse)) {
@@ -75,32 +89,31 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
         setItem(itemData);
         const images = Object.values(itemData.images || {});
         setMainImage(images[0]?.url || images[0]?.original_url || itemData.main_image || itemData.image || "");
+        
+        // Check favorite status with the correct numeric ID
+        checkFavoriteStatus(itemData.id);
+
+        // Auto-redirect from ID to slug in URL if slug exists (only for booklets and medical tools)
+        if (id && !isNaN(id) && itemData.slug) {
+          let routePrefix = '';
+          if (productType === 'booklet') routePrefix = 'booklets';
+          else if (productType === 'medical_tool') routePrefix = 'medical-tools';
+          
+          if (routePrefix) {
+            navigate(`/store/${routePrefix}/${itemData.slug}`, { replace: true });
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    
-    const checkFavoriteStatus = async () => {
-      if (!isLoggedIn) return;
-      try {
-        const response = await request("favorites", { auth: true });
-        const favorites = response.data || [];
-        const isItemFavorite = favorites.some(fav => 
-          fav.table_id === parseInt(id) && fav.type === favoriteType
-        );
-        setIsFavorite(isItemFavorite);
-      } catch (err) {
-        console.error("Failed to check favorite status:", err);
-      }
-    };
 
     if (id) {
       fetchItemDetails();
-      checkFavoriteStatus();
     }
-  }, [id, request, i18n.language, isLoggedIn, apiPath, favoriteType]);
+  }, [id, request, i18n.language, isLoggedIn, apiPath, favoriteType, navigate, productType]);
 
   const handleViewPdf = (url) => {
     setCurrentPdfUrl(url);
@@ -199,6 +212,7 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
 
           <div>
             <h1 className="text-3xl font-bold">{item.name}</h1>
+
             <div 
               className={`mt-3 text-lg text-text-secondary ${!isExpanded ? 'line-clamp-4' : ''}`}
               dangerouslySetInnerHTML={{ __html: item.description }} 
@@ -265,8 +279,44 @@ export default function StoreDetails({ productType, apiPath, checkoutRoute }) {
                 </button>
               )}
             </div>
+
+            {/* ── Vendor / Instructor Clean Box ── */}
+            {item.instructor && (
+              <div className="mt-10 border-t border-border pt-8">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-5">
+                  {t('store.sold_by', 'Sold by')}
+                </p>
+                <div className="flex items-start gap-4">
+                  <Link to={`/merchants/${item.instructor.id}`} className="shrink-0">
+                    <img
+                      src={item.instructor.image || "/user.png"}
+                      alt={item.instructor.name}
+                      className="w-14 h-14 rounded-full object-cover border border-border"
+                      onError={(e) => { e.currentTarget.src = "/user.png"; }}
+                    />
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/merchants/${item.instructor.id}`} className="hover:text-primary transition-colors">
+                      <h4 className="font-bold text-base text-text">{item.instructor.name}</h4>
+                    </Link>
+                    {item.instructor.job_title && (
+                      <p className="text-sm text-text-secondary mt-0.5 truncate">{item.instructor.job_title}</p>
+                    )}
+                    <Link
+                      to={`/merchants/${item.instructor.id}`}
+                      className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-primary hover:underline"
+                    >
+                      {t('store.view_merchant_profile', 'View Merchant Profile')}
+                      <FiChevronRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+
       </div>
 
       {showPdf && currentPdfUrl && isBookType && (

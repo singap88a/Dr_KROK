@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark, FaBriefcase, FaChevronDown, FaBook, FaBookOpen, FaStethoscope, FaTshirt } from "react-icons/fa";
+import { FaMoon, FaSun, FaBars, FaTimes, FaGlobe, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaBookmark, FaBriefcase, FaChevronDown, FaBook, FaBookOpen, FaStethoscope, FaTshirt, FaStore } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
@@ -121,7 +121,8 @@ export default function Navbar() {
         { path: "/store/books", label: "navbar.books", icon: FaBook },
         { path: "/store/booklets", label: "navbar.booklets", icon: FaBookOpen },
         { path: "/store/medical-tools", label: "navbar.medicalTools", icon: FaStethoscope },
-        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt }
+        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt },
+        { path: "/merchants", label: "navbar.merchants", icon: FaStore }
       ]
     },
     { path: "/about", label: "navbar.about" },
