@@ -1373,5 +1373,28 @@
     "enter_name": "Please enter the name to embroider",
     "select_color": "Please select an embroidery thread colour",
     "select_font": "Please select an embroidery font"
+  },
+  "essay": {
+    "totalScore": "Total Score",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "yourAnswer": "Your Answer",
+    "noAnswer": "No answer provided",
+    "modelAnswer": "Model Answer",
+    "keywords": "Keywords",
+    "matched": "matched",
+    "summaryTitle": "Essay Summary",
+    "retake": "Retake",
+    "question": "Question",
+    "keywordsHint": "Your answer must include at least",
+    "keywordOf": "key concept(s) to be marked correct",
+    "worth": "Worth",
+    "pts": "pts",
+    "writeAnswer": "Write your answer below",
+    "placeholder": "Type your detailed answer here...",
+    "words": "words",
+    "chars": "characters",
+    "submitNext": "Submit & Next",
+    "submitFinish": "Submit & Finish"
   }
 }

@@ -1966,6 +1966,42 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           useCache: true,
         });
       },
+
+      // ─── Essay Questions ──────────────────────────────────────────────────────
+
+      async getLessonEssayQuestions(lessonId, lessonType = "video", page = 1, limit = 15) {
+        if (!lessonId) throw new Error("lessonId is required");
+        const endpoint = lessonType === "live"
+          ? `live-lesson/${lessonId}/essay-questions?limit=${limit}&page=${page}`
+          : `lesson/${lessonId}/essay-questions?limit=${limit}&page=${page}`;
+        
+        // Try with auth first (sends token if user is logged in)
+        // If that fails (401/403), retry without auth for free lessons
+        try {
+          const res = await request(endpoint, { auth: true, useCache: false });
+          return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        } catch {
+          try {
+            const res = await request(endpoint, { auth: false, useCache: false });
+            return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+          } catch {
+            return [];
+          }
+        }
+      },
+
+      async submitEssayAnswer({ essayQuestionId, studentAnswer, isCorrect, scoreAchieved }) {
+        return await request("essay-questions/submit", {
+          method: "POST",
+          auth: true,
+          body: {
+            essay_question_id: essayQuestionId,
+            student_answer: studentAnswer,
+            is_correct: isCorrect,
+            score_achieved: scoreAchieved,
+          },
+        });
+      },
     }),
     [
       baseUrl,

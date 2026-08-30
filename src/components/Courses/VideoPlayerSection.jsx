@@ -1,5 +1,5 @@
 import React from "react";
-import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaRegCopy, FaFileAlt } from "react-icons/fa";
+import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaRegCopy, FaFileAlt, FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -11,6 +11,8 @@ import { QuizModal } from "./QuizSystem/QuizModal";
 import { ResultsModal } from "./QuizSystem/ResultsModal";
 import LessonInteractions from "./LessonInteractions";
 import LessonFlashCards from "./LessonFlashCards";
+import LessonEssayQuestions from "./LessonEssayQuestions";
+import { useApi } from "../../context/ApiContext";
 
 export default function VideoPlayerSection({
   currentLesson,
@@ -45,7 +47,10 @@ export default function VideoPlayerSection({
   groupId = null,
 }) {
   const { t, i18n } = useTranslation();
+  const { getLessonEssayQuestions } = useApi();
   const [activeTab, setActiveTab] = React.useState("about");
+  const [essayQuestions, setEssayQuestions] = React.useState([]);
+  const [essayLoading, setEssayLoading] = React.useState(false);
 
   const content = currentLesson || currentSection;
   const hasAttachments = content && (
@@ -64,15 +69,40 @@ export default function VideoPlayerSection({
     ...(hasAttachments ? [{ id: "attachments", label: t("courses.tabs.attachments", "Files"), icon: <FaPaperclip className="text-xs" /> }] : []),
     ...(hasQuizzes ? [{ id: "quizzes", label: t("courses.tabs.quizzes", "Quizzes"), icon: <FaGraduationCap className="text-xs" /> }] : []),
     ...(currentLesson ? [{ id: "flashcards", label: t("courses.tabs.flashcards", "Flashcards"), icon: <FaRegCopy className="text-xs" /> }] : []),
+    ...(essayQuestions.length > 0 ? [{ id: "essay", label: t("courses.tabs.essay", "Essay"), icon: <FaEdit className="text-xs" /> }] : []),
     ...(currentLesson ? [{ id: "comments", label: t("courses.tabs.comments", "Discussions"), icon: <FaComments className="text-xs" /> }] : []),
   ];
+
+  // Fetch essay questions whenever lesson changes
+  React.useEffect(() => {
+    if (!currentLesson?.id) {
+      setEssayQuestions([]);
+      return;
+    }
+    let cancelled = false;
+    setEssayLoading(true);
+    setEssayQuestions([]);
+    const lessonType = isLiveCourse ? "live" : "video";
+    console.log("📝 [Essay] Fetching for lesson:", currentLesson.id, "type:", lessonType);
+    getLessonEssayQuestions(currentLesson.id, lessonType)
+      .then((data) => {
+        console.log("📝 [Essay] Got data:", data);
+        if (!cancelled) setEssayQuestions(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("📝 [Essay] Error:", err);
+        if (!cancelled) setEssayQuestions([]);
+      })
+      .finally(() => { if (!cancelled) setEssayLoading(false); });
+    return () => { cancelled = true; };
+  }, [currentLesson?.id, isLiveCourse]);
 
   React.useEffect(() => {
     const isTabAvailable = tabs.some(tab => tab.id === activeTab);
     if (!isTabAvailable) {
       setActiveTab("about");
     }
-  }, [currentLesson?.id, currentSection?.id, hasAttachments, hasQuizzes]);
+  }, [currentLesson?.id, currentSection?.id, hasAttachments, hasQuizzes, essayQuestions.length]);
 
   const shouldShowContent = () => {
     if (currentLesson) {
@@ -485,6 +515,14 @@ export default function VideoPlayerSection({
                         lessonId={currentLesson.id}
                         isLiveCourse={isLiveCourse}
                         hasAccess={hasAccess}
+                      />
+                    )}
+
+                    {activeTab === "essay" && essayQuestions.length > 0 && (
+                      <LessonEssayQuestions
+                        key={currentLesson?.id}
+                        questions={essayQuestions}
+                        isLiveCourse={isLiveCourse}
                       />
                     )}
 
