@@ -1359,5 +1359,19 @@
     "ended": "ENDED",
     "comingSoon": "STARTING SOON",
     "students": "Students"
+  },
+  "embroidery": {
+    "add_embroidery": "Add embroidery to your item",
+    "fee_label": "Additional fee",
+    "free": "Free",
+    "embroidery_fee": "Embroidery",
+    "price_added": "Embroidery cost added to total",
+    "name_label": "Name or text to embroider",
+    "name_placeholder": "e.g. Dr. Ahmed",
+    "color_label": "Thread colour",
+    "font_label": "Font style",
+    "enter_name": "Please enter the name to embroider",
+    "select_color": "Please select an embroidery thread colour",
+    "select_font": "Please select an embroidery font"
   }
 }

@@ -42,6 +42,8 @@ export default function StoreCheckout() {
   
   const selectedColor = state?.color || '';
   const selectedSize = state?.size || '';
+  const embroidery = state?.embroidery || { has_embroidery: false };
+  const embroideryPrice = embroidery.has_embroidery ? (Number(embroidery.embroidery_price) || 0) : 0;
 
   const [mainImage, setMainImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -281,7 +283,9 @@ export default function StoreCheckout() {
 
   // Calculate coupon discount amount
   const couponDiscountAmount = finalPrice * (couponDiscount / 100);
-  const discountedPrice = finalPrice - couponDiscountAmount;
+  const discountedPriceBeforeEmbroidery = finalPrice - couponDiscountAmount;
+  // Add embroidery price on top after all other discounts
+  const discountedPrice = discountedPriceBeforeEmbroidery + embroideryPrice;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -430,7 +434,14 @@ const handleDeliveryOrder = async (e) => {
       
       if (productType === 'medical_clothes') {
         formDataToSend.append('color', selectedColor);
-        formDataToSend.append('size', selectedSize);
+        if (selectedSize) formDataToSend.append('size', selectedSize);
+        // Embroidery fields
+        formDataToSend.append('has_embroidery', embroidery.has_embroidery ? '1' : '0');
+        if (embroidery.has_embroidery) {
+          formDataToSend.append('embroidery_name', embroidery.embroidery_name || '');
+          formDataToSend.append('embroidery_color', embroidery.embroidery_color || '');
+          formDataToSend.append('embroidery_font', embroidery.embroidery_font || '');
+        }
       }
 
       const response = await request(checkoutApi, {
@@ -777,6 +788,16 @@ const handleDeliveryOrder = async (e) => {
                 <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
                   <div>{t('books.delivery')}</div>
                   <div>{t('books.free')}</div>
+                </div>
+              )}
+              {/* Embroidery line */}
+              {embroidery.has_embroidery && embroideryPrice > 0 && (
+                <div className="flex items-center justify-between mt-2 text-sm text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <span>✂️</span>
+                    <span>{t('embroidery.embroidery_fee', 'Embroidery')}: «{embroidery.embroidery_name}»</span>
+                  </div>
+                  <div className="font-semibold">+₴{embroideryPrice.toFixed(2)}</div>
                 </div>
               )}
                 {/* Total Line */}
