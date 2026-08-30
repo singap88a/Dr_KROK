@@ -9,10 +9,10 @@ import LoadingSpinner from "../../../components/Common/LoadingSpinner";
 import SEO from "../../../components/SEO/SEO";
 import FlashOfferBanner from "../../../components/Home/FlashOfferBanner";
 
-export default function StoreList({ 
-  productType, 
-  apiPath, 
-  title, 
+export default function StoreList({
+  productType,
+  apiPath,
+  title,
   detailsRoute,
   seoTitle,
   seoDesc,
@@ -29,7 +29,7 @@ export default function StoreList({
   const [searchTerm, setSearchTerm] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
-  const [typeFilter, setTypeFilter] = useState("all"); 
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
@@ -41,8 +41,8 @@ export default function StoreList({
   const [sortBy, setSortBy] = useState('default');
 
   const isBookType = productType === 'book' || productType === 'booklet';
-  const favoriteType = productType === 'medical_clothes' ? 'apparel' : 
-                       isBookType ? 'book' : productType;
+  const favoriteType = productType === 'medical_clothes' ? 'apparel' :
+    isBookType ? 'book' : productType;
 
   const fetchCategories = useCallback(async () => {
     if (!isBookType && productType !== 'medical_clothes' && productType !== 'medical_tool') return;
@@ -74,9 +74,9 @@ export default function StoreList({
       } else if (productType === 'medical_tool' && selectedCategory) {
         path = `categories/${selectedCategory}/${apiPath}?page=${page}`;
       }
-      
+
       const response = await request(path, { useCache: false });
-      
+
       const newItems = response.data || [];
       let apiPagination = response.pagination;
 
@@ -84,7 +84,7 @@ export default function StoreList({
       if (!apiPagination && Array.isArray(newItems)) {
         const perPage = 15; // default page size
         let totalItems = newItems.length;
-        
+
         try {
           // Fetch with large limit just to get the total count for accurate pagination
           const countPath = path.split('?')[0] + '?limit=1000';
@@ -131,8 +131,8 @@ export default function StoreList({
       try {
         const response = await getFavorites();
         const favoriteIds = (response.data || [])
-            .filter(fav => fav.type === favoriteType)
-            .map(fav => fav.table_id);
+          .filter(fav => fav.type === favoriteType)
+          .map(fav => fav.table_id);
         setFavorites(favoriteIds);
       } catch {
         console.error("Failed to fetch favorites");
@@ -247,7 +247,7 @@ export default function StoreList({
 
   return (
     <section className="min-h-screen px-4 py-12 md:px-10 lg:px-20 bg-background text-text">
-      <SEO 
+      <SEO
         title={t(title) || seoTitle}
         description={seoDesc || "Browse our store."}
       />
@@ -260,7 +260,7 @@ export default function StoreList({
             <h2 className="text-3xl font-bold md:text-4xl">
               {t(title)}
             </h2>
-            
+
             <div className="flex flex-wrap gap-3">
               {(isBookType || productType === 'medical_clothes' || productType === 'medical_tool') && (
                 <div className="relative">
@@ -269,7 +269,7 @@ export default function StoreList({
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-300 border rounded-lg bg-surface border-border text-text hover:border-primary hover:text-primary"
                   >
                     <FiFilter className={selectedCategory ? 'text-primary' : ''} />
-                    {selectedCategory 
+                    {selectedCategory
                       ? (categories.find(c => c.id === selectedCategory)?.name || t('books.select_category'))
                       : t('books.select_category') || 'Filter by Category'}
                     <FiChevronDown className={`transition-transform duration-300 ${isCategoryMenuOpen ? 'rotate-180' : ''}`} />
@@ -370,7 +370,7 @@ export default function StoreList({
               } else if (sortBy === 'bestseller') {
                 displayedItems.sort((a, b) => (b.is_bestseller === a.is_bestseller) ? 0 : b.is_bestseller ? 1 : -1);
               }
-              
+
               return displayedItems.map((item) => (
                 <CardComponent
                   key={item.id}

@@ -1,6 +1,6 @@
 import React from "react";
 import { FiHeart, FiStar } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function BookCard({ item, isFavorite, onToggleFavorite, isLoadingFavorite, detailsRoute }) {
@@ -53,10 +53,27 @@ export default function BookCard({ item, isFavorite, onToggleFavorite, isLoading
           dangerouslySetInnerHTML={{ __html: item.description }}
         />
 
-        <div className="mt-4 mb-4">
+        <div className="mt-4 mb-3">
           {oldPrice && <span className="mr-2 text-gray-400 line-through">₴{oldPrice}</span>}
           <span className="font-semibold text-primary">₴{discountedPrice}</span>
         </div>
+
+        {/* Vendor / Instructor */}
+        {item.instructor && (
+          <Link
+            to={`/merchants/${item.instructor.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 mb-3 group/vendor"
+          >
+            <img
+              src={item.instructor.image || "/user.png"}
+              alt={item.instructor.name}
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+              onError={(e) => { e.currentTarget.src = "/user.png"; }}
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400 group-hover/vendor:text-primary transition-colors truncate">{item.instructor.name}</span>
+          </Link>
+        )}
 
         <button
           onClick={() => navigate(`${detailsRoute}/${item.product_type === 'booklet' ? (item.slug || item.id) : item.id}`)}

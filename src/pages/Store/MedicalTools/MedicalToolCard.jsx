@@ -1,6 +1,6 @@
 import React from "react";
 import { FiHeart, FiStar, FiActivity } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function MedicalToolCard({ item, isFavorite, onToggleFavorite, isLoadingFavorite, detailsRoute }) {
@@ -46,29 +46,46 @@ export default function MedicalToolCard({ item, isFavorite, onToggleFavorite, is
 
       <div className="flex flex-col flex-1 p-5 border-t border-border bg-gray-50/50 dark:bg-gray-800/50">
         <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="text-lg font-bold text-gray-800 transition dark:text-gray-100 group-hover:text-primary">
+          <h3 className="text-lg font-bold text-gray-800 transition dark:text-gray-100 group-hover:text-primary">
             {item.name}
-            </h3>
-            <FiActivity className="text-xl text-primary opacity-70 shrink-0 mt-1" />
+          </h3>
+          <FiActivity className="text-xl text-primary opacity-70 shrink-0 mt-1" />
         </div>
-        
+
         <div
           className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2 prose prose-sm dark:prose-invert max-w-none"
           dangerouslySetInnerHTML={{ __html: item.description }}
         />
 
+        {/* Vendor / Instructor */}
+        {item.instructor && (
+          <Link
+            to={`/merchants/${item.instructor.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 mb-3 group/vendor"
+          >
+            <img
+              src={item.instructor.image || "/user.png"}
+              alt={item.instructor.name}
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+              onError={(e) => { e.currentTarget.src = "/user.png"; }}
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400 group-hover/vendor:text-primary transition-colors truncate">{item.instructor.name}</span>
+          </Link>
+        )}
+
         <div className="flex items-center justify-between mt-auto pt-4">
-            <div>
-                {oldPrice && <div className="text-xs text-gray-400 line-through">₴{oldPrice}</div>}
-                <div className="text-xl font-black text-primary">₴{discountedPrice}</div>
-            </div>
-            
-            <button
-                onClick={() => navigate(`${detailsRoute}/${item.slug}`)}
-                className="px-5 py-2.5 text-sm font-semibold text-white transition rounded-full bg-primary hover:bg-primary-focus hover:-translate-y-0.5 active:translate-y-0"
-            >
-                {t('books.view_details', 'View Details')}
-            </button>
+          <div>
+            {oldPrice && <div className="text-xs text-gray-400 line-through">₴{oldPrice}</div>}
+            <div className="text-xl font-black text-primary">₴{discountedPrice}</div>
+          </div>
+
+          <button
+            onClick={() => navigate(`${detailsRoute}/${item.slug}`)}
+            className="px-5 py-2.5 text-sm font-semibold text-white transition rounded-full bg-primary hover:bg-primary-focus hover:-translate-y-0.5 active:translate-y-0"
+          >
+            {t('books.view_details', 'View Details')}
+          </button>
         </div>
       </div>
     </div>

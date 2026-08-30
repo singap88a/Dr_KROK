@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiHeart, FiCheck, FiImage, FiScissors } from "react-icons/fi";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { FiArrowLeft, FiHeart, FiCheck, FiImage, FiScissors, FiBriefcase, FiMail, FiPhone, FiChevronRight } from "react-icons/fi";
 import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
 import { useTranslation } from 'react-i18next';
@@ -446,9 +446,45 @@ export default function MedicalClothesDetails() {
                   dangerouslySetInnerHTML={{ __html: item.description }}
                 />
               </div>
+
+              {/* ── Vendor / Instructor Clean Box ── */}
+              {item.instructor && (
+                <div className="mt-10 border-t border-border pt-8">
+                  <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-5">
+                    {t('store.sold_by', 'Sold by')}
+                  </p>
+                  <div className="flex items-start gap-4">
+                    <Link to={`/merchants/${item.instructor.id}`} className="shrink-0">
+                      <img
+                        src={item.instructor.image || "/user.png"}
+                        alt={item.instructor.name}
+                        className="w-14 h-14 rounded-full object-cover border border-border"
+                        onError={(e) => { e.currentTarget.src = "/user.png"; }}
+                      />
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/merchants/${item.instructor.id}`} className="hover:text-primary transition-colors">
+                        <h4 className="font-bold text-base text-text">{item.instructor.name}</h4>
+                      </Link>
+                      {item.instructor.job_title && (
+                        <p className="text-sm text-text-secondary mt-0.5 truncate">{item.instructor.job_title}</p>
+                      )}
+                      <Link
+                        to={`/merchants/${item.instructor.id}`}
+                        className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-primary hover:underline"
+                      >
+                        {t('store.view_merchant_profile', 'View Merchant Profile')}
+                        <FiChevronRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+
 
         {/* Size Chart Modal */}
         {showSizeChart && (
