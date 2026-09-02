@@ -1241,6 +1241,9 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                   {codeCopied && (
                     <p className="mt-1 text-xs text-center text-green-600">{t('points.copied', 'Copied!')}</p>
                   )}
+                  <p className="text-xs text-text-secondary mt-3 text-center leading-relaxed bg-primary/5 rounded p-2 border border-primary/10">
+                    {t('points.earn_referral', 'Share this code to earn {{points}} points for each friend that registers!', { points: user.settings_referral_points || '0' })}
+                  </p>
                 </div>
               ) : (
                 <p className="mb-4 text-sm text-center text-text-secondary opacity-60">{t('points.no_code', 'No referral code assigned yet')}</p>

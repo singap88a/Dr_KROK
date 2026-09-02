@@ -1410,6 +1410,7 @@
     "copy": "Copy",
     "copied": "Copied!",
     "no_code": "No referral code assigned yet",
+    "earn_referral": "Share this code to earn {{points}} points for each friend that registers!",
     "enter_friends_code": "Enter Friend's Referral Code",
     "code_placeholder": "Enter referral code...",
     "apply_code": "Apply",
