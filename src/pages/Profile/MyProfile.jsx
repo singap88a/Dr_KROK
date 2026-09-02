@@ -69,8 +69,15 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   const [referralLoading, setReferralLoading] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [codeAlreadyApplied, setCodeAlreadyApplied] = useState(() => {
-    return localStorage.getItem("DR_KROK_referral_applied") === "true";
+    if (user?.code_add_invite_friend) return true;
+    return localStorage.getItem(`DR_KROK_referral_applied_${user?.id}`) === "true";
   });
+
+  useEffect(() => {
+    if (user?.code_add_invite_friend) {
+      setCodeAlreadyApplied(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (initialIsEditing) {
@@ -203,7 +210,9 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       if (result?.success) {
         toast.success(t('points.code_applied'));
         setCodeAlreadyApplied(true);
-        localStorage.setItem("DR_KROK_referral_applied", "true");
+        if (user?.id) {
+          localStorage.setItem(`DR_KROK_referral_applied_${user.id}`, "true");
+        }
         setReferralCode("");
       } else {
         toast.error(result?.message || t('points.code_error'));
@@ -611,33 +620,37 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         <div className="p-4 border rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-primary/5 border-primary/20">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-full shadow-inner flex-shrink-0 bg-primary/10 text-primary">
-              <FaGem className="text-xl" />
+              {codeAlreadyApplied ? <FaCheck className="text-xl" /> : <FaGem className="text-xl" />}
             </div>
             <div>
               <h3 className="font-bold text-base text-primary">
-                {t('points.have_referral', "Have a friend's referral code?")}
+                {codeAlreadyApplied 
+                  ? t('points.code_already_applied', 'Referral code already applied')
+                  : t('points.have_referral', "Have a friend's referral code?")}
               </h3>
             </div>
           </div>
-          <div className="w-full md:w-auto md:min-w-[300px]">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={referralCode}
-                onChange={e => setReferralCode(e.target.value)}
-                placeholder={t('points.code_placeholder', 'Enter referral code...')}
-                className="flex-1 px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
-                onKeyDown={e => e.key === 'Enter' && handleApplyReferralCode()}
-              />
-              <button
-                onClick={handleApplyReferralCode}
-                disabled={referralLoading || !referralCode.trim()}
-                className="px-5 py-2 text-sm font-bold text-white transition-all rounded-lg bg-primary hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:scale-105 active:scale-95 whitespace-nowrap"
-              >
-                {referralLoading ? t('points.applying', 'Applying...') : t('points.apply_code', 'Apply')}
-              </button>
+          {!codeAlreadyApplied && (
+            <div className="w-full md:w-auto md:min-w-[300px]">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={e => setReferralCode(e.target.value)}
+                  placeholder={t('points.code_placeholder', 'Enter referral code...')}
+                  className="flex-1 px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                  onKeyDown={e => e.key === 'Enter' && handleApplyReferralCode()}
+                />
+                <button
+                  onClick={handleApplyReferralCode}
+                  disabled={referralLoading || !referralCode.trim()}
+                  className="px-5 py-2 text-sm font-bold text-white transition-all rounded-lg bg-primary hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:scale-105 active:scale-95 whitespace-nowrap"
+                >
+                  {referralLoading ? t('points.applying', 'Applying...') : t('points.apply_code', 'Apply')}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
