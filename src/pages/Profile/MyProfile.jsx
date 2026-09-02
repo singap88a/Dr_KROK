@@ -606,6 +606,41 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         )}
       </div>
 
+      {/* Compact Referral Code Input Banner */}
+      {user && (
+        <div className="p-4 border rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-primary/5 border-primary/20">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-full shadow-inner flex-shrink-0 bg-primary/10 text-primary">
+              <FaGem className="text-xl" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-primary">
+                {t('points.have_referral', "Have a friend's referral code?")}
+              </h3>
+            </div>
+          </div>
+          <div className="w-full md:w-auto md:min-w-[300px]">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={referralCode}
+                onChange={e => setReferralCode(e.target.value)}
+                placeholder={t('points.code_placeholder', 'Enter referral code...')}
+                className="flex-1 px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                onKeyDown={e => e.key === 'Enter' && handleApplyReferralCode()}
+              />
+              <button
+                onClick={handleApplyReferralCode}
+                disabled={referralLoading || !referralCode.trim()}
+                className="px-5 py-2 text-sm font-bold text-white transition-all rounded-lg bg-primary hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:scale-105 active:scale-95 whitespace-nowrap"
+              >
+                {referralLoading ? t('points.applying', 'Applying...') : t('points.apply_code', 'Apply')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Picture Section */}
         <div className="p-6 text-center border bg-surface border-border rounded-xl h-fit lg:sticky lg:top-24">
@@ -1248,37 +1283,6 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
               ) : (
                 <p className="mb-4 text-sm text-center text-text-secondary opacity-60">{t('points.no_code', 'No referral code assigned yet')}</p>
               )}
-
-              {/* Friend's code input */}
-              <div className="pt-4 border-t border-border">
-                <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-text-secondary">
-                  {t('points.enter_friends_code', "Enter Friend's Code")}
-                </label>
-                {codeAlreadyApplied ? (
-                  <div className="flex items-center gap-2 px-3 py-2.5 text-sm text-green-700 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20">
-                    <FaCheck className="text-green-600 flex-shrink-0" />
-                    <span>{t('points.code_already_applied', 'Referral code already applied')}</span>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={referralCode}
-                      onChange={e => setReferralCode(e.target.value)}
-                      placeholder={t('points.code_placeholder', 'Enter referral code...')}
-                      className="flex-1 px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                      onKeyDown={e => e.key === 'Enter' && handleApplyReferralCode()}
-                    />
-                    <button
-                      onClick={handleApplyReferralCode}
-                      disabled={referralLoading || !referralCode.trim()}
-                      className="px-4 py-2 text-sm font-semibold text-white transition-all rounded-lg bg-primary hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {referralLoading ? t('points.applying', 'Applying...') : t('points.apply_code', 'Apply')}
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Allowed Merchants Card */}
