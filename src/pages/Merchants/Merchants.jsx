@@ -52,56 +52,78 @@ function Avatar({ name, image, size = 48 }) {
 
 function MerchantCard({ merchant }) {
   const { t } = useTranslation();
-  const hasSocial = merchant.facebook || merchant.instagram || merchant.youtube;
-  const initial = merchant.name?.charAt(0)?.toUpperCase() || "M";
-  const bgGradient = gradients[(merchant.name?.charCodeAt(0) || 0) % gradients.length];
+  const hasSocial = merchant.facebook || merchant.instagram || merchant.youtube || merchant.email;
 
   return (
-    <Link to={`/merchants/${merchant.id}`} className="group block focus:outline-none">
-      <div className="h-full bg-gray-50 dark:bg-gray-900 border border-primary/40 dark:border-primary/40 rounded-2xl hover:border-primary dark:hover:border-primary transition-all duration-300 flex flex-col overflow-hidden">
-        {/* Card header — avatar + name */}
-        <div className="p-5 flex items-center gap-4 border-b border-primary/5 dark:border-primary/10">
-          <Avatar name={merchant.name} image={merchant.image} size={48} />
-          <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-[15px] text-gray-900 dark:text-white truncate leading-snug group-hover:text-primary transition-colors">
-              {merchant.name}
-            </h3>
-            {merchant.job_title && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 flex items-center gap-1">
-                <FaBriefcase size={9} className="text-primary/60 flex-shrink-0" />
-                {merchant.job_title}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Card body */}
-        <div className="p-4 flex-1 flex flex-col justify-between">
-          {merchant.email && (
-            <p className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 truncate mb-3">
-              <FaEnvelope size={10} className="text-primary/50 flex-shrink-0" />
-              {merchant.email}
+    <div className="group block focus:outline-none h-full bg-gray-50 dark:bg-gray-900 border border-primary/40 dark:border-primary/40 rounded-2xl hover:border-primary dark:hover:border-primary transition-all duration-300 flex flex-col overflow-hidden">
+      {/* Card header — avatar + name */}
+      <div className="p-5 flex items-center gap-4 border-b border-primary/5 dark:border-primary/10">
+        <Avatar name={merchant.name} image={merchant.image} size={48} />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-[15px] text-gray-900 dark:text-white truncate leading-snug group-hover:text-primary transition-colors">
+            {merchant.name}
+          </h3>
+          {merchant.job_title && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 flex items-center gap-1">
+              <FaBriefcase size={9} className="text-primary/60 flex-shrink-0" />
+              {merchant.job_title}
             </p>
           )}
-
-          {/* Social presence indicators */}
-          {hasSocial && (
-            <div className="flex items-center gap-2 mb-3">
-              {merchant.facebook && <FaFacebookF size={11} className="text-primary/40" />}
-              {merchant.instagram && <FaInstagram size={11} className="text-primary/40" />}
-              {merchant.youtube && <FaYoutube size={11} className="text-primary/40" />}
-            </div>
-          )}
-
-          <div className="pt-3">
-            <span className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary text-white font-bold text-[13px] rounded-xl group-hover:opacity-90 transition-all duration-300">
-              {t("merchantsPage.viewStore")}
-              <FaChevronRight size={10} />
-            </span>
-          </div>
         </div>
       </div>
-    </Link>
+
+      {/* Card body */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        {/* Social presence indicators (Clickable Icons) */}
+        {hasSocial && (
+          <div className="flex items-center gap-2 mb-4">
+            {merchant.email && (
+              <a 
+                href={`mailto:${merchant.email}`}
+                className="flex items-center justify-center w-8 h-8 text-primary/70 transition bg-primary/10 rounded-full hover:bg-primary hover:text-white"
+                title={merchant.email}
+              >
+                <FaEnvelope size={12} />
+              </a>
+            )}
+            {merchant.facebook && (
+              <a 
+                href={merchant.facebook} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center w-8 h-8 text-primary/70 transition bg-primary/10 rounded-full hover:bg-primary hover:text-white"
+              >
+                <FaFacebookF size={12} />
+              </a>
+            )}
+            {merchant.instagram && (
+              <a 
+                href={merchant.instagram} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center w-8 h-8 text-primary/70 transition bg-primary/10 rounded-full hover:bg-primary hover:text-white"
+              >
+                <FaInstagram size={12} />
+              </a>
+            )}
+            {merchant.youtube && (
+              <a 
+                href={merchant.youtube} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center w-8 h-8 text-primary/70 transition bg-primary/10 rounded-full hover:bg-primary hover:text-white"
+              >
+                <FaYoutube size={12} />
+              </a>
+            )}
+          </div>
+        )}
+
+        <div className="pt-auto mt-auto">
+          <Link 
+            to={`/merchants/${merchant.id}`}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary text-white font-bold text-[13px] rounded-xl hover:opacity-90 transition-all duration-300"
+          >
+            {t("merchantsPage.viewStore")}
+            <FaChevronRight size={10} />
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
 

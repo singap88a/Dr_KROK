@@ -12,6 +12,7 @@ const NewsUpdates = lazy(() => import("../../components/Home/Articles"));
 const InstructorsCarousel = lazy(() => import("../../components/Home/InstructorsCarousel"));
 const HomeBanners = lazy(() => import("../../components/Home/HomeBanners"));
 const Live_courses = lazy(() => import("../../components/Home/Live_courses"));
+const MerchantsCarousel = lazy(() => import("../../components/Home/MerchantsCarousel"));
 const FlashOffers = lazy(() => import("../../components/Home/FlashOffers"));
 
 export default function DrKrokHome() {
@@ -30,6 +31,7 @@ export default function DrKrokHome() {
           <BooksCarousel />
           <StatsSection />
           <Live_courses/>
+          <MerchantsCarousel />
           <NewsUpdates />
           <HomeBanners/>
           <InstructorsCarousel/>
