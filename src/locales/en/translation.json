@@ -1398,5 +1398,33 @@
     "chars": "characters",
     "submitNext": "Submit & Next",
     "submitFinish": "Submit & Finish"
+  },
+  "points": {
+    "title": "Points & Referral",
+    "balance": "Points Balance",
+    "monetary_value": "Cash Value",
+    "min_redeem": "Minimum to Redeem",
+    "point_value": "Point Value",
+    "pts": "pts",
+    "my_code": "My Referral Code",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "no_code": "No referral code assigned yet",
+    "enter_friends_code": "Enter Friend's Referral Code",
+    "code_placeholder": "Enter referral code...",
+    "apply_code": "Apply",
+    "applying": "Applying...",
+    "code_applied": "Referral code applied successfully!",
+    "code_error": "Failed to apply referral code",
+    "code_already_applied": "You have already applied a referral code",
+    "merchants_title": "Redeem Points At",
+    "visit_store": "Visit Store",
+    "view_profile": "View Profile",
+    "use_points_label": "Use my points balance",
+    "points_applied": "Points discount will be applied at checkout automatically",
+    "points_used": "Points Used",
+    "points_discount": "Points Discount",
+    "no_points": "You don't have enough points to redeem",
+    "orders_points_badge": "Points Applied"
   }
 }
