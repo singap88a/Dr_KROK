@@ -1082,7 +1082,9 @@
       "percentage": "Percentage",
       "noStudents": "No top students yet."
     },
-    "centerCourse": "Center Course"
+    "centerCourse": "Center Course",
+    "congratulationsPopup": "Congratulations!",
+    "pointsRewardMessage": "You have successfully passed the test with a score of <1>{{percentage}}%</1> and <2>{{points}}</2> points have been added to your balance as a reward."
   },
   "orders": {
     "title": "My Orders",

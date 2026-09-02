@@ -1050,7 +1050,9 @@
       "percentage": "Відсоток",
       "noStudents": "Кращих студентів поки немає."
     },
-    "centerCourse": "Курс Центру"
+    "centerCourse": "Курс Центру",
+    "congratulationsPopup": "Вітаємо!",
+    "pointsRewardMessage": "Ви успішно склали тест з результатом <1>{{percentage}}%</1> і <2>{{points}}</2> балів було додано на ваш баланс у якості винагороди."
   },
   "orders": {
     "title": "Мої замовлення",
