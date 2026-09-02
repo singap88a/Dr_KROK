@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaChartBar, FaHandPointer, FaArrowsAlt, FaTimes, FaAward } from "react-icons/fa";
 
@@ -38,6 +38,7 @@ export default function CourseTestRunner() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pointsPopupData, setPointsPopupData] = useState(null);
 
   // اكتشاف إذا كان الجهاز موبايل
   useEffect(() => {
@@ -475,10 +476,20 @@ export default function CourseTestRunner() {
 
     console.log('📤 Prepared test data for API:', testData);
 
+    let popupData = null;
+
     try {
       console.log('🚀 Sending test data to API...');
       const apiResponse = await addStudentTest(testData);
       console.log('✅ Test submitted successfully:', apiResponse);
+      
+      const responseData = apiResponse?.data || apiResponse;
+      if (responseData?.earned_points > 0) {
+        popupData = {
+          points: responseData.earned_points,
+          percentage: responseData.course_percentage || percentage.toFixed(2),
+        };
+      }
     } catch (error) {
       console.error("❌ Failed to submit test results:", error);
     }
@@ -506,21 +517,29 @@ export default function CourseTestRunner() {
     }
 
     const basePath = isLiveCourse ? '/live-courses' : '/courses';
-    if (scope === "final") {
-      navigate(`${basePath}/${id}/final-results`, {
-        replace: true,
-        state: { results: { total, earned, percentage, answers: resultsData }, test },
-      });
-    } else if (scope === "lesson") {
-      navigate(`${basePath}/${id}/test-results/lesson/${testId}`, {
-        replace: true,
-        state: { results: resultsData, test, lessonId },
-      });
-    } else if (scope === "section") {
-      navigate(`${basePath}/${id}/test-results/section/${testId}`, {
-        replace: true,
-        state: { results: resultsData, test, sectionId },
-      });
+    const doNavigation = () => {
+      if (scope === "final") {
+        navigate(`${basePath}/${id}/final-results`, {
+          replace: true,
+          state: { results: { total, earned, percentage, answers: resultsData }, test },
+        });
+      } else if (scope === "lesson") {
+        navigate(`${basePath}/${id}/test-results/lesson/${testId}`, {
+          replace: true,
+          state: { results: resultsData, test, lessonId },
+        });
+      } else if (scope === "section") {
+        navigate(`${basePath}/${id}/test-results/section/${testId}`, {
+          replace: true,
+          state: { results: resultsData, test, sectionId },
+        });
+      }
+    };
+
+    if (popupData) {
+      setPointsPopupData({ ...popupData, onContinue: doNavigation });
+    } else {
+      doNavigation();
     }
   };
 
@@ -769,6 +788,42 @@ export default function CourseTestRunner() {
               alt="Enlarged view"
               className="rounded-lg max-h-[80vh]"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Points Popup */}
+      {pointsPopupData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center transform transition-all animate-bounce-in">
+            <div className="flex justify-center mb-4 text-yellow-400">
+              <FaAward size={64} />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              {t("courses.congratulationsPopup", "Congratulations!")}
+            </h3>
+            <p className="text-gray-600 mb-6 text-lg leading-relaxed">
+              <Trans
+                i18nKey="courses.pointsRewardMessage"
+                values={{ percentage: pointsPopupData.percentage, points: pointsPopupData.points }}
+                components={{
+                  1: <span className="font-bold text-green-600" />,
+                  2: <span className="font-bold text-yellow-500" />
+                }}
+              >
+                You have successfully passed the test with a score of <span className="font-bold text-green-600">{pointsPopupData.percentage}%</span> and <span className="font-bold text-yellow-500">{pointsPopupData.points}</span> points have been added to your balance as a reward.
+              </Trans>
+            </p>
+            <button
+              onClick={() => {
+                const continueNav = pointsPopupData.onContinue;
+                setPointsPopupData(null);
+                if (continueNav) continueNav();
+              }}
+              className="w-full bg-primary text-white rounded-lg py-3 font-semibold hover:bg-secondary transition-colors"
+            >
+              {t("common.continue", "متابعة")}
+            </button>
           </div>
         </div>
       )}

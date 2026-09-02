@@ -21,6 +21,7 @@ import {
   FaTshirt,
   FaStethoscope,
   FaChevronDown,
+  FaGem,
 } from "react-icons/fa";
 
 // Custom Tooltip Component
@@ -382,6 +383,8 @@ const normalizeOrders = (orders) => {
         city: o.city,
         branch: o.branch,
         messages: o.messages || [],
+        points_used: o.points_used || 0,
+        points_discount: o.points_discount || 0,
       };
     }
     if (o && typeof o === "object" && "total_price" in o) {
@@ -393,6 +396,8 @@ const normalizeOrders = (orders) => {
         status: mapStatusFromBackend(o.status),
         date: o.created_at || new Date().toISOString(),
         messages: o.messages || [],
+        points_used: o.points_used || 0,
+        points_discount: o.points_discount || 0,
       };
     }
     return {
@@ -406,6 +411,8 @@ const normalizeOrders = (orders) => {
       city: o.city,
       branch: o.branch,
       messages: o.messages || [],
+      points_used: o.points_used || 0,
+      points_discount: o.points_discount || 0,
     };
   });
 };
@@ -632,7 +639,15 @@ const MyOrders = ({ orders }) => {
                       {order.type.replace('_', ' ')}
                     </td>
                     <td className="px-6 py-4 font-medium">
-                      ₴{Number(order.price).toFixed(2)}
+                      <div className="flex flex-col gap-1">
+                        <span>₴{Number(order.price).toFixed(2)}</span>
+                        {Number(order.points_used) > 0 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-full dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800">
+                            <FaGem className="text-[9px]" />
+                            -{Number(order.points_discount).toFixed(2)}₴ ({order.points_used} {t("points.pts", "pts")})
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -731,26 +746,35 @@ const MyOrders = ({ orders }) => {
                 </div>
               </div>
 
-              <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                <p>
-                  <span className="font-medium">{t("orders.type")}:</span>{" "}
-                  <span className="capitalize">{order.type.replace('_', ' ')}</span>
-                </p>
-                <p>
-                  <span className="font-medium">{t("orders.price")}:</span> ₴
-                  {Number(order.price).toFixed(2)}
-                </p>
-                <p>
-                  <span className="font-medium">{t("orders.date")}:</span>{" "}
-                  {formatDate(order.date)}
-                </p>
-                {order.type === 'delivery' && order.city && order.branch && (
+                <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                   <p>
-                    <span className="font-medium">{t("orders.delivery_to", "Delivery to")}:</span>{" "}
-                    {order.city} - {order.branch}
+                    <span className="font-medium">{t("orders.type")}:</span>{" "}
+                    <span className="capitalize">{order.type.replace('_', ' ')}</span>
                   </p>
-                )}
-              </div>
+                  <p>
+                    <span className="font-medium">{t("orders.price")}:</span> ₴
+                    {Number(order.price).toFixed(2)}
+                  </p>
+                  {Number(order.points_used) > 0 && (
+                    <p className="flex items-center gap-1">
+                      <span className="font-medium">{t("points.points_discount", "Points Discount")}:</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-full dark:bg-purple-900/20 dark:text-purple-300">
+                        <FaGem className="text-[9px]" />
+                        -{Number(order.points_discount).toFixed(2)}₴ ({order.points_used} {t("points.pts", "pts")})
+                      </span>
+                    </p>
+                  )}
+                  <p>
+                    <span className="font-medium">{t("orders.date")}:</span>{" "}
+                    {formatDate(order.date)}
+                  </p>
+                  {order.type === 'delivery' && order.city && order.branch && (
+                    <p>
+                      <span className="font-medium">{t("orders.delivery_to", "Delivery to")}:</span>{" "}
+                      {order.city} - {order.branch}
+                    </p>
+                  )}
+                </div>
 
               {order.type === "pdf" && order.file && (
                 <div className="mt-3">

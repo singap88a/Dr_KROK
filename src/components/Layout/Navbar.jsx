@@ -121,8 +121,7 @@ export default function Navbar() {
         { path: "/store/books", label: "navbar.books", icon: FaBook },
         { path: "/store/booklets", label: "navbar.booklets", icon: FaBookOpen },
         { path: "/store/medical-tools", label: "navbar.medicalTools", icon: FaStethoscope },
-        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt },
-        { path: "/merchants", label: "navbar.merchants", icon: FaStore }
+        { path: "/store/medical-clothes", label: "navbar.medicalClothes", icon: FaTshirt }
       ]
     },
     { path: "/about", label: "navbar.about" },

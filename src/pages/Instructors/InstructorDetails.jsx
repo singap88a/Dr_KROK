@@ -18,6 +18,9 @@ import {
   FaMapMarkerAlt,
   FaCalendarAlt,
   FaUsers,
+  FaHeartbeat,
+  FaStethoscope,
+  FaSyringe,
 } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
@@ -49,104 +52,125 @@ function CourseCard({ course, type = "video" }) {
   const route = type === "live" ? `/live-courses/${course.id}` : `/courses/${course.id}`;
   const isBestseller = course.is_bestseller;
   const rating = Number(course.avg_rating || 0);
+  const { t } = useTranslation();
 
   return (
-    <Link
-      to={route}
-      className="group flex flex-col bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-    >
-      <div className="relative overflow-hidden aspect-video bg-gray-100 dark:bg-gray-700">
-        <img
-          src={course.image || "/logo.png"}
-          alt={course.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          onError={(e) => { e.target.src = "/logo.png"; }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="group flex flex-col bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="relative overflow-hidden aspect-[16/9] bg-gray-100 dark:bg-gray-700">
+        <Link to={route} className="block w-full h-full">
+          <img
+            src={course.image || "/logo.png"}
+            alt={course.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => { e.target.src = "/logo.png"; }}
+          />
+        </Link>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
         {isBestseller && (
-          <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-            <FaStar size={8} /> Bestseller
+          <span className="absolute top-3 left-3 z-10 flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded-md shadow-sm">
+            <FaStar size={10} /> Bestseller
           </span>
         )}
         {course.level && (
-          <span className="absolute top-2 right-2 text-[10px] font-semibold text-white bg-primary/80 px-2 py-0.5 rounded-full capitalize">
+          <span className="absolute top-3 right-3 z-10 text-[11px] font-semibold text-white bg-primary px-2.5 py-1 rounded-md shadow-md capitalize border border-white/20">
             {course.level}
           </span>
         )}
       </div>
       <div className="p-4 flex flex-col flex-1">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-primary transition-colors">
-          {course.title}
-        </h4>
-        <div className="flex items-center gap-1 mb-3">
+        <Link to={route}>
+          <h4 className="text-base font-bold text-gray-900 dark:text-white line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+            {course.title}
+          </h4>
+        </Link>
+        <div className="flex items-center gap-1 mb-4">
           {rating > 0 && (
             <>
-              <FaStar size={10} className="text-amber-400" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">{rating.toFixed(1)}</span>
+              <FaStar size={12} className="text-amber-400" />
+              <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">{rating.toFixed(1)}</span>
             </>
           )}
           {course.language && (
-            <span className="ml-auto text-[10px] text-gray-400 dark:text-gray-500">{course.language}</span>
+            <span className="ml-auto text-xs font-medium text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
+              {course.language}
+            </span>
           )}
         </div>
-        <div className="mt-auto">
+        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
           <Price price={course.price} discount={course.discount} />
+          <Link
+            to={route}
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+          >
+            {t("courses.viewDetails", "View Details")}
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
 // ── Center Course Card ────────────────────────────────────────────────────────
 function CenterCourseCard({ course }) {
+  const { t } = useTranslation();
   return (
-    <div className="group flex flex-col bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-      <div className="relative overflow-hidden aspect-video bg-gray-100 dark:bg-gray-700">
-        <img
-          src={course.image || "/logo.png"}
-          alt={course.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          onError={(e) => { e.target.src = "/logo.png"; }}
-        />
+    <div className="group flex flex-col bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="relative overflow-hidden aspect-[16/9] bg-gray-100 dark:bg-gray-700">
+        <Link to={`/center-courses/${course.id}`} className="block w-full h-full">
+          <img
+            src={course.image || "/logo.png"}
+            alt={course.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => { e.target.src = "/logo.png"; }}
+          />
+        </Link>
         {course.is_bestseller && (
-          <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-            <FaStar size={8} /> Bestseller
+          <span className="absolute top-3 left-3 z-10 flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded-md shadow-sm">
+            <FaStar size={10} /> Bestseller
           </span>
         )}
         {course.status && (
-          <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
-            course.status === "available" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
+          <span className={`absolute top-3 right-3 z-10 text-[11px] font-bold px-2 py-1 rounded-md shadow-md capitalize border border-white/20 ${
+            course.status === "available" ? "bg-emerald-100 text-emerald-800" : "bg-gray-200 text-gray-800"
           }`}>
             {course.status}
           </span>
         )}
       </div>
       <div className="p-4 flex flex-col flex-1">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-          {course.title}
-        </h4>
-        <div className="space-y-1 mb-3">
+        <Link to={`/center-courses/${course.id}`}>
+          <h4 className="text-base font-bold text-gray-900 dark:text-white line-clamp-2 mb-3 group-hover:text-primary transition-colors">
+            {course.title}
+          </h4>
+        </Link>
+        <div className="space-y-2 mb-4">
           {course.address && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-              <FaMapMarkerAlt size={10} className="text-primary flex-shrink-0" />
-              {course.address}
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <FaMapMarkerAlt size={14} className="text-gray-400 flex-shrink-0" />
+              <span className="truncate">{course.address}</span>
             </div>
           )}
           {course.start_date && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-              <FaCalendarAlt size={10} className="text-primary flex-shrink-0" />
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <FaCalendarAlt size={14} className="text-gray-400 flex-shrink-0" />
               {new Date(course.start_date).toLocaleDateString()}
             </div>
           )}
           {course.seats_left !== undefined && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-              <FaUsers size={10} className="text-primary flex-shrink-0" />
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <FaUsers size={14} className="text-gray-400 flex-shrink-0" />
               {course.seats_left} seats left
             </div>
           )}
         </div>
-        <div className="mt-auto">
+        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
           <Price price={course.price} discount={course.discount} />
+          <Link
+            to={`/center-courses/${course.id}`}
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+          >
+            {t("courses.viewDetails", "View Details")}
+          </Link>
         </div>
       </div>
     </div>
@@ -276,141 +300,156 @@ function InstructorDetails() {
         </Link>
 
         {/* ── Profile Card ── */}
-        <div className="overflow-hidden bg-white shadow-2xl rounded-3xl dark:bg-gray-800 mb-10">
-          <div className="flex flex-col lg:flex-row">
-            {/* Left */}
-            <div className="flex flex-col items-center justify-center w-full p-10 text-center bg-gradient-to-br from-primary/10 to-blue-50 dark:from-primary/20 dark:to-gray-800 lg:w-1/3 lg:text-left">
+        <div className="overflow-hidden bg-white shadow-sm border border-gray-200 rounded-xl dark:bg-gray-800 dark:border-gray-700 mb-10">
+          {/* Cover Area with Medical Pattern */}
+          <div className="h-40 md:h-56 w-full relative overflow-hidden bg-primary">
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80"></div>
+            
+            {/* Medical Icons Pattern */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+              <FaHeartbeat className="absolute -bottom-4 -left-4 text-white text-8xl transform -rotate-12" />
+              <FaStethoscope className="absolute top-4 left-1/4 text-white text-9xl transform rotate-12" />
+              <FaSyringe className="absolute -top-10 right-1/4 text-white text-8xl transform rotate-45" />
+              <FaHeartbeat className="absolute bottom-8 right-10 text-white text-7xl transform -rotate-6" />
+            </div>
+            
+            {/* Decorative circles */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl"></div>
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl"></div>
+          </div>
+          
+          <div className="px-6 md:px-10 pb-10 relative">
+            {/* Avatar & Header */}
+            <div className="flex flex-col md:flex-row md:items-end md:-mt-20 -mt-20 mb-8 gap-6 relative z-10">
               <img
                 src={image || "/logo.png"}
                 alt={name}
-                className="object-cover w-32 h-32 mb-6 border-4 border-white rounded-full shadow-xl md:w-44 md:h-44 dark:border-gray-700"
+                className="object-cover w-36 h-36 border-4 border-white dark:border-gray-800 rounded-full shadow-md bg-white shrink-0 mx-auto md:mx-0"
                 onError={(e) => { e.target.src = "/logo.png"; }}
               />
-              <h1 className="mb-2 text-3xl font-extrabold text-gray-900 dark:text-white md:text-4xl">{name}</h1>
-              <p className="mb-4 text-lg font-medium text-primary">
-                {job_title || t("instructors.jobTitle")}
-              </p>
-
-              {/* Stats row */}
-              <div className="flex gap-3 w-full max-w-xs mb-4">
-                {years_of_experience && (
-                  <div className="flex-1 text-center bg-white dark:bg-gray-700 rounded-xl py-2 border border-gray-100 dark:border-gray-600">
-                    <div className="text-lg font-bold text-primary">{years_of_experience}</div>
-                    <div className="text-[10px] text-gray-400">Yrs exp.</div>
-                  </div>
-                )}
-                {totalCourses > 0 && (
-                  <div className="flex-1 text-center bg-white dark:bg-gray-700 rounded-xl py-2 border border-gray-100 dark:border-gray-600">
-                    <div className="text-lg font-bold text-primary">{totalCourses}</div>
-                    <div className="text-[10px] text-gray-400">Courses</div>
-                  </div>
-                )}
+              <div className="flex-1 text-center md:text-left mb-2 md:pt-20 pt-4">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{name}</h1>
+                <p className="text-gray-600 dark:text-gray-300 font-medium mt-1">
+                  {job_title || t("instructors.jobTitle")}
+                </p>
               </div>
-
-              {/* Gender & Experience chips */}
-              <div className="flex flex-col w-full max-w-xs gap-3">
-                <div className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg dark:bg-gray-700 dark:text-gray-200">
-                  <FaUser className="mr-2 text-primary" />
-                  {genderText}
-                </div>
-                <div className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg dark:bg-gray-700 dark:text-gray-200">
-                  <FaBriefcase className="mr-2 text-primary" />
-                  {t("instructors.details.yearsOfExperience")}: {years_of_experience}
-                </div>
+              <div className="flex gap-3 justify-center md:justify-end shrink-0 mb-2 md:pt-20 pt-2">
                 {telegram && (
                   <a
                     href={telegram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-bold text-white transition-all transform bg-primary rounded-xl hover:bg-primary/90 hover:scale-105 shadow-lg shadow-primary/20 mt-2"
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-opacity bg-primary rounded-lg hover:opacity-90 shadow-sm"
                   >
-                    <FaTelegram size={18} />
+                    <FaTelegram size={16} />
                     {t("courses.askInstructor", "Ask the Instructor")}
                   </a>
                 )}
               </div>
             </div>
 
-            {/* Right */}
-            <div className="flex-1 p-10 space-y-8">
-              {/* Bio */}
-              <div>
-                <h2 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
-                  {t("instructors.details.bio")}
-                </h2>
-                <div
-                  className="text-base leading-relaxed text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: bio || t("instructors.details.noBio") }}
-                />
-              </div>
-
-              {/* Expertise */}
-              {expertise && (
-                <div>
-                  <h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">
-                    {t("instructors.details.expertise")}
-                  </h3>
-                  <div
-                    className="text-base leading-relaxed text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: expertise }}
-                  />
-                </div>
-              )}
-
-              {/* Contact Info */}
-              <div>
-                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                  {t("instructors.contact")}
-                </h3>
-                <div className="space-y-3">
-                  {email && (
-                    <a href={`mailto:${email}`} className="flex items-center p-3 text-gray-700 transition-colors rounded-xl bg-gray-50 hover:bg-primary hover:text-white dark:bg-gray-700 dark:text-gray-200">
-                      <FaEnvelope className="mr-3" />{email}
-                    </a>
-                  )}
-                  {phone && (
-                    <a href={`tel:${phone}`} className="flex items-center p-3 text-gray-700 transition-colors rounded-xl bg-gray-50 hover:bg-primary hover:text-white dark:bg-gray-700 dark:text-gray-200">
-                      <FaPhone className="mr-3" />{phone}
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Social Media */}
-              {(facebook || instagram || youtube || telegram || whatsapp) && (
-                <div>
-                  <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                    {t("instructors.details.socialMedia")}
-                  </h3>
-                  <div className="flex flex-wrap gap-4">
-                    {facebook && (
-                      <a href={facebook} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-12 h-12 text-gray-500 transition-all bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white">
-                        <FaFacebookF size={18} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
+              {/* Left sidebar info (Meta style intro) */}
+              <div className="lg:col-span-1 space-y-6">
+                <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-lg">Intro</h3>
+                  
+                  <div className="space-y-4 text-sm text-gray-800 dark:text-gray-200">
+                    <div className="flex items-center gap-3">
+                      <FaUser className="text-gray-400 text-lg shrink-0" />
+                      <span>{genderText}</span>
+                    </div>
+                    {years_of_experience && (
+                      <div className="flex items-center gap-3">
+                        <FaBriefcase className="text-gray-400 text-lg shrink-0" />
+                        <span>{t("instructors.details.yearsOfExperience")}: <span className="font-semibold">{years_of_experience}</span></span>
+                      </div>
+                    )}
+                    {totalCourses > 0 && (
+                      <div className="flex items-center gap-3">
+                        <FaVideo className="text-gray-400 text-lg shrink-0" />
+                        <span>{totalCourses} Courses</span>
+                      </div>
+                    )}
+                    {email && (
+                      <a href={`mailto:${email}`} className="flex items-center gap-3 hover:underline">
+                        <FaEnvelope className="text-gray-400 text-lg shrink-0" />
+                        <span className="break-all">{email}</span>
                       </a>
                     )}
-                    {instagram && (
-                      <a href={instagram} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-12 h-12 text-gray-500 transition-all bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white">
-                        <FaInstagram size={18} />
-                      </a>
-                    )}
-                    {youtube && (
-                      <a href={youtube} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-12 h-12 text-gray-500 transition-all bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white">
-                        <FaYoutube size={18} />
-                      </a>
-                    )}
-                    {telegram && (
-                      <a href={telegram} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-12 h-12 text-gray-500 transition-all bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white">
-                        <FaTelegram size={18} />
-                      </a>
-                    )}
-                    {whatsapp && (
-                      <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-12 h-12 text-gray-500 transition-all bg-gray-100 rounded-full dark:bg-gray-700 hover:bg-primary hover:text-white">
-                        <FaWhatsapp size={18} />
+                    {phone && (
+                      <a href={`tel:${phone}`} className="flex items-center gap-3 hover:underline">
+                        <FaPhone className="text-gray-400 text-lg shrink-0" />
+                        <span>{phone}</span>
                       </a>
                     )}
                   </div>
+                  
+                  {/* Social Media */}
+                  {(facebook || instagram || youtube || whatsapp) && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex flex-wrap gap-2">
+                        {facebook && (
+                          <a href={facebook} target="_blank" rel="noopener noreferrer" className="p-2.5 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <FaFacebookF size={16} />
+                          </a>
+                        )}
+                        {instagram && (
+                          <a href={instagram} target="_blank" rel="noopener noreferrer" className="p-2.5 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <FaInstagram size={16} />
+                          </a>
+                        )}
+                        {youtube && (
+                          <a href={youtube} target="_blank" rel="noopener noreferrer" className="p-2.5 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <FaYoutube size={16} />
+                          </a>
+                        )}
+                        {whatsapp && (
+                          <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="p-2.5 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <FaWhatsapp size={16} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Main content area */}
+              <div className="lg:col-span-2 space-y-6">
+                {(bio || expertise) ? (
+                  <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-8">
+                    {bio && (
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                          {t("instructors.details.bio")}
+                        </h2>
+                        <div
+                          className="text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none text-sm md:text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: bio }}
+                        />
+                      </div>
+                    )}
+                    
+                    {expertise && (
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                          {t("instructors.details.expertise")}
+                        </h2>
+                        <div
+                          className="text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none text-sm md:text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: expertise }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-gray-800 p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-center">
+                    <p className="text-gray-500">{t("instructors.details.noBio")}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

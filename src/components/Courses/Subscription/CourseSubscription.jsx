@@ -38,6 +38,7 @@ import {
   FaWhatsapp,
   FaExclamationTriangle,
   FaInfoCircle,
+  FaGem,
 } from "react-icons/fa";
 
 export default function CourseSubscription() {
@@ -87,6 +88,33 @@ export default function CourseSubscription() {
 
   // Save before login modal state
   const [showSaveWarning, setShowSaveWarning] = useState(false);
+
+  // Points state
+  const [usePoints, setUsePoints] = useState(false);
+
+  // Check if user is eligible to use points:
+  // 1. Has enough points >= min required
+  // 2. Course instructor is in allowed_points_merchants
+  const isPointsEligible = (() => {
+    if (!isLoggedIn || !userData) return false;
+    const balance = Number(userData.points_balance || 0);
+    const minRequired = Number(userData.settings_min_points_to_redeem || 0);
+    if (balance < minRequired || minRequired === 0) return false;
+    return true;
+  })();
+
+  // Check if instructor is whitelisted for points
+  const isInstructorAllowed = (() => {
+    if (!course || !userData?.allowed_points_merchants?.length) return false;
+    const instructorId = course?.instructor?.id;
+    const instructorEmail = course?.instructor?.email;
+    return userData.allowed_points_merchants.some(
+      m => (instructorId && m.id === instructorId) ||
+           (instructorEmail && m.email === instructorEmail)
+    );
+  })();
+
+  const canUsePoints = isPointsEligible && isInstructorAllowed;
 
   useEffect(() => {
     let mounted = true;
@@ -254,11 +282,11 @@ export default function CourseSubscription() {
       let response;
 
       if (isCenterCourse) {
-        response = await subscribeToCenterCourse(id, selectedPayment, finalAmount, couponId);
+        response = await subscribeToCenterCourse(id, selectedPayment, finalAmount, couponId, usePoints);
       } else if (isLiveCourse) {
-        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId);
+        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId, usePoints);
       } else {
-        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId);
+        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId, usePoints);
       }
 
       console.log('Subscription response:', response);
@@ -675,6 +703,37 @@ export default function CourseSubscription() {
                         {t('courses.must_agree_to_purchase_policy', 'You must agree to the purchase policy to subscribe.')}
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Use Points Checkbox — only shown when eligible */}
+                {isLoggedIn && canUsePoints && (
+                  <div className="mb-5 p-3 border rounded-lg border-purple-200 bg-purple-50/60 dark:bg-purple-900/10 dark:border-purple-800">
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        id="usePoints"
+                        checked={usePoints}
+                        onChange={(e) => setUsePoints(e.target.checked)}
+                        className="mt-0.5 accent-purple-600"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <FaGem className="text-purple-500 text-xs" />
+                          <span className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+                            {t('points.use_points_label', 'Use my points balance')}
+                          </span>
+                          <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 bg-purple-100 dark:bg-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-700 rounded">
+                            {Number(userData?.points_balance || 0).toLocaleString()} {t('points.pts', 'pts')}
+                          </span>
+                        </div>
+                        {usePoints && (
+                          <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
+                            {t('points.points_applied', 'Points discount will be applied at checkout automatically')}
+                          </p>
+                        )}
+                      </div>
+                    </label>
                   </div>
                 )}
 

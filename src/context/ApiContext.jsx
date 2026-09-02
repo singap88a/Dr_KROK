@@ -1099,7 +1099,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       },
 
       // Course subscription - UPDATED with auto cache invalidation
-      async subscribeToCourse(courseId, paymentMethod, amount, couponId = null) {
+      async subscribeToCourse(courseId, paymentMethod, amount, couponId = null, usePoints = false) {
         const formData = new FormData();
 
         const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -1112,6 +1112,9 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('deposit_amount', amount.toString());
         if (couponId) {
           formData.append('coupon_id', couponId);
+        }
+        if (usePoints) {
+          formData.append('use_points', '1');
         }
 
         try {
@@ -1144,7 +1147,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       },
 
       // Live course subscription - UPDATED بنفس النظام
-      async subscribeToLiveCourse(courseId, paymentMethod, amount, couponId = null) {
+      async subscribeToLiveCourse(courseId, paymentMethod, amount, couponId = null, usePoints = false) {
         const formData = new FormData();
 
         const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -1157,6 +1160,9 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('deposit_amount', amount.toString());
         if (couponId) {
           formData.append('coupon_id', couponId);
+        }
+        if (usePoints) {
+          formData.append('use_points', '1');
         }
 
         try {
@@ -1189,7 +1195,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       },
 
       // Center course subscription
-      async subscribeToCenterCourse(courseId, paymentMethod, amount, couponId = null) {
+      async subscribeToCenterCourse(courseId, paymentMethod, amount, couponId = null, usePoints = false) {
         const formData = new FormData();
 
         const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -1202,6 +1208,9 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         formData.append('deposit_amount', amount.toString());
         if (couponId) {
           formData.append('coupon_id', couponId);
+        }
+        if (usePoints) {
+          formData.append('use_points', '1');
         }
 
         try {
@@ -1232,6 +1241,7 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
           throw error;
         }
       },
+
 
       // Get user's enrolled courses
       async getMyCourses() {
