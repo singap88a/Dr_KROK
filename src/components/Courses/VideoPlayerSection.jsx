@@ -391,6 +391,7 @@ export default function VideoPlayerSection({
                       groupId={groupId}
                       mode="stats"
                       hasAccess={hasAccess}
+                      onCommentClick={() => setActiveTab("comments")}
                     />
                   )}
 

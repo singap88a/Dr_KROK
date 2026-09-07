@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import { useUser } from "../../context/UserContext";
 
-export default function LessonInteractions({ lessonId, batchLessonId, isLiveCourse = false, groupId, mode = "full", hasAccess = false }) {
+export default function LessonInteractions({ lessonId, batchLessonId, isLiveCourse = false, groupId, mode = "full", hasAccess = false, onCommentClick }) {
   const { t } = useTranslation();
   const { isLoggedIn } = useUser();
   const {
@@ -153,16 +153,14 @@ export default function LessonInteractions({ lessonId, batchLessonId, isLiveCour
   };
 
   const scrollToComments = () => {
-    const element = document.getElementById("lesson-comments-section");
-    if (!element) return;
-    const navOffset = 88;
-    const top = element.getBoundingClientRect().top + window.scrollY - navOffset;
-    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-    requestAnimationFrame(() => {
-      const retryTop =
-        element.getBoundingClientRect().top + window.scrollY - navOffset;
-      window.scrollTo({ top: Math.max(0, retryTop), behavior: "smooth" });
-    });
+    if (onCommentClick) onCommentClick();
+    setTimeout(() => {
+      const element = document.getElementById("lesson-comments-section");
+      if (!element) return;
+      const navOffset = 88;
+      const top = element.getBoundingClientRect().top + window.scrollY - navOffset;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }, 100);
   };
 
   if (!isLoggedIn) return null;
