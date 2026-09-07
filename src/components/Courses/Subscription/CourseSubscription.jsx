@@ -358,7 +358,7 @@ export default function CourseSubscription() {
     return (
       <section className="min-h-[50vh] flex flex-col items-center justify-center gap-4 text-text">
         <div className="text-red-600">{t("common.error", "Error")}: {error || t("courses.courseNotFound", "Course not found.")}</div>
-        <Link to="/courses" className="px-4 py-2 text-white rounded-lg bg-primary hover:bg-secondary">
+        <Link to={isCenterCourse ? "/center-courses" : isLiveCourse ? "/live-courses" : "/courses"} className="px-4 py-2 text-white rounded-lg bg-primary hover:bg-secondary">
           {t("courses.backToCourses", "Back to Courses")}
         </Link>
       </section>
@@ -431,11 +431,11 @@ export default function CourseSubscription() {
               {t('courses.already_enrolled_message', 'You are already enrolled in this course. You can start learning now!')}
             </p>
             <Link
-              to={isLiveCourse ? `/live-courses/${id}/lessons` : `/courses/${id}/lessons`}
+              to={isCenterCourse ? `/center-courses/${id}` : isLiveCourse ? `/live-courses/${id}/lessons` : `/courses/${id}/lessons`}
               className="inline-flex items-center gap-2 px-6 py-3 text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
             >
               <FaPlay />
-              {t('courses.start_learning', 'Start Learning')}
+              {isCenterCourse ? t('courses.viewDetails', 'View Details') : t('courses.start_learning', 'Start Learning')}
             </Link>
           </div>
         </div>
@@ -449,7 +449,7 @@ export default function CourseSubscription() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            to={isLiveCourse ? `/live-courses/${id}` : `/courses/${id}`}
+            to={isCenterCourse ? `/center-courses/${id}` : isLiveCourse ? `/live-courses/${id}` : `/courses/${id}`}
             className="inline-flex items-center gap-2 mb-6 transition-colors text-primary hover:text-secondary"
           >
             <FaArrowLeft />
