@@ -91,6 +91,58 @@ export default function CourseProgressCard({ course, t, formatDate }) {
           </div>
         )}
 
+        {/* All Tests results if available */}
+        {course.tests && course.tests.length > 0 && (
+          <details className="mt-3 text-xs group">
+            <summary className="px-4 py-2 font-bold text-primary bg-primary/10 rounded-lg cursor-pointer hover:bg-primary/20 transition-colors select-none flex items-center justify-between outline-none shadow-sm border border-primary/20">
+              <span>View Tests ({course.tests.length})</span>
+              <span className="text-[10px] px-2 py-0.5 bg-primary/20 rounded-full font-semibold group-open:bg-primary group-open:text-white transition-colors">
+                <span className="group-open:hidden">Expand</span>
+                <span className="hidden group-open:inline">Collapse</span>
+              </span>
+            </summary>
+            <div className="mt-2 p-3 border border-border rounded-lg space-y-3 max-h-56 overflow-y-auto custom-scrollbar bg-surface/50 shadow-inner">
+              {course.tests.map((test, idx) => (
+                <div key={idx} className="flex flex-col gap-1 pb-3 border-b border-border/70 last:border-0 last:pb-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-semibold text-text line-clamp-2 leading-tight flex-1" title={test.test_name || test.test_type}>
+                      {test.test_name || test.test_type}
+                    </span>
+                    <div className="shrink-0 mt-0.5">
+                      {test.passed ? (
+                         <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded text-[10px] border border-emerald-200 dark:border-emerald-900 shadow-sm">Passed</span>
+                      ) : (
+                         <span className="text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded text-[10px] border border-red-200 dark:border-red-900 shadow-sm">Failed</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Progress bar for score */}
+                  <div className="space-y-1.5 mt-1">
+                    <div className="flex justify-between text-[10px] text-text-secondary font-medium">
+                      <span>Score: {test.score} / {test.total_score}</span>
+                      <span>{test.percentage}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        style={{ width: `${test.percentage}%` }}
+                        className={`h-full rounded-full transition-all duration-500 shadow-sm ${
+                          test.passed ? "bg-emerald-500" : "bg-red-500"
+                        }`}
+                      ></div>
+                    </div>
+                    {test.date && (
+                      <div className="text-[9px] text-text-muted text-right mt-0.5">
+                        {formatDate(test.date)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
         {/* Timestamp */}
         {course.last_watched_at && (
           <span className="text-[10px] text-text-muted block italic">
