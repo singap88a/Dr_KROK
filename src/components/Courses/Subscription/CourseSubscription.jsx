@@ -27,6 +27,8 @@ import {
   FaShoppingCart,
   FaBookmark,
   FaCreditCard,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
   FaCcVisa,
   FaApplePay,
   FaGooglePay,
@@ -493,26 +495,57 @@ export default function CourseSubscription() {
 
                   {/* Course Stats */}
                   <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <FaBookOpen className="text-primary" />
-                      <span>{course.lessons_count || 0} {t('courses.lessons', 'Lessons')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaClock className="text-primary" />
-                      <span>{Math.max(1, Math.round((course.duration_minutes || 0) / 60))}h {t('courses.duration', 'Duration')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaUsers className="text-primary" />
-                      <span>{course.enrolled_count || 0} {t('courses.students', 'Students')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        {renderStars(course.avg_rating || 0)}
-                      </div>
-                      <span className="text-sm">
-                        {(course.avg_rating || 0).toFixed(1)} ({course.ratings_count || 0})
-                      </span>
-                    </div>
+                    {isCenterCourse ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <FaMapMarkerAlt className="text-primary shrink-0" />
+                          <span className="truncate" title={course.address}>{course.address || t('common.not_specified', 'Not Specified')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaCalendarAlt className="text-primary shrink-0" />
+                          <span>{t('center_courses.start_date', 'Starts')}: {course.start_date || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaClock className="text-primary shrink-0" />
+                          <span className="truncate" title={course.booking_end_date}>{t('center_courses.booking_end', 'Booking ends')}: {course.booking_end_date || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaBookOpen className="text-primary shrink-0" />
+                          <span>{course.lectures_count || 0} {t('center_courses.lectures', 'Lectures')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaClock className="text-primary shrink-0" />
+                          <span>{course.lecture_duration || 0} {t('center_courses.min_per_lecture', 'mins/lecture')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaUsers className="text-primary shrink-0" />
+                          <span>{course.max_students || 0} {t('center_courses.max_students', 'Max Students')}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <FaBookOpen className="text-primary shrink-0" />
+                          <span>{course.lessons_count || 0} {t('courses.lessons', 'Lessons')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaClock className="text-primary shrink-0" />
+                          <span>{Math.max(1, Math.round((course.duration_minutes || 0) / 60))}h {t('courses.duration', 'Duration')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaUsers className="text-primary shrink-0" />
+                          <span>{course.enrolled_count || 0} {t('courses.students', 'Students')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 shrink-0">
+                            {renderStars(course.avg_rating || 0)}
+                          </div>
+                          <span className="text-sm">
+                            {(course.avg_rating || 0).toFixed(1)} ({course.ratings_count || 0})
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Course Level & Language */}
