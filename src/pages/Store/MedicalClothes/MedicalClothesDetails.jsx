@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { FiArrowLeft, FiHeart, FiCheck, FiImage, FiScissors, FiBriefcase, FiMail, FiPhone, FiChevronRight } from "react-icons/fi";
+import { FiArrowLeft, FiHeart, FiCheck, FiImage, FiScissors, FiBriefcase, FiMail, FiPhone, FiChevronRight, FiEdit2 } from "react-icons/fi";
 import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
 import { useTranslation } from 'react-i18next';
@@ -352,15 +352,20 @@ export default function MedicalClothesDetails() {
                           <label className="block text-sm font-semibold text-text-secondary mb-2">
                             {t('embroidery.name_label', 'Name or text to embroider')} *
                           </label>
-                          <input
-                            id="embroidery-name-input"
-                            type="text"
-                            value={embroideryName}
-                            onChange={e => setEmbroideryName(e.target.value)}
-                            maxLength={50}
-                            placeholder={t('embroidery.name_placeholder', 'e.g. Dr. Ahmed')}
-                            className="w-full px-4 py-3 border rounded-xl border-border bg-surface text-text focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                          />
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <FiEdit2 className="text-text-secondary" />
+                            </div>
+                            <input
+                              id="embroidery-name-input"
+                              type="text"
+                              value={embroideryName}
+                              onChange={e => setEmbroideryName(e.target.value)}
+                              maxLength={50}
+                              placeholder={t('embroidery.name_placeholder', 'e.g. Dr. Diaa')}
+                              className="w-full pl-11 pr-4 py-3 border-2 rounded-xl border-border bg-surface text-text focus:ring-2 focus:ring-primary focus:border-primary outline-none transition shadow-sm"
+                            />
+                          </div>
                           <p className="text-xs text-text-secondary mt-1 text-right">{embroideryName.length}/50</p>
                         </div>
 
