@@ -29,6 +29,7 @@ import {
   FaImage,
   FaHourglassHalf,
   FaPercentage,
+  FaLock,
 } from "react-icons/fa";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -55,9 +56,11 @@ export default function LiveCourseDetails() {
   const [userHasReviewed, setUserHasReviewed] = useState(false);
   const [userHasAccess, setUserHasAccess] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [showCompletedModal, setShowCompletedModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [showExpiredModal, setShowExpiredModal] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -78,28 +81,35 @@ export default function LiveCourseDetails() {
 
         // Check course access and expiration
         if (data.enrollment_status) {
-          const { is_enrolled, is_expired: expired } = data.enrollment_status;
-          setIsExpired(expired === true);
-          setUserHasAccess(is_enrolled === true && expired === false);
+          const { is_enrolled, is_expired: expired, status } = data.enrollment_status;
+          const completed = status === 'completed';
+          
+          setIsCompleted(completed);
+          setIsExpired((expired === true || status === 'expired') && !completed);
+          setUserHasAccess(is_enrolled === true && !expired && !completed);
         } else if (isLoggedIn) {
           try {
             const access = await getCourseAccess(id, 'live_course');
-            // access can be a boolean or an object { is_enrolled, is_expired }
             if (access && typeof access === 'object') {
               const enrolled = access.is_enrolled === true;
               const expired  = access.is_expired  === true;
-              setIsExpired(expired);
-              setUserHasAccess(enrolled && !expired);
+              const completed = access.status === 'completed';
+              
+              setIsCompleted(completed);
+              setIsExpired(expired && !completed);
+              setUserHasAccess(enrolled && !expired && !completed);
             } else {
+              setIsCompleted(false);
               setIsExpired(false);
               setUserHasAccess(!!access);
             }
           } catch {
-            // If access check fails, assume no access for paid content
+            setIsCompleted(false);
             setIsExpired(false);
             setUserHasAccess(data.price === 0 || data.price === "0");
           }
         } else {
+          setIsCompleted(false);
           setIsExpired(false);
           setUserHasAccess(false);
         }
@@ -365,16 +375,23 @@ export default function LiveCourseDetails() {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            {isExpired ? (
+            {isCompleted ? (
+              /* ───── الكورس مكتمل ───── */
+              <button
+                onClick={() => setShowCompletedModal(true)}
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-green-600 hover:bg-green-700 sm:px-6 sm:py-3 flex items-center gap-2"
+              >
+                <FaCertificate className="w-4 h-4" />
+                {t("courses.courseCompleted", "Course Completed")}
+              </button>
+            ) : isExpired ? (
               /* ───── الكورس منتهى الصلاحية ───── */
               <button
                 onClick={() => setShowExpiredModal(true)}
-                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-green-600 hover:bg-green-700 sm:px-6 sm:py-3 flex items-center gap-2"
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-red-600 hover:bg-red-700 sm:px-6 sm:py-3 flex items-center gap-2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {t("courses.courseCompleted", "تم اجتياز الدورة")}
+                <FaLock className="w-4 h-4" />
+                {t("courses.courseExpired", "Course Expired")}
               </button>
             ) : userHasAccess ? (
               /* ───── مسجّل والكورس نشط ───── */
@@ -559,18 +576,41 @@ export default function LiveCourseDetails() {
       {showExpiredModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md p-6 overflow-hidden text-center bg-white shadow-2xl rounded-2xl dark:bg-surface">
-            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full dark:bg-green-900/30">
-              <FaCertificate className="text-3xl text-green-600 dark:text-green-400" />
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full dark:bg-red-900/30">
+              <FaLock className="text-3xl text-red-600 dark:text-red-400" />
             </div>
             <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-              {t("courses.courseCompletedTitle", "تم اجتياز الدورة بنجاح")}
+              {t("courses.courseExpiredTitle", "Course Access Expired")}
             </h3>
             <p className="mb-6 text-gray-600 dark:text-gray-300">
-              {t("courses.courseCompletedMessage", "لقد أتممت متطلبات هذه الدورة بنجاح في وقت سابق. نظراً لانتهاء فترة صلاحية الوصول، لا يمكن عرض المحتوى حالياً. نتمنى لك دوام التوفيق والنجاح.")}
+              {t("courses.courseExpiredMessage", "Your access period for this course has expired.")}
             </p>
             <button
               onClick={() => setShowExpiredModal(false)}
               className="w-full px-4 py-3 font-semibold text-white transition-colors bg-primary rounded-xl hover:bg-secondary"
+            >
+              {t("common.close", "إغلاق")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Modal */}
+      {showCompletedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md p-6 overflow-hidden text-center bg-white shadow-2xl rounded-2xl dark:bg-surface">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full dark:bg-green-900/30">
+              <FaCertificate className="text-3xl text-green-600 dark:text-green-400" />
+            </div>
+            <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+              {t("courses.courseCompletedTitle", "Course Successfully Passed!")}
+            </h3>
+            <p className="mb-6 text-gray-600 dark:text-gray-300">
+              {t("courses.courseCompletedMessage", "You have successfully completed the requirements for this course. We wish you continued success.")}
+            </p>
+            <button
+              onClick={() => setShowCompletedModal(false)}
+              className="w-full px-6 py-3 font-semibold text-white transition-all rounded-xl bg-primary hover:bg-secondary hover:scale-105"
             >
               {t("common.close", "إغلاق")}
             </button>

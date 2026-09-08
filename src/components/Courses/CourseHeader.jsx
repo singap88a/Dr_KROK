@@ -16,7 +16,9 @@ const CourseHeader = ({
   courseProgress, 
   progressLoading, 
   onPurchaseClick,
-  backPath
+  backPath,
+  isExpired,
+  isCompleted
 }) => {
   const { t } = useTranslation();
 
@@ -165,7 +167,7 @@ const CourseHeader = ({
               )}
             </div>
           </div>
-          {!hasAccess && (
+          {!hasAccess && !isExpired && !isCompleted && (
             <button
               onClick={onPurchaseClick}
               className="px-6 py-3 font-semibold text-white transition-all rounded-lg bg-gradient-to-r bg-primary to-secondary hover:shadow-lg hover:scale-105"

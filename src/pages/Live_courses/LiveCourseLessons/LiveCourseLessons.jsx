@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import i18n from "../../../i18n";
 import LoadingSpinner from "../../../components/Common/LoadingSpinner";
-import { FaCertificate } from "react-icons/fa";
+import { FaCertificate, FaLock } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -62,6 +62,7 @@ export default function LiveCourseLessons() {
   const [sections, setSections] = useState([]);
   const [hasAccess, setHasAccess] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentSection, setCurrentSection] = useState(null);
   const [expandedSections, setExpandedSections] = useState(new Set());
@@ -621,26 +622,35 @@ export default function LiveCourseLessons() {
 
         // Check course access and expiration
         if (courseData.enrollment_status) {
-          const { is_enrolled, is_expired: expired } = courseData.enrollment_status;
-          setIsExpired(expired === true);
-          setHasAccess(is_enrolled === true && expired === false);
+          const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
+          const completed = status === 'completed';
+          
+          setIsCompleted(completed);
+          setIsExpired((expired === true || status === 'expired') && !completed);
+          setHasAccess(is_enrolled === true && !expired && !completed);
         } else if (isLoggedIn) {
           try {
             const access = await getCourseAccess(realId, 'live_course');
             if (access && typeof access === 'object') {
               const enrolled = access.is_enrolled === true;
-              const expired = access.is_expired === true;
-              setIsExpired(expired);
-              setHasAccess(enrolled && !expired);
+              const expired  = access.is_expired  === true;
+              const completed = access.status === 'completed';
+              
+              setIsCompleted(completed);
+              setIsExpired(expired && !completed);
+              setHasAccess(enrolled && !expired && !completed);
             } else {
+              setIsCompleted(false);
               setIsExpired(false);
               setHasAccess(!!access);
             }
           } catch {
+            setIsCompleted(false);
             setIsExpired(false);
             setHasAccess(courseData.price === 0 || courseData.price === "0");
           }
         } else {
+          setIsCompleted(false);
           setIsExpired(false);
           setHasAccess(false);
         }
@@ -772,6 +782,8 @@ export default function LiveCourseLessons() {
           isLoggedIn={isLoggedIn}
           courseProgress={courseProgress}
           progressLoading={progressLoading}
+          isExpired={isExpired}
+          isCompleted={isCompleted}
           onPurchaseClick={() => setShowPurchaseModal(true)}
           backPath={`/live-courses/${course.id}`}
         />
@@ -779,21 +791,17 @@ export default function LiveCourseLessons() {
         <BatchInfoCard course={course} t={t} />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {isExpired ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="lg:col-span-3"
-            >
-              <div className="flex flex-col items-center justify-center p-8 my-8 text-center border shadow-xl bg-surface rounded-3xl border-border sm:p-12 sm:my-12">
+          {isCompleted ? (
+            <div className="lg:col-span-3">
+              <div className="flex flex-col items-center justify-center p-8 my-8 text-center border shadow-xl bg-surface rounded-3xl border-border animate-fade-in sm:p-12 sm:my-12">
                 <div className="flex items-center justify-center w-20 h-20 mb-6 bg-green-100 rounded-full dark:bg-green-900/30 sm:w-24 sm:h-24">
                   <FaCertificate className="text-4xl text-green-600 dark:text-green-400 sm:text-5xl" />
                 </div>
                 <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-                  {t("courses.courseCompletedTitle", "تم اجتياز الدورة بنجاح!")}
+                  {t("courses.courseCompletedTitle", "Course Successfully Passed!")}
                 </h2>
                 <p className="max-w-md mx-auto mb-8 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
-                  {t("courses.courseCompletedMessage", "لقد أتممت متطلبات هذه الدورة بنجاح في وقت سابق. نظراً لانتهاء فترة صلاحية الوصول، لا يمكن عرض المحتوى حالياً. نتمنى لك دوام التوفيق والنجاح.")}
+                  {t("courses.courseCompletedMessage", "You have successfully completed the requirements for this course. We wish you continued success.")}
                 </p>
                 <Link
                   to={`/live-courses/${id}`}
@@ -802,7 +810,27 @@ export default function LiveCourseLessons() {
                   {t("courses.backToDetails", "العودة لتفاصيل الدورة")}
                 </Link>
               </div>
-            </motion.div>
+            </div>
+          ) : isExpired ? (
+            <div className="lg:col-span-3">
+              <div className="flex flex-col items-center justify-center p-8 my-8 text-center border shadow-xl bg-surface rounded-3xl border-border animate-fade-in sm:p-12 sm:my-12">
+                <div className="flex items-center justify-center w-20 h-20 mb-6 bg-red-100 rounded-full dark:bg-red-900/30 sm:w-24 sm:h-24">
+                  <FaLock className="text-4xl text-red-600 dark:text-red-400 sm:text-5xl" />
+                </div>
+                <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+                  {t("courses.courseExpiredTitle", "Course Access Expired")}
+                </h2>
+                <p className="max-w-md mx-auto mb-8 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
+                  {t("courses.courseExpiredMessage", "Your access period for this course has expired.")}
+                </p>
+                <Link
+                  to={`/live-courses/${id}`}
+                  className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
+                >
+                  {t("courses.backToDetails", "العودة لتفاصيل الدورة")}
+                </Link>
+              </div>
+            </div>
           ) : (
             <>
               <Sidebar
