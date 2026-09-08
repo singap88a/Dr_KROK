@@ -126,7 +126,8 @@ export default function Courses() {
     setLoading(true);
     setError("");
     try {
-      const res = await getCenterCourses({ page, per_page: PER_PAGE, filter: centerFilter });
+      // Fetch all center courses and filter locally as requested
+      const res = await getCenterCourses({ page, per_page: 100 });
       if (!mounted) return;
       
       const mapped = (res.data || []).map((c) => ({
@@ -230,7 +231,31 @@ export default function Courses() {
     }
   };
 
-  const visible = activeTab === "video" ? videoCourses : activeTab === "live" ? liveCourses : centerCourses;
+  const visible = useMemo(() => {
+    if (activeTab === "video") return videoCourses;
+    if (activeTab === "live") return liveCourses;
+    
+    // Local filtering for center courses
+    return centerCourses.filter(c => {
+      let isEnded = false;
+      if (c.status === 'expired' || c.status === 'completed') {
+        isEnded = true;
+      } else if (c.started_at) {
+        const now = new Date();
+        const courseDate = new Date(c.started_at);
+        const diffTime = courseDate.getTime() - now.getTime();
+        const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+        if (diffHours < 0) isEnded = true;
+      }
+      
+      if (centerFilter === 'expired' || centerFilter === 'completed') {
+        return isEnded;
+      } else if (centerFilter === 'closest') {
+        return !isEnded;
+      }
+      return true;
+    });
+  }, [activeTab, videoCourses, liveCourses, centerCourses, centerFilter]);
   const filtered = useMemo(() => {
     return visible.filter((c) => {
       const text = `${c.title} ${c.instructor || ""} ${c.description || ""}`.toLowerCase();
