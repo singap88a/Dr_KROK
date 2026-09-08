@@ -894,21 +894,21 @@ export default function LiveCourseLessons() {
       />
 
       <ImagePopup
-        showImagePopup={showImagePopup}
-        selectedImage={selectedImage}
-        setShowImagePopup={setShowImagePopup}
+        show={showImagePopup}
+        image={selectedImage}
+        onClose={() => setShowImagePopup(false)}
       />
 
       <PDFPopup
-        showFilesPopup={showFilesPopup}
-        selectedFile={selectedFile}
-        setShowFilesPopup={setShowFilesPopup}
+        show={showFilesPopup}
+        file={selectedFile}
+        onClose={() => setShowFilesPopup(false)}
       />
 
       <VideoPopup
-        showVideoPopup={showVideoPopup}
-        selectedVideo={selectedVideo}
-        setShowVideoPopup={setShowVideoPopup}
+        show={showVideoPopup}
+        video={selectedVideo}
+        onClose={() => setShowVideoPopup(false)}
       />
     </section>
   );
