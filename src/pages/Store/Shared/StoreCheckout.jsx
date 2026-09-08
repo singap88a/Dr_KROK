@@ -97,6 +97,26 @@ export default function StoreCheckout() {
   
   const isPdfBook = isBookType && !isDelivery;
 
+  // Points Logic
+  const [usePoints, setUsePoints] = useState(false);
+  const pointsBalance = Number(userData?.points_balance || 0);
+  const minPointsToRedeem = Number(userData?.settings_min_points_to_redeem || 0);
+  const pointsMonetaryValue = Number(userData?.points_monetary_value || 0);
+  
+  const isPointsEligible = pointsBalance > 0 && pointsBalance >= minPointsToRedeem;
+  
+  const isMerchantAllowed = (() => {
+    if (!item || !userData?.allowed_points_merchants?.length) return false;
+    const instructorId = item?.instructor?.id || item?.merchant_id;
+    const instructorEmail = item?.instructor?.email || item?.merchant_email;
+    return userData.allowed_points_merchants.some(
+      m => (instructorId && m.id === instructorId) ||
+           (instructorEmail && m.email === instructorEmail)
+    );
+  })();
+
+  const canUsePoints = isPointsEligible && isMerchantAllowed;
+
   const handleOpenInstallmentModal = () => {
     const depositPct = Number(item?.course_deposit_percentage || 0);
     if (depositPct === 0) {
@@ -287,6 +307,9 @@ export default function StoreCheckout() {
   // Add embroidery price on top after all other discounts
   const discountedPrice = discountedPriceBeforeEmbroidery + embroideryPrice;
 
+  const pointsDiscountAmount = usePoints && canUsePoints ? Math.min(pointsMonetaryValue, discountedPrice) : 0;
+  const finalDiscountedPrice = discountedPrice - pointsDiscountAmount;
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -333,7 +356,7 @@ export default function StoreCheckout() {
     navigate('/login', { state: { from: returnPath } });
   };
 
-  const finalAmountToPay = useInstallment ? installmentAmount : discountedPrice.toFixed(2);
+  const finalAmountToPay = useInstallment ? installmentAmount : finalDiscountedPrice.toFixed(2);
 
 
 
@@ -421,6 +444,10 @@ const handleDeliveryOrder = async (e) => {
       // Add amount and deposit_amount for installments
       formDataToSend.append('amount', finalAmountToPay.toString());
       formDataToSend.append('deposit_amount', finalAmountToPay.toString());
+
+      if (usePoints && canUsePoints) {
+        formDataToSend.append('use_points', '1');
+      }
 
       console.log('Sending order data:', {
         client_name: formData.client_name,
@@ -532,6 +559,9 @@ const handleDeliveryOrder = async (e) => {
       // أضف client_id لو متاح
       if (userData?.id) {
         formDataToSend.append('client_id', userData.id.toString());
+      }
+      if (usePoints && canUsePoints) {
+        formDataToSend.append('use_points', '1');
       }
 
       const response = await request(checkoutApi, {
@@ -803,8 +833,34 @@ const handleDeliveryOrder = async (e) => {
                 {/* Total Line */}
                 <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200">
                   <span className="text-lg font-bold text-gray-900">{t('books.total')}</span>
-                  <span className="text-xl font-black text-primary">₴{discountedPrice.toFixed(2)}</span>
+                  <span className="text-xl font-black text-primary">₴{finalDiscountedPrice.toFixed(2)}</span>
                 </div>
+
+                {/* Use Points Checkbox */}
+                {canUsePoints && (
+                  <div className="mt-4 p-4 border border-emerald-200 bg-emerald-50 rounded-xl flex items-start gap-3 transition-all hover:shadow-sm">
+                    <input
+                      type="checkbox"
+                      id="usePoints"
+                      checked={usePoints}
+                      onChange={(e) => setUsePoints(e.target.checked)}
+                      className="mt-1 w-5 h-5 text-emerald-600 border-emerald-300 rounded focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <div>
+                      <label htmlFor="usePoints" className="font-semibold text-emerald-800 cursor-pointer block">
+                        {t('points.use_points_balance', 'Use Points Balance')}
+                      </label>
+                      <p className="text-sm text-emerald-600 mt-1">
+                        {t('points.balance_available', { balance: pointsBalance, value: pointsMonetaryValue.toFixed(2) }, `You have ${pointsBalance} points worth ₴${pointsMonetaryValue.toFixed(2)}.`)}
+                      </p>
+                      {usePoints && (
+                        <div className="mt-2 text-sm font-bold text-emerald-700 bg-white/60 px-3 py-1.5 rounded-lg border border-emerald-100 inline-block">
+                          {t('points.discount_applied', 'Discount applied:')} -₴{pointsDiscountAmount.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Installment Options (if not PDF book) */}
                 {!isPdfBook && (

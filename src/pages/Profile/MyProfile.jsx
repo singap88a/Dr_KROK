@@ -1300,12 +1300,12 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
             {/* Allowed Merchants Card */}
             {user.allowed_points_merchants && user.allowed_points_merchants.length > 0 && (
-              <div className="p-5 border bg-surface border-border rounded-xl">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="p-5 border bg-surface border-border rounded-xl flex flex-col max-h-[360px]">
+                <div className="flex items-center gap-2 mb-4 shrink-0">
                   <FaStore className="text-emerald-600" />
                   <h4 className="font-bold text-sm uppercase tracking-wider opacity-70">{t('points.merchants_title', 'Redeem Points At')}</h4>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-2">
                   {user.allowed_points_merchants.map(merchant => {
                     // Robust detection logic
                     // A pure store will typically have role 'merchant' or 'store'
