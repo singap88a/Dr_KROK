@@ -387,7 +387,7 @@ export default function Navbar() {
                       {cartItems.map((item) => (
                         <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 p-4 transition hover:bg-surface/50 group">
                           <Link 
-                            to={item.url}
+                            to={item.url || '#'}
                             state={item.stateData}
                             onClick={() => setCartOpen(false)}
                             className="flex-shrink-0"
@@ -403,13 +403,13 @@ export default function Navbar() {
                           </Link>
                           <div className="flex-1 min-w-0">
                             <Link 
-                              to={item.url}
+                              to={item.url || '#'}
                               state={item.stateData}
                               onClick={() => setCartOpen(false)}
                               className="block text-sm font-medium truncate text-text hover:text-primary transition-colors"
-                              title={item.name}
+                              title={item.name || item.title}
                             >
-                              {item.name}
+                              {item.name || item.title || "Unknown Item"}
                             </Link>
                             <p className="mt-1 text-xs text-textSecondary capitalize">{t(`cart.type_${item.type}`, item.type.replace('_', ' '))}</p>
                             <div className="flex items-center justify-between mt-1">

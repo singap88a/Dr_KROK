@@ -381,10 +381,11 @@ export default function CourseSubscription() {
 
     addToCart({
       id: course.id,
-      title: course.title,
+      name: course.title,
       price: discountedPrice,
       type: isCenterCourse ? 'center_course' : isLiveCourse ? 'live_course' : 'course',
-      image: imageUrl
+      image: imageUrl,
+      url: location.pathname
     });
     toast.success(t("courses.addedToCart", "Course added to cart"));
   };
