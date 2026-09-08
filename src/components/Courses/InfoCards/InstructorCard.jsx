@@ -1,7 +1,7 @@
 // LiveCourseLessons/InstructorCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaGraduationCap } from "react-icons/fa";
+import { FaGraduationCap, FaTelegram } from "react-icons/fa";
 
 export default function InstructorCard({ course, t }) {
   if (!course.instructor) return null;
@@ -40,12 +40,27 @@ export default function InstructorCard({ course, t }) {
             {course.instructor.bio}
           </p>
 
-          <Link
-            to={`/instructors/${course.instructor.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
-          >
-            {t("instructors.viewDetails", "View Details")}
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to={`/instructors/${course.instructor.id}`}
+              className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+            >
+              {t("instructors.viewDetails", "View Details")}
+            </Link>
+
+            {course.instructor.telegram && (
+              <a
+                href={course.instructor.telegram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 font-medium text-white transition-colors rounded-lg bg-primary hover:bg-secondary"
+                title="Telegram"
+              >
+                <FaTelegram size={20} />
+                <span>Telegram</span>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>
