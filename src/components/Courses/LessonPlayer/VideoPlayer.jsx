@@ -75,6 +75,18 @@ export const VideoPlayer = ({
   const videoRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   const videoSrc = currentLesson?.video || currentSection?.video;
 
   if (!videoSrc) {
@@ -128,18 +140,6 @@ export const VideoPlayer = ({
       }
     }
   };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
-    };
-  }, []);
 
   return (
     <div ref={containerRef} style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#000" }} className="group">

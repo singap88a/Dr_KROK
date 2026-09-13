@@ -59,6 +59,53 @@ const formatDateForDisplay = (dateString) => {
   return dateString;
 };
 
+// Helper to format social URLs
+const formatSocialUrl = (url, domain) => {
+  if (!url) return "";
+  let cleanUrl = url.trim();
+  if (cleanUrl.startsWith('@')) cleanUrl = cleanUrl.substring(1);
+  
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+  
+  if (cleanUrl.includes(domain)) {
+    return `https://${cleanUrl}`;
+  }
+  
+  return `https://${domain}/${cleanUrl}`;
+};
+
+// Helper to translate backend errors
+const translateBackendError = (errorMsg, t) => {
+  if (typeof errorMsg !== 'string') return t('profile.toast.update_fail', 'Update failed');
+  const lowerMsg = errorMsg.toLowerCase();
+  
+  if (lowerMsg.includes('instagram')) return t('profile.toast.invalid_instagram', 'Invalid Instagram link format.');
+  if (lowerMsg.includes('facebook')) return t('profile.toast.invalid_facebook', 'Invalid Facebook link format.');
+  if (lowerMsg.includes('telegram')) return t('profile.toast.invalid_telegram', 'Invalid Telegram link format.');
+  if (lowerMsg.includes('whatsapp')) return t('profile.toast.invalid_whatsapp', 'Invalid WhatsApp link format.');
+  
+  if (lowerMsg.includes('البريد') || lowerMsg.includes('email') || lowerMsg.includes('إيميل')) {
+    return t('profile.toast.email_exists', 'This email is already registered to another account.');
+  }
+  
+  if (lowerMsg.includes('الهاتف') || lowerMsg.includes('phone') || lowerMsg.includes('رقم')) {
+    return t('profile.toast.phone_exists', 'This phone number is already registered.');
+  }
+
+  if (lowerMsg.includes('المستخدم') || lowerMsg.includes('username')) {
+    return t('profile.toast.username_exists', 'This username is already taken.');
+  }
+
+  const arabicPattern = /[\u0600-\u06FF]/;
+  if (arabicPattern.test(errorMsg)) {
+    return t('profile.toast.update_fail', 'An error occurred while saving. Please check your data.');
+  }
+  
+  return errorMsg;
+};
+
 const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [loading, setLoading] = useState(false);
@@ -184,10 +231,10 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         university_id: parseInt(formData.university_id) || 0,
         college_year: formData.college_year,
         specialization_id: parseInt(formData.specialization_id) || 0,
-        facebook: formData.facebook || "",
-        instagram: formData.instagram || "",
-        telegram: formData.telegram || "",
-        whatsapp: formData.whatsapp || "",
+        facebook: formatSocialUrl(formData.facebook, 'facebook.com'),
+        instagram: formatSocialUrl(formData.instagram, 'instagram.com'),
+        telegram: formatSocialUrl(formData.telegram, 't.me'),
+        whatsapp: formatSocialUrl(formData.whatsapp, 'wa.me'),
         // The specific field name required by the API for the referral code
         code_add_invite_friend: referralCode.trim(),
       };
@@ -215,10 +262,12 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         }
         setReferralCode("");
       } else {
-        toast.error(result?.message || t('points.code_error'));
+        let errorMsg = result?.message || t('points.code_error');
+        toast.error(translateBackendError(errorMsg, t));
       }
     } catch (err) {
-      toast.error(err?.message || t('points.code_error'));
+      let errorMsg = err?.message || t('points.code_error');
+      toast.error(translateBackendError(errorMsg, t));
     } finally {
       setReferralLoading(false);
     }
@@ -477,10 +526,10 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         college_year: formData.college_year,
 
         specialization_id: parseInt(formData.specialization_id) || 0,
-        facebook: formData.facebook || "",
-        instagram: formData.instagram || "",
-        telegram: formData.telegram || "",
-        whatsapp: formData.whatsapp || "",
+        facebook: formatSocialUrl(formData.facebook, 'facebook.com'),
+        instagram: formatSocialUrl(formData.instagram, 'instagram.com'),
+        telegram: formatSocialUrl(formData.telegram, 't.me'),
+        whatsapp: formatSocialUrl(formData.whatsapp, 'wa.me'),
         // Do NOT send imageprofile here unless we actually uploaded a new one to the image endpoint
       };
 
@@ -522,11 +571,13 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         setIsEditing(false);
       } else {
         console.error("API Error:", data);
-        toast.error(data.message || t('profile.toast.update_fail'));
+        let errorMsg = data.message || t('profile.toast.update_fail');
+        toast.error(translateBackendError(errorMsg, t));
       }
     } catch (error) {
       console.error("Profile update error:", error);
-      toast.error(t('profile.toast.update_error'));
+      let errorMsg = error?.message || t('profile.toast.update_error');
+      toast.error(translateBackendError(errorMsg, t));
     } finally {
       setLoading(false);
     }
