@@ -70,11 +70,13 @@ export default function Profile() {
     try {
       const savedReadIds = JSON.parse(localStorage.getItem("dr_krok_read_messages") || "[]");
       let unreadCount = 0;
-      orders.forEach(order => {
-        if (order.messages && Array.isArray(order.messages)) {
-          unreadCount += order.messages.filter(m => !savedReadIds.includes(m.id)).length;
-        }
-      });
+      if (Array.isArray(orders)) {
+        orders.forEach(order => {
+          if (order && order.messages && Array.isArray(order.messages)) {
+            unreadCount += order.messages.filter(m => m && m.id && !savedReadIds.includes(m.id)).length;
+          }
+        });
+      }
       setUnreadOrdersMessagesCount(unreadCount);
     } catch (e) {
       console.warn("Failed to calculate unread orders messages count", e);
@@ -94,10 +96,10 @@ export default function Profile() {
   const updateNotificationsCount = useCallback(async () => {
     try {
       const res = await getNotifications();
-      if (res.success) {
-        const notifications = res.data.data || [];
+      if (res?.success) {
+        const notifications = res?.data?.data || res?.data || [];
         const savedReadIds = JSON.parse(localStorage.getItem("dr_krok_read_notifications") || "[]");
-        const unreadCount = notifications.filter(n => !savedReadIds.includes(n.id)).length;
+        const unreadCount = Array.isArray(notifications) ? notifications.filter(n => n && n.id && !savedReadIds.includes(n.id)).length : 0;
         setUnreadNotificationsCount(unreadCount);
       }
     } catch (e) {
@@ -121,10 +123,10 @@ export default function Profile() {
   const updateOrderMessagesTabCount = useCallback(async () => {
     try {
       const res = await getMyOrderMessages();
-      if (res.success) {
-        const messages = res.data?.messages || [];
+      if (res?.success) {
+        const messages = res?.data?.messages || res?.messages || [];
         const savedReadIds = JSON.parse(localStorage.getItem("dr_krok_read_order_messages") || "[]");
-        const unreadCount = messages.filter(m => !savedReadIds.includes(m.id)).length;
+        const unreadCount = Array.isArray(messages) ? messages.filter(m => m && m.id && !savedReadIds.includes(m.id)).length : 0;
         setUnreadOrderMessagesTabCount(unreadCount);
       }
     } catch (e) {
@@ -146,13 +148,13 @@ export default function Profile() {
       try {
         const data = await getMyProfile();
 
-        if (data.success) {
+        if (data?.success && data?.data) {
           const full = {
             ...data.data,
             stats: {
-              courses: data.data.courses_count || 0,
-              orders: data.data.orders_count || 0,
-              rating: data.data.rating || 0,
+              courses: data.data?.courses_count || 0,
+              orders: data.data?.orders_count || 0,
+              rating: data.data?.rating || 0,
             },
           };
           setUser(full);
@@ -165,8 +167,8 @@ export default function Profile() {
           // Clear the flag immediately so it doesn't show again on refresh or revisit
           localStorage.removeItem('DR_KROK_show_completion_modal');
         } else {
-          setError(data.message || "Failed to load profile");
-          toast.error(data.message || "Failed to load profile");
+          setError(data?.message || "Failed to load profile");
+          toast.error(data?.message || "Failed to load profile");
         }
       } catch (err) {
         console.error("Profile fetch error:", err);
@@ -187,7 +189,7 @@ export default function Profile() {
         try {
           setCoursesLoading(true);
           const courses = await getMyCourses();
-          setEnrolledCourses(courses);
+          setEnrolledCourses(Array.isArray(courses) ? courses : []);
         } catch (err) {
           console.error("Failed to fetch enrolled courses:", err);
           toast.error("Failed to load enrolled courses");
@@ -204,7 +206,7 @@ export default function Profile() {
     const loadOrders = async () => {
       try {
         const ordersData = await getOrders();
-        setOrders(ordersData.orders || ordersData);
+        setOrders(Array.isArray(ordersData?.orders) ? ordersData.orders : Array.isArray(ordersData) ? ordersData : []);
       } catch (e) {
         console.warn("Failed to load orders", e);
       }

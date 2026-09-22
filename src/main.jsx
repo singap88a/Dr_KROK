@@ -1,8 +1,10 @@
+import './utils/fixGoogleTranslate';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from "react-router-dom"
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
+import ErrorBoundary from './components/Common/ErrorBoundary';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css'
@@ -14,31 +16,33 @@ import { CartProvider } from './context/CartContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <HelmetProvider>
-      <ApiProvider>
-        <ThemeProvider>
-          <UserProvider>
-            <CartProvider>
-              <BrowserRouter>
-                <App />
-                <ToastContainer
-                  position="top-right"
-                  autoClose={3000}
-                  hideProgressBar={false}
-                  newestOnTop={false}
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                  theme="light"
-                  style={{ zIndex: 99999 }}
-                />
-              </BrowserRouter>
-            </CartProvider>
-          </UserProvider>
-        </ThemeProvider>
-      </ApiProvider>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <ApiProvider>
+          <ThemeProvider>
+            <UserProvider>
+              <CartProvider>
+                <BrowserRouter>
+                  <App />
+                  <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                    style={{ zIndex: 99999 }}
+                  />
+                </BrowserRouter>
+              </CartProvider>
+            </UserProvider>
+          </ThemeProvider>
+        </ApiProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )
