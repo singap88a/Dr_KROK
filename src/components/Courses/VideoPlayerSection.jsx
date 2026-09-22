@@ -1,5 +1,5 @@
 import React from "react";
-import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaRegCopy, FaFileAlt, FaEdit } from "react-icons/fa";
+import { FaList, FaLock, FaCalendarAlt, FaClock, FaVideo, FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaRegCopy, FaFileAlt, FaEdit, FaHeadset } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -549,13 +549,14 @@ export default function VideoPlayerSection({
               ) : (
                 <div className="flex flex-col items-center justify-center p-12 bg-accent/20 aspect-video">
                   <FaLock className="mb-4 text-4xl text-text-muted" />
-                  <p className="text-lg font-semibold">{t("courses.contentLocked", "Premium Content Locked")}</p>
-                  <p className="mt-2 text-sm text-text-muted">{t("courses.enrollToAccess", "Enroll in this course to access this lesson.")}</p>
+                  <p className="text-lg font-semibold">{t("courses.courseClosedTitle", "Course Access Closed")}</p>
+                  <p className="mt-2 text-sm text-text-muted text-center max-w-md">{t("courses.courseClosedMessage", "Access to this course has been closed by administration. Please contact support for assistance.")}</p>
                   <button
                     onClick={() => setShowPurchaseModal(true)}
-                    className="px-6 py-2 mt-4 text-white rounded-lg bg-primary hover:bg-secondary"
+                    className="px-6 py-2.5 mt-4 text-white rounded-xl bg-primary hover:bg-secondary flex items-center gap-2 font-semibold"
                   >
-                    {t("courses.enrollNow", "Enroll Now")}
+                    <FaHeadset />
+                    {t("courses.contactSupport", "Contact Support")}
                   </button>
                 </div>
               )
@@ -579,19 +580,20 @@ export default function VideoPlayerSection({
                 {t("courses.selectContent", "Select a lesson or section to start")}
               </p>
               {!hasAccess && (
-                <div className="p-4 mt-4 border border-yellow-300 rounded-lg bg-yellow-50">
-                  <div className="flex items-center gap-2 text-yellow-800">
-                    <FaLock className="text-yellow-600" />
-                    <span className="font-medium">{t("liveCourses.premiumContentLocked", "Premium Content Locked")}</span>
+                <div className="p-4 mt-4 border border-yellow-300 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
+                  <div className="flex items-center justify-center gap-2 text-yellow-800 dark:text-yellow-200">
+                    <FaLock className="text-yellow-600 dark:text-yellow-400" />
+                    <span className="font-medium">{t("courses.courseClosedTitle", "Course Access Closed")}</span>
                   </div>
-                  <p className="mt-2 text-sm text-yellow-700">
-                    {t("liveCourses.premiumContentMessage", "You need to enroll in this course to access all premium lessons and materials.")}
+                  <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-300 max-w-md mx-auto">
+                    {t("courses.courseClosedMessage", "Access to this course has been closed by administration. Please contact support for assistance.")}
                   </p>
                   <button
                     onClick={() => setShowPurchaseModal(true)}
-                    className="px-4 py-2 mt-3 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700"
+                    className="px-4 py-2 mt-3 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-secondary inline-flex items-center gap-2"
                   >
-                    {t("liveCourses.enrollNowToUnlock", "Enroll Now to Unlock")}
+                    <FaHeadset />
+                    {t("courses.contactSupport", "Contact Support")}
                   </button>
                 </div>
               )}

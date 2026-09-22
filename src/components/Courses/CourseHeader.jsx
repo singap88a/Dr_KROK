@@ -6,7 +6,8 @@ import {
   FaBookOpen, 
   FaClock, 
   FaStar, 
-  FaRegStar 
+  FaRegStar,
+  FaHeadset
 } from "react-icons/fa";
 
 const CourseHeader = ({ 
@@ -168,12 +169,13 @@ const CourseHeader = ({
             </div>
           </div>
           {!hasAccess && !isExpired && !isCompleted && (
-            <button
-              onClick={onPurchaseClick}
-              className="px-6 py-3 font-semibold text-white transition-all rounded-lg bg-gradient-to-r bg-primary to-secondary hover:shadow-lg hover:scale-105"
+            <Link
+              to="/contact"
+              className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition-all rounded-lg bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105"
             >
-              {t("courses.enrollNow", "Enroll Now")}
-            </button>
+              <FaHeadset />
+              {t("courses.contactSupport", "Contact Support")}
+            </Link>
           )}
         </div>
       </div>
