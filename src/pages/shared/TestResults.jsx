@@ -54,14 +54,39 @@ export default function TestResults() {
     if (!quizResults || !test?.quizzes) return [];
     return quizResults.map(res => {
       const quiz = test.quizzes.find(q => q.id === res.question_id);
+      if (!quiz) return null;
+
+      // ✅ تحويل orig_index إلى answer_X للعرض الصحيح في المراجعة الفورية
+      let studentAnswerKey = res.student_answer;
+      const isMcqType = quiz.type === "mcq" || !quiz.type;
+
+      if (isMcqType && (typeof res.student_answer === "number" || (typeof res.student_answer === "string" && !isNaN(res.student_answer) && res.student_answer !== ""))) {
+        const origIdx = parseInt(res.student_answer);
+        if (quiz.answers && Array.isArray(quiz.answers)) {
+          // نبحث عن الـ entry اللي orig_index يساوي القيمة المرسلة
+          const matched = quiz.answers.find(a => a.orig_index === origIdx);
+          if (matched !== undefined) {
+            // matched.index هو الإندكس الحالي (0-based) في الـ quiz object
+            studentAnswerKey = `answer_${matched.index + 1}`;
+          } else {
+            // fallback: orig_index + 1 → answer_X
+            studentAnswerKey = `answer_${origIdx + 1}`;
+          }
+        } else {
+          // fallback لو مفيش answers array
+          studentAnswerKey = `answer_${origIdx + 1}`;
+        }
+      }
+
       return {
         ...quiz,
-        studentAnswer: res.student_answer,
+        studentAnswer: studentAnswerKey,
         correctAnswer: res.correct_answer,
         isCorrect: res.is_correct
       };
-    }).filter(q => q.title);
+    }).filter(q => q && q.title);
   }, [quizResults, test]);
+
   const userName = userData?.name || t("courses.student", "Student");
 
   const calculatedPercentage = useMemo(() => {
