@@ -17,7 +17,12 @@ const translateReviewQuestion = (q) => {
   };
   
   if (isMcq) {
-    // بناء answer_X من answers array أولاً
+    if (q.student_answer_index !== null && q.student_answer_index !== undefined && q.student_answer_index !== "") {
+      translated.student_answer = `answer_${parseInt(q.student_answer_index) + 1}`;
+    } else {
+      translated.student_answer = q.student_answer || "";
+    }
+    
     if (Array.isArray(q.answers)) {
       q.answers.forEach((ans) => {
         const num = ans.index + 1;
@@ -25,33 +30,12 @@ const translateReviewQuestion = (q) => {
         translated[`answer_${num}_image`] = ans.image;
       });
     }
-
-    // ✅ تحويل student_answer_index (orig_index) إلى answer_X باستخدام answers array
-    if (q.student_answer_index !== null && q.student_answer_index !== undefined && q.student_answer_index !== "") {
-      const origIdx = parseInt(q.student_answer_index);
-      if (Array.isArray(q.answers)) {
-        // نبحث عن الإجابة التي orig_index يساوي الـ origIdx المرسل
-        const matched = q.answers.find(a => a.orig_index === origIdx);
-        if (matched !== undefined) {
-          translated.student_answer = `answer_${matched.index + 1}`;
-        } else {
-          // fallback: orig_index + 1 مباشرة
-          translated.student_answer = `answer_${origIdx + 1}`;
-        }
-      } else {
-        // fallback قديم
-        translated.student_answer = `answer_${origIdx + 1}`;
-      }
-    } else {
-      translated.student_answer = q.student_answer || "";
-    }
   } else {
     translated.student_answer = q.student_answer || "";
   }
   
   return translated;
 };
-
 
 export default function PreviousTestResult({ test, previousTestResult, navigate, t, location, id, scope, onRetake }) {
   const { getStudentTestReview } = useApi();

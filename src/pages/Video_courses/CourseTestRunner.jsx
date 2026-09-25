@@ -442,30 +442,10 @@ export default function CourseTestRunner() {
 
         correctAnswer = pairs.map(pair => `${pair.key}:${pair.key}`).join(", ");
       } else {
-        const selectedKey = answers[q.id] || ""; // e.g. "answer_3"
+        studentAnswer = answers[q.id] || "";
         const correctAnswerKey = `answer_${parseInt(q.correct_answer_index) + 1}`;
-        isCorrect = selectedKey === correctAnswerKey;
+        isCorrect = answers[q.id] === correctAnswerKey;
         correctAnswer = q[correctAnswerKey] || "";
-
-        // ✅ إرسال orig_index بدل الـ key المخلوط
-        // إذا كان في answers array من الـ API فيها orig_index، نستخدمها
-        if (selectedKey && q.answers && Array.isArray(q.answers)) {
-          // answer_3 → نبحث عن العنصر اللي num = 3 في q.answers
-          const keyNum = parseInt(selectedKey.replace("answer_", ""));
-          const matchedAnswer = q.answers.find(a => a.index + 1 === keyNum || a.num === keyNum);
-          if (matchedAnswer !== undefined && matchedAnswer.orig_index !== undefined) {
-            studentAnswer = matchedAnswer.orig_index;
-          } else {
-            // fallback: نحول answer_X لـ index رقمي (X-1)
-            studentAnswer = keyNum - 1;
-          }
-        } else if (selectedKey) {
-          // fallback لو مفيش answers array: نحول answer_X لـ (X-1)
-          const keyNum = parseInt(selectedKey.replace("answer_", ""));
-          studentAnswer = isNaN(keyNum) ? selectedKey : keyNum - 1;
-        } else {
-          studentAnswer = "";
-        }
 
         if (isCorrect) earned += parseInt(q.question_score || 1);
       }
