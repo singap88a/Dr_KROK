@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../../context/UserContext";
 import i18n from "../../../i18n";
 import LoadingSpinner from "../../../components/Common/LoadingSpinner";
-import { FaCertificate, FaLock, FaHeadset } from "react-icons/fa";
+import { FaCertificate, FaLock } from "react-icons/fa";
 // Shared Components
 import CourseHeader from "../../../components/Courses/CourseHeader";
 import VideoPlayerSection from "../../../components/Courses/VideoPlayerSection";
@@ -746,26 +746,17 @@ export default function CourseLessons() {
                   <FaLock className="text-4xl text-red-600 dark:text-red-400 sm:text-5xl" />
                 </div>
                 <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-                  {t("courses.courseClosedTitle", "Course Access Closed")}
+                  {t("courses.courseExpiredTitle", "Course Access Expired")}
                 </h2>
                 <p className="max-w-md mx-auto mb-8 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
-                  {t("courses.courseClosedMessage", "Access to this course has been closed by administration. Please contact support.")}
+                  {t("courses.courseExpiredMessage", "Your access period for this course has expired.")}
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  <Link 
-                    to="/contact"
-                    className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105 flex items-center gap-2"
-                  >
-                    <FaHeadset />
-                    {t("courses.contactSupport", "Contact Support")}
-                  </Link>
-                  <Link 
-                    to={`/courses/${id}`}
-                    className="px-6 py-3 font-semibold transition-all sm:px-8 bg-gray-200 text-text rounded-xl hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-                  >
-                    {t("courses.backToDetails", "Back to Course Details")}
-                  </Link>
-                </div>
+                <Link 
+                  to={`/courses/${id}`}
+                  className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
+                >
+                  {t("courses.backToDetails", "العودة لتفاصيل الدورة")}
+                </Link>
               </div>
             </div>
           ) : (

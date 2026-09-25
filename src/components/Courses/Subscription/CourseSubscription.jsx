@@ -41,7 +41,6 @@ import {
   FaExclamationTriangle,
   FaInfoCircle,
   FaGem,
-  FaHeadset,
 } from "react-icons/fa";
 
 export default function CourseSubscription() {
@@ -60,7 +59,6 @@ export default function CourseSubscription() {
   const [error, setError] = useState("");
   const [course, setCourse] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscriptionSuccess, setSubscriptionSuccess] = useState(false);
   const [orderData, setOrderData] = useState(null);
@@ -133,27 +131,16 @@ export default function CourseSubscription() {
         setCourse(courseData);
 
         // Check access if logged in
-        if (courseData.enrollment_status) {
-          const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
-          const completed = status === 'completed';
-          const expiredOrClosed = expired === true || status === 'expired' || status === 'closed';
-          setIsExpired(expiredOrClosed);
-          setHasAccess(is_enrolled === true && !expiredOrClosed && !completed);
-        } else if (isLoggedIn) {
+        if (isLoggedIn) {
           try {
             const access = await getCourseAccess(id, isCenterCourse ? 'center_course' : isLiveCourse ? 'live_course' : 'video_course');
-            if (access && typeof access === 'object') {
-              const enrolled = access.is_enrolled === true;
-              const expired = access.is_expired === true || access.status === 'expired' || access.status === 'closed';
-              setIsExpired(expired);
-              setHasAccess(enrolled && !expired && access.status !== 'completed');
-            } else {
-              setHasAccess(!!access);
-            }
+            setHasAccess(access);
           } catch {
+            // If access check fails, assume no access for paid content
             setHasAccess(courseData.price === 0 || courseData.price === "0");
           }
         } else {
+          // Not logged in, only free content accessible
           setHasAccess(false);
         }
       } catch (err) {
@@ -452,32 +439,6 @@ export default function CourseSubscription() {
               {isCenterCourse ? t('courses.viewDetails', 'View Details') : t('courses.start_learning', 'Start Learning')}
             </Link>
           </div>
-        </div>
-      </section>
-    );
-  }
-
-  // If course access is closed or expired, disable purchasing and direct to contact
-  if (isExpired) {
-    return (
-      <section className="min-h-screen py-10 bg-background text-text">
-        <div className="max-w-xl px-4 py-12 mx-auto text-center border rounded-2xl bg-surface border-border shadow-xl my-12">
-          <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full dark:bg-red-900/30">
-            <FaLock className="text-4xl text-red-600 dark:text-red-400" />
-          </div>
-          <h2 className="mb-4 text-2xl font-bold text-text">
-            {t("courses.courseClosedTitle", "Course Access Closed")}
-          </h2>
-          <p className="mb-8 text-text-secondary leading-relaxed">
-            {t("courses.courseClosedMessage", "Access to this course has been closed by administration. Purchasing is currently disabled.")}
-          </p>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 px-8 py-3 font-semibold text-white transition-colors rounded-xl bg-primary hover:bg-secondary"
-          >
-            <FaHeadset />
-            {t("courses.contactSupport", "Contact Support")}
-          </Link>
         </div>
       </section>
     );

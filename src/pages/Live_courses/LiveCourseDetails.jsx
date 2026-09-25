@@ -30,7 +30,6 @@ import {
   FaHourglassHalf,
   FaPercentage,
   FaLock,
-  FaHeadset,
 } from "react-icons/fa";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -404,13 +403,12 @@ export default function LiveCourseDetails() {
               </button>
             ) : (
               /* ───── غير مسجّل ───── */
-              <Link
-                to="/contact"
-                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3 flex items-center gap-2 font-medium"
+              <button
+                onClick={() => navigate(`/live-courses/${id}/subscribe`)}
+                className="px-4 py-2 text-sm text-white transition rounded-lg shadow-md bg-primary hover:bg-secondary sm:px-6 sm:py-3"
               >
-                <FaHeadset />
-                {t("courses.contactSupport", "Contact Support")}
-              </Link>
+                {t("courses.subscribeNow", "Subscribe Now")}
+              </button>
             )}
             {/* زر «عرض الدروس» */}
             <button
@@ -574,7 +572,7 @@ export default function LiveCourseDetails() {
       {/* Top Students Section */}
       <TopStudentsSlider students={course.top_students} />
 
-      {/* Expired / Closed Modal */}
+      {/* Expired Modal */}
       {showExpiredModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md p-6 overflow-hidden text-center bg-white shadow-2xl rounded-2xl dark:bg-surface">
@@ -582,26 +580,17 @@ export default function LiveCourseDetails() {
               <FaLock className="text-3xl text-red-600 dark:text-red-400" />
             </div>
             <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-              {t("courses.courseClosedTitle", "Course Access Closed")}
+              {t("courses.courseExpiredTitle", "Course Access Expired")}
             </h3>
-            <p className="mb-6 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-              {t("courses.courseClosedMessage", "Access to this course has been closed by administration. Please contact support for assistance.")}
+            <p className="mb-6 text-gray-600 dark:text-gray-300">
+              {t("courses.courseExpiredMessage", "Your access period for this course has expired.")}
             </p>
-            <div className="space-y-3">
-              <Link
-                to="/contact"
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold text-white transition-colors bg-primary rounded-xl hover:bg-secondary"
-              >
-                <FaHeadset />
-                {t("courses.contactSupport", "Contact Support")}
-              </Link>
-              <button
-                onClick={() => setShowExpiredModal(false)}
-                className="w-full px-4 py-3 font-semibold text-text transition-colors bg-gray-200 rounded-xl hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-              >
-                {t("common.close", "إغلاق")}
-              </button>
-            </div>
+            <button
+              onClick={() => setShowExpiredModal(false)}
+              className="w-full px-4 py-3 font-semibold text-white transition-colors bg-primary rounded-xl hover:bg-secondary"
+            >
+              {t("common.close", "إغلاق")}
+            </button>
           </div>
         </div>
       )}
