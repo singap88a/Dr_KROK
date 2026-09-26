@@ -337,34 +337,44 @@ export default function CourseLessons() {
           }
         }
 
+        let hasProfileAccess = false;
+        if (isLoggedIn) {
+          try {
+            hasProfileAccess = await getCourseAccess(realId, 'video_course');
+          } catch {
+            hasProfileAccess = courseData.price === 0 || courseData.price === "0";
+          }
+        }
+
         // Check course access and expiration
         if (courseData.enrollment_status) {
           const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
           const completed = status === 'completed';
           
+          let actuallyExpired = (expired === true || status === 'expired');
+          if (!actuallyExpired && !is_enrolled && hasProfileAccess && !completed) {
+            actuallyExpired = true;
+          }
+
           setIsCompleted(completed);
-          setIsExpired((expired === true || status === 'expired') && !completed);
-          setHasAccess(is_enrolled === true && !expired && !completed);
+          setIsExpired(actuallyExpired);
+          setHasAccess(is_enrolled === true && !actuallyExpired && !completed);
         } else if (isLoggedIn) {
-          try {
-            const access = await getCourseAccess(realId, 'video_course');
-            if (access && typeof access === 'object') {
-              const enrolled = access.is_enrolled === true;
-              const expired  = access.is_expired  === true;
-              const completed = access.status === 'completed';
-              
-              setIsCompleted(completed);
-              setIsExpired(expired && !completed);
-              setHasAccess(enrolled && !expired && !completed);
-            } else {
-              setIsCompleted(false);
-              setIsExpired(false);
-              setHasAccess(!!access);
-            }
-          } catch {
+          if (hasProfileAccess && typeof hasProfileAccess === 'object') {
+            const enrolled = hasProfileAccess.is_enrolled === true;
+            const expired  = hasProfileAccess.is_expired  === true;
+            const completed = hasProfileAccess.status === 'completed';
+            
+            let actuallyExpired = expired;
+            if (!actuallyExpired && !enrolled && !completed) actuallyExpired = true;
+
+            setIsCompleted(completed);
+            setIsExpired(actuallyExpired && !completed);
+            setHasAccess(enrolled && !actuallyExpired && !completed);
+          } else {
             setIsCompleted(false);
             setIsExpired(false);
-            setHasAccess(courseData.price === 0 || courseData.price === "0");
+            setHasAccess(!!hasProfileAccess);
           }
         } else {
           setIsCompleted(false);

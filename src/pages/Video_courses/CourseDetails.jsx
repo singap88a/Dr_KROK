@@ -78,36 +78,44 @@ export default function CourseDetails() {
           setReviews(data.ratings);
         }
 
+        let hasProfileAccess = false;
+        if (isLoggedIn) {
+          try {
+            hasProfileAccess = await getCourseAccess(id, 'video_course');
+          } catch {
+            hasProfileAccess = data.price === 0 || data.price === "0";
+          }
+        }
+
         // Check course access and expiration
         if (data.enrollment_status) {
           const { is_enrolled, is_expired: expired, status } = data.enrollment_status;
           const completed = status === 'completed';
           
+          let actuallyExpired = (expired === true || status === 'expired');
+          if (!actuallyExpired && !is_enrolled && hasProfileAccess && !completed) {
+            actuallyExpired = true;
+          }
+
           setIsCompleted(completed);
-          setIsExpired((expired === true || status === 'expired') && !completed);
-          setUserHasAccess(is_enrolled === true && !expired && !completed);
+          setIsExpired(actuallyExpired);
+          setUserHasAccess(is_enrolled === true && !actuallyExpired && !completed);
         } else if (isLoggedIn) {
-          try {
-            const access = await getCourseAccess(id, 'video_course');
-            // access can be a boolean or an object { is_enrolled, is_expired }
-            if (access && typeof access === 'object') {
-              const enrolled = access.is_enrolled === true;
-              const expired  = access.is_expired  === true;
-              const completed = access.status === 'completed';
-              
-              setIsCompleted(completed);
-              setIsExpired(expired && !completed);
-              setUserHasAccess(enrolled && !expired && !completed);
-            } else {
-              setIsCompleted(false);
-              setIsExpired(false);
-              setUserHasAccess(!!access);
-            }
-          } catch {
-            // If access check fails, assume no access for paid content
+          if (hasProfileAccess && typeof hasProfileAccess === 'object') {
+            const enrolled = hasProfileAccess.is_enrolled === true;
+            const expired  = hasProfileAccess.is_expired  === true;
+            const completed = hasProfileAccess.status === 'completed';
+            
+            let actuallyExpired = expired;
+            if (!actuallyExpired && !enrolled && !completed) actuallyExpired = true;
+
+            setIsCompleted(completed);
+            setIsExpired(actuallyExpired && !completed);
+            setUserHasAccess(enrolled && !actuallyExpired && !completed);
+          } else {
             setIsCompleted(false);
             setIsExpired(false);
-            setUserHasAccess(data.price === 0 || data.price === "0");
+            setUserHasAccess(!!hasProfileAccess);
           }
         } else {
           setIsCompleted(false);
