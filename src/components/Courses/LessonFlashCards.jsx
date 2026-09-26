@@ -377,7 +377,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
           </div>
 
           {/* 3D Flash Card Area */}
-          <div className="flashcard-perspective relative w-full h-[320px] max-w-2xl mx-auto cursor-pointer" onClick={handleFlip}>
+          <div className="flashcard-perspective relative w-full h-[420px] md:h-[400px] max-w-2xl mx-auto cursor-pointer" onClick={handleFlip}>
             <div className={`flashcard-inner ${isFlipped ? "is-flipped" : ""}`}>
               
               {/* CARD FRONT */}
@@ -395,18 +395,18 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                 </div>
 
                 {/* Question Body */}
-                <div className="flex flex-col md:flex-row items-center justify-center gap-6 my-auto max-h-[220px] overflow-y-auto px-2">
+                <div className="flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4 my-4 overflow-y-auto px-2 custom-scrollbar">
                   {currentCard.image && (
-                    <div className="w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-2xl overflow-hidden border border-border shadow bg-white">
+                    <div className="w-full max-w-[150px] md:max-w-[180px] aspect-square shrink-0 rounded-xl overflow-hidden border border-border shadow-sm bg-white flex items-center justify-center p-1">
                       <img 
                         src={currentCard.image} 
                         alt="Question Reference" 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     </div>
                   )}
-                  <h4 className="text-base md:text-lg font-bold text-text text-center leading-relaxed max-w-lg">
+                  <h4 className="text-[15px] md:text-base font-bold text-text text-center leading-relaxed max-w-lg">
                     {currentCard.question}
                   </h4>
                 </div>
@@ -433,8 +433,8 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                 </div>
 
                 {/* Answer Body */}
-                <div className="flex flex-col items-center justify-center gap-4 my-auto max-h-[220px] overflow-y-auto px-4">
-                  <p className="text-sm md:text-base font-semibold text-text text-center leading-relaxed max-w-lg">
+                <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-4 my-4 overflow-y-auto px-4 custom-scrollbar">
+                  <p className="text-[14px] md:text-base font-semibold text-text text-center leading-relaxed max-w-lg">
                     {currentCard.answer}
                   </p>
                 </div>
