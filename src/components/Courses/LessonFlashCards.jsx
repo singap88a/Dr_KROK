@@ -310,12 +310,16 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
           position: absolute;
           width: 100%;
           height: 100%;
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden !important;
+          backface-visibility: hidden !important;
           display: flex;
           flex-direction: column;
           border-radius: 1.5rem;
           box-shadow: 0 10px 30px -15px rgba(0,0,0,0.1);
+          background-color: var(--color-surface);
+        }
+        .flashcard-front {
+          transform: rotateY(0deg);
         }
         .flashcard-back {
           transform: rotateY(180deg);
@@ -381,7 +385,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
             <div className={`flashcard-inner ${isFlipped ? "is-flipped" : ""}`}>
               
               {/* CARD FRONT */}
-              <div className="flashcard-front p-6 border-2 border-border/60 bg-surface/90 hover:border-primary/50 transition-colors duration-300 justify-between">
+              <div className={`flashcard-front p-6 border-2 border-border/60 bg-surface hover:border-primary/50 transition-colors duration-300 justify-between ${isFlipped ? "z-0 pointer-events-none" : "z-10"}`}>
                 
                 {/* Flash Card Indicator Tag */}
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted">
@@ -419,7 +423,7 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
               </div>
 
               {/* CARD BACK */}
-              <div className="flashcard-back p-6 border-2 border-primary/30 bg-gradient-to-br from-surface to-accent/15 justify-between">
+              <div className={`flashcard-back p-6 border-2 border-primary/30 bg-surface justify-between ${isFlipped ? "z-10" : "z-0 pointer-events-none"}`}>
                 
                 {/* Back Header */}
                 <div className="flex justify-between items-center text-xs font-semibold text-primary">
