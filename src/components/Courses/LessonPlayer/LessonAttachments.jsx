@@ -96,14 +96,9 @@ export const LessonAttachments = ({
                       <ErrorBoundary 
                         fallback={
                           <div className="p-4 border border-dashed border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/15 rounded-lg text-center text-sm text-text-muted">
-                            <p className="mb-2 text-red-600 dark:text-red-400 font-medium">Unable to display PDF preview inside browser.</p>
-                            <a
-                              href={fileUrl}
-                              download
-                              className="inline-block px-4 py-2 bg-primary text-white text-xs font-semibold rounded hover:opacity-90 transition-all"
-                            >
-                              Download File
-                            </a>
+                            <p className="text-red-600 dark:text-red-400 font-medium">
+                              {t("courses.pdfPreviewUnavailable", "Unable to display PDF preview inside browser.")}
+                            </p>
                           </div>
                         }
                       >
@@ -111,24 +106,17 @@ export const LessonAttachments = ({
                       </ErrorBoundary>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => handleFileClick(fileUrl)}
-                      className="flex items-center gap-4 p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 hover:shadow-md group"
-                    >
-                      <div className="flex-shrink-0 p-3 transition-colors rounded-lg bg-primary/10 group-hover:bg-primary/20">
+                    <div className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-surface">
+                      <div className="flex-shrink-0 p-3 rounded-lg bg-primary/10">
                         <FaFileAlt className="text-xl text-primary" />
                       </div>
                       <div className="flex-1 text-left">
                         <span className="block text-sm font-medium text-text">
                           {fileName}
                         </span>
-                        <span className="block mt-1 text-xs text-text-muted">
-                          {t("courses.clickToDownload", "Click to download")}
-                        </span>
                       </div>
-                    </button>
-                  )
-                  }
+                    </div>
+                  )}
                 </div>
               );
             })}

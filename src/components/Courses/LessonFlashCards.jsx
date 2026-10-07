@@ -451,7 +451,6 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                   >
                     <FaRedo className="w-3.5 h-3.5 shrink-0" />
                     <span>{texts.reviewAgain}</span>
-                    <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-black/10 text-[9px] rounded font-mono ml-1">1</kbd>
                   </button>
 
                   <button 
@@ -460,7 +459,6 @@ export default function LessonFlashCards({ lessonId, isLiveCourse, hasAccess }) 
                   >
                     <FaCheck className="w-3.5 h-3.5 shrink-0" />
                     <span>{texts.knewIt}</span>
-                    <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-black/10 text-[9px] rounded font-mono ml-1">2</kbd>
                   </button>
                 </div>
               </div>
