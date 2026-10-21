@@ -20,16 +20,16 @@ export default function ProfileCompletionModal({ isOpen, onEdit }) {
               <FaExclamationTriangle className="text-4xl animate-pulse" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold mb-2">{t('profile.completion.title')}</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('profile.completion.title', 'Complete Your Profile')}</h2>
           <p className="text-sm opacity-90 leading-relaxed">
-            {t('profile.completion.subtitle')}
+            {t('profile.completion.subtitle', 'Please complete your required profile information')}
           </p>
         </div>
 
         {/* Content Body */}
         <div className="p-8 text-center space-y-6">
-          <p className="text-text-secondary">
-            {t('profile.completion.description') || "Your profile is missing some essential information. Please update it to enjoy all the features of our platform."}
+          <p className="text-text-secondary leading-relaxed">
+            {t('profile.completion.description', 'Your profile is missing some essential required information (such as phone number, university, or college year). Please update it to enjoy all the features of our platform.')}
           </p>
           
           <button
@@ -37,14 +37,14 @@ export default function ProfileCompletionModal({ isOpen, onEdit }) {
             className="w-full py-4 flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg hover:shadow-primary/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <FaEdit className="text-lg" />
-            <span>{t('profile.completion.submit')}</span>
+            <span>{t('profile.completion.submit', 'Complete Profile Now')}</span>
           </button>
         </div>
         
         {/* Footer info */}
         <div className="px-6 pb-6 text-center border-t border-border pt-4 bg-gray-50 dark:bg-gray-800/50">
           <p className="text-[10px] text-text-secondary uppercase tracking-widest font-bold">
-            {t('profile.completion.required')}
+            {t('profile.completion.required', '* Required fields must be completed')}
           </p>
         </div>
       </div>

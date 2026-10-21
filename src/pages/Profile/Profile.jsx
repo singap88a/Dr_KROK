@@ -27,6 +27,7 @@ import {
   FaBook,
   FaBuilding,
   FaEnvelope,
+  FaThLarge,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
@@ -38,6 +39,7 @@ import MyRatings from "./MyRatings";
 import MyNotifications from "./MyNotifications";
 import MyMaterials from "./MyMaterials";
 import UniversityStudents from "./UniversityStudents";
+import StudentDashboard from "./StudentDashboard";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
@@ -49,8 +51,15 @@ export default function Profile() {
   const { t } = useTranslation();
   const { updateUser, logout, userData } = useUser();
   const { getOrders, getMyCourses, getMyProfile, getNotifications, getMyOrderMessages, request } = useApi();
-  const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(null);
+  const selectedRole = user?.role || userData?.role || localStorage.getItem("DR_KROK_selected_role");
+  const isRepRole = selectedRole === "university_rep" || selectedRole === "university_representative";
+  const [activeTab, setActiveTab] = useState(() => {
+    if (location.state?.activeTab) return location.state.activeTab;
+    const initialRole = localStorage.getItem("DR_KROK_selected_role");
+    const isRep = initialRole === "university_rep" || initialRole === "university_representative";
+    return isRep ? "profile" : "dashboard";
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -63,8 +72,12 @@ export default function Profile() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [unreadOrdersMessagesCount, setUnreadOrdersMessagesCount] = useState(0);
   const [unreadOrderMessagesTabCount, setUnreadOrderMessagesTabCount] = useState(0);
-  const selectedRole = user?.role || userData?.role || localStorage.getItem("DR_KROK_selected_role");
-  const isRepRole = selectedRole === "university_rep" || selectedRole === "university_representative";
+
+  useEffect(() => {
+    if (isRepRole && activeTab === "dashboard") {
+      setActiveTab("profile");
+    }
+  }, [isRepRole, activeTab]);
 
   const updateOrdersMessagesCount = useCallback(() => {
     try {
@@ -139,7 +152,16 @@ export default function Profile() {
   }, [updateOrderMessagesTabCount]);
 
   const isProfileIncomplete = (u) => {
-    return !u?.phone || (!u?.university_id && !u?.university?.id) || !u?.college_year;
+    if (!u) return false;
+    const hasPhone = Boolean(u.phone && String(u.phone).trim() !== "");
+    const hasUniversity = Boolean(
+      u.university_id ||
+      u.university?.id ||
+      (typeof u.university === "string" && u.university.trim() !== "") ||
+      u.university?.name
+    );
+    const hasYear = Boolean(u.college_year && String(u.college_year).trim() !== "");
+    return !hasPhone || !hasUniversity || !hasYear;
   };
 
   // Fetch profile data on component mount
@@ -222,8 +244,11 @@ export default function Profile() {
   }, [location.state]);
 
   const menuItems = [
+    ...(!isRepRole ? [
+      { id: "dashboard", label: t('profile.sidebar.dashboard', 'لوحة القيادة'), icon: FaThLarge }
+    ] : []),
     { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
-    ...(selectedRole === "university_rep" || selectedRole === "university_representative" ? [
+    ...(isRepRole ? [
       {
         id: "university_students",
         label: t("universityRepresentative.studentsList", "My university students"),
@@ -414,6 +439,8 @@ export default function Profile() {
     }
 
     switch (activeTab) {
+      case "dashboard":
+        return <StudentDashboard user={user} setActiveTab={setActiveTab} />;
       case "courses":
         return coursesLoading ? (
           <div className="flex items-center justify-center min-h-96">
@@ -450,7 +477,9 @@ export default function Profile() {
           setForceEdit(false);
         }} />;
       default:
-        return coursesLoading ? (
+        return !isRepRole ? (
+          <StudentDashboard user={user} setActiveTab={setActiveTab} />
+        ) : coursesLoading ? (
           <div className="flex items-center justify-center min-h-96">
             <LoadingSpinner />
           </div>
