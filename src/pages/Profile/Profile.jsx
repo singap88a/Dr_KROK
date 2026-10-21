@@ -43,7 +43,7 @@ import StudentDashboard from "./StudentDashboard";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
-import ProfileCompletionModal from "./ProfileCompletionModal";
+import StudentOnboardingModal from "./StudentOnboardingModal";
 
 export default function Profile() {
   const location = useLocation();
@@ -69,6 +69,8 @@ export default function Profile() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [forceEdit, setForceEdit] = useState(false);
+  const [onboardingSuccessNotice, setOnboardingSuccessNotice] = useState(false);
+  const [onboardingIncompleteNotice, setOnboardingIncompleteNotice] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [unreadOrdersMessagesCount, setUnreadOrdersMessagesCount] = useState(0);
   const [unreadOrderMessagesTabCount, setUnreadOrderMessagesTabCount] = useState(0);
@@ -182,11 +184,12 @@ export default function Profile() {
           setUser(full);
           updateUser((prev) => ({ ...(prev || {}), ...full }));
           
-          const shouldShowModal = localStorage.getItem('DR_KROK_show_completion_modal') === 'true';
-          if (shouldShowModal && isProfileIncomplete(full)) {
+          const isNewStudent = localStorage.getItem('DR_KROK_new_student_onboarding') === 'true';
+          const shouldShowModal = isNewStudent || localStorage.getItem('DR_KROK_show_completion_modal') === 'true';
+          if (!isRepRole && isProfileIncomplete(full) && shouldShowModal) {
             setShowCompletionModal(true);
           }
-          // Clear the flag immediately so it doesn't show again on refresh or revisit
+          // Clear completion modal flag
           localStorage.removeItem('DR_KROK_show_completion_modal');
         } else {
           setError(data?.message || "Failed to load profile");
@@ -245,7 +248,7 @@ export default function Profile() {
 
   const menuItems = [
     ...(!isRepRole ? [
-      { id: "dashboard", label: t('profile.sidebar.dashboard', 'لوحة القيادة'), icon: FaThLarge }
+      { id: "dashboard", label: t('profile.sidebar.dashboard', 'Dashboard'), icon: FaThLarge }
     ] : []),
     { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
     ...(isRepRole ? [
@@ -467,15 +470,24 @@ export default function Profile() {
       case "university_students":
         return <UniversityStudents />;
       case "profile":
-        return <MyProfile user={user} initialIsEditing={forceEdit} onProfileUpdate={(updated)=>{
-          const merged = {
-            ...updated,
-            stats: user?.stats || { courses: 0, orders: 0, rating: 0 },
-          };
-          setUser(merged);
-          updateUser((prev)=>({ ...(prev||{}), ...merged }));
-          setForceEdit(false);
-        }} />;
+        return (
+          <MyProfile
+            user={user}
+            initialIsEditing={forceEdit}
+            onboardingSuccessNotice={onboardingSuccessNotice}
+            onboardingIncompleteNotice={onboardingIncompleteNotice}
+            onProfileUpdate={(updated) => {
+              const merged = {
+                ...updated,
+                stats: user?.stats || { courses: 0, orders: 0, rating: 0 },
+              };
+              setUser(merged);
+              updateUser((prev) => ({ ...(prev || {}), ...merged }));
+              setForceEdit(false);
+              setOnboardingIncompleteNotice(false);
+            }}
+          />
+        );
       default:
         return !isRepRole ? (
           <StudentDashboard user={user} setActiveTab={setActiveTab} />
@@ -543,11 +555,26 @@ export default function Profile() {
         }}
       />
 
-      <ProfileCompletionModal 
+      <StudentOnboardingModal 
         isOpen={showCompletionModal}
-        onEdit={() => {
-          setForceEdit(true);
+        user={user}
+        onComplete={(updatedUser) => {
+          const merged = {
+            ...updatedUser,
+            stats: user?.stats || { courses: 0, orders: 0, rating: 0 },
+          };
+          setUser(merged);
+          updateUser((prev) => ({ ...(prev || {}), ...merged }));
           setShowCompletionModal(false);
+          setOnboardingSuccessNotice(true);
+          setOnboardingIncompleteNotice(false);
+          setActiveTab("profile");
+        }}
+        onRedirectToProfile={() => {
+          setShowCompletionModal(false);
+          setForceEdit(true);
+          setOnboardingIncompleteNotice(true);
+          setOnboardingSuccessNotice(false);
           setActiveTab("profile");
         }}
       />

@@ -61,6 +61,7 @@ const SocialCallback = () => {
 
               // Always set flag so if profile is incomplete, modal prompts user
               localStorage.setItem('DR_KROK_show_completion_modal', 'true');
+              localStorage.setItem('DR_KROK_new_student_onboarding', 'true');
               
               const redirectPath = "/profile";
               

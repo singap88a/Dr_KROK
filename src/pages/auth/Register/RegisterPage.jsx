@@ -122,6 +122,7 @@ export default function RegisterPage() {
       if (data.success) {
         userRegister(data.data.token, data.data);
         localStorage.setItem('DR_KROK_show_completion_modal', 'true');
+        localStorage.setItem('DR_KROK_new_student_onboarding', 'true');
         localStorage.setItem('DR_KROK_selected_role', form.role === "university_representative" ? "university_rep" : form.role);
         toast.success("🎉 Account created successfully!", {
           position: "top-right",

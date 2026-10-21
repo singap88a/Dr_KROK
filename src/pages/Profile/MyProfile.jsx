@@ -290,7 +290,13 @@ const FieldError = ({ id, message }) => {
   );
 };
 
-const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
+const MyProfile = ({
+  user,
+  onProfileUpdate,
+  initialIsEditing = false,
+  onboardingSuccessNotice = false,
+  onboardingIncompleteNotice = false,
+}) => {
   const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -928,6 +934,46 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
           </div>
         )}
       </div>
+
+      {/* Onboarding Success Banner */}
+      {onboardingSuccessNotice && (
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3.5 shadow-sm animate-scale-in">
+          <div className="p-2 rounded-xl bg-emerald-500 text-white shrink-0 mt-0.5">
+            <FaCheck className="text-base" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="font-bold text-sm text-emerald-800 dark:text-emerald-300">
+              {t("profile.onboarding.successBannerTitle", "Your Account is Active!")}
+            </h4>
+            <p className="text-xs sm:text-sm text-emerald-700/90 dark:text-emerald-400/90 leading-relaxed">
+              {t(
+                "profile.onboarding.successBannerDesc",
+                "All your profile details have been saved and verified. If you need to update any information in the future, you can edit and save it from this page at any time."
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding Incomplete Warning Banner */}
+      {onboardingIncompleteNotice && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3.5 shadow-sm animate-scale-in">
+          <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0 mt-0.5">
+            <FaExclamationTriangle className="text-base" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="font-bold text-sm text-amber-800 dark:text-amber-300">
+              {t("profile.onboarding.incompleteBannerTitle", "Mandatory Notice: Please complete and save your profile details")}
+            </h4>
+            <p className="text-xs sm:text-sm text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
+              {t(
+                "profile.onboarding.incompleteBannerDesc",
+                "Please fill in the required fields (Phone Number, University, and Academic Year) and click 'Save Changes' to activate your account and purchase courses without limitations."
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Compact Referral Code Input Banner */}
       {user && (

@@ -27,8 +27,8 @@ export default function StudentDashboard({ user, setActiveTab }) {
   const universityName =
     user?.university?.name ||
     (typeof user?.university === "string" ? user.university : null) ||
-    t("profile.dashboard.notSpecified", "غير محدد");
-  const collegeYear = user?.college_year || t("profile.dashboard.notSpecified", "غير محدد");
+    t("profile.dashboard.notSpecified", "Not specified");
+  const collegeYear = user?.college_year || t("profile.dashboard.notSpecified", "Not specified");
 
   // Sample schedule structure ready to be plugged into backend API data
   const sampleSchedule = [
@@ -84,16 +84,16 @@ export default function StudentDashboard({ user, setActiveTab }) {
           <div className="space-y-2.5 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider border border-white/15">
               <FaGraduationCap className="text-xs text-white/90" />
-              <span>{t("profile.dashboard.studentSpace", "مساحة الطالب")}</span>
+              <span>{t("profile.dashboard.studentSpace", "Student Space")}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              {t("profile.dashboard.welcomeBack", "مرحباً بك،")}{" "}
-              <span>{user?.name || t("profile.dashboard.student", "طالبنا العزيز")}</span>
+              {t("profile.dashboard.welcomeBack", "Welcome back,")}{" "}
+              <span>{user?.name || t("profile.dashboard.student", "Dear Student")}</span>
             </h1>
             <p className="text-white/85 text-sm sm:text-base leading-relaxed">
               {t(
                 "profile.dashboard.heroDesc",
-                "هنا يمكنك متابعة جدول محاضراتك المباشرة وتقدمك الدراسي بكل سهولة."
+                "Track your live lecture schedule and learning progress seamlessly in one place."
               )}
             </p>
 
@@ -101,12 +101,12 @@ export default function StudentDashboard({ user, setActiveTab }) {
             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg border border-white/15 text-white">
                 <FaBuilding className="text-white/70 text-xs" />
-                <span className="text-white/75">{t("profile.dashboard.university", "الجامعة")}:</span>
+                <span className="text-white/75">{t("profile.dashboard.university", "University")}:</span>
                 <strong className="font-semibold text-white">{universityName}</strong>
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg border border-white/15 text-white">
                 <FaCalendarAlt className="text-white/70 text-xs" />
-                <span className="text-white/75">{t("profile.dashboard.year", "السنة الدراسية")}:</span>
+                <span className="text-white/75">{t("profile.dashboard.year", "Academic Year")}:</span>
                 <strong className="font-semibold text-white">{collegeYear}</strong>
               </span>
             </div>
@@ -119,13 +119,13 @@ export default function StudentDashboard({ user, setActiveTab }) {
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-primary hover:bg-white/95 font-semibold text-sm rounded-xl shadow-sm transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
             >
               <FaUserCheck className="text-sm" />
-              <span>{t("profile.dashboard.viewProfile", "الملف الشخصي")}</span>
+              <span>{t("profile.dashboard.viewProfile", "My Profile")}</span>
             </button>
             <button
               onClick={() => setActiveTab("courses")}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-medium text-sm rounded-xl backdrop-blur-sm transition-all duration-150"
             >
-              <span>{t("profile.dashboard.myCoursesBtn", "كورساتي المسجلة")}</span>
+              <span>{t("profile.dashboard.myCoursesBtn", "Enrolled Courses")}</span>
               {isRtl ? <FaArrowLeft className="text-xs" /> : <FaArrowRight className="text-xs" />}
             </button>
           </div>
@@ -144,14 +144,14 @@ export default function StudentDashboard({ user, setActiveTab }) {
               <FaGraduationCap />
             </div>
             <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
-              {t("profile.dashboard.view", "عرض")}
+              {t("profile.dashboard.view", "View")}
               <FaChevronRight className="text-[10px]" />
             </span>
           </div>
           <div>
             <div className="text-2xl font-black text-text">{user?.stats?.courses || 0}</div>
             <div className="text-xs font-medium text-text-secondary mt-1">
-              {t("profile.stats.courses", "الكورسات المسجلة")}
+              {t("profile.stats.courses", "Courses")}
             </div>
           </div>
         </div>
@@ -164,13 +164,13 @@ export default function StudentDashboard({ user, setActiveTab }) {
             </div>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 dark:text-red-400">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-              {t("profile.dashboard.liveBadge", "مباشر")}
+              {t("profile.dashboard.liveBadge", "Live")}
             </span>
           </div>
           <div>
             <div className="text-2xl font-black text-text">3</div>
             <div className="text-xs font-medium text-text-secondary mt-1">
-              {t("profile.dashboard.upcomingSessions", "محاضرات لايف قادمة")}
+              {t("profile.dashboard.upcomingSessions", "Upcoming Live Lectures")}
             </div>
           </div>
         </div>
@@ -185,14 +185,14 @@ export default function StudentDashboard({ user, setActiveTab }) {
               <FaBook />
             </div>
             <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
-              {t("profile.dashboard.view", "عرض")}
+              {t("profile.dashboard.view", "View")}
               <FaChevronRight className="text-[10px]" />
             </span>
           </div>
           <div>
             <div className="text-2xl font-black text-text">{user?.materials_count || 0}</div>
             <div className="text-xs font-medium text-text-secondary mt-1">
-              {t("profile.sidebar.myMaterials", "المذكرات والمواد")}
+              {t("profile.sidebar.myMaterials", "My Material")}
             </div>
           </div>
         </div>
@@ -207,14 +207,14 @@ export default function StudentDashboard({ user, setActiveTab }) {
               <FaShoppingCart />
             </div>
             <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
-              {t("profile.dashboard.view", "عرض")}
+              {t("profile.dashboard.view", "View")}
               <FaChevronRight className="text-[10px]" />
             </span>
           </div>
           <div>
             <div className="text-2xl font-black text-text">{user?.stats?.orders || 0}</div>
             <div className="text-xs font-medium text-text-secondary mt-1">
-              {t("profile.stats.orders", "الطلبات والمشتريات")}
+              {t("profile.stats.orders", "Orders")}
             </div>
           </div>
         </div>
@@ -229,13 +229,13 @@ export default function StudentDashboard({ user, setActiveTab }) {
                 <FaBroadcastTower className="text-lg" />
               </div>
               <h2 className="text-xl font-bold text-text">
-                {t("profile.dashboard.scheduleTitle", "مواعيد المحاضرات اللايف")}
+                {t("profile.dashboard.scheduleTitle", "Live Lectures Schedule")}
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-text-secondary">
               {t(
                 "profile.dashboard.scheduleSubtitle",
-                "تابع مواعيد وجلسات البث المباشر الخاصة بالكورسات المسجلة لديك."
+                "Follow the live broadcast schedule and interactive sessions for your enrolled courses."
               )}
             </p>
           </div>
@@ -250,7 +250,7 @@ export default function StudentDashboard({ user, setActiveTab }) {
                   : "text-text-secondary hover:text-text"
               }`}
             >
-              {t("profile.dashboard.allLectures", "الكل")}
+              {t("profile.dashboard.allLectures", "All")}
             </button>
             <button
               onClick={() => setFilterType("live")}
@@ -260,7 +260,7 @@ export default function StudentDashboard({ user, setActiveTab }) {
                   : "text-text-secondary hover:text-text"
               }`}
             >
-              {t("profile.dashboard.liveCoursesFilter", "لايف كورس")}
+              {t("profile.dashboard.liveCoursesFilter", "Live Course")}
             </button>
             <button
               onClick={() => setFilterType("video")}
@@ -270,7 +270,7 @@ export default function StudentDashboard({ user, setActiveTab }) {
                   : "text-text-secondary hover:text-text"
               }`}
             >
-              {t("profile.dashboard.videoCoursesFilter", "جلسات نقاش")}
+              {t("profile.dashboard.videoCoursesFilter", "Discussion Sessions")}
             </button>
           </div>
         </div>
@@ -294,8 +294,8 @@ export default function StudentDashboard({ user, setActiveTab }) {
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     {item.courseType === "live"
-                      ? t("profile.dashboard.liveCourseTag", "كورس مباشر")
-                      : t("profile.dashboard.videoCourseTag", "جلسة تفاعلية")}
+                      ? t("profile.dashboard.liveCourseTag", "Live Course")
+                      : t("profile.dashboard.videoCourseTag", "Interactive Session")}
                   </span>
                   <span className="text-xs font-medium text-text-secondary">
                     {item.courseName}
@@ -329,7 +329,7 @@ export default function StudentDashboard({ user, setActiveTab }) {
                   className="px-4 py-2.5 rounded-xl font-bold text-xs bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-200 shadow-sm"
                   onClick={() => setActiveTab("courses")}
                 >
-                  {t("profile.dashboard.joinOrDetails", "تفاصيل المحاضرة")}
+                  {t("profile.dashboard.joinOrDetails", "Lecture Details")}
                 </button>
               </div>
             </div>
@@ -342,7 +342,7 @@ export default function StudentDashboard({ user, setActiveTab }) {
           <p className="leading-relaxed">
             {t(
               "profile.dashboard.syncNotice",
-              "سيتم ربط وإظهار كامل جدول مواعيد المحاضرات المباشرة والجلسات الخاصة بك تلقائياً فور تأكيدها وتحديثها من إدارة الأكاديمية."
+              "Your live lecture schedule and sessions will be automatically synced once finalized by the academy administration."
             )}
           </p>
         </div>
@@ -357,9 +357,9 @@ export default function StudentDashboard({ user, setActiveTab }) {
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
             <FaVideo />
           </div>
-          <h4 className="font-bold text-text text-sm mb-1">{t("profile.dashboard.continueCourses", "متابعة الكورسات")}</h4>
+          <h4 className="font-bold text-text text-sm mb-1">{t("profile.dashboard.continueCourses", "Continue Courses")}</h4>
           <p className="text-xs text-text-secondary leading-relaxed">
-            {t("profile.dashboard.continueCoursesDesc", "شاهد المحاضرات المسجلة واختبر معلوماتك.")}
+            {t("profile.dashboard.continueCoursesDesc", "Watch recorded lectures and test your knowledge.")}
           </p>
         </button>
 
@@ -370,9 +370,9 @@ export default function StudentDashboard({ user, setActiveTab }) {
           <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
             <FaBook />
           </div>
-          <h4 className="font-bold text-text text-sm mb-1">{t("profile.dashboard.materialsLibrary", "بنك المذكرات والأسئلة")}</h4>
+          <h4 className="font-bold text-text text-sm mb-1">{t("profile.dashboard.materialsLibrary", "Materials & Question Bank")}</h4>
           <p className="text-xs text-text-secondary leading-relaxed">
-            {t("profile.dashboard.materialsLibraryDesc", "تصفح وحمل ملخصات وملفات KROK الخاصة بك.")}
+            {t("profile.dashboard.materialsLibraryDesc", "Browse and download your KROK summaries and files.")}
           </p>
         </button>
 
@@ -383,9 +383,9 @@ export default function StudentDashboard({ user, setActiveTab }) {
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
             <FaCheckCircle />
           </div>
-          <h4 className="font-bold text-text text-sm mb-1">{t("profile.dashboard.accountSettings", "إعدادات الحساب والبيانات")}</h4>
+          <h4 className="font-bold text-text text-sm mb-1">{t("profile.dashboard.accountSettings", "Account Settings & Info")}</h4>
           <p className="text-xs text-text-secondary leading-relaxed">
-            {t("profile.dashboard.accountSettingsDesc", "تحديث الهاتف، الجامعة، والسنة الدراسية.")}
+            {t("profile.dashboard.accountSettingsDesc", "Update phone, university, and academic year.")}
           </p>
         </button>
       </div>
