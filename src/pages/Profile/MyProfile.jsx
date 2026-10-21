@@ -28,6 +28,8 @@ import {
   FaGem,
   FaTag,
   FaExternalLinkAlt,
+  FaExclamationCircle,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
@@ -106,6 +108,188 @@ const translateBackendError = (errorMsg, t) => {
   return errorMsg;
 };
 
+// ===================== Validation helpers =====================
+
+// Order matters: used to focus the first invalid field and to order the summary
+const FIELD_ORDER = [
+  'name', 'email', 'phone', 'birth', 'gender', 'university_id', 'college_year',
+  'specialization_id', 'facebook', 'instagram', 'telegram', 'whatsapp',
+];
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_CHARS_REGEX = /^\+?[0-9\s\-()]+$/;
+
+// Validates a social link: accepts either a full link on the allowed domain or a plain username
+const isValidSocial = (value, domains, usernameRegex) => {
+  if (!value) return true;
+  const v = value.trim();
+  if (!v) return true;
+  if (/\s/.test(v)) return false;
+  const lower = v.toLowerCase();
+  if (domains.some(d => lower.includes(d))) {
+    try {
+      const url = new URL(lower.startsWith('http') ? lower : `https://${lower}`);
+      const host = url.hostname.replace(/^(www\.|m\.)/, '');
+      return domains.includes(host) && url.pathname.replace(/\//g, '').length > 0;
+    } catch {
+      return false;
+    }
+  }
+  // A link to a different website is not allowed
+  if (lower.startsWith('http') || lower.startsWith('www.')) return false;
+  return usernameRegex ? usernameRegex.test(v) : false;
+};
+
+// Returns an explanatory error message for a single field, or '' when valid
+const validateField = (field, value, t) => {
+  const v = typeof value === 'string' ? value.trim() : value;
+
+  switch (field) {
+    case 'name':
+      if (!v) return t('profile.validation.name_required');
+      if (v.length < 3) return t('profile.validation.name_short');
+      if (v.length > 100) return t('profile.validation.name_long');
+      if (!/^[\p{L}\s'.-]+$/u.test(v)) return t('profile.validation.name_invalid');
+      return '';
+
+    case 'email':
+      if (!v) return t('profile.validation.email_required');
+      if (!EMAIL_REGEX.test(v)) return t('profile.validation.email_invalid');
+      return '';
+
+    case 'phone': {
+      if (!v) return t('profile.validation.phone_required');
+      if (!PHONE_CHARS_REGEX.test(v)) return t('profile.validation.phone_chars');
+      const digits = v.replace(/\D/g, '');
+      if (digits.length < 9 || digits.length > 15) return t('profile.validation.phone_length', { count: digits.length });
+      return '';
+    }
+
+    case 'birth': {
+      if (!v) return t('profile.validation.birth_required');
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return t('profile.validation.birth_invalid');
+      const today = new Date();
+      if (d > today) return t('profile.validation.birth_future');
+      let age = today.getFullYear() - d.getFullYear();
+      const m = today.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+      if (age < 14) return t('profile.validation.birth_too_young');
+      if (age > 100) return t('profile.validation.birth_too_old');
+      return '';
+    }
+
+    case 'gender':
+      return v ? '' : t('profile.validation.gender_required');
+
+    case 'university_id':
+      return v ? '' : t('profile.validation.university_required');
+
+    case 'college_year':
+      return v ? '' : t('profile.validation.college_year_required');
+
+    case 'facebook':
+      return isValidSocial(v, ['facebook.com', 'fb.com'], /^@?[A-Za-z0-9.]{3,50}$/)
+        ? '' : t('profile.validation.facebook_invalid');
+
+    case 'instagram':
+      return isValidSocial(v, ['instagram.com'], /^@?[A-Za-z0-9._]{1,30}$/)
+        ? '' : t('profile.validation.instagram_invalid');
+
+    case 'telegram':
+      return isValidSocial(v, ['t.me', 'telegram.me'], /^@?[A-Za-z0-9_]{5,32}$/)
+        ? '' : t('profile.validation.telegram_invalid');
+
+    case 'whatsapp': {
+      if (!v) return '';
+      if (PHONE_CHARS_REGEX.test(v)) {
+        const digits = v.replace(/\D/g, '');
+        return digits.length >= 9 && digits.length <= 15 ? '' : t('profile.validation.whatsapp_invalid');
+      }
+      return isValidSocial(v, ['wa.me', 'whatsapp.com', 'api.whatsapp.com'], null)
+        ? '' : t('profile.validation.whatsapp_invalid');
+    }
+
+    default:
+      return '';
+  }
+};
+
+const validateProfileForm = (data, t) => {
+  const errs = {};
+  FIELD_ORDER.forEach(field => {
+    const msg = validateField(field, data[field], t);
+    if (msg) errs[field] = msg;
+  });
+  return errs;
+};
+
+// ---- Backend error mapping (e.g. Laravel 422 `errors` object) ----
+const BACKEND_FIELD_ALIASES = {
+  university: 'university_id',
+  specialization: 'specialization_id',
+  birth_date: 'birth',
+  date_of_birth: 'birth',
+};
+const DUPLICATE_PATTERN = /(taken|already|exist|in use|مسجل|موجود|مستخدم|вже|зайнят)/i;
+
+const detectFieldFromMessage = (message) => {
+  const lower = (message || '').toLowerCase();
+  if (lower.includes('instagram')) return 'instagram';
+  if (lower.includes('facebook')) return 'facebook';
+  if (lower.includes('telegram')) return 'telegram';
+  if (lower.includes('whatsapp')) return 'whatsapp';
+  if (lower.includes('email') || lower.includes('البريد') || lower.includes('إيميل')) return 'email';
+  if (lower.includes('phone') || lower.includes('الهاتف') || lower.includes('رقم')) return 'phone';
+  if (lower.includes('birth') || lower.includes('ميلاد')) return 'birth';
+  if (lower.includes('gender') || lower.includes('الجنس') || lower.includes('النوع')) return 'gender';
+  if (lower.includes('university') || lower.includes('الجامعة')) return 'university_id';
+  if (lower.includes('college') || lower.includes('السنة') || lower.includes('الفرقة')) return 'college_year';
+  if (lower.includes('name') || lower.includes('الاسم')) return 'name';
+  return null;
+};
+
+const mapBackendFieldMessage = (field, msg, t) => {
+  const text = Array.isArray(msg) ? msg[0] : msg;
+  const fallback = t(`profile.validation.${field}_invalid`, { defaultValue: t('profile.validation.generic_invalid') });
+  if (typeof text !== 'string' || !text) return fallback;
+  if (DUPLICATE_PATTERN.test(text)) {
+    if (field === 'email') return t('profile.toast.email_exists', 'This email is already registered to another account.');
+    if (field === 'phone') return t('profile.toast.phone_exists', 'This phone number is already registered.');
+  }
+  // Backend messages in Arabic are not understandable for the students -> use our own message
+  if (/[\u0600-\u06FF]/.test(text)) return fallback;
+  return text;
+};
+
+const extractBackendFieldErrors = (payload, message, t) => {
+  const result = {};
+  const errs = payload?.errors || payload?.data?.errors;
+  if (errs && typeof errs === 'object' && !Array.isArray(errs)) {
+    Object.entries(errs).forEach(([key, msg]) => {
+      const field = BACKEND_FIELD_ALIASES[key] || key;
+      if (FIELD_ORDER.includes(field)) result[field] = mapBackendFieldMessage(field, msg, t);
+    });
+  }
+  if (Object.keys(result).length === 0) {
+    const text = payload?.message || message;
+    const field = detectFieldFromMessage(text);
+    if (field) result[field] = mapBackendFieldMessage(field, text, t);
+  }
+  return result;
+};
+
+// Inline error message displayed under an invalid input
+const FieldError = ({ id, message }) => {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="flex items-start gap-1.5 mt-1.5 text-xs font-medium text-red-600 dark:text-red-400 animate-fadeIn">
+      <FaExclamationCircle className="mt-0.5 shrink-0" />
+      <span>{message}</span>
+    </p>
+  );
+};
+
 const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [loading, setLoading] = useState(false);
@@ -170,6 +354,81 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
   const { request, getAuthToken } = useApi();
 
+  // Field-level validation errors: { [field]: message }
+  const [errors, setErrors] = useState({});
+  const errorFields = FIELD_ORDER.filter(f => errors[f]);
+
+  const fieldLabel = (field) => ({
+    name: t('profile.full_name'),
+    email: t('profile.email_address'),
+    phone: t('profile.phone_number'),
+    birth: t('profile.birth_date'),
+    gender: t('profile.gender'),
+    university_id: t('profile.university'),
+    college_year: t('profile.college_year'),
+    specialization_id: t('profile.specialization'),
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
+  }[field] || field);
+
+  const fieldId = (field) => `profile-field-${field}`;
+  const errorId = (field) => `profile-error-${field}`;
+
+  // Input classes: red border/background when the field is invalid
+  const fieldClass = (field, base = "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2") =>
+    `${base} transition-colors ${errors[field]
+      ? 'border-red-500 bg-red-50 dark:bg-red-900/10 focus:ring-red-400 text-red-900 dark:text-red-200'
+      : 'border-border bg-background focus:ring-primary'}`;
+
+  const labelClass = (field, base = "block mb-2 text-sm font-bold") =>
+    `${base} ${errors[field] ? 'text-red-600 dark:text-red-400' : 'text-text-primary'}`;
+
+  const a11yProps = (field) => ({
+    id: fieldId(field),
+    'aria-invalid': !!errors[field],
+    'aria-describedby': errors[field] ? errorId(field) : undefined,
+  });
+
+  const focusField = (field) => {
+    // Delay so the inputs exist if edit mode has just been turned on
+    setTimeout(() => {
+      const el = document.getElementById(fieldId(field));
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+      }
+    }, 80);
+  };
+
+  // Shows the errors on the inputs + a clear toast and focuses the first invalid field
+  const showValidationErrors = (errs) => {
+    setErrors(errs);
+    const fields = FIELD_ORDER.filter(f => errs[f]);
+    if (fields.length === 0) return;
+    if (fields.length === 1) {
+      toast.error(`${fieldLabel(fields[0])}: ${errs[fields[0]]}`);
+    } else {
+      toast.error(t('profile.validation.toast_multiple', {
+        count: fields.length,
+        fields: fields.map(fieldLabel).join(', '),
+      }));
+    }
+    focusField(fields[0]);
+  };
+
+  // Handles a failed API response: maps errors to fields when possible
+  const handleBackendError = (payload, message) => {
+    const fieldErrors = extractBackendFieldErrors(payload, message, t);
+    if (Object.keys(fieldErrors).length > 0) {
+      setIsEditing(true);
+      showValidationErrors(fieldErrors);
+    } else {
+      toast.error(translateBackendError(message || payload?.message || t('profile.toast.update_fail'), t));
+    }
+  };
+
   // State for password change modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
@@ -202,19 +461,12 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       return;
     }
     
-    // Since we are using the update-profile API, we MUST ensure all required fields are present
-    if (!formData.name || !formData.email || !formData.phone || !formData.birth || !formData.gender) {
-      toast.error(t('profile.toast.all_fields_required', 'All primary profile fields (like birth date) are required before applying the code!'));
-      return;
-    }
-    
-    if (!formData.university_id) {
-      toast.error(t('profile.toast.select_university'));
-      return;
-    }
-    
-    if (!formData.college_year) {
-      toast.error(t('profile.toast.select_college_year'));
+    // Since we are using the update-profile API, we MUST ensure all required fields are valid
+    const validationErrors = validateProfileForm(formData, t);
+    if (Object.keys(validationErrors).length > 0) {
+      toast.info(t('profile.validation.complete_before_referral'));
+      setIsEditing(true);
+      showValidationErrors(validationErrors);
       return;
     }
 
@@ -262,12 +514,10 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         }
         setReferralCode("");
       } else {
-        let errorMsg = result?.message || t('points.code_error');
-        toast.error(translateBackendError(errorMsg, t));
+        handleBackendError(result, result?.message || t('points.code_error'));
       }
     } catch (err) {
-      let errorMsg = err?.message || t('points.code_error');
-      toast.error(translateBackendError(errorMsg, t));
+      handleBackendError(err?.data, err?.message || t('points.code_error'));
     } finally {
       setReferralLoading(false);
     }
@@ -419,6 +669,28 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
       ...prev,
       [name]: value
     }));
+    // Re-validate live once a field has been flagged, so the red state clears as soon as it's fixed
+    setErrors(prev => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      const msg = validateField(name, value, t);
+      if (msg) next[name] = msg;
+      else delete next[name];
+      return next;
+    });
+  };
+
+  // Show format errors as soon as the student leaves a filled field
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (!value || !String(value).trim()) return;
+    const msg = validateField(name, value, t);
+    setErrors(prev => {
+      const next = { ...prev };
+      if (msg) next[name] = msg;
+      else delete next[name];
+      return next;
+    });
   };
 
   const handleImageChange = (e) => {
@@ -426,12 +698,12 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
     if (file) {
       // Validate file type and size
       if (!file.type.startsWith('image/')) {
-        toast.error("Please select an image file");
+        toast.error(t('profile.toast.image_type', 'Please select an image file'));
         return;
       }
       
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error("Image size should be less than 5MB");
+        toast.error(t('profile.toast.image_size', 'Image size should be less than 5MB'));
         return;
       }
       
@@ -479,22 +751,13 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
   };
 
   const handleSave = async () => {
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.phone || !formData.birth || !formData.gender) {
-      toast.error(t('profile.toast.all_fields_required', 'All primary profile fields are required!'));
+    // Field-level validation
+    const validationErrors = validateProfileForm(formData, t);
+    if (Object.keys(validationErrors).length > 0) {
+      showValidationErrors(validationErrors);
       return;
     }
-    
-    if (!formData.university_id) {
-      toast.error(t('profile.toast.select_university'));
-      return;
-    }
-    
-    if (!formData.college_year) {
-      toast.error(t('profile.toast.select_college_year'));
-      return;
-    }
-
+    setErrors({});
 
     setLoading(true);
     try {
@@ -568,16 +831,15 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
           onProfileUpdate(updatedUser);
         }
 
+        setErrors({});
         setIsEditing(false);
       } else {
         console.error("API Error:", data);
-        let errorMsg = data.message || t('profile.toast.update_fail');
-        toast.error(translateBackendError(errorMsg, t));
+        handleBackendError(data, data.message || t('profile.toast.update_fail'));
       }
     } catch (error) {
       console.error("Profile update error:", error);
-      let errorMsg = error?.message || t('profile.toast.update_error');
-      toast.error(translateBackendError(errorMsg, t));
+      handleBackendError(error?.data, error?.message || t('profile.toast.update_error'));
     } finally {
       setLoading(false);
     }
@@ -609,6 +871,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         setImagePreview("/user.png");
       }
     }
+    setErrors({});
     setIsEditing(false);
   };
 
@@ -705,6 +968,33 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
         </div>
       )}
 
+      {/* Validation summary: explains every problem and lets the student jump to the field */}
+      {isEditing && errorFields.length > 0 && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="p-4 border border-red-300 rounded-xl bg-red-50 dark:bg-red-900/20 dark:border-red-800 shadow-sm"
+        >
+          <div className="flex items-center gap-2 mb-2 font-bold text-red-700 dark:text-red-300">
+            <FaExclamationTriangle />
+            {t('profile.validation.summary_title', { count: errorFields.length })}
+          </div>
+          <ul className="space-y-1 text-sm text-red-700 dark:text-red-300 list-disc ps-6">
+            {errorFields.map(field => (
+              <li key={field}>
+                <button
+                  type="button"
+                  onClick={() => focusField(field)}
+                  className="text-start hover:underline"
+                >
+                  <strong>{fieldLabel(field)}:</strong> {errors[field]}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Picture Section */}
         <div className="p-6 text-center border bg-surface border-border rounded-xl h-fit lg:sticky lg:top-24">
@@ -758,13 +1048,16 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                       <FaFacebook className="inline mr-1 text-blue-600" /> Facebook <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       name="facebook"
                       value={formData.facebook}
                       onChange={handleInputChange}
+                      onBlur={handleBlur}
                       placeholder="https://facebook.com/..."
-                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      {...a11yProps('facebook')}
+                      className={fieldClass('facebook', "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1")}
                     />
+                    <FieldError id={errorId('facebook')} message={errors.facebook} />
                   </div>
                 ) : (
                   <a 
@@ -796,13 +1089,16 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                       <FaInstagram className="inline mr-1 text-pink-600" /> Instagram <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       name="instagram"
                       value={formData.instagram}
                       onChange={handleInputChange}
+                      onBlur={handleBlur}
                       placeholder="https://instagram.com/..."
-                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      {...a11yProps('instagram')}
+                      className={fieldClass('instagram', "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1")}
                     />
+                    <FieldError id={errorId('instagram')} message={errors.instagram} />
                   </div>
                 ) : (
                   <a 
@@ -834,13 +1130,16 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                       <FaTelegram className="inline mr-1 text-blue-500" /> Telegram <span className="text-[9px] font-normal lowercase opacity-70">(Optional)</span>
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       name="telegram"
                       value={formData.telegram}
                       onChange={handleInputChange}
+                      onBlur={handleBlur}
                       placeholder="https://t.me/..."
-                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      {...a11yProps('telegram')}
+                      className={fieldClass('telegram', "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1")}
                     />
+                    <FieldError id={errorId('telegram')} message={errors.telegram} />
                   </div>
                 ) : (
                   <a 
@@ -876,9 +1175,12 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                       name="whatsapp"
                       value={formData.whatsapp}
                       onChange={handleInputChange}
+                      onBlur={handleBlur}
                       placeholder="Wa.me/..."
-                      className="w-full px-3 py-2 text-sm border rounded-lg bg-background border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      {...a11yProps('whatsapp')}
+                      className={fieldClass('whatsapp', "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1")}
                     />
+                    <FieldError id={errorId('whatsapp')} message={errors.whatsapp} />
                   </div>
                 ) : (
                   <a 
@@ -913,18 +1215,23 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
             <div className="space-y-4">
               {/* Full Name */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('name')} className={labelClass('name')}>
                   {t('profile.full_name')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      {...a11yProps('name')}
+                      className={fieldClass('name')}
+                      required
+                    />
+                    <FieldError id={errorId('name')} message={errors.name} />
+                  </>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
@@ -937,18 +1244,23 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Email */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('email')} className={labelClass('email')}>
                   {t('profile.email_address')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      {...a11yProps('email')}
+                      className={fieldClass('email')}
+                      required
+                    />
+                    <FieldError id={errorId('email')} message={errors.email} />
+                  </>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
@@ -961,18 +1273,24 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Phone */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('phone')} className={labelClass('phone')}>
                   {t('profile.phone_number')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder="+380501234567"
+                      {...a11yProps('phone')}
+                      className={fieldClass('phone')}
+                      required
+                    />
+                    <FieldError id={errorId('phone')} message={errors.phone} />
+                  </>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
@@ -1081,18 +1399,24 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
             <div className="space-y-4">
               {/* Birth Date */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('birth')} className={labelClass('birth')}>
                   {t('profile.birth_date')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
-                  <input
-                    type="date"
-                    name="birth"
-                    value={formData.birth}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <>
+                    <input
+                      type="date"
+                      name="birth"
+                      value={formData.birth}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      max={new Date().toISOString().split('T')[0]}
+                      {...a11yProps('birth')}
+                      className={fieldClass('birth')}
+                      required
+                    />
+                    <FieldError id={errorId('birth')} message={errors.birth} />
+                  </>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
@@ -1105,15 +1429,17 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* Gender */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('gender')} className={labelClass('gender')}>
                   {t('profile.gender')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
+                  <>
                   <select
                     name="gender"
                     value={formData.gender}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    {...a11yProps('gender')}
+                    className={fieldClass('gender')}
                     required
                   >
                     <option value="">{t('profile.select_gender')}</option>
@@ -1121,6 +1447,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     <option value="female">{t('profile.female')}</option>
                     <option value="other">{t('profile.other')}</option>
                   </select>
+                  <FieldError id={errorId('gender')} message={errors.gender} />
+                  </>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
@@ -1133,7 +1461,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* University */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('university_id')} className={labelClass('university_id')}>
                   {t('profile.university')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
@@ -1142,7 +1470,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                     <button
                       type="button"
                       onClick={() => setUniDropdownOpen(o => !o)}
-                      className="w-full flex items-center justify-between px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary text-left"
+                      {...a11yProps('university_id')}
+                      className={fieldClass('university_id', "w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-left")}
                     >
                       <span className={formData.university_id ? "" : "text-gray-400"}>
                         {formData.university_id
@@ -1221,6 +1550,7 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                         )}
                       </div>
                     )}
+                    <FieldError id={errorId('university_id')} message={errors.university_id} />
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
@@ -1234,15 +1564,17 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
 
               {/* College Year */}
               <div>
-                <label className="block mb-2 text-sm font-bold text-text-primary">
+                <label htmlFor={fieldId('college_year')} className={labelClass('college_year')}>
                   {t('profile.college_year')} <span className="text-[11px] font-normal text-text-secondary opacity-70 ml-1">* (Required)</span>
                 </label>
                 {isEditing ? (
+                  <>
                   <select
                     name="college_year"
                     value={formData.college_year}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    {...a11yProps('college_year')}
+                    className={fieldClass('college_year')}
                     required
                   >
                     <option value="">{t('profile.select_year')}</option>
@@ -1252,6 +1584,8 @@ const MyProfile = ({ user, onProfileUpdate, initialIsEditing = false }) => {
                       </option>
                     ))}
                   </select>
+                  <FieldError id={errorId('college_year')} message={errors.college_year} />
+                  </>
                 ) : (
                   <div className="flex items-center gap-3 p-3 border rounded-lg border-border bg-gray-50/30 dark:bg-gray-800/30">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-border">
