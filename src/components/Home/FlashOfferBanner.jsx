@@ -20,7 +20,7 @@ export default function FlashOfferBanner({ type }) {
   // Map productType names if necessary
   const getBannerType = (storeType) => {
     if (storeType === "medical_clothes" || storeType === "apparel") return "apparel";
-    return storeType; // book, booklet, medical_tool
+    return storeType; // book, booklet, medical_tool, video_course, live_course
   };
 
   useEffect(() => {
@@ -29,24 +29,35 @@ export default function FlashOfferBanner({ type }) {
         setLoading(true);
         const bannerType = getBannerType(type);
         
-        // We will fetch from the main flash-offers endpoint to get all matching offers for this type
-        const res = await request("flash-offers", { useCache: false });
-        if (res && res.success && Array.isArray(res.data)) {
-          // Filter by category type and verify not expired
-          const typeOffers = res.data.filter(
-            offer => offer.store_type === bannerType && !offer.is_expired
-          );
-          setOffers(typeOffers);
-
-          // Initialize countdown values
-          const countdowns = {};
-          typeOffers.forEach(o => {
-            countdowns[o.id] = Math.max(0, parseInt(o.remaining_seconds) || 0);
-          });
-          setTimeRemaining(countdowns);
-        } else {
-          setOffers([]);
+        let loadedOffers = [];
+        try {
+          const bannerRes = await request(`flash-offers/banner/${bannerType}`, { useCache: false });
+          if (bannerRes && bannerRes.success && bannerRes.data) {
+            loadedOffers = Array.isArray(bannerRes.data) ? bannerRes.data : [bannerRes.data];
+          }
+        } catch (e) {
+          console.debug("Banner endpoint fallback to flash-offers list", e);
         }
+
+        if (loadedOffers.length === 0) {
+          // We will fetch from the main flash-offers endpoint to get all matching offers for this type
+          const res = await request("flash-offers", { useCache: false });
+          if (res && res.success && Array.isArray(res.data)) {
+            // Filter by category type and verify not expired
+            loadedOffers = res.data.filter(
+              offer => (offer.store_type === bannerType || offer.type === bannerType) && !offer.is_expired
+            );
+          }
+        }
+
+        setOffers(loadedOffers);
+
+        // Initialize countdown values
+        const countdowns = {};
+        loadedOffers.forEach(o => {
+          countdowns[o.id] = Math.max(0, parseInt(o.remaining_seconds) || 0);
+        });
+        setTimeRemaining(countdowns);
       } catch (err) {
         console.error(`Failed to fetch flash offer banners for ${type}:`, err);
         setOffers([]);
@@ -56,6 +67,9 @@ export default function FlashOfferBanner({ type }) {
     };
     if (type) {
       fetchBanners();
+    } else {
+      setOffers([]);
+      setLoading(false);
     }
   }, [type, request, i18n.language]);
 
@@ -92,8 +106,39 @@ export default function FlashOfferBanner({ type }) {
   };
 
   const handleBuyNow = (offer) => {
-    let productType = offer.store_type;
-    if (offer.store_type === "apparel") {
+    const rawType = offer.store_type || offer.type;
+
+    // Handle course subscriptions
+    if (rawType === "video_course" || rawType === "video") {
+      const courseId = offer.item?.id || offer.item_id || offer.course_id;
+      if (courseId) {
+        navigate(`/courses/${courseId}/subscribe`, {
+          state: {
+            flashOffer: offer,
+            discount: offer.discount_percentage,
+            price: offer.offer_price
+          }
+        });
+        return;
+      }
+    }
+
+    if (rawType === "live_course" || rawType === "live") {
+      const courseId = offer.item?.id || offer.item_id || offer.course_id;
+      if (courseId) {
+        navigate(`/live-courses/${courseId}/subscribe`, {
+          state: {
+            flashOffer: offer,
+            discount: offer.discount_percentage,
+            price: offer.offer_price
+          }
+        });
+        return;
+      }
+    }
+
+    let productType = rawType;
+    if (rawType === "apparel") {
       productType = "medical_clothes";
     }
 
@@ -101,20 +146,26 @@ export default function FlashOfferBanner({ type }) {
       ...offer.item,
       price: offer.original_price,
       discount: offer.discount_percentage,
-      type: offer.store_type === "booklet" ? "PDF" : "delivery"
+      type: rawType === "booklet" ? "PDF" : "delivery"
     };
 
     navigate("/store/checkout", {
       state: {
         item: checkoutItem,
         productType: productType,
-        itemType: offer.store_type
+        itemType: rawType
       }
     });
   };
 
   const getStoreTypeIcon = (storeType) => {
     switch (storeType) {
+      case "video_course":
+      case "video":
+        return <FiTag className="text-sm" />;
+      case "live_course":
+      case "live":
+        return <FiTag className="text-sm" />;
       case "book":
         return <FiBook className="text-sm" />;
       case "booklet":

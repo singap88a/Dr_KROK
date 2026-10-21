@@ -366,10 +366,15 @@ export default function CourseSubscription() {
   }
 
   // Calculate pricing (match CourseDetails): discount is a percentage
+  const flashOffer = location.state?.flashOffer;
   const priceNumber = Number(course.price) || 0;
-  const discountPercentage = Number(course.discount) || 0;
+  const discountPercentage = flashOffer
+    ? (Number(location.state?.discount ?? flashOffer.discount_percentage) || 0)
+    : (Number(course.discount) || 0);
   const discountAmount = priceNumber * (discountPercentage / 100);
-  const subtotalAfterDiscount = Math.max(0, priceNumber - discountAmount);
+  const subtotalAfterDiscount = flashOffer && location.state?.price
+    ? Number(location.state.price)
+    : Math.max(0, priceNumber - discountAmount);
   const couponDiscountAmount = subtotalAfterDiscount * (couponDiscount / 100);
   const discountedPrice = Math.max(0, subtotalAfterDiscount - couponDiscountAmount);
 
@@ -607,9 +612,16 @@ export default function CourseSubscription() {
           <div className="lg:col-span-1">
             <div className="sticky top-6">
               <div className="p-6 border rounded-2xl border-border bg-surface">
-                <h3 className="mb-6 text-xl font-bold text-text">
+                <h3 className="mb-4 text-xl font-bold text-text">
                   {t('courses.subscriptionDetails', 'Subscription Details')}
                 </h3>
+
+                {flashOffer && (
+                  <div className="flex items-center gap-2 p-2.5 mb-4 text-xs font-semibold text-amber-800 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 rounded-xl">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>{t('flashOffers.offerBadge', 'Flash Offer Applied')}: {discountPercentage}% OFF</span>
+                  </div>
+                )}
 
                 {/* Price Display */}
                 <div className="mb-6">

@@ -655,6 +655,22 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         };
       },
 
+      async filterCourses(params = {}) {
+        const query = new URLSearchParams();
+        if (params.type) query.set("type", params.type);
+        if (params.specialization_id) query.set("specialization_id", params.specialization_id);
+        if (params.college_year) query.set("college_year", params.college_year);
+        if (params.page) query.set("page", params.page);
+        if (params.per_page) query.set("per_page", params.per_page);
+        const path = `courses/filter?${query.toString()}`;
+        const response = await request(path, { useCache: false });
+        return {
+          data: Array.isArray(response?.data) ? response.data : [],
+          pagination: response?.pagination || null,
+          raw: response,
+        };
+      },
+
       async getCenterCourseById(id, auth = false) {
         if (!id) throw new Error("Course id is required");
         let itemData = null;

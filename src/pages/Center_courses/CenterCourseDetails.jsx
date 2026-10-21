@@ -21,6 +21,7 @@ import {
   FaCalendarAlt,
   FaHourglassHalf,
   FaMapMarkerAlt,
+  FaStethoscope,
 } from "react-icons/fa";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -305,6 +306,13 @@ export default function CenterCourseDetails() {
             {course.level && (
               <div className="flex items-center gap-2">
                 <FaLayerGroup className="text-primary" /> {t("courses.level", "Level")} <span className="font-medium">{getLevelTranslation(course.level)}</span>
+              </div>
+            )}
+            {course?.specialization && (
+              <div className="flex items-center gap-2">
+                <FaStethoscope className="text-primary" /> {t("profile.specialization", "Specialization")} <span className="font-medium">
+                  {typeof course.specialization === 'object' ? course.specialization?.name : course.specialization}
+                </span>
               </div>
             )}
             <div className="flex items-center gap-2">
