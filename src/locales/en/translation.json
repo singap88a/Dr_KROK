@@ -576,7 +576,7 @@
     }
   },
   "testimonials": {
-    "title": "Students Testimonials",
+    "title": "Students Reviews",
     "loading": "Loading testimonials...",
     "error": "Failed to load testimonials",
     "no_testimonials": "No testimonials available",
@@ -586,7 +586,10 @@
     "close_video": "Close Video",
     "no_video": "No video available",
     "view_all": "View More",
-    "all_reviews": "Customer Reviews",
+    "all_reviews": "Students Reviews",
+    "featured_reviews": "Featured Student Stories",
+    "top_badge": "Top Review",
+    "read_text_review": "Read Written Review",
     "subtitle": "See what our students are saying about us.",
     "read_more": "Read More"
   },
