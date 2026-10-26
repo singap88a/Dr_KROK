@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   FaGraduationCap,
   FaBroadcastTower,
@@ -20,14 +21,46 @@ import {
   FaTrophy,
   FaChartBar,
   FaBolt,
+  FaCoins,
+  FaMedal,
+  FaStar,
+  FaPlay,
 } from "react-icons/fa";
 import { useStudyTracker } from "../../context/StudyTrackerContext";
+import { useApi } from "../../context/ApiContext";
 
 export default function StudentDashboard({ user, setActiveTab }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { getMyCoursesProgress } = useApi();
   const isRtl = i18n.language === "ar" || i18n.dir?.() === "rtl";
   const { streak, today, thisWeek, thisMonth } = useStudyTracker();
   const [filterType, setFilterType] = useState("all"); // "all" | "live" | "video"
+  const [coursesProgressData, setCoursesProgressData] = useState(null);
+  const [loadingCoursesProgress, setLoadingCoursesProgress] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCoursesProgress = async () => {
+      try {
+        setLoadingCoursesProgress(true);
+        if (getMyCoursesProgress) {
+          const res = await getMyCoursesProgress({ per_page: 4 }, { useCache: true });
+          if (isMounted && res?.data) {
+            setCoursesProgressData(res.data);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch courses progress in StudentDashboard:", err);
+      } finally {
+        if (isMounted) setLoadingCoursesProgress(false);
+      }
+    };
+    fetchCoursesProgress();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // University & year display helpers
   const universityName =
@@ -77,6 +110,14 @@ export default function StudentDashboard({ user, setActiveTab }) {
     if (filterType === "all") return true;
     return item.courseType === filterType;
   });
+
+  const summary = coursesProgressData?.summary || null;
+  const coursesProgressList =
+    coursesProgressData?.all_courses?.data ||
+    [
+      ...(coursesProgressData?.video_courses?.data || []),
+      ...(coursesProgressData?.live_courses?.data || []),
+    ];
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -138,202 +179,15 @@ export default function StudentDashboard({ user, setActiveTab }) {
         </div>
       </div>
 
-      {/* ─── Study Tracker & Streak Section (Duolingo Style 🔥) ─────────── */}
-      <div className="bg-surface/80 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm space-y-6">
-        {/* Header with Monthly Report link */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all duration-500 shadow-md ${
-                streak.is_studied_today
-                  ? "bg-gradient-to-tr from-amber-500 to-orange-500 text-white animate-pulse"
-                  : "bg-surface text-gray-400 border border-border"
-              }`}
-            >
-              <FaFire className={streak.is_studied_today ? "text-amber-100 drop-shadow" : "text-gray-400"} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-text">
-                  {streak.current_streak}{" "}
-                  {t("studyTracker.daysStreak", "Days Streak")}
-                </h2>
-                {streak.is_studied_today ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    <FaCheckCircle className="text-[10px]" />
-                    {t("studyTracker.studiedToday", "Active Today 🔥")}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                    <FaBolt className="text-[10px]" />
-                    {t("studyTracker.studyNeeded", "Study today to keep streak!")}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs sm:text-sm text-textSecondary mt-0.5">
-                {streak.streak_message ||
-                  (streak.is_studied_today
-                    ? t("studyTracker.greatStreak", "Keep the momentum going! Great work today.")
-                    : t("studyTracker.startStudying", "Spend a few minutes studying now to maintain your flame!"))}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setActiveTab("study_tracker")}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] self-stretch sm:self-auto justify-center"
-          >
-            <span>{t("studyTracker.viewFullReport", "Monthly Report & Calendar")}</span>
-            {isRtl ? <FaArrowLeft className="text-xs" /> : <FaArrowRight className="text-xs" />}
-          </button>
-        </div>
-
-        {/* 3 Metric Cards + Weekly Bar Chart Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Column 1: Today's Time & Lifetime / Best */}
-          <div className="space-y-4">
-            {/* Today's Study Card */}
-            <div className="p-4 rounded-xl border border-border bg-gradient-to-br from-blue-500/10 via-surface to-surface">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2">
-                <span>{t("studyTracker.todayStudy", "Today's Study")}</span>
-                <FaClock className="text-sm" />
-              </div>
-              <div className="text-3xl font-extrabold text-text">
-                {today.formatted_time || `${today.hours || 0}h`}
-              </div>
-              <p className="text-[11px] text-textSecondary mt-1">
-                {today.total_seconds > 0
-                  ? t("studyTracker.activeStudyLogged", "Net focused active time logged today")
-                  : t("studyTracker.noTimeYet", "Timer running as you browse & learn")}
-              </p>
-            </div>
-
-            {/* Streak Records & Monthly Commitment */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl border border-border bg-surface">
-                <div className="flex items-center gap-1.5 text-xs text-amber-500 mb-1">
-                  <FaTrophy className="text-xs" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-textSecondary">
-                    {t("studyTracker.longestStreak", "Best Streak")}
-                  </span>
-                </div>
-                <div className="text-xl font-bold text-text">
-                  {streak.longest_streak || streak.current_streak || 0}{" "}
-                  <span className="text-xs font-normal text-textSecondary">{t("studyTracker.days", "days")}</span>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl border border-border bg-surface">
-                <div className="flex items-center gap-1.5 text-xs text-emerald-500 mb-1">
-                  <FaChartBar className="text-xs" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-textSecondary">
-                    {t("studyTracker.monthlyGoal", "Commitment")}
-                  </span>
-                </div>
-                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {thisMonth.commitment_percentage || 0}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Column 2 & 3: Weekly 7-Day Interactive Activity Bar Chart */}
-          <div className="lg:col-span-2 p-5 rounded-xl border border-border bg-surface flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="text-sm font-bold text-text flex items-center gap-2">
-                  <FaChartBar className="text-primary" />
-                  <span>{t("studyTracker.weeklyActivity", "Weekly Activity (Last 7 Days)")}</span>
-                </h4>
-                <p className="text-[11px] text-textSecondary">
-                  {t("studyTracker.totalThisWeek", "Total:")}{" "}
-                  <strong className="text-text">{thisWeek.formatted_time || `${thisWeek.total_hours || 0}h`}</strong>{" "}
-                  {t("studyTracker.across", "across")}{" "}
-                  <strong className="text-text">{thisWeek.active_days || 0}</strong>{" "}
-                  {t("studyTracker.activeDays", "active days")}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 text-[11px] text-textSecondary">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-t from-amber-500 to-orange-500"></span>
-                  {t("studyTracker.studied", "Studied")}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-border"></span>
-                  {t("studyTracker.noStudy", "No study")}
-                </span>
-              </div>
-            </div>
-
-            {/* 7 Days Bars */}
-            <div className="grid grid-cols-7 gap-2 pt-6 items-end min-h-[140px]">
-              {(thisWeek.days && thisWeek.days.length > 0
-                ? thisWeek.days
-                : [
-                    { day_short: "Mon", total_seconds: 0, is_studied: false },
-                    { day_short: "Tue", total_seconds: 0, is_studied: false },
-                    { day_short: "Wed", total_seconds: 0, is_studied: false },
-                    { day_short: "Thu", total_seconds: 0, is_studied: false },
-                    { day_short: "Fri", total_seconds: 0, is_studied: false },
-                    { day_short: "Sat", total_seconds: 0, is_studied: false },
-                    { day_short: "Sun", total_seconds: 0, is_studied: false },
-                  ]
-              ).map((day, idx) => {
-                const maxSeconds = Math.max(
-                  ...((thisWeek.days || []).map((d) => d.total_seconds || 0)),
-                  3600
-                );
-                const heightPercent = day.is_studied
-                  ? Math.min(100, Math.max(20, Math.round(((day.total_seconds || 0) / maxSeconds) * 100)))
-                  : 8;
-
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-2 group">
-                    {/* Time tooltip on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-semibold text-textSecondary select-none">
-                      {day.formatted_time || (day.hours ? `${day.hours}h` : "0m")}
-                    </div>
-
-                    {/* Bar track & fill */}
-                    <div className="w-full max-w-[36px] h-24 bg-surface border border-border/70 rounded-lg flex items-end p-1 overflow-hidden relative">
-                      <div
-                        className={`w-full rounded-md transition-all duration-500 ${
-                          day.is_studied
-                            ? "bg-gradient-to-t from-amber-500 to-orange-500 shadow-sm"
-                            : "bg-border/60"
-                        }`}
-                        style={{ height: `${heightPercent}%` }}
-                      />
-                    </div>
-
-                    {/* Day Label */}
-                    <span
-                      className={`text-[11px] font-medium transition-colors ${
-                        day.is_today
-                          ? "text-primary font-bold underline"
-                          : "text-textSecondary"
-                      }`}
-                    >
-                      {day.day_short || day.day_name?.slice(0, 3)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Quick Stats Overview ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ─── Quick Stats Overview (Real Metrics) ─────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
         {/* Courses Stat */}
         <div
           onClick={() => setActiveTab("courses")}
-          className="group cursor-pointer p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+          className="group cursor-pointer p-4 sm:p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
               <FaGraduationCap />
             </div>
             <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
@@ -342,28 +196,81 @@ export default function StudentDashboard({ user, setActiveTab }) {
             </span>
           </div>
           <div>
-            <div className="text-2xl font-black text-text">{user?.stats?.courses || 0}</div>
+            <div className="text-2xl font-black text-text">
+              {summary?.total_enrolled_courses ?? user?.stats?.courses ?? 0}
+            </div>
             <div className="text-xs font-medium text-text-secondary mt-1">
               {t("profile.stats.courses", "Courses")}
             </div>
           </div>
         </div>
 
-        {/* Live Sessions Stat */}
-        <div className="p-5 rounded-2xl bg-surface border border-border/70 shadow-sm flex flex-col justify-between">
+        {/* Orders Stat */}
+        <div
+          onClick={() => setActiveTab("orders")}
+          className="group cursor-pointer p-4 sm:p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+        >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center text-xl">
-              <FaBroadcastTower />
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <FaShoppingCart />
             </div>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 dark:text-red-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-              {t("profile.dashboard.liveBadge", "Live")}
+            <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
+              {t("profile.dashboard.view", "View")}
+              <FaChevronRight className="text-[10px]" />
             </span>
           </div>
           <div>
-            <div className="text-2xl font-black text-text">3</div>
+            <div className="text-2xl font-black text-text">{user?.stats?.orders ?? 0}</div>
             <div className="text-xs font-medium text-text-secondary mt-1">
-              {t("profile.dashboard.upcomingSessions", "Upcoming Live Lectures")}
+              {t("profile.stats.orders", "Orders")}
+            </div>
+          </div>
+        </div>
+
+        {/* Rating Stat (Moved from Profile Sidebar) */}
+        <div
+          onClick={() => setActiveTab("ratings")}
+          className="group cursor-pointer p-4 sm:p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <FaStar />
+            </div>
+            <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
+              {t("profile.dashboard.view", "View")}
+              <FaChevronRight className="text-[10px]" />
+            </span>
+          </div>
+          <div>
+            <div className="flex items-baseline gap-1 text-2xl font-black text-text">
+              <span>{user?.stats?.rating || user?.rating || 0}</span>
+              <span className="text-xs font-normal text-text-secondary">/ 5</span>
+            </div>
+            <div className="text-xs font-medium text-text-secondary mt-1">
+              {t("profile.stats.rating", "Rating")}
+            </div>
+          </div>
+        </div>
+
+        {/* Total Points Earned Stat (Update 15) */}
+        <div
+          onClick={() => setActiveTab("courses")}
+          className="group cursor-pointer p-4 sm:p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <FaCoins />
+            </div>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              {summary?.overall_points_percentage ? `${summary.overall_points_percentage}%` : "Points"}
+            </span>
+          </div>
+          <div>
+            <div className="text-2xl font-black text-text">
+              {summary?.total_earned_points ?? 0}
+            </div>
+            <div className="text-xs font-medium text-text-secondary mt-1">
+              {t("myCourses.totalPointsEarned", "Points Earned")}
             </div>
           </div>
         </div>
@@ -371,10 +278,10 @@ export default function StudentDashboard({ user, setActiveTab }) {
         {/* Study Materials Stat */}
         <div
           onClick={() => setActiveTab("materials")}
-          className="group cursor-pointer p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+          className="group cursor-pointer p-4 sm:p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
               <FaBook />
             </div>
             <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
@@ -389,29 +296,150 @@ export default function StudentDashboard({ user, setActiveTab }) {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Orders Stat */}
-        <div
-          onClick={() => setActiveTab("orders")}
-          className="group cursor-pointer p-5 rounded-2xl bg-surface border border-border/70 hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-              <FaShoppingCart />
+      {/* ─── UPDATE 11, 14, 15: Course Progress, Ranking & Points Section ──── */}
+      {coursesProgressList.length > 0 && (
+        <div className="rounded-3xl bg-surface border border-border/70 p-6 sm:p-7 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <FaChartBar className="text-lg" />
+                </div>
+                <h2 className="text-xl font-bold text-text">
+                  {t("myCourses.dashboardProgressTitle", "My Learning Progress & Ranking")}
+                </h2>
+              </div>
+              <p className="text-xs sm:text-sm text-text-secondary">
+                {t(
+                  "myCourses.dashboardProgressSubtitle",
+                  "Track your completion, points, and class ranking across enrolled courses"
+                )}
+              </p>
             </div>
-            <span className="text-xs font-semibold text-text-secondary group-hover:text-primary transition-colors flex items-center gap-1">
-              {t("profile.dashboard.view", "View")}
+
+            <button
+              onClick={() => setActiveTab("courses")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white hover:bg-secondary transition-all shadow-sm self-start sm:self-auto"
+            >
+              <span>{t("myCourses.viewAllCourses", "View All Courses")}</span>
               <FaChevronRight className="text-[10px]" />
-            </span>
+            </button>
           </div>
-          <div>
-            <div className="text-2xl font-black text-text">{user?.stats?.orders || 0}</div>
-            <div className="text-xs font-medium text-text-secondary mt-1">
-              {t("profile.stats.orders", "Orders")}
-            </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {coursesProgressList.slice(0, 4).map((course, idx) => {
+              const live = course.course_type === "live" || course.type === "live_course";
+              const courseId = course.course_id || course.id;
+              const progressPct = Math.min(100, Math.max(0, Number(course.progress?.percentage || 0)));
+              const rank = course.rank || {};
+              const points = course.points || {};
+
+              return (
+                <div
+                  key={courseId || idx}
+                  onClick={() => {
+                    if (live) {
+                      navigate(`/live-courses/${courseId}/lessons`);
+                    } else {
+                      navigate(`/courses/${courseId}/lessons`);
+                    }
+                  }}
+                  className="p-4 rounded-2xl bg-background/60 hover:bg-background border border-border/70 hover:border-primary/50 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 group shadow-sm"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={course.image || "/course-placeholder.jpg"}
+                      alt={course.title}
+                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-border"
+                      onError={(e) => {
+                        e.currentTarget.src = "/course-placeholder.jpg";
+                      }}
+                    />
+
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            live
+                              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                              : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {live ? t("courses.liveCourse", "Live") : t("courses.videoCourse", "Video")}
+                        </span>
+                        {course.category && (
+                          <span className="text-[10px] text-text-secondary truncate">
+                            {course.category}
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="font-bold text-sm text-text line-clamp-1 group-hover:text-primary transition-colors">
+                        {course.title || course.name}
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar (Update 11) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-text-secondary font-medium">
+                        {t("myCourses.progress", "Progress")}:{" "}
+                        <strong className="text-text font-bold">
+                          {course.progress?.completed_lessons || 0} / {course.progress?.total_lessons || 0}
+                        </strong>
+                      </span>
+                      <span className="font-black text-primary">{progressPct}%</span>
+                    </div>
+
+                    <div className="w-full h-2 rounded-full bg-border/60 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          progressPct >= 100
+                            ? "bg-emerald-500"
+                            : "bg-gradient-to-r from-primary to-blue-400"
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Rank & Points Mini Row (Update 14 & 15) */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                    {/* Rank (Update 14) */}
+                    <div className="flex items-center gap-1.5">
+                      {rank.is_first ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 font-extrabold text-[11px]">
+                          🏆 {rank.rank_label || "1 / 1"}
+                        </span>
+                      ) : rank.is_top_three ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-bold text-[11px]">
+                          🥇 {rank.rank_label}
+                        </span>
+                      ) : (
+                        <span className="text-text-secondary text-[11px]">
+                          {t("myCourses.rankInCourse", "Rank")}:{" "}
+                          <strong className="text-text">
+                            {rank.rank_label || `${rank.current_rank || 1} / ${rank.total_students || 1}`}
+                          </strong>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Points (Update 15) */}
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-text">
+                      <FaCoins className="text-yellow-500 text-xs" />
+                      <span>{points.points_label || `${points.earned_points || 0} pts`}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
+      )}
 
       {/* ─── Live Lectures Schedule Section ──────────────────────────────── */}
       <div className="rounded-3xl bg-surface border border-border/70 p-6 sm:p-7 shadow-sm space-y-6">
@@ -538,6 +566,198 @@ export default function StudentDashboard({ user, setActiveTab }) {
               "Your live lecture schedule and sessions will be automatically synced once finalized by the academy administration."
             )}
           </p>
+        </div>
+      </div>
+
+      {/* ─── Streamlined Study Tracker & Activity Section (In place, visually rich, 100% English & Ukrainian) ─── */}
+      <div className="rounded-3xl bg-surface border border-border/80 p-5 sm:p-6 shadow-sm space-y-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+          <div className="flex items-center gap-3.5">
+            <div
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm ${
+                streak.is_studied_today
+                  ? "bg-gradient-to-tr from-amber-500 to-orange-500 text-white animate-pulse"
+                  : "bg-background text-gray-400 border border-border"
+              }`}
+            >
+              <FaFire className={streak.is_studied_today ? "text-white" : "text-gray-400"} />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-lg font-bold text-text">
+                  {streak.current_streak || 0} {t("studyTracker.daysStreak", "Days Streak")}
+                </h3>
+                {streak.is_studied_today ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <FaCheckCircle className="text-[10px]" />
+                    {t("studyTracker.studiedToday", "Active Today 🔥")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    <FaBolt className="text-[10px]" />
+                    {t("studyTracker.studyNeeded", "Study today to keep streak!")}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs text-text-secondary mt-0.5">
+                {streak.is_studied_today
+                  ? t("studyTracker.greatStreak", "Keep the momentum going! Great work today.")
+                  : t("studyTracker.startStudying", "Spend a few minutes studying now to maintain your flame!")}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveTab("study_tracker")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-semibold transition-all self-start sm:self-auto shadow-sm"
+          >
+            <span>{t("studyTracker.viewFullReport", "Monthly Report & Calendar")}</span>
+            {isRtl ? <FaArrowLeft className="text-[10px]" /> : <FaArrowRight className="text-[10px]" />}
+          </button>
+        </div>
+
+        {/* Visual Charts & Metrics Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Left Column: Quick Metrics (Today's Study + Best Streak + Commitment) */}
+          <div className="space-y-3 flex flex-col justify-between">
+            {/* Today's Study Card */}
+            <div className="p-4 rounded-2xl border border-border/80 bg-background/50 flex items-center justify-between gap-4">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block mb-1">
+                  {t("studyTracker.todayStudy", "Today's Study")}
+                </span>
+                <div className="text-2xl font-black text-text">
+                  {today.formatted_time || `${today.hours || 0}h`}
+                </div>
+                <p className="text-[11px] text-text-secondary mt-0.5">
+                  {today.total_seconds > 0
+                    ? t("studyTracker.activeStudyLogged", "Net focused active time logged today")
+                    : t("studyTracker.noTimeYet", "Timer running as you browse & learn")}
+                </p>
+              </div>
+
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-lg shrink-0">
+                <FaClock />
+              </div>
+            </div>
+
+            {/* Best Streak & Commitment 2-col */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-2xl border border-border/80 bg-background/50">
+                <div className="flex items-center gap-1.5 text-xs text-amber-500 mb-1">
+                  <FaTrophy className="text-xs" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
+                    {t("studyTracker.longestStreak", "Best Streak")}
+                  </span>
+                </div>
+                <div className="text-lg font-black text-text">
+                  {streak.longest_streak || streak.current_streak || 0}{" "}
+                  <span className="text-xs font-normal text-text-secondary">{t("studyTracker.days", "days")}</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl border border-border/80 bg-background/50">
+                <div className="flex items-center gap-1.5 text-xs text-emerald-500 mb-1">
+                  <FaChartBar className="text-xs" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
+                    {t("studyTracker.monthlyGoal", "Commitment")}
+                  </span>
+                </div>
+                <div className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                  {thisMonth.commitment_percentage || 0}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Weekly 7-Day Interactive Activity Bar Chart */}
+          <div className="lg:col-span-2 p-4 sm:p-5 rounded-2xl border border-border/80 bg-background/50 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-text flex items-center gap-1.5">
+                  <FaChartBar className="text-primary text-xs" />
+                  <span>{t("studyTracker.weeklyActivity", "Weekly Activity (Last 7 Days)")}</span>
+                </h4>
+                <p className="text-[11px] text-text-secondary mt-0.5">
+                  {t("studyTracker.totalThisWeek", "Total:")}{" "}
+                  <strong className="text-text">{thisWeek.formatted_time || `${thisWeek.total_hours || 0}h`}</strong>{" "}
+                  {t("studyTracker.across", "across")}{" "}
+                  <strong className="text-text">{thisWeek.active_days || 0}</strong>{" "}
+                  {t("studyTracker.activeDays", "active days")}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 text-[11px] text-text-secondary">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-gradient-to-t from-amber-500 to-orange-500"></span>
+                  {t("studyTracker.studied", "Studied")}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-border"></span>
+                  {t("studyTracker.noStudy", "No study")}
+                </span>
+              </div>
+            </div>
+
+            {/* 7 Days Bars */}
+            <div className="grid grid-cols-7 gap-2 pt-4 items-end min-h-[120px]">
+              {(thisWeek.days && thisWeek.days.length > 0
+                ? thisWeek.days
+                : [
+                    { day_short: "Mon", total_seconds: 0, is_studied: false },
+                    { day_short: "Tue", total_seconds: 0, is_studied: false },
+                    { day_short: "Wed", total_seconds: 0, is_studied: false },
+                    { day_short: "Thu", total_seconds: 0, is_studied: false },
+                    { day_short: "Fri", total_seconds: 0, is_studied: false },
+                    { day_short: "Sat", total_seconds: 0, is_studied: false },
+                    { day_short: "Sun", total_seconds: 0, is_studied: false },
+                  ]
+              ).map((day, idx) => {
+                const maxSeconds = Math.max(
+                  ...((thisWeek.days || []).map((d) => d.total_seconds || 0)),
+                  3600
+                );
+                const heightPercent = day.is_studied
+                  ? Math.min(100, Math.max(20, Math.round(((day.total_seconds || 0) / maxSeconds) * 100)))
+                  : 8;
+
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1.5 group">
+                    {/* Time tooltip on hover */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-semibold text-text-secondary select-none">
+                      {day.formatted_time || (day.hours ? `${day.hours}h` : "0m")}
+                    </div>
+
+                    {/* Bar track & fill */}
+                    <div className="w-full max-w-[32px] h-20 bg-surface border border-border/70 rounded-lg flex items-end p-1 overflow-hidden relative">
+                      <div
+                        className={`w-full rounded-md transition-all duration-500 ${
+                          day.is_studied
+                            ? "bg-gradient-to-t from-amber-500 to-orange-500 shadow-sm"
+                            : "bg-border/60"
+                        }`}
+                        style={{ height: `${heightPercent}%` }}
+                      />
+                    </div>
+
+                    {/* Day Label */}
+                    <span
+                      className={`text-[11px] font-medium transition-colors ${
+                        day.is_today
+                          ? "text-primary font-bold underline"
+                          : "text-text-secondary"
+                      }`}
+                    >
+                      {day.day_short || day.day_name?.slice(0, 3)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

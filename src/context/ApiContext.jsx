@@ -181,8 +181,8 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         statusData?.is_maintenance === "true"
       );
 
-      setIsMaintenance(maintenance);
-      if (statusData) {
+      setIsMaintenance((prev) => (prev !== maintenance ? maintenance : prev));
+      if (maintenance) {
         setMaintenanceData(statusData);
       }
       return statusData;
@@ -1341,6 +1341,27 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         return response.data || [];
       },
 
+      // Get user's enrolled courses with comprehensive progress, ranking, points and tests summary
+      async getMyCoursesProgress(params = {}, { useCache = false } = {}) {
+        const query = new URLSearchParams();
+        if (params.type && params.type !== "all") query.append("type", params.type);
+        if (params.status && params.status !== "all") query.append("status", params.status);
+        if (params.per_page) query.append("per_page", params.per_page);
+        if (params.page) query.append("page", params.page);
+        if (params.video_page) query.append("video_page", params.video_page);
+        if (params.live_page) query.append("live_page", params.live_page);
+
+        const queryString = query.toString();
+        const endpoint = `profile/my-courses-progress${queryString ? `?${queryString}` : ""}`;
+
+        const response = await request(endpoint, {
+          auth: true,
+          useCache,
+          cacheTTL: 2 * 60 * 1000,
+        });
+        return response;
+      },
+
       // Add student test results - UPDATED
       async addStudentTest(testData) {
         console.log('🎯 addStudentTest called with:', testData);
@@ -2144,7 +2165,6 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       isMaintenance,
       maintenanceData,
       checkPlatformStatus,
-      isCheckingMaintenance,
     }),
     [
       baseUrl,
@@ -2169,7 +2189,6 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
       isMaintenance,
       maintenanceData,
       checkPlatformStatus,
-      isCheckingMaintenance
     ]
   );
 

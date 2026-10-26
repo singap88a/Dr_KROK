@@ -65,6 +65,7 @@ export default function App() {
   const { isMaintenance, maintenanceData, checkPlatformStatus } = useApi();
   const location = useLocation();
   const isChatPage = location.pathname === "/gemini";
+  const isProfilePage = location.pathname.toLowerCase().startsWith("/profile");
 
   // If platform is under maintenance (or previewing via /maintenance route), display the maintenance page
   const isMaintenanceRoute =
@@ -176,7 +177,7 @@ export default function App() {
       </main>
       <AI_Icon />
       <TelegramIcon />
-      {!isChatPage && (
+      {!isChatPage && !isProfilePage && (
         <>
           <CTA />
           <Footer />

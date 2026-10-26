@@ -170,11 +170,12 @@ export default function Profile() {
 
   // Fetch profile data on component mount
   useEffect(() => {
+    let isMounted = true;
     const fetchProfile = async () => {
       try {
         const data = await getMyProfile();
 
-        if (data?.success && data?.data) {
+        if (data?.success && data?.data && isMounted) {
           const full = {
             ...data.data,
             stats: {
@@ -193,40 +194,50 @@ export default function Profile() {
           }
           // Clear completion modal flag
           localStorage.removeItem('DR_KROK_show_completion_modal');
-        } else {
+        } else if (isMounted) {
           setError(data?.message || "Failed to load profile");
           toast.error(data?.message || "Failed to load profile");
         }
       } catch (err) {
         console.error("Profile fetch error:", err);
-        setError("Network error occurred");
-        toast.error("Network error occurred");
+        if (isMounted) {
+          setError("Network error occurred");
+          toast.error("Network error occurred");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [getMyProfile]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  // Fetch enrolled courses when courses tab is active
+  // Fetch enrolled courses once when courses tab is active
   useEffect(() => {
-    if (activeTab === "courses") {
+    if (activeTab === "courses" && enrolledCourses.length === 0) {
+      let isMounted = true;
       const fetchEnrolledCourses = async () => {
         try {
           setCoursesLoading(true);
           const courses = await getMyCourses();
-          setEnrolledCourses(Array.isArray(courses) ? courses : []);
+          if (isMounted) {
+            setEnrolledCourses(Array.isArray(courses) ? courses : []);
+          }
         } catch (err) {
           console.error("Failed to fetch enrolled courses:", err);
-          toast.error("Failed to load enrolled courses");
         } finally {
-          setCoursesLoading(false);
+          if (isMounted) setCoursesLoading(false);
         }
       };
       fetchEnrolledCourses();
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [activeTab, getMyCourses]);
+  }, [activeTab]);
 
   // Load real orders for the logged-in user
   useEffect(() => {
@@ -286,9 +297,9 @@ export default function Profile() {
   };
 
   const Sidebar = () => (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Close Button for Mobile */}
-      <div className="flex justify-end p-4 lg:hidden">
+      <div className="flex justify-end p-4 lg:hidden shrink-0">
         <button
           onClick={() => setIsMobileMenuOpen(false)}
           className="p-2 text-text-secondary hover:text-text"
@@ -296,21 +307,22 @@ export default function Profile() {
           <FaTimes className="text-lg" />
         </button>
       </div>
+
       {/* User Profile Section */}
-      <div className="px-6 pt-10 pb-6 text-center border-b border-border">
+      <div className="px-6 py-6 text-center border-b border-border shrink-0">
         {loading ? (
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 mx-auto mb-4 bg-gray-300 rounded-full animate-pulse"></div>
+            <div className="w-16 h-16 mx-auto mb-3 bg-gray-300 rounded-full animate-pulse"></div>
             <div className="w-24 h-4 mx-auto mb-2 bg-gray-300 rounded animate-pulse"></div>
             <div className="w-32 h-3 mx-auto bg-gray-300 rounded animate-pulse"></div>
           </div>
         ) : user ? (
           <>
-            <div className="relative w-20 h-20 mx-auto mb-4">
+            <div className="relative w-16 h-16 mx-auto mb-3">
               <img
                 src={user.imageprofile || user.avatar || "/user.png"}
                 alt={user.name}
-                className="object-cover w-full h-full rounded-full shadow-lg bg-primary"
+                className="object-cover w-full h-full rounded-full shadow-md bg-primary"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   if (!e.currentTarget.src.includes('/user.png')) {
@@ -318,23 +330,23 @@ export default function Profile() {
                   }
                 }}
               />
-              <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
-            <h3 className="text-lg font-semibold">{user.name}</h3>
-            <p className="text-sm text-text-secondary">{user.email}</p>
+            <h3 className="text-base font-bold text-text truncate px-2">{user.name}</h3>
+            <p className="text-xs text-text-secondary truncate px-2">{user.email}</p>
           </>
         ) : (
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 mx-auto mb-4 bg-gray-300 rounded-full"></div>
+            <div className="w-16 h-16 mx-auto mb-3 bg-gray-300 rounded-full"></div>
             <div className="w-24 h-4 mx-auto mb-2 bg-gray-300 rounded"></div>
             <div className="w-32 h-3 mx-auto bg-gray-300 rounded"></div>
           </div>
         )}
       </div>
 
-      {/* Navigation Menu */}
-      <nav className="p-4 flex-1 overflow-y-auto">
-        <ul className="space-y-2">
+      {/* Navigation Menu with custom primary scrollbar */}
+      <nav className="p-4 flex-1 overflow-y-auto overscroll-contain space-y-1.5 scrollbar-thin scrollbar-thumb-primary/40 hover:scrollbar-thumb-primary/70 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/40 hover:[&::-webkit-scrollbar-thumb]:bg-primary/70 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <ul className="space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -352,20 +364,20 @@ export default function Profile() {
                     }
                     setActiveTab(item.id);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm ${
                     activeTab === item.id
-                      ? "bg-primary text-white shadow-lg"
-                      : "hover:bg-surface text-text-secondary hover:text-text"
+                      ? "bg-primary text-white shadow-md font-semibold"
+                      : "hover:bg-surface text-text-secondary hover:text-text font-medium"
                   }`}
                 >
-                  <Icon className="text-lg" />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className="text-base shrink-0" />
+                  <span className="truncate">{item.label}</span>
                   {item.badge > 0 && (
-                    <div className="ml-auto relative flex items-center justify-center">
+                    <div className="ml-auto relative flex items-center justify-center shrink-0">
                       {item.id === "orders" ? (
                         <>
-                          <FaEnvelope className={`text-xl ${activeTab === item.id ? "text-white/90" : "text-primary/80"}`} />
-                          <span className="absolute -top-1.5 -right-2 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-red-500 rounded-full animate-pulse shadow-sm border border-surface">
+                          <FaEnvelope className={`text-base ${activeTab === item.id ? "text-white/90" : "text-primary/80"}`} />
+                          <span className="absolute -top-1.5 -right-2 flex items-center justify-center min-w-[15px] h-[15px] px-1 text-[8px] font-bold text-white bg-red-500 rounded-full animate-pulse shadow-sm border border-surface">
                             {item.badge}
                           </span>
                         </>
@@ -382,33 +394,6 @@ export default function Profile() {
           })}
         </ul>
       </nav>
-
-      {/* Stats Section */}
-      <div className="p-4 mt-auto border-t border-border">
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2 transition-colors border rounded-lg bg-surface/40 border-border/50 hover:bg-surface">
-            <div className="flex items-center gap-1.5 mb-1">
-              <FaGraduationCap className="text-sm text-primary/80" />
-              <span className="text-lg font-bold text-primary leading-none">{user?.stats?.courses || 0}</span>
-            </div>
-            <div className="text-[10px] uppercase tracking-wide font-medium text-text-secondary">{t('profile.stats.courses')}</div>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 transition-colors border rounded-lg bg-surface/40 border-border/50 hover:bg-surface">
-            <div className="flex items-center gap-1.5 mb-1">
-              <FaShoppingCart className="text-sm text-primary/80" />
-              <span className="text-lg font-bold text-primary leading-none">{user?.stats?.orders || 0}</span>
-            </div>
-            <div className="text-[10px] uppercase tracking-wide font-medium text-text-secondary">{t('profile.stats.orders')}</div>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2 transition-colors border rounded-lg bg-surface/40 border-border/50 hover:bg-surface">
-            <div className="flex items-center gap-1.5 mb-1">
-              <FaStar className="text-sm text-yellow-500/90" />
-              <span className="text-lg font-bold text-primary leading-none">{user?.stats?.rating || 0}</span>
-            </div>
-            <div className="text-[10px] uppercase tracking-wide font-medium text-text-secondary">{t('profile.stats.rating')}</div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 
@@ -450,13 +435,7 @@ export default function Profile() {
       case "study_tracker":
         return <StudyTrackerReport />;
       case "courses":
-        return coursesLoading ? (
-          <div className="flex items-center justify-center min-h-96">
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />
-        );
+        return <MyCourses enrolledCourses={enrolledCourses} renderStars={renderStars} />;
       case "materials":
         return <MyMaterials user={user} setActiveTab={setActiveTab} setForceEdit={setForceEdit} />;
       case "orders":
@@ -535,14 +514,14 @@ export default function Profile() {
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={() => setIsMobileMenuOpen(false)}
           ></div>
-          <aside className="fixed top-0 left-0 z-50 h-full border-r shadow-xl w-80 bg-surface border-border">
+          <aside className="fixed top-0 left-0 z-50 h-full border-r shadow-xl w-80 bg-surface border-border flex flex-col">
             <Sidebar />
           </aside>
         </div>
       )}
 
-      {/* Sidebar */}
-      <aside className="sticky top-0 flex-col hidden min-h-screen p-6 border-r shadow-xl rounded-br-xl lg:flex w-80 bg-surface border-border">
+      {/* Desktop Sticky Sidebar */}
+      <aside className="sticky top-16 h-[calc(100vh-4rem)] hidden lg:flex flex-col w-80 shrink-0 self-start border-r border-border shadow-xl bg-surface z-20">
         <Sidebar />
       </aside>
 

@@ -199,7 +199,6 @@ export const StudyTrackerProvider = ({ children }) => {
 
       if (isVisible && isUserActive) {
         accumulatedSecondsRef.current += 1;
-        setActiveSeconds(accumulatedSecondsRef.current);
 
         // Trigger heartbeat if threshold reached
         if (accumulatedSecondsRef.current >= HEARTBEAT_INTERVAL_SEC) {
