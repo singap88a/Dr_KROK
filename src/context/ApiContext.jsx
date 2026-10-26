@@ -1362,6 +1362,49 @@ export const ApiProvider = ({ children, baseUrl = "https://admin.dr-krok.com/api
         return response;
       },
 
+      // Get student's live courses lessons schedule (Update 10)
+      async getMyLiveSchedule(params = {}, { useCache = false } = {}) {
+        const query = new URLSearchParams();
+        if (params.only_lessons !== undefined) {
+          query.append("only_lessons", params.only_lessons ? "1" : "0");
+        } else {
+          query.append("only_lessons", "1");
+        }
+        if (params.status && params.status !== "all") {
+          query.append("status", params.status);
+        }
+        if (params.only_active !== undefined) {
+          query.append("only_active", params.only_active ? "1" : "0");
+        }
+        if (params.course_id) {
+          query.append("course_id", params.course_id);
+        }
+
+        const queryString = query.toString();
+        const primaryEndpoint = `live-courses/my-schedule${queryString ? `?${queryString}` : ""}`;
+        const fallbackEndpoint = `profile/my-live-schedule${queryString ? `?${queryString}` : ""}`;
+
+        try {
+          const res = await request(primaryEndpoint, {
+            auth: true,
+            useCache,
+            cacheTTL: 2 * 60 * 1000,
+          });
+          if (res?.success) return res;
+          return await request(fallbackEndpoint, {
+            auth: true,
+            useCache,
+            cacheTTL: 2 * 60 * 1000,
+          });
+        } catch {
+          return await request(fallbackEndpoint, {
+            auth: true,
+            useCache,
+            cacheTTL: 2 * 60 * 1000,
+          });
+        }
+      },
+
       // Add student test results - UPDATED
       async addStudentTest(testData) {
         console.log('🎯 addStudentTest called with:', testData);

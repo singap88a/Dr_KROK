@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
+import LiveCourseScheduleModal from "./LiveCourseScheduleModal";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const isLive = (course) =>
@@ -176,7 +177,7 @@ const TestsHistoryModal = ({ course, isOpen, onClose }) => {
 };
 
 // ─── Single Course Card ──────────────────────────────────────────────────────
-const CourseProgressCard = ({ course, onOpenTests }) => {
+const CourseProgressCard = ({ course, onOpenTests, onOpenSchedule }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const live = isLive(course);
@@ -474,35 +475,52 @@ const CourseProgressCard = ({ course, onOpenTests }) => {
         <div className="flex-1" />
 
         {/* ── 5. Action Buttons & Test Results Trigger ── */}
-        <div className="pt-3 border-t border-border flex items-center justify-between gap-2">
-          {/* Tests Breakdown Button */}
-          {Array.isArray(course.tests) && course.tests.length > 0 ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenTests(course);
-              }}
-              className="px-3 py-2 rounded-xl text-xs font-semibold bg-surface border border-border hover:border-primary/50 text-text transition-colors flex items-center gap-1.5"
-            >
-              <FaFileAlt className="text-primary text-xs" />
-              <span>
-                {t("myCourses.viewTestsHistory", "View Tests History ({{count}})", {
-                  count: course.tests.length,
+        <div className="pt-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
+          {/* Action triggers (Tests History + Schedule for live) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {Array.isArray(course.tests) && course.tests.length > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenTests(course);
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-surface border border-border hover:border-primary/50 text-text transition-colors flex items-center gap-1.5"
+              >
+                <FaFileAlt className="text-primary text-xs" />
+                <span>
+                  {t("myCourses.viewTestsHistory", "View Tests History ({{count}})", {
+                    count: course.tests.length,
+                  })}
+                </span>
+              </button>
+            )}
+
+            {/* Live Course Schedule & Timeline Trigger (Update 10) */}
+            {live && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenSchedule && onOpenSchedule(course);
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <FaCalendarAlt className="text-rose-500 text-xs" />
+                <span>{t("myCourses.courseTimeline", "Schedule & Timeline")}</span>
+              </button>
+            )}
+
+            {!course.tests?.length && !live && course.expiry_date && (
+              <span className="text-[11px] text-text-secondary">
+                {t("myCourses.activeUntil", "Active until {{date}}", {
+                  date: formatDate(course.expiry_date),
                 })}
               </span>
-            </button>
-          ) : (
-            <span className="text-[11px] text-text-secondary">
-              {course.expiry_date
-                ? t("myCourses.activeUntil", "Active until {{date}}", {
-                    date: formatDate(course.expiry_date),
-                  })
-                : ""}
-            </span>
-          )}
+            )}
+          </div>
 
-          {/* Continue Button */}
+          {/* Continue / Join Button */}
           <button
             type="button"
             onClick={(e) => {
@@ -642,6 +660,7 @@ export default function MyCourses({ enrolledCourses: propEnrolledCourses = [] })
   });
 
   const [selectedCourseForTests, setSelectedCourseForTests] = useState(null);
+  const [selectedCourseForSchedule, setSelectedCourseForSchedule] = useState(null);
 
   const propCoursesRef = useRef(propEnrolledCourses);
   propCoursesRef.current = propEnrolledCourses;
@@ -847,6 +866,7 @@ export default function MyCourses({ enrolledCourses: propEnrolledCourses = [] })
               key={course.course_id || course.id || idx}
               course={course}
               onOpenTests={(c) => setSelectedCourseForTests(c)}
+              onOpenSchedule={(c) => setSelectedCourseForSchedule(c)}
             />
           ))}
         </div>
@@ -902,6 +922,14 @@ export default function MyCourses({ enrolledCourses: propEnrolledCourses = [] })
         course={selectedCourseForTests}
         isOpen={Boolean(selectedCourseForTests)}
         onClose={() => setSelectedCourseForTests(null)}
+      />
+
+      {/* ── Live Course Schedule & Timeline Modal (Update 10) ── */}
+      <LiveCourseScheduleModal
+        course={selectedCourseForSchedule}
+        isOpen={Boolean(selectedCourseForSchedule)}
+        onClose={() => setSelectedCourseForSchedule(null)}
+        onNavigateToLessons={(id) => navigate(`/live-courses/${id}/lessons`)}
       />
     </div>
   );
