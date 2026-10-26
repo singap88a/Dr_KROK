@@ -24,6 +24,12 @@ const SEO = ({ title, description, image, url, noindex }) => {
 
   return (
     <Helmet>
+      {/* Disable Google Translate globally */}
+      <html lang='en' translate='no' className='notranslate' />
+      <body className='notranslate' translate='no' />
+      <meta name='google' content='notranslate' />
+      <meta name='googlebot' content='notranslate' />
+
       {/* Standard metadata tags */}
       <title>{fullTitle}</title>
       <meta name='description' content={metaDescription} />

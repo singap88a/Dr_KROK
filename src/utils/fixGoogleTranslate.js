@@ -38,3 +38,26 @@ if (typeof window !== "undefined" && typeof Node !== "undefined" && Node.prototy
     return originalInsertBefore.call(this, newNode, referenceNode);
   };
 }
+
+// ── Enforce "notranslate" globally across all browsers ──
+if (typeof document !== "undefined") {
+  try {
+    if (document.documentElement) {
+      document.documentElement.setAttribute("translate", "no");
+      document.documentElement.classList.add("notranslate");
+    }
+    const applyToBody = () => {
+      if (document.body) {
+        document.body.setAttribute("translate", "no");
+        document.body.classList.add("notranslate");
+      }
+    };
+    if (document.body) {
+      applyToBody();
+    } else {
+      document.addEventListener("DOMContentLoaded", applyToBody);
+    }
+  } catch {
+    // ignore
+  }
+}
