@@ -58,10 +58,36 @@ const TestimonialsPage = lazy(() => import("./pages/Testimonials/Testimonials"))
 const Merchants = lazy(() => import("./pages/Merchants/Merchants"));
 const MerchantDetails = lazy(() => import("./pages/Merchants/MerchantDetails"));
 const CenterCourseDetails = lazy(() => import("./pages/Center_courses/CenterCourseDetails"));
+const MaintenancePage = lazy(() => import("./pages/Maintenance/MaintenancePage"));
+import { useApi } from "./context/ApiContext";
 
 export default function App() {
+  const { isMaintenance, maintenanceData, checkPlatformStatus } = useApi();
   const location = useLocation();
   const isChatPage = location.pathname === "/gemini";
+
+  // If platform is under maintenance (or previewing via /maintenance route), display the maintenance page
+  const isMaintenanceRoute =
+    location.pathname === "/maintenance" ||
+    location.pathname === "/maintenance-preview" ||
+    location.search.includes("maintenance=true");
+
+  if (isMaintenance || isMaintenanceRoute) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white">
+            <LoadingSpinner />
+          </div>
+        }
+      >
+        <MaintenancePage
+          maintenanceData={maintenanceData}
+          onRefresh={checkPlatformStatus}
+        />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-text">

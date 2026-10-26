@@ -130,7 +130,7 @@ export default function SubscriptionSuccess({ course, orderData }) {
                       {t('subscription.clientName', 'Client Name')}
                     </p>
                     <p className="text-lg font-bold text-gray-800 dark:text-white">
-                      {orderData.client_name || 'N/A'}
+                      {[orderData.client_name, orderData.second_client_name].filter(Boolean).join(' ') || 'N/A'}
                     </p>
                   </div>
                 </div>

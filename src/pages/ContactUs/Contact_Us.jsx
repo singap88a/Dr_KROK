@@ -28,6 +28,7 @@ export default function ContactUs() {
     phone: "",
     city: "",
     message: "",
+    website: "", // Honeypot trap field for bot detection
   });
 
   const [loading, setLoading] = useState(false);
@@ -75,6 +76,7 @@ export default function ContactUs() {
           phone: "",
           city: "",
           message: "",
+          website: "",
         });
       } else {
         toast.error("❌ " + t('contact.toast.fail'), {
@@ -235,6 +237,18 @@ export default function ContactUs() {
               onSubmit={handleSubmit}
               className="p-6 space-y-5 border shadow rounded-2xl bg-surface border-border"
             >
+              {/* حقل مصيدة للبوتات - يترك فارغاً ومخفياً عن العين */}
+              <div style={{ display: "none" }} className="hidden" aria-hidden="true">
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex="-1"
+                  autoComplete="off"
+                  value={formData.website}
+                  onChange={handleChange}
+                />
+              </div>
+
               <input
                 type="text"
                 name="name"

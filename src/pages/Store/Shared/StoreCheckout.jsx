@@ -54,6 +54,7 @@ export default function StoreCheckout() {
   const [formData, setFormData] = useState({
     client_id: "",
     client_name: "",
+    second_client_name: "",
     phone1: "",
     phone2: "",
     city: "",
@@ -191,10 +192,31 @@ export default function StoreCheckout() {
   // Set client_id and item_id from user data and item
   useEffect(() => {
     if (userData?.id) {
-      setFormData(prev => ({
-        ...prev,
-        client_id: userData.id.toString()
-      }));
+      setFormData(prev => {
+        let client_name = prev.client_name;
+        let second_client_name = prev.second_client_name;
+
+        // Auto-split user's name if form fields are empty and user has a full name
+        if (!client_name && !second_client_name && userData?.name) {
+          const parts = userData.name.trim().split(/\s+/).filter(Boolean);
+          if (parts.length >= 3) {
+            client_name = parts.slice(0, 2).join(' ');
+            second_client_name = parts.slice(2).join(' ');
+          } else if (parts.length === 2) {
+            client_name = parts.join(' ');
+          } else {
+            client_name = userData.name;
+          }
+        }
+
+        return {
+          ...prev,
+          client_id: userData.id.toString(),
+          client_name,
+          second_client_name,
+          phone1: prev.phone1 || userData.phone || ""
+        };
+      });
     }
     if (item?.id) {
       setFormData(prev => ({
@@ -256,10 +278,22 @@ export default function StoreCheckout() {
     try {
       const response = await request('paint_order_data');
       if (response && response.data) {
+        let fetchedClientName = response.data.client_name || "";
+        let fetchedSecondName = response.data.second_client_name || "";
+
+        if (!fetchedSecondName && fetchedClientName) {
+          const parts = fetchedClientName.trim().split(/\s+/).filter(Boolean);
+          if (parts.length >= 3) {
+            fetchedClientName = parts.slice(0, 2).join(' ');
+            fetchedSecondName = parts.slice(2).join(' ');
+          }
+        }
+
         // Populate form with paint order data
         setFormData(prev => ({
           ...prev,
-          client_name: response.data.client_name || prev.client_name,
+          client_name: fetchedClientName || prev.client_name,
+          second_client_name: fetchedSecondName || prev.second_client_name,
           phone1: response.data.phone1 || prev.phone1,
           phone2: response.data.phone2 || prev.phone2,
           city: response.data.city || prev.city,
@@ -369,8 +403,22 @@ const handleDeliveryOrder = async (e) => {
     setSuccess("");
 
     // Validate required fields
-    if (!formData.client_name.trim()) {
-      setError(t('books.enter_name_error'));
+    const firstNames = (formData.client_name || '').trim().split(/\s+/).filter(Boolean);
+    if (firstNames.length === 0) {
+      setError(t('books.enter_first_name_error', 'يرجى إدخال الاسم الأول واسم الأب في الحقل الأول.'));
+      setLoading(false);
+      return;
+    }
+
+    if (firstNames.length < 2) {
+      setError(t('books.enter_two_names_error', 'متطلبات شركة الشحن: يجب إدخال اسمين على الأقل في حقل الاسم الأول (الاسم الأول واسم الأب).'));
+      setLoading(false);
+      return;
+    }
+
+    const secondNames = (formData.second_client_name || '').trim().split(/\s+/).filter(Boolean);
+    if (secondNames.length === 0) {
+      setError(t('books.enter_second_name_error', 'متطلبات شركة الشحن: يرجى إدخال الاسم الثالث أو اللقب (اسم العائلة) في الحقل الثاني.'));
       setLoading(false);
       return;
     }
@@ -430,7 +478,8 @@ const handleDeliveryOrder = async (e) => {
       if (formData.client_id) {
         formDataToSend.append('client_id', formData.client_id);
       }
-      formDataToSend.append('client_name', formData.client_name);
+      formDataToSend.append('client_name', formData.client_name.trim());
+      formDataToSend.append('second_client_name', formData.second_client_name.trim());
       formDataToSend.append('phone1', formData.phone1);
       formDataToSend.append('phone2', formData.phone2 || '');
       formDataToSend.append('city', formData.city);
@@ -450,7 +499,8 @@ const handleDeliveryOrder = async (e) => {
       }
 
       console.log('Sending order data:', {
-        client_name: formData.client_name,
+        client_name: formData.client_name.trim(),
+        second_client_name: formData.second_client_name.trim(),
         phone1: formData.phone1,
         phone2: formData.phone2,
         city: formData.city,
@@ -908,19 +958,59 @@ const handleDeliveryOrder = async (e) => {
             {/* Delivery Form */}
             {itemType === 1 && (
               <form onSubmit={handleDeliveryOrder} className="mt-6 space-y-4">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    <FiUser /> {t('books.client_name')} *
-                  </label>
-                  <input
-                    type="text"
-                    name="client_name"
-                    value={formData.client_name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder={t('books.enter_client_name')}
-                  />
+                {/* Shipping Full Name Notice */}
+                <div className="p-3 border rounded-xl bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <FiUser className="text-primary text-sm flex-shrink-0" />
+                    <span>{t('books.shipping_name_notice_title', 'متطلبات شركة الشحن: الاسم ثلاثي بالكامل')}</span>
+                  </div>
+                  <p className="text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
+                    {t('books.shipping_name_notice_desc', 'حرصاً على وصول شحنتك بدون تأخير، يُشترط إدخال الاسم الأول واسم الأب في الحقل الأول، والاسم الثالث (أو اللقب / اسم العائلة) في الحقل الثاني.')}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* First Name & Father's Name */}
+                  <div>
+                    <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <FiUser /> {t('books.client_name', 'الاسم الأول واسم الأب')} *
+                      </span>
+                      <span className="text-[11px] font-normal text-text-muted">
+                        ({t('books.min_two_names', 'اسمان على الأقل')})
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      name="client_name"
+                      value={formData.client_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                      placeholder={t('books.enter_client_name', 'الاسم الأول واسم الأب (مثال: أحمد محمد)')}
+                    />
+                  </div>
+
+                  {/* Third Name / Surname / Family Name */}
+                  <div>
+                    <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <FiUser /> {t('books.second_client_name', 'الاسم الثالث / اللقب')} *
+                      </span>
+                      <span className="text-[11px] font-normal text-text-muted">
+                        ({t('books.min_one_name', 'اسم واحد على الأقل')})
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      name="second_client_name"
+                      value={formData.second_client_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                      placeholder={t('books.enter_second_client_name', 'الاسم الثالث أو اللقب (مثال: الشامي)')}
+                    />
+                  </div>
                 </div>
 
                 <div>

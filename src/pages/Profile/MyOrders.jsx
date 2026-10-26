@@ -382,6 +382,8 @@ const normalizeOrders = (orders) => {
         file: o.file,
         city: o.city,
         branch: o.branch,
+        client_name: o.client_name,
+        second_client_name: o.second_client_name,
         messages: o.messages || [],
         points_used: o.points_used || 0,
         points_discount: o.points_discount || 0,
@@ -390,7 +392,9 @@ const normalizeOrders = (orders) => {
     if (o && typeof o === "object" && "total_price" in o) {
       return {
         id: o.id,
-        item: o.client_name || "Book order",
+        item: [o.client_name, o.second_client_name].filter(Boolean).join(" ") || "Book order",
+        client_name: o.client_name,
+        second_client_name: o.second_client_name,
         type: "book",
         price: parseFloat(o.total_price) || 0,
         status: mapStatusFromBackend(o.status),
@@ -768,11 +772,21 @@ const MyOrders = ({ orders }) => {
                     <span className="font-medium">{t("orders.date")}:</span>{" "}
                     {formatDate(order.date)}
                   </p>
-                  {order.type === 'delivery' && order.city && order.branch && (
-                    <p>
-                      <span className="font-medium">{t("orders.delivery_to", "Delivery to")}:</span>{" "}
-                      {order.city} - {order.branch}
-                    </p>
+                  {order.type === 'delivery' && (
+                    <>
+                      {(order.client_name || order.second_client_name) && (
+                        <p>
+                          <span className="font-medium">{t("orders.recipient", "Recipient")}:</span>{" "}
+                          {[order.client_name, order.second_client_name].filter(Boolean).join(" ")}
+                        </p>
+                      )}
+                      {order.city && order.branch && (
+                        <p>
+                          <span className="font-medium">{t("orders.delivery_to", "Delivery to")}:</span>{" "}
+                          {order.city} - {order.branch}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 
