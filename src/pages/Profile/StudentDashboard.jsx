@@ -16,11 +16,17 @@ import {
   FaCheckCircle,
   FaChevronRight,
   FaBuilding,
+  FaFire,
+  FaTrophy,
+  FaChartBar,
+  FaBolt,
 } from "react-icons/fa";
+import { useStudyTracker } from "../../context/StudyTrackerContext";
 
 export default function StudentDashboard({ user, setActiveTab }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language === "ar" || i18n.dir?.() === "rtl";
+  const { streak, today, thisWeek, thisMonth } = useStudyTracker();
   const [filterType, setFilterType] = useState("all"); // "all" | "live" | "video"
 
   // University & year display helpers
@@ -128,6 +134,193 @@ export default function StudentDashboard({ user, setActiveTab }) {
               <span>{t("profile.dashboard.myCoursesBtn", "Enrolled Courses")}</span>
               {isRtl ? <FaArrowLeft className="text-xs" /> : <FaArrowRight className="text-xs" />}
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Study Tracker & Streak Section (Duolingo Style 🔥) ─────────── */}
+      <div className="bg-surface/80 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm space-y-6">
+        {/* Header with Monthly Report link */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all duration-500 shadow-md ${
+                streak.is_studied_today
+                  ? "bg-gradient-to-tr from-amber-500 to-orange-500 text-white animate-pulse"
+                  : "bg-surface text-gray-400 border border-border"
+              }`}
+            >
+              <FaFire className={streak.is_studied_today ? "text-amber-100 drop-shadow" : "text-gray-400"} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-text">
+                  {streak.current_streak}{" "}
+                  {t("studyTracker.daysStreak", "Days Streak")}
+                </h2>
+                {streak.is_studied_today ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <FaCheckCircle className="text-[10px]" />
+                    {t("studyTracker.studiedToday", "Active Today 🔥")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    <FaBolt className="text-[10px]" />
+                    {t("studyTracker.studyNeeded", "Study today to keep streak!")}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-textSecondary mt-0.5">
+                {streak.streak_message ||
+                  (streak.is_studied_today
+                    ? t("studyTracker.greatStreak", "Keep the momentum going! Great work today.")
+                    : t("studyTracker.startStudying", "Spend a few minutes studying now to maintain your flame!"))}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveTab("study_tracker")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] self-stretch sm:self-auto justify-center"
+          >
+            <span>{t("studyTracker.viewFullReport", "Monthly Report & Calendar")}</span>
+            {isRtl ? <FaArrowLeft className="text-xs" /> : <FaArrowRight className="text-xs" />}
+          </button>
+        </div>
+
+        {/* 3 Metric Cards + Weekly Bar Chart Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Column 1: Today's Time & Lifetime / Best */}
+          <div className="space-y-4">
+            {/* Today's Study Card */}
+            <div className="p-4 rounded-xl border border-border bg-gradient-to-br from-blue-500/10 via-surface to-surface">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2">
+                <span>{t("studyTracker.todayStudy", "Today's Study")}</span>
+                <FaClock className="text-sm" />
+              </div>
+              <div className="text-3xl font-extrabold text-text">
+                {today.formatted_time || `${today.hours || 0}h`}
+              </div>
+              <p className="text-[11px] text-textSecondary mt-1">
+                {today.total_seconds > 0
+                  ? t("studyTracker.activeStudyLogged", "Net focused active time logged today")
+                  : t("studyTracker.noTimeYet", "Timer running as you browse & learn")}
+              </p>
+            </div>
+
+            {/* Streak Records & Monthly Commitment */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-xl border border-border bg-surface">
+                <div className="flex items-center gap-1.5 text-xs text-amber-500 mb-1">
+                  <FaTrophy className="text-xs" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-textSecondary">
+                    {t("studyTracker.longestStreak", "Best Streak")}
+                  </span>
+                </div>
+                <div className="text-xl font-bold text-text">
+                  {streak.longest_streak || streak.current_streak || 0}{" "}
+                  <span className="text-xs font-normal text-textSecondary">{t("studyTracker.days", "days")}</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-border bg-surface">
+                <div className="flex items-center gap-1.5 text-xs text-emerald-500 mb-1">
+                  <FaChartBar className="text-xs" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-textSecondary">
+                    {t("studyTracker.monthlyGoal", "Commitment")}
+                  </span>
+                </div>
+                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {thisMonth.commitment_percentage || 0}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2 & 3: Weekly 7-Day Interactive Activity Bar Chart */}
+          <div className="lg:col-span-2 p-5 rounded-xl border border-border bg-surface flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="text-sm font-bold text-text flex items-center gap-2">
+                  <FaChartBar className="text-primary" />
+                  <span>{t("studyTracker.weeklyActivity", "Weekly Activity (Last 7 Days)")}</span>
+                </h4>
+                <p className="text-[11px] text-textSecondary">
+                  {t("studyTracker.totalThisWeek", "Total:")}{" "}
+                  <strong className="text-text">{thisWeek.formatted_time || `${thisWeek.total_hours || 0}h`}</strong>{" "}
+                  {t("studyTracker.across", "across")}{" "}
+                  <strong className="text-text">{thisWeek.active_days || 0}</strong>{" "}
+                  {t("studyTracker.activeDays", "active days")}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 text-[11px] text-textSecondary">
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-t from-amber-500 to-orange-500"></span>
+                  {t("studyTracker.studied", "Studied")}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-border"></span>
+                  {t("studyTracker.noStudy", "No study")}
+                </span>
+              </div>
+            </div>
+
+            {/* 7 Days Bars */}
+            <div className="grid grid-cols-7 gap-2 pt-6 items-end min-h-[140px]">
+              {(thisWeek.days && thisWeek.days.length > 0
+                ? thisWeek.days
+                : [
+                    { day_short: "Mon", total_seconds: 0, is_studied: false },
+                    { day_short: "Tue", total_seconds: 0, is_studied: false },
+                    { day_short: "Wed", total_seconds: 0, is_studied: false },
+                    { day_short: "Thu", total_seconds: 0, is_studied: false },
+                    { day_short: "Fri", total_seconds: 0, is_studied: false },
+                    { day_short: "Sat", total_seconds: 0, is_studied: false },
+                    { day_short: "Sun", total_seconds: 0, is_studied: false },
+                  ]
+              ).map((day, idx) => {
+                const maxSeconds = Math.max(
+                  ...((thisWeek.days || []).map((d) => d.total_seconds || 0)),
+                  3600
+                );
+                const heightPercent = day.is_studied
+                  ? Math.min(100, Math.max(20, Math.round(((day.total_seconds || 0) / maxSeconds) * 100)))
+                  : 8;
+
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-2 group">
+                    {/* Time tooltip on hover */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-semibold text-textSecondary select-none">
+                      {day.formatted_time || (day.hours ? `${day.hours}h` : "0m")}
+                    </div>
+
+                    {/* Bar track & fill */}
+                    <div className="w-full max-w-[36px] h-24 bg-surface border border-border/70 rounded-lg flex items-end p-1 overflow-hidden relative">
+                      <div
+                        className={`w-full rounded-md transition-all duration-500 ${
+                          day.is_studied
+                            ? "bg-gradient-to-t from-amber-500 to-orange-500 shadow-sm"
+                            : "bg-border/60"
+                        }`}
+                        style={{ height: `${heightPercent}%` }}
+                      />
+                    </div>
+
+                    {/* Day Label */}
+                    <span
+                      className={`text-[11px] font-medium transition-colors ${
+                        day.is_today
+                          ? "text-primary font-bold underline"
+                          : "text-textSecondary"
+                      }`}
+                    >
+                      {day.day_short || day.day_name?.slice(0, 3)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

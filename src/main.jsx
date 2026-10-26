@@ -13,6 +13,7 @@ import { ApiProvider } from './context/ApiContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { UserProvider } from './context/UserContext'
 import { CartProvider } from './context/CartContext'
+import { StudyTrackerProvider } from './context/StudyTrackerContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -23,20 +24,22 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <UserProvider>
               <CartProvider>
                 <BrowserRouter>
-                  <App />
-                  <ToastContainer
-                    position="top-right"
-                    autoClose={3000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                    style={{ zIndex: 99999 }}
-                  />
+                  <StudyTrackerProvider>
+                    <App />
+                    <ToastContainer
+                      position="top-right"
+                      autoClose={3000}
+                      hideProgressBar={false}
+                      newestOnTop={false}
+                      closeOnClick
+                      rtl={false}
+                      pauseOnFocusLoss
+                      draggable
+                      pauseOnHover
+                      theme="light"
+                      style={{ zIndex: 99999 }}
+                    />
+                  </StudyTrackerProvider>
                 </BrowserRouter>
               </CartProvider>
             </UserProvider>

@@ -28,6 +28,7 @@ import {
   FaBuilding,
   FaEnvelope,
   FaThLarge,
+  FaFire,
 } from "react-icons/fa";
 
 import MyProfile from "./MyProfile";
@@ -40,6 +41,7 @@ import MyNotifications from "./MyNotifications";
 import MyMaterials from "./MyMaterials";
 import UniversityStudents from "./UniversityStudents";
 import StudentDashboard from "./StudentDashboard";
+import StudyTrackerReport from "./StudyTrackerReport";
 import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
@@ -248,7 +250,8 @@ export default function Profile() {
 
   const menuItems = [
     ...(!isRepRole ? [
-      { id: "dashboard", label: t('profile.sidebar.dashboard', 'Dashboard'), icon: FaThLarge }
+      { id: "dashboard", label: t('profile.sidebar.dashboard', 'Dashboard'), icon: FaThLarge },
+      { id: "study_tracker", label: t('profile.sidebar.studyTracker', 'Study Tracker & Streak'), icon: FaFire }
     ] : []),
     { id: "profile", label: t('profile.sidebar.myProfile'), icon: FaUser },
     ...(isRepRole ? [
@@ -444,6 +447,8 @@ export default function Profile() {
     switch (activeTab) {
       case "dashboard":
         return <StudentDashboard user={user} setActiveTab={setActiveTab} />;
+      case "study_tracker":
+        return <StudyTrackerReport />;
       case "courses":
         return coursesLoading ? (
           <div className="flex items-center justify-center min-h-96">
