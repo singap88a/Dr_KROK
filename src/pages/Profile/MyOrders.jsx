@@ -14,10 +14,10 @@ import {
 } from "react-icons/fa";
 
 // Modular Subcomponents
-import OrderStatusModal from "./components/orders/OrderStatusModal";
-import OrderMessagesModal from "./components/orders/OrderMessagesModal";
-import OrderFilterDropdown from "./components/orders/OrderFilterDropdown";
-import { OrderDesktopRow, OrderMobileCard } from "./components/orders/OrderRowAndCards";
+import OrderStatusModal from "../../components/Profile/orders/OrderStatusModal";
+import OrderMessagesModal from "../../components/Profile/orders/OrderMessagesModal";
+import OrderFilterDropdown from "../../components/Profile/orders/OrderFilterDropdown";
+import { OrderDesktopRow, OrderMobileCard } from "../../components/Profile/orders/OrderRowAndCards";
 
 // Status mapping helpers
 const mapStatusFromBackend = (status) => {

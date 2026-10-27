@@ -46,7 +46,7 @@ import LogoutConfirmModal from "../../components/Modals/LogoutConfirmModal";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import StudentOnboardingModal from "./StudentOnboardingModal";
-import ProfileSidebar from "./components/ProfileSidebar";
+import ProfileSidebar from "../../components/Profile/ProfileSidebar";
 
 export default function Profile() {
   const location = useLocation();

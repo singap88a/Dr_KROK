@@ -8,9 +8,9 @@ import {
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { useStudyTracker } from "../../context/StudyTrackerContext";
-import TrackerKpiCards from "./components/tracker/TrackerKpiCards";
-import TrackerCalendarGrid from "./components/tracker/TrackerCalendarGrid";
-import TrackerDayModal from "./components/tracker/TrackerDayModal";
+import TrackerKpiCards from "../../components/Profile/tracker/TrackerKpiCards";
+import TrackerCalendarGrid from "../../components/Profile/tracker/TrackerCalendarGrid";
+import TrackerDayModal from "../../components/Profile/tracker/TrackerDayModal";
 
 export default function StudyTrackerReport() {
   const { t, i18n } = useTranslation();

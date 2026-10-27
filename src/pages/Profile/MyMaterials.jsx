@@ -12,8 +12,8 @@ import {
 } from "react-icons/fa";
 
 // Modular Subcomponents
-import MaterialImageModal from "./components/materials/MaterialImageModal";
-import MaterialsLevelView from "./components/materials/MaterialsLevelView";
+import MaterialImageModal from "../../components/Profile/materials/MaterialImageModal";
+import MaterialsLevelView from "../../components/Profile/materials/MaterialsLevelView";
 
 export default function MyMaterials({ user, setActiveTab, setForceEdit }) {
   const { t, i18n } = useTranslation();

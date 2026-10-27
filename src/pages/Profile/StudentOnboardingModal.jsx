@@ -14,10 +14,10 @@ import {
 } from "react-icons/fa";
 import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
-import OnboardingProgressBar from "./components/onboarding/OnboardingProgressBar";
-import OnboardingSuccessScreen from "./components/onboarding/OnboardingSuccessScreen";
-import OnboardingExitConfirm from "./components/onboarding/OnboardingExitConfirm";
-import OnboardingStepFields from "./components/onboarding/OnboardingStepFields";
+import OnboardingProgressBar from "../../components/Profile/onboarding/OnboardingProgressBar";
+import OnboardingSuccessScreen from "../../components/Profile/onboarding/OnboardingSuccessScreen";
+import OnboardingExitConfirm from "../../components/Profile/onboarding/OnboardingExitConfirm";
+import OnboardingStepFields from "../../components/Profile/onboarding/OnboardingStepFields";
 
 export default function StudentOnboardingModal({
   isOpen,

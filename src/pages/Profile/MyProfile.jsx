@@ -14,11 +14,11 @@ import {
   translateBackendError,
   formatSocialUrl,
   formatDateForInput,
-} from "./components/profile/profileValidation";
-import ProfileBanners from "./components/profile/ProfileBanners";
-import ProfileAvatarCard from "./components/profile/ProfileAvatarCard";
-import ProfileDetailsForm from "./components/profile/ProfileDetailsForm";
-import ProfilePointsSection from "./components/profile/ProfilePointsSection";
+} from "../../components/Profile/profile/profileValidation";
+import ProfileBanners from "../../components/Profile/profile/ProfileBanners";
+import ProfileAvatarCard from "../../components/Profile/profile/ProfileAvatarCard";
+import ProfileDetailsForm from "../../components/Profile/profile/ProfileDetailsForm";
+import ProfilePointsSection from "../../components/Profile/profile/ProfilePointsSection";
 
 export default function MyProfile({
   user,

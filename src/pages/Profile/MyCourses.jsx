@@ -12,10 +12,10 @@ import LoadingSpinner from "../../components/Common/LoadingSpinner";
 import LiveCourseScheduleModal from "./LiveCourseScheduleModal";
 
 // Modular Courses Components
-import CoursesSummaryHeader from "./components/courses/CoursesSummaryHeader";
-import CoursesFilterBar from "./components/courses/CoursesFilterBar";
-import CourseProgressCard from "./components/courses/CourseProgressCard";
-import TestsHistoryModal from "./components/courses/TestsHistoryModal";
+import CoursesSummaryHeader from "../../components/Profile/courses/CoursesSummaryHeader";
+import CoursesFilterBar from "../../components/Profile/courses/CoursesFilterBar";
+import CourseProgressCard from "../../components/Profile/courses/CourseProgressCard";
+import TestsHistoryModal from "../../components/Profile/courses/TestsHistoryModal";
 
 export default function MyCourses({ enrolledCourses: propEnrolledCourses = [] }) {
   const { t } = useTranslation();

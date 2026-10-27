@@ -4,7 +4,7 @@ import { FiHeart } from "react-icons/fi";
 import { useApi } from "../../context/ApiContext";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import FavoriteItemCard from "./components/favorites/FavoriteItemCard";
+import FavoriteItemCard from "../../components/Profile/favorites/FavoriteItemCard";
 
 export default function MyFavorites() {
   const {

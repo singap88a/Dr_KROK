@@ -5,8 +5,8 @@ import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
 
 // Modular Subcomponents
-import PlatformNotificationCard from "./components/notifications/PlatformNotificationCard";
-import OrderMessageNotificationCard from "./components/notifications/OrderMessageNotificationCard";
+import PlatformNotificationCard from "../../components/Profile/notifications/PlatformNotificationCard";
+import OrderMessageNotificationCard from "../../components/Profile/notifications/OrderMessageNotificationCard";
 
 export default function MyNotifications() {
   const { t } = useTranslation();

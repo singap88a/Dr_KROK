@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "../../context/UserContext";
 import { useApi } from "../../context/ApiContext";
 import LoadingSpinner from "../../components/Common/LoadingSpinner";
-import RatingCard from "./components/ratings/RatingCard";
+import RatingCard from "../../components/Profile/ratings/RatingCard";
 
 export default function MyRatings({ user, onRatingsUpdate }) {
   const { t } = useTranslation();

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Lottie from 'lottie-react';
-import loginAnimation from './animations/Login_animation.json';
+import loginAnimation from '../animations/Login_animation.json';
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login"); // 'login' | 'register'

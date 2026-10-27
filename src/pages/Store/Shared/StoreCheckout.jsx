@@ -11,6 +11,12 @@ import CitySelector from "../../../components/Common/CitySelector";
 import CouponInput from "../../../components/Common/CouponInput";
 import IncompleteProfileModal from "../../../components/Modals/IncompleteProfileModal";
 import SaveBeforeLoginModal from "../../../components/Modals/SaveBeforeLoginModal";
+import CheckoutProductSummary from "../../../components/Store/Checkout/CheckoutProductSummary";
+import CheckoutPriceSummary from "../../../components/Store/Checkout/CheckoutPriceSummary";
+import CheckoutDeliveryForm from "../../../components/Store/Checkout/CheckoutDeliveryForm";
+import CheckoutDigitalPayment from "../../../components/Store/Checkout/CheckoutDigitalPayment";
+import CheckoutTermsModal from "../../../components/Store/Checkout/CheckoutTermsModal";
+import CheckoutInstallmentModal from "../../../components/Store/Checkout/CheckoutInstallmentModal";
 
 import he from "he";
 
@@ -689,104 +695,22 @@ const handleDeliveryOrder = async (e) => {
     <section className="min-h-screen px-4 py-10 bg-background text-text md:px-8">
       <div className="grid max-w-6xl grid-cols-1 gap-8 mx-auto lg:grid-cols-2">
         {/* LEFT - Product summary */}
-        <aside className="order-2 lg:order-1">
-          <div className="sticky space-y-6 top-6">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 mb-4 text-text-secondary hover:text-primary"
-            >
-              <FiChevronLeft /> {t('books.back')}
-            </button>
+        <CheckoutProductSummary
+          item={item}
+          mainImage={mainImage}
+          setMainImage={setMainImage}
+          images={images}
+          priceNumber={priceNumber}
+          discountAmount={discountAmount}
+          finalPrice={finalPrice}
+          itemType={itemType}
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+          navigate={navigate}
+          t={t}
+        />
 
-            <div className="overflow-hidden border shadow-sm rounded-2xl border-border bg-surface">
-              {mainImage ? (
-                <img
-                  src={mainImage}
-                  alt={item.name}
-                  className="object-cover w-full h-96"
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full text-gray-500 bg-gray-200 h-96">
-                  <div className="text-center">
-                    <FiCreditCard className="w-16 h-16 mx-auto mb-2" />
-                    <p>{t('books.no_image_available')}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {images.length > 1 && (
-              <div className="flex gap-3">
-                {images.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setMainImage(img.url || img.original_url)}
-                    className={`w-20 h-16 overflow-hidden rounded-lg border ${
-                      mainImage === (img.url || img.original_url)
-                        ? "border-primary ring-2 ring-primary"
-                        : "border-border"
-                    }`}
-                  >
-                    <img
-                      src={img.url || img.original_url}
-                      className="object-cover w-full h-full"
-                      alt={`thumb-${i}`}
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="p-6 border rounded-2xl border-border bg-surface">
-              <h1 className="text-2xl font-bold">{item.name}</h1>
-              <p className="mt-1 text-sm text-text-secondary">by {item.author}</p>
-
-              <div className="flex items-center justify-between mt-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    {discountAmount > 0 && (
-                      <span className="text-sm text-gray-400 line-through">
-                        ₴{priceNumber.toFixed(2)}
-                      </span>
-                    )}
-                    <span className="text-lg font-semibold text-primary">
-                      ₴{finalPrice.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-xs text-text-secondary">
-                    {itemType === 1 ? t('books.delivery_included') : t('books.pdf_download')}
-                  </div>
-                </div>
-
-                <div className="text-sm text-text-secondary">
-                  {item.pages_count} {t('books.pages')}
-                </div>
-              </div>
-
-              <div className="mt-4 text-sm text-text-secondary">
-                <p><strong>{t('books.language')}:</strong> {item.language}</p>
-                <p><strong>{t('books.category')}:</strong> {item.category?.name}</p>
-                <p><strong>{t('books.type')}:</strong> {itemType === 1 ? t('books.delivery') : t('books.pdf_only')}</p>
-              </div>
-
-              <div 
-                   className={`mt-4 leading-relaxed text-text-secondary ${!isExpanded ? 'line-clamp-4' : ''}`}
-                   dangerouslySetInnerHTML={{ __html: item.description }} />
-              {item.description && item.description.length > 200 && (
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="mt-2 font-medium underline text-primary hover:text-primary/80"
-                >
-                  {isExpanded ? "Show Less" : "Read More"}
-                </button>
-              )}
-            </div>
-
-
-          </div>
-        </aside>
-
-        {/* RIGHT - Order form or payment */}
+        {/* RIGHT - Form and Payment */}
         <main className="order-1 lg:order-2">
           <div className="p-6 border shadow-md rounded-2xl border-border bg-surface">
             <h2 className="text-2xl font-bold">
@@ -796,523 +720,80 @@ const handleDeliveryOrder = async (e) => {
               {itemType === 1 ? t('books.fill_delivery_info') : t('books.select_payment_method')}
             </p>
 
-            {/* Coupon Input */}
-            <div className="mt-4">
-              <CouponInput
-                onApply={handleCouponApply}
+            <CheckoutPriceSummary
+              item={item}
+              itemType={itemType}
+              isBookType={isBookType}
+              isPdfBook={isPdfBook}
+              finalPrice={finalPrice}
+              couponDiscount={couponDiscount}
+              couponDiscountAmount={couponDiscountAmount}
+              embroidery={embroidery}
+              embroideryPrice={embroideryPrice}
+              finalDiscountedPrice={finalDiscountedPrice}
+              handleCouponApply={handleCouponApply}
+              error={error}
+              success={success}
+              couponError={couponError}
+              couponMessage={couponMessage}
+              loadingPaintData={loadingPaintData}
+              fetchPaintOrderData={fetchPaintOrderData}
+              canUsePoints={canUsePoints}
+              usePoints={usePoints}
+              setUsePoints={setUsePoints}
+              pointsBalance={pointsBalance}
+              pointsMonetaryValue={pointsMonetaryValue}
+              pointsDiscountAmount={pointsDiscountAmount}
+              useInstallment={useInstallment}
+              installmentAmount={installmentAmount}
+              handleCancelInstallment={handleCancelInstallment}
+              handleOpenInstallmentModal={handleOpenInstallmentModal}
+              t={t}
+            />
+
+            {itemType === 1 ? (
+              <CheckoutDeliveryForm
+                formData={formData}
+                handleInputChange={handleInputChange}
+                handleCitySelect={handleCitySelect}
+                setFormData={setFormData}
+                selectedCity={selectedCity}
+                branches={branches}
+                agreeToTerms={agreeToTerms}
+                setAgreeToTerms={setAgreeToTerms}
+                setShowTerms={setShowTerms}
+                loading={loading}
+                handleDeliveryOrder={handleDeliveryOrder}
+                isLoggedIn={isLoggedIn}
+                handleLoginClick={handleLoginClick}
+                handleAddToCart={handleAddToCart}
                 t={t}
-                initialDiscount={couponDiscount}
               />
-            </div>
-
-            {/* Error/Success Messages */}
-            {error && (
-              <div className="p-4 mt-4 text-red-600 border border-red-200 rounded-lg bg-red-50">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="p-4 mt-4 text-green-600 border border-green-200 rounded-lg bg-green-50">
-                {success}
-              </div>
-            )}
-
-            {/* Coupon Messages */}
-            {couponError && (
-              <div className="p-4 mt-4 text-red-600 border border-red-200 rounded-lg bg-red-50">
-                {couponError}
-              </div>
-            )}
-            {couponMessage && (
-              <div className="p-4 mt-4 text-green-600 border border-green-200 rounded-lg bg-green-50">
-                {couponMessage}
-              </div>
-            )}
-
-            {/* Fetch Paint Data Button */}
-            {itemType === 1 && isBookType && (
-              <div className="mt-4">
-                <button
-                  onClick={fetchPaintOrderData}
-                  disabled={loadingPaintData}
-                  className="flex items-center gap-2 px-4 py-2 text-sm transition border rounded-lg text-primary border-primary hover:bg-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FiRefreshCw className={loadingPaintData ? 'animate-spin' : ''} />
-                  {loadingPaintData ? t('books.loading_paint_data') : t('books.load_paint_data')}
-                </button>
-                <p className="mt-1 text-xs text-text-secondary">
-                  {t('books.optional_load_paint_data')}
-                </p>
-              </div>
-            )}
-
-            {/* Order summary */}
-            <div className="p-4 mt-6 border rounded-lg bg-background/60 border-border">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-text-secondary">{item.name}</div>
-                <div className="font-semibold">₴{finalPrice.toFixed(2)}</div>
-              </div>
-              {couponDiscount > 0 && (
-                <>
-                  <div className="flex items-center justify-between mt-2 text-sm text-green-600">
-                    <div>{t('books.coupon.discount_label', { percent: couponDiscount }) || `Coupon Discount (${couponDiscount}%)`}</div>
-                    <div>-₴{couponDiscountAmount.toFixed(2)}</div>
-                  </div>
-                  <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
-                    <div>{t('books.original_total') || 'Original Total'}</div>
-                    <div className="line-through">₴{finalPrice.toFixed(2)}</div>
-                  </div>
-                </>
-              )}
-              {itemType === 1 && (
-                <div className="flex items-center justify-between mt-2 text-sm text-text-secondary">
-                  <div>{t('books.delivery')}</div>
-                  <div>{t('books.free')}</div>
-                </div>
-              )}
-              {/* Embroidery line */}
-              {embroidery.has_embroidery && embroideryPrice > 0 && (
-                <div className="flex items-center justify-between mt-2 text-sm text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <span>✂️</span>
-                    <span>{t('embroidery.embroidery_fee', 'Embroidery')}: «{embroidery.embroidery_name}»</span>
-                  </div>
-                  <div className="font-semibold">+₴{embroideryPrice.toFixed(2)}</div>
-                </div>
-              )}
-                {/* Total Line */}
-                <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200">
-                  <span className="text-lg font-bold text-gray-900">{t('books.total')}</span>
-                  <span className="text-xl font-black text-primary">₴{finalDiscountedPrice.toFixed(2)}</span>
-                </div>
-
-                {/* Use Points Checkbox */}
-                {canUsePoints && (
-                  <div className="mt-4 p-4 border border-emerald-200 bg-emerald-50 rounded-xl flex items-start gap-3 transition-all hover:shadow-sm">
-                    <input
-                      type="checkbox"
-                      id="usePoints"
-                      checked={usePoints}
-                      onChange={(e) => setUsePoints(e.target.checked)}
-                      className="mt-1 w-5 h-5 text-emerald-600 border-emerald-300 rounded focus:ring-emerald-500 cursor-pointer"
-                    />
-                    <div>
-                      <label htmlFor="usePoints" className="font-semibold text-emerald-800 cursor-pointer block">
-                        {t('points.use_points_balance', 'Use Points Balance')}
-                      </label>
-                      <p className="text-sm text-emerald-600 mt-1">
-                        {t('points.balance_available', { balance: pointsBalance, value: pointsMonetaryValue.toFixed(2) }, `You have ${pointsBalance} points worth ₴${pointsMonetaryValue.toFixed(2)}.`)}
-                      </p>
-                      {usePoints && (
-                        <div className="mt-2 text-sm font-bold text-emerald-700 bg-white/60 px-3 py-1.5 rounded-lg border border-emerald-100 inline-block">
-                          {t('points.discount_applied', 'Discount applied:')} -₴{pointsDiscountAmount.toFixed(2)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Installment Options (if not PDF book) */}
-                {!isPdfBook && (
-                  <div className="mt-6 border border-primary/20 rounded-xl p-4 bg-primary/5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-primary">{t('installments.payInInstallments', 'Pay in Installments')}</h4>
-                      {useInstallment ? (
-                        <button
-                          onClick={handleCancelInstallment}
-                          className="text-sm text-red-500 hover:text-red-700 underline"
-                        >
-                          {t('installments.cancelInstallment', 'Cancel')}
-                        </button>
-                      ) : (
-                        <span className="text-sm text-gray-500">{t('installments.optional', 'Optional')}</span>
-                      )}
-                    </div>
-                    
-                    {useInstallment ? (
-                      <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-primary/30">
-                        <span className="text-sm font-medium text-gray-700">
-                          {t('installments.installmentAmount', 'Installment Amount')}
-                        </span>
-                        <span className="font-bold text-primary">₴{Number(installmentAmount).toFixed(2)}</span>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleOpenInstallmentModal}
-                        className="w-full py-2 px-4 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-lg font-medium transition-colors"
-                      >
-                        {t('installments.setupInstallment', 'Setup Installment Plan')}
-                      </button>
-                    )}
-                  </div>
-                )}
-                
-                {useInstallment && (
-                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200 bg-orange-50 p-3 rounded-lg">
-                    <span className="font-bold text-orange-800">{t('installments.amountToPayNow', 'Amount to Pay Now')}</span>
-                    <span className="text-xl font-black text-orange-600">₴{Number(installmentAmount).toFixed(2)}</span>
-                  </div>
-                )}
-            </div>
-
-            {/* Delivery Form */}
-            {itemType === 1 && (
-              <form onSubmit={handleDeliveryOrder} className="mt-6 space-y-4">
-                {/* Shipping Full Name Notice */}
-                <div className="p-3 border rounded-xl bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <FiUser className="text-primary text-sm flex-shrink-0" />
-                    <span>{t('books.shipping_name_notice_title', 'متطلبات شركة الشحن: الاسم ثلاثي بالكامل')}</span>
-                  </div>
-                  <p className="text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
-                    {t('books.shipping_name_notice_desc', 'حرصاً على وصول شحنتك بدون تأخير، يُشترط إدخال الاسم الأول واسم الأب في الحقل الأول، والاسم الثالث (أو اللقب / اسم العائلة) في الحقل الثاني.')}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* First Name & Father's Name */}
-                  <div>
-                    <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-1">
-                      <span className="flex items-center gap-1.5">
-                        <FiUser /> {t('books.client_name', 'الاسم الأول واسم الأب')} *
-                      </span>
-                      <span className="text-[11px] font-normal text-text-muted">
-                        ({t('books.min_two_names', 'اسمان على الأقل')})
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      name="client_name"
-                      value={formData.client_name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                      placeholder={t('books.enter_client_name', 'الاسم الأول واسم الأب (مثال: أحمد محمد)')}
-                    />
-                  </div>
-
-                  {/* Third Name / Surname / Family Name */}
-                  <div>
-                    <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-1">
-                      <span className="flex items-center gap-1.5">
-                        <FiUser /> {t('books.second_client_name', 'الاسم الثالث / اللقب')} *
-                      </span>
-                      <span className="text-[11px] font-normal text-text-muted">
-                        ({t('books.min_one_name', 'اسم واحد على الأقل')})
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      name="second_client_name"
-                      value={formData.second_client_name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                      placeholder={t('books.enter_second_client_name', 'الاسم الثالث أو اللقب (مثال: الشامي)')}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    <FiPhone /> {t('books.phone_number')} *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone1"
-                    value={formData.phone1}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder={t('books.enter_phone_number')}
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    <FiPhone /> {t('books.phone_number_2')} ({t('books.optional')})
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone2"
-                    value={formData.phone2}
-                    onChange={handleInputChange}
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder={t('books.enter_phone_number_2')}
-                  />
-                </div>
-
-                {/* <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    <FiMapPin /> Region *
-                  </label>
-                  <select
-                    name="region_id"
-                    value={formData.region_id}
-                    onChange={handleRegionChange}
-                    required
-                    className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="">Select Region</option>
-                    {regions.map((region) => (
-                      <option key={region.id} value={region.id}>
-                        {region.name}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
-
-                <div className="mb-4">
-                  <p className="text-sm text-text-secondary">
-                    {t('books.select_city_branch_instruction')}
-                  </p>
-                </div>
-
-                <CitySelector
-                  value={formData.city}
-                  onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      city: e.target.value,
-                      city_id: e.target.city_id ? e.target.city_id.toString() : ""
-                    }));
-                  }}
-                  onCitySelect={handleCitySelect}
-                  required
-                  placeholder={t('city_selector.select_city')}
-                />
-
-                {selectedCity && branches.length > 0 && (
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                      <FiHome /> Branch *
-                    </label>
-                    <select
-                      name="branch_id"
-                      value={formData.branch_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, branch_id: e.target.value }))}
-                      required
-                      className="w-full p-3 mt-1 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                      <option value="">{t('books.select_branch_placeholder')}</option>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>
-                          {branch.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Payment Methods Style Selection */}
-                <div className="mt-8 border-t pt-6">
-                  <h3 className="mb-4 text-lg font-semibold">{t('books.select_payment_method')}</h3>
-                  <div className="flex flex-wrap gap-4">
-                    {[
-                      { id: 'apple-pay', name: 'Apple Pay', icon: FaApplePay, color: 'text-black dark:text-white' },
-                      { id: 'google-pay', name: 'Google Pay', icon: FaGooglePay, color: 'text-gray-900 dark:text-gray-100' },
-                      { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' }
-                    ].map((method) => {
-                      const IconComponent = method.icon;
-                      return (
-                        <div
-                          key={method.id}
-                          className="flex flex-col items-center flex-1 min-w-[100px] p-4 border rounded-xl border-border bg-background/60"
-                        >
-                          <IconComponent className={`text-3xl mb-2 ${method.color}`} />
-                          <span className="text-sm font-medium">{t(`books.${method.id}`)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-
-
-                {/* Hidden client_id field */}
-                <input
-                  type="hidden"
-                  name="client_id"
-                  value={formData.client_id}
-                />
-
-                {/* Terms and Conditions */}
-                <div className="mt-6">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="agreeToTerms"
-                      checked={agreeToTerms}
-                      onChange={(e) => setAgreeToTerms(e.target.checked)}
-                      className="mt-1"
-                    />
-                    <label htmlFor="agreeToTerms" className="text-sm text-text-secondary">
-                      {t('books.agree_to_terms_start')}{' '}
-                      <button
-                        type="button"
-                        onClick={() => setShowTerms(true)}
-                        className="text-primary hover:underline"
-                      >
-                        {t('books.purchase_policy')}
-                      </button>
-                    </label>
-                  </div>
-                  {!agreeToTerms && (
-                    <p className="mt-2 text-sm text-red-500">
-                      {t('books.must_agree_to_terms')}
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !agreeToTerms}
-                  className="w-full px-6 py-3 mt-6 font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? t('books.placing_order') : t('books.place_order')}
-                </button>
-                {/* Save Path Button */}
-                {!isLoggedIn && (
-                  <div className="mt-4 text-center">
-                    <button
-                      type="button"
-                      onClick={handleLoginClick}
-                      className="text-sm font-medium text-primary hover:text-secondary hover:underline"
-                    >
-                      {t('courses.loginToSubscribe', 'Login to subscribe')}
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleAddToCart}
-                      className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
-                    >
-                      <FaBookmark />
-                      {t('cart.save_path', 'Save to wishlist to return later')}
-                    </button>
-                  </div>
-                )}
-              </form>
-            )}
-
-            {/* PDF Purchase */}
-            {itemType === 2 && (
-              <div className="mt-6">
-                <h3 className="mb-4 text-lg font-semibold">{t('books.select_payment_method')}</h3>
-                <div className="flex gap-4">
-                  {[
-                    { id: 'apple-pay', name: 'Apple Pay', icon: FaApplePay, color: 'text-black dark:text-white' },
-                    { id: 'google-pay', name: 'Google Pay', icon: FaGooglePay, color: 'text-gray-900 dark:text-gray-100' },
-                    { id: 'visa', name: 'Visa', icon: FaCcVisa, color: 'text-blue-600' }
-                  ].map((method) => {
-                    const IconComponent = method.icon;
-                    return (
-                      <div
-                        key={method.id}
-                        className="flex flex-col items-center p-4 border rounded-lg border-border bg-background/60"
-                      >
-                        <IconComponent className={`text-3xl mb-2 ${method.color}`} />
-                        <span className="font-medium">{t(`books.${method.id}`)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Terms and Conditions */}
-                <div className="mt-6">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="agreeToTermsPdf"
-                      checked={agreeToTerms}
-                      onChange={(e) => setAgreeToTerms(e.target.checked)}
-                      className="mt-1"
-                    />
-                    <label htmlFor="agreeToTermsPdf" className="text-sm text-text-secondary">
-                      {t('books.agree_to_terms_start')}{' '}
-                      <button
-                        type="button"
-                        onClick={() => setShowTerms(true)}
-                        className="text-primary hover:underline"
-                      >
-                        {t('books.purchase_policy')}
-                      </button>
-                    </label>
-                  </div>
-                  {!agreeToTerms && (
-                    <p className="mt-2 text-sm text-red-500">
-                      {t('books.must_agree_to_terms')}
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={handlePdfPurchase}
-                  disabled={loading || !agreeToTerms}
-                  className="w-full px-6 py-3 mt-6 font-medium text-white transition rounded-lg bg-primary hover:shadow-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? t('books.processing') : t('books.purchase_now')}
-                </button>
-                {/* Save Path Button */}
-                {!isLoggedIn && (
-                  <div className="mt-4 text-center">
-                    <button
-                      type="button"
-                      onClick={handleLoginClick}
-                      className="text-sm font-medium text-primary hover:text-secondary hover:underline"
-                    >
-                      {t('courses.loginToSubscribe', 'Login to subscribe')}
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleAddToCart}
-                      className="flex justify-center items-center w-full gap-2 px-6 py-3 mt-4 font-medium transition-all duration-300 border rounded-lg text-primary border-primary hover:bg-primary hover:text-white hover:scale-[1.02] hover:shadow-lg active:scale-95"
-                    >
-                      <FaBookmark />
-                      {t('cart.save_path', 'Save to wishlist to return later')}
-                    </button>
-                  </div>
-                )}
-              </div>
+            ) : (
+              <CheckoutDigitalPayment
+                agreeToTerms={agreeToTerms}
+                setAgreeToTerms={setAgreeToTerms}
+                setShowTerms={setShowTerms}
+                loading={loading}
+                handlePdfPurchase={handlePdfPurchase}
+                isLoggedIn={isLoggedIn}
+                handleLoginClick={handleLoginClick}
+                handleAddToCart={handleAddToCart}
+                t={t}
+              />
             )}
           </div>
         </main>
       </div>
 
       {/* Terms and Conditions Modal */}
-      {showTerms && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-2xl max-h-[80vh] p-6 mx-4 bg-white rounded-lg shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">{t('books.purchasePolicy.title')}</h3>
-              <button
-                onClick={() => setShowTerms(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-[60vh] text-gray-700">
-              {termsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-8 h-8 border-b-2 rounded-full animate-spin border-primary"></div>
-                </div>
-              ) : (
-                <div dangerouslySetInnerHTML={{ __html: termsText }} />
-              )}
-            </div>
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => setShowTerms(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                {t('books.purchasePolicy.close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CheckoutTermsModal
+        showTerms={showTerms}
+        setShowTerms={setShowTerms}
+        termsLoading={termsLoading}
+        termsText={termsText}
+        t={t}
+      />
 
       {/* Save Warning Modal */}
       <SaveBeforeLoginModal 
@@ -1326,101 +807,25 @@ const handleDeliveryOrder = async (e) => {
       <IncompleteProfileModal 
         isOpen={showProfileModal} 
         onClose={() => setShowProfileModal(false)}
-        showSaveOption={!cartItems?.some(i => i.id === item?.id && i.type === "item")}
+        showSaveOption={!cartItems?.some(i => i.id === item?.id && i.type === 'item')}
         onSave={handleAddToCart}
       />
 
-      {/* Custom Modals from Installment Logic */}
-      {showInstallmentModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-fadeIn">
-            <button
-              onClick={handleCloseInstallmentModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {t('installments.installmentModal.title', 'Setup Installment')}
-              </h3>
-              <p className="text-gray-600">
-                {t('installments.installmentModal.subtitle', { minPct: item?.course_deposit_percentage || 50 }, `Enter the amount you'd like to pay now. Minimum is ${item?.course_deposit_percentage || 50}% of the total price.`)}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('installments.installmentModal.amountLabel', 'Payment Amount (₴)')}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₴</span>
-                  <input
-                    type="number"
-                    value={installmentAmount}
-                    onChange={(e) => {
-                      setInstallmentAmount(e.target.value);
-                      if (installmentError) setInstallmentError("");
-                    }}
-                    className={`w-full pl-8 pr-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all ${
-                      installmentError ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'border-gray-200 focus:border-primary focus:bg-white'
-                    }`}
-                    placeholder={(discountedPrice * (Number(item?.course_deposit_percentage || 50) / 100)).toFixed(2)}
-                  />
-                </div>
-                {installmentError && (
-                  <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
-                    <FiRefreshCw className="w-4 h-4" /> {installmentError}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleCloseInstallmentModal}
-                  className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                >
-                  {t('common.cancel', 'Cancel')}
-                </button>
-                <button
-                  onClick={handleApplyInstallment}
-                  className="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all"
-                >
-                  {t('common.apply', 'Apply')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showNoInstallmentPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-fadeIn text-center">
-            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {t('installments.noInstallment.title', 'Installments Unavailable')}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {t('installments.noInstallment.message', 'This item does not support installment payments at the moment.')}
-            </p>
-            <button
-              onClick={() => setShowNoInstallmentPopup(false)}
-              className="w-full py-3 px-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors"
-            >
-              {t('common.close', 'Close')}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Installment Modals */}
+      <CheckoutInstallmentModal
+        showInstallmentModal={showInstallmentModal}
+        handleCloseInstallmentModal={handleCloseInstallmentModal}
+        item={item}
+        installmentAmount={installmentAmount}
+        setInstallmentAmount={setInstallmentAmount}
+        installmentError={installmentError}
+        setInstallmentError={setInstallmentError}
+        handleApplyInstallment={handleApplyInstallment}
+        discountedPrice={discountedPrice}
+        showNoInstallmentPopup={showNoInstallmentPopup}
+        setShowNoInstallmentPopup={setShowNoInstallmentPopup}
+        t={t}
+      />
     </section>
   );
 }

@@ -4,12 +4,12 @@ import { useStudyTracker } from "../../context/StudyTrackerContext";
 import { useApi } from "../../context/ApiContext";
 
 // Modular Dashboard Components
-import DashboardHeroBanner from "./components/dashboard/DashboardHeroBanner";
-import DashboardStatsGrid from "./components/dashboard/DashboardStatsGrid";
-import DashboardCourseProgress from "./components/dashboard/DashboardCourseProgress";
-import DashboardLiveSchedule from "./components/dashboard/DashboardLiveSchedule";
-import DashboardStudyTracker from "./components/dashboard/DashboardStudyTracker";
-import DashboardQuickShortcuts from "./components/dashboard/DashboardQuickShortcuts";
+import DashboardHeroBanner from "../../components/Profile/dashboard/DashboardHeroBanner";
+import DashboardStatsGrid from "../../components/Profile/dashboard/DashboardStatsGrid";
+import DashboardCourseProgress from "../../components/Profile/dashboard/DashboardCourseProgress";
+import DashboardLiveSchedule from "../../components/Profile/dashboard/DashboardLiveSchedule";
+import DashboardStudyTracker from "../../components/Profile/dashboard/DashboardStudyTracker";
+import DashboardQuickShortcuts from "../../components/Profile/dashboard/DashboardQuickShortcuts";
 
 export default function StudentDashboard({ user, setActiveTab }) {
   const { i18n } = useTranslation();
