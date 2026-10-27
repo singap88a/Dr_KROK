@@ -109,17 +109,43 @@ export default function OrderStatusModal({ isOpen, onClose, status, orderType, o
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-4">
           <div className="p-4 border border-blue-200 dark:border-blue-900/40 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-xl">
             <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-200">
               {getStatusMessage()}
             </p>
           </div>
 
-          <div className="flex justify-end">
+          {order?.payment_plan === "installment" && (
+            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 space-y-2 text-xs">
+              <div className="flex items-center justify-between font-bold text-emerald-800 dark:text-emerald-300">
+                <span>💳 {t("installments.installmentPlan", "Installment Plan")}</span>
+                <span>
+                  {t("installments.monthsPaid", "{{paid}} / {{total}} months paid", {
+                    paid: order.paid_months ?? 0,
+                    total: order.installment_months ?? 0,
+                  })}
+                </span>
+              </div>
+              {order.next_installment_date && (
+                <div className="flex items-center justify-between text-text-secondary">
+                  <span>{t("installments.nextInstallmentDate", "Next installment date:")}</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">{order.next_installment_date}</span>
+                </div>
+              )}
+              {order.installment_total_price && (
+                <div className="flex items-center justify-between text-text-secondary pt-1 border-t border-emerald-200/60 dark:border-emerald-800/40">
+                  <span>{t("installments.totalAmount", "Total:")}</span>
+                  <span className="font-bold text-text">₴{Number(order.installment_total_price).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
             <button
               onClick={onClose}
-              className="px-6 py-3 font-semibold text-white transition-all duration-200 transform shadow-lg bg-primary rounded-xl hover:shadow-xl hover:scale-105"
+              className="px-6 py-2.5 font-semibold text-white transition-all duration-200 transform shadow-md bg-primary rounded-xl hover:shadow-lg hover:scale-[1.02]"
             >
               {t("common.got_it", "Got it")}
             </button>

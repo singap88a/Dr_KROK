@@ -127,13 +127,21 @@ export default function LiveCourses({ courses, favoriteIds, onToggleFavorite, go
 
             {/* Price & CTA */}
             <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-primary">
-                  ₴{(course.price - (course.price * course.discount / 100)).toFixed(2)}
-                </span>
-                {course.discount > 0 && (
-                  <span className="text-sm text-gray-400 line-through">
-                    ₴{course.price.toFixed(2)}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-primary">
+                    ₴{(course.price - (course.price * course.discount / 100)).toFixed(2)}
+                  </span>
+                  {course.discount > 0 && (
+                    <span className="text-sm text-gray-400 line-through">
+                      ₴{course.price.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                {course.is_installment_enabled && course.installment_monthly_amount && (
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                    <span>💳</span>
+                    <span>{t("installments.installmentAvailable", "Installment:")} ₴{Number(course.installment_monthly_amount).toFixed(0)}/{t("installments.month", "mo")} ({course.installment_months} {t("installments.months", "months")})</span>
                   </span>
                 )}
               </div>

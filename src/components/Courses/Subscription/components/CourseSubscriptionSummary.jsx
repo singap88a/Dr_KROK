@@ -39,6 +39,13 @@ export default function CourseSubscriptionSummary({
   installmentAmount,
   handleOpenInstallmentModal,
   handleCancelInstallment,
+  paymentPlan = "cash",
+  handleSelectPaymentPlan,
+  isInstallmentAvailable = false,
+  monthlyInstallment = 0,
+  totalInstallmentPrice = 0,
+  installmentMonths = 0,
+  downPayment = 0,
   handleLoginClick,
   handleAddToCart,
   t,
@@ -113,17 +120,107 @@ export default function CourseSubscriptionSummary({
             {/* Total */}
             <div className="flex items-center justify-between pt-2 border-t border-border">
               <span className="text-lg font-bold text-text">
-                {t("courses.total", "Total")}
+                {paymentPlan === "installment"
+                  ? t("installments.payToday", "Amount to Pay Today (1st Installment)")
+                  : t("courses.total", "Total")}
               </span>
               <span
                 className={`text-2xl font-bold ${
-                  couponDiscount > 0 ? "text-green-600" : "text-primary"
+                  paymentPlan === "installment"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : couponDiscount > 0
+                    ? "text-green-600"
+                    : "text-primary"
                 }`}
               >
-                ₴{discountedPrice.toFixed(2)}
+                ₴{paymentPlan === "installment" ? downPayment.toFixed(2) : discountedPrice.toFixed(2)}
               </span>
             </div>
           </div>
+
+          {/* Payment Plan Selection (Cash vs Installment) */}
+          {isInstallmentAvailable && (
+            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-surface to-surface border border-primary/20 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-text flex items-center gap-2">
+                  <FaCreditCard className="text-primary text-xs" />
+                  {t("installments.selectPlan", "Choose Payment Plan")}
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-full">
+                  {t("installments.flexibleOptions", "Flexible Installment Plan")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Cash Option Card */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectPaymentPlan && handleSelectPaymentPlan("cash")}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    paymentPlan === "cash"
+                      ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
+                      : "border-border hover:border-primary/40 bg-surface/80"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-text flex items-center gap-1.5">
+                      <span>💵</span> {t("installments.cash", "Cash")}
+                    </span>
+                    <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentPlan === "cash" ? "border-primary bg-primary" : "border-text-muted"}`}>
+                      {paymentPlan === "cash" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                  </div>
+                  <p className="text-base font-black text-primary">₴{discountedPrice.toFixed(2)}</p>
+                  <p className="text-[10px] text-text-muted mt-0.5">{t("installments.payOnce", "One-time payment")}</p>
+                </button>
+
+                {/* Installment Option Card */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectPaymentPlan && handleSelectPaymentPlan("installment")}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    paymentPlan === "installment"
+                      ? "border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500"
+                      : "border-border hover:border-emerald-500/40 bg-surface/80"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-text flex items-center gap-1.5">
+                      <span>💳</span> {t("installments.installment", "Installment")}
+                    </span>
+                    <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentPlan === "installment" ? "border-emerald-500 bg-emerald-500" : "border-text-muted"}`}>
+                      {paymentPlan === "installment" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                  </div>
+                  <p className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                    ₴{monthlyInstallment.toFixed(2)}
+                    <span className="text-[10px] font-normal text-text-muted">/{t("installments.month", "mo")}</span>
+                  </p>
+                  <p className="text-[10px] text-text-muted mt-0.5">
+                    {installmentMonths} {t("installments.months", "months")} • {t("installments.total", "Total")}: ₴{totalInstallmentPrice.toFixed(2)}
+                  </p>
+                </button>
+              </div>
+
+              {/* Installment breakdown if selected */}
+              {paymentPlan === "installment" && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-1.5 animate-fadeIn">
+                  <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-300 font-bold">
+                    <span>{t("installments.payToday", "Amount to pay today:")}</span>
+                    <span className="text-sm font-black">₴{downPayment.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-text-secondary text-[11px]">
+                    <span>{t("installments.monthlyAmount", "Monthly installment:")}</span>
+                    <span>₴{monthlyInstallment.toFixed(2)} × {installmentMonths} {t("installments.months", "months")}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-text-secondary text-[11px]">
+                    <span>{t("installments.totalAmount", "Total installment price:")}</span>
+                    <span className="font-semibold text-text">₴{totalInstallmentPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Error/Success Messages */}
           {error && (
@@ -290,50 +387,12 @@ export default function CourseSubscriptionSummary({
             ) : (
               <div className="flex items-center justify-center gap-2">
                 <FaShoppingCart />
-                {useInstallment
-                  ? `Pay ₴${installmentAmount} Installment`
+                {paymentPlan === "installment"
+                  ? `${t("installments.payFirstInstallment", "Pay 1st Installment")}: ₴${downPayment.toFixed(2)}`
                   : t("courses.subscribeNow", "Subscribe Now")}
               </div>
             )}
           </button>
-
-          {/* Installment Option */}
-          {discountedPrice >= 100 && !useInstallment && (
-            <button
-              onClick={handleOpenInstallmentModal}
-              disabled={!isLoggedIn || !agreeToTerms}
-              className="w-full px-6 py-3 mt-3 font-medium transition-colors border rounded-lg text-primary border-primary hover:bg-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center justify-center gap-2">
-                <FaCreditCard />
-                {t("courses.payInInstallments", "Pay in Installments")}
-              </div>
-            </button>
-          )}
-
-          {/* Installment Info */}
-          {useInstallment && (
-            <div className="p-3 mt-3 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaCheck className="text-green-600" />
-                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Paying in installments: ₴{installmentAmount}
-                  </span>
-                </div>
-                <button
-                  onClick={handleCancelInstallment}
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
-                  Cancel
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-green-600 dark:text-green-300">
-                Remaining balance: ₴
-                {(discountedPrice - installmentAmount).toFixed(2)}
-              </p>
-            </div>
-          )}
 
           {/* Login Link */}
           {!isLoggedIn && (

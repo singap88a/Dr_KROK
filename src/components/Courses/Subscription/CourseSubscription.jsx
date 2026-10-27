@@ -199,63 +199,49 @@ export default function CourseSubscription() {
   };
 
   // دالة لفتح وإغلاق المودال
-  const handleOpenInstallmentModal = () => {
-    // Check if this course supports installments
-    const depositPct = Number(course?.course_deposit_percentage || 0);
-    if (depositPct === 0) {
+  const isInstallmentAvailable = Boolean(course?.is_installment_enabled);
+  const [paymentPlan, setPaymentPlan] = useState("cash");
+
+  const monthlyInstallment = Number(course?.installment_monthly_amount || 0);
+  const totalInstallmentPrice = Number(course?.installment_total_price || 0);
+  const installmentMonths = Number(course?.installment_months || 0);
+  const downPayment = Number(course?.installment_down_payment || monthlyInstallment);
+
+  const handleSelectPaymentPlan = (plan) => {
+    if (plan === "installment" && !isInstallmentAvailable) {
       setShowNoInstallmentPopup(true);
       return;
     }
+    setPaymentPlan(plan);
+    setUseInstallment(plan === "installment");
+    if (plan === "installment") {
+      setInstallmentAmount((downPayment || monthlyInstallment).toString());
+    } else {
+      setInstallmentAmount("");
+    }
+  };
+
+  const handleOpenInstallmentModal = () => {
+    if (!isInstallmentAvailable) {
+      setShowNoInstallmentPopup(true);
+      return;
+    }
+    handleSelectPaymentPlan("installment");
     setShowInstallmentModal(true);
-    setInstallmentAmount("");
-    setInstallmentError("");
   };
 
   const handleCloseInstallmentModal = () => {
     setShowInstallmentModal(false);
-    setInstallmentAmount("");
-    setInstallmentError("");
-    setUseInstallment(false);
   };
 
-  // دالة التحقق من مبلغ التقسيط
-  // دالة التحقق من مبلغ التقسيط
-  const validateInstallmentAmount = (amount) => {
-    // Calculate minimum amount based on course_deposit_percentage
-    const depositPct = Number(course?.course_deposit_percentage || 50);
-    const minAmount = discountedPrice * (depositPct / 100);
-    const numericAmount = Number(amount);
-
-    if (numericAmount < minAmount) {
-      return t('installments.installmentModal.errorMin', { min: minAmount.toFixed(2) }, `Minimum installment amount is ₴${minAmount.toFixed(2)}`);
-    }
-
-    if (numericAmount > discountedPrice) {
-      return t('installments.installmentModal.errorMax', { price: discountedPrice.toFixed(2) }, `Installment amount cannot exceed the total price (₴${discountedPrice.toFixed(2)})`);
-    }
-
-    return null;
-  };
-
-  // دالة تطبيق التقسيط
   const handleApplyInstallment = () => {
-    const validationError = validateInstallmentAmount(installmentAmount);
-
-    if (validationError) {
-      setInstallmentError(validationError);
-      return;
-    }
-
-    setUseInstallment(true);
+    handleSelectPaymentPlan("installment");
     setShowInstallmentModal(false);
-    setInstallmentError("");
   };
 
-  // دالة إلغاء التقسيط
   const handleCancelInstallment = () => {
-    setUseInstallment(false);
-    setInstallmentAmount("");
-    setInstallmentError("");
+    handleSelectPaymentPlan("cash");
+    setShowInstallmentModal(false);
   };
 
   const handleSubscription = async () => {
@@ -282,7 +268,9 @@ export default function CourseSubscription() {
     setIsSubscribing(true);
     setError("");
 
-    const finalAmount = useInstallment ? installmentAmount : discountedPrice;
+    const isInstallment = isInstallmentAvailable && (paymentPlan === "installment" || useInstallment);
+    const planToSend = isInstallment ? "installment" : "cash";
+    const finalAmount = isInstallment ? (downPayment || monthlyInstallment || discountedPrice) : discountedPrice;
     // getAuthToken is already destructured from useApi at the top of the component
 
     try {
@@ -291,9 +279,9 @@ export default function CourseSubscription() {
       if (isCenterCourse) {
         response = await subscribeToCenterCourse(id, selectedPayment, finalAmount, couponId, usePoints);
       } else if (isLiveCourse) {
-        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId, usePoints);
+        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId, usePoints, planToSend);
       } else {
-        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId, usePoints);
+        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId, usePoints, planToSend);
       }
 
       console.log('Subscription response:', response);
@@ -485,6 +473,13 @@ export default function CourseSubscription() {
             installmentAmount={installmentAmount}
             handleOpenInstallmentModal={handleOpenInstallmentModal}
             handleCancelInstallment={handleCancelInstallment}
+            paymentPlan={paymentPlan}
+            handleSelectPaymentPlan={handleSelectPaymentPlan}
+            isInstallmentAvailable={isInstallmentAvailable}
+            monthlyInstallment={monthlyInstallment}
+            totalInstallmentPrice={totalInstallmentPrice}
+            installmentMonths={installmentMonths}
+            downPayment={downPayment}
             handleLoginClick={handleLoginClick}
             handleAddToCart={handleAddToCart}
             t={t}

@@ -68,26 +68,45 @@ export default function CourseHeroInfo({
       </div>
 
       {/* Price Section */}
-      <div className="flex items-center gap-3">
-        <span className="text-xl font-bold text-primary sm:text-2xl">
-          ₴
-          {Number(course.discount) > 0
-            ? (
-                Number(course.price) -
-                (Number(course.price) * Number(course.discount)) / 100
-              ).toFixed(2)
-            : Number(course.price || 0).toFixed(2)}
-        </span>
-        {Number(course.discount) > 0 ? (
-          <>
-            <span className="text-base line-through text-text-muted sm:text-lg">
-              ₴{Number(course.price || 0).toFixed(2)}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-primary sm:text-2xl">
+            ₴
+            {Number(course.discount) > 0
+              ? (
+                  Number(course.price) -
+                  (Number(course.price) * Number(course.discount)) / 100
+                ).toFixed(2)
+              : Number(course.price || 0).toFixed(2)}
+          </span>
+          {Number(course.discount) > 0 ? (
+            <>
+              <span className="text-base line-through text-text-muted sm:text-lg">
+                ₴{Number(course.price || 0).toFixed(2)}
+              </span>
+              <span className="px-2 py-1 text-xs font-semibold text-white bg-red-600 rounded">
+                {Math.round(Number(course.discount))}%
+              </span>
+            </>
+          ) : null}
+        </div>
+
+        {course.is_installment_enabled && (
+          <div className="flex items-center flex-wrap gap-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm">
+              <span>💳</span> {t("installments.installmentAvailable", "Installment Available")}
             </span>
-            <span className="px-2 py-1 text-xs font-semibold text-white bg-red-600 rounded">
-              {Math.round(Number(course.discount))}%
+            <span>
+              {t("installments.payFrom", "Pay from")} <strong>₴{Number(course.installment_monthly_amount || 0).toFixed(2)}</strong>/{t("installments.month", "month")}
+              {course.installment_months ? ` (${t("installments.overMonths", "over {{months}} months", { months: course.installment_months })})` : ""}
             </span>
-          </>
-        ) : null}
+            {course.installment_total_price && (
+              <span className="text-text-muted text-[11px]">
+                • {t("installments.totalInstallmentPrice", "Total:")} ₴{Number(course.installment_total_price).toFixed(2)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Details Grid */}

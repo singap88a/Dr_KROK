@@ -114,6 +114,11 @@ export function useCoursesCatalog() {
           img: c.image && typeof c.image === "string" && c.image.length > 0 ? c.image : "/logo.png",
           specialization: c.specialization,
           college_year: c.college_year,
+          is_installment_enabled: Boolean(c.is_installment_enabled),
+          installment_total_price: c.installment_total_price != null ? Number(c.installment_total_price) : null,
+          installment_months: c.installment_months != null ? Number(c.installment_months) : null,
+          installment_monthly_amount: c.installment_monthly_amount != null ? Number(c.installment_monthly_amount) : null,
+          installment_down_payment: c.installment_down_payment != null ? Number(c.installment_down_payment) : null,
         }));
         setVideoCourses(mapped);
         if (res.pagination) {
@@ -138,6 +143,11 @@ export function useCoursesCatalog() {
           is_bestseller: c.is_bestseller,
           img: c.image && typeof c.image === "string" && c.image.length > 0 ? c.image : "/logo.png",
           specialization: c.specialization,
+          is_installment_enabled: Boolean(c.is_installment_enabled),
+          installment_total_price: c.installment_total_price != null ? Number(c.installment_total_price) : null,
+          installment_months: c.installment_months != null ? Number(c.installment_months) : null,
+          installment_monthly_amount: c.installment_monthly_amount != null ? Number(c.installment_monthly_amount) : null,
+          installment_down_payment: c.installment_down_payment != null ? Number(c.installment_down_payment) : null,
         }));
         setLiveCourses(mapped);
         if (res.pagination) {

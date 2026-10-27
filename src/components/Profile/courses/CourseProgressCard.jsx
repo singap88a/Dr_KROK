@@ -18,6 +18,7 @@ import {
   FaCoins,
   FaFileAlt,
   FaAward,
+  FaCreditCard,
 } from "react-icons/fa";
 
 const isLive = (course) =>
@@ -219,6 +220,68 @@ export default function CourseProgressCard({ course, onOpenTests, onOpenSchedule
             )}
           </div>
         </div>
+
+        {/* ── Installment Payment Status (if enrolled via installment) ── */}
+        {course.payment && (course.payment.is_installment || course.payment.plan === "installment") && (() => {
+          const p = course.payment;
+          const paidMonths = Number(p.paid_months ?? 0);
+          const totalMonths = Number(p.installment_months ?? 0);
+          const isFullyPaid = p.remaining_months === 0;
+          const instProgress = totalMonths > 0 ? Math.min(100, Math.round((paidMonths / totalMonths) * 100)) : 0;
+
+          return (
+            <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-emerald-500/10 border border-emerald-500/20 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                  <FaCreditCard className="text-[11px] text-emerald-600 dark:text-emerald-400" />
+                  <span>{t("installments.installmentPlan", "Installment Plan")}</span>
+                </span>
+                {isFullyPaid ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
+                    <FaCheckCircle className="text-[9px]" />
+                    {t("installments.fullyPaid", "Fully Paid")}
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                    {t("installments.monthsPaid", "{{paid}} / {{total}} months paid", {
+                      paid: paidMonths,
+                      total: totalMonths,
+                    })}
+                  </span>
+                )}
+              </div>
+
+              {/* Installment Progress Bar */}
+              {totalMonths > 0 && (
+                <div className="w-full h-1.5 rounded-full bg-border/60 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                    style={{ width: `${instProgress}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Financial info & next installment date */}
+              <div className="flex items-center justify-between text-[11px] text-text-secondary pt-0.5">
+                <span>
+                  {!isFullyPaid && p.remaining_amount != null
+                    ? t("installments.remainingAmount", "Remaining: ₴{{amount}}", {
+                        amount: Number(p.remaining_amount).toFixed(2),
+                      })
+                    : isFullyPaid
+                    ? `₴${Number(p.total_price || 0).toFixed(2)}`
+                    : ""}
+                </span>
+                {!isFullyPaid && p.next_installment_date && (
+                  <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                    <FaCalendarAlt className="text-[9px]" />
+                    <span>{p.next_installment_date}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── 4. Student Rank & Points ── */}
         <div className="grid grid-cols-2 gap-2 text-xs">

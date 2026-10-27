@@ -125,8 +125,8 @@ export default function StoreCheckout() {
   const canUsePoints = isPointsEligible && isMerchantAllowed;
 
   const handleOpenInstallmentModal = () => {
-    const depositPct = Number(item?.course_deposit_percentage || 0);
-    if (depositPct === 0) {
+    const isInstallment = Boolean(item?.is_installment_enabled || Number(item?.course_deposit_percentage || 0) > 0);
+    if (!isInstallment) {
       setShowNoInstallmentPopup(true);
       return;
     }
@@ -496,9 +496,10 @@ const handleDeliveryOrder = async (e) => {
         formDataToSend.append('coupon_id', couponId.toString());
       }
       
-      // Add amount and deposit_amount for installments
+      // Add amount, deposit_amount and payment_plan for installments
       formDataToSend.append('amount', finalAmountToPay.toString());
       formDataToSend.append('deposit_amount', finalAmountToPay.toString());
+      formDataToSend.append('payment_plan', useInstallment ? 'installment' : 'cash');
 
       if (usePoints && canUsePoints) {
         formDataToSend.append('use_points', '1');

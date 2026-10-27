@@ -48,6 +48,14 @@ const normalizeOrders = (orders) => {
         messages: o.messages || [],
         points_used: o.points_used || 0,
         points_discount: o.points_discount || 0,
+        payment_plan: o.payment_plan || (o.is_installment ? "installment" : "cash"),
+        installment_total_price: o.installment_total_price != null ? Number(o.installment_total_price) : null,
+        installment_months: o.installment_months != null ? Number(o.installment_months) : null,
+        paid_months: o.paid_months != null ? Number(o.paid_months) : 0,
+        remaining_months: o.remaining_months != null ? Number(o.remaining_months) : null,
+        monthly_installment_amount: o.monthly_installment_amount != null ? Number(o.monthly_installment_amount) : null,
+        next_installment_date: o.next_installment_date || null,
+        payment_status: o.payment_status || null,
       };
     }
     if (o && typeof o === "object" && "total_price" in o) {
@@ -63,6 +71,14 @@ const normalizeOrders = (orders) => {
         messages: o.messages || [],
         points_used: o.points_used || 0,
         points_discount: o.points_discount || 0,
+        payment_plan: o.payment_plan || (o.is_installment ? "installment" : "cash"),
+        installment_total_price: o.installment_total_price != null ? Number(o.installment_total_price) : null,
+        installment_months: o.installment_months != null ? Number(o.installment_months) : null,
+        paid_months: o.paid_months != null ? Number(o.paid_months) : 0,
+        remaining_months: o.remaining_months != null ? Number(o.remaining_months) : null,
+        monthly_installment_amount: o.monthly_installment_amount != null ? Number(o.monthly_installment_amount) : null,
+        next_installment_date: o.next_installment_date || null,
+        payment_status: o.payment_status || null,
       };
     }
     return {
@@ -78,6 +94,14 @@ const normalizeOrders = (orders) => {
       messages: o.messages || [],
       points_used: o.points_used || 0,
       points_discount: o.points_discount || 0,
+      payment_plan: o.payment_plan || (o.is_installment ? "installment" : "cash"),
+      installment_total_price: o.installment_total_price != null ? Number(o.installment_total_price) : null,
+      installment_months: o.installment_months != null ? Number(o.installment_months) : null,
+      paid_months: o.paid_months != null ? Number(o.paid_months) : 0,
+      remaining_months: o.remaining_months != null ? Number(o.remaining_months) : null,
+      monthly_installment_amount: o.monthly_installment_amount != null ? Number(o.monthly_installment_amount) : null,
+      next_installment_date: o.next_installment_date || null,
+      payment_status: o.payment_status || null,
     };
   });
 };

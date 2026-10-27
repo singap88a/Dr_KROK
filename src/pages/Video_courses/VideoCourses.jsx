@@ -73,6 +73,17 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
                   )}
                 </div>
               </div>
+              {course.is_installment_enabled && course.installment_monthly_amount && (
+                <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-lg">
+                  <span className="flex items-center gap-1">
+                    <span>💳</span>
+                    <span>{t("installments.installmentAvailable", "Installment:")} ₴{Number(course.installment_monthly_amount).toFixed(0)}/{t("installments.month", "mo")}</span>
+                  </span>
+                  {course.installment_months && (
+                    <span className="text-[10px] text-text-muted">({course.installment_months} {t("installments.months", "months")})</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="px-6 pb-4">

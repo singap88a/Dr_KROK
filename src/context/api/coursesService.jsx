@@ -318,7 +318,8 @@ export function createCoursesService(request) {
     paymentMethod,
     amount,
     couponId = null,
-    usePoints = false
+    usePoints = false,
+    paymentPlan = "cash"
   ) => {
     const formData = new FormData();
     const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -329,6 +330,7 @@ export function createCoursesService(request) {
     formData.append("payment_method", paymentMethod);
     formData.append("amount", amount.toString());
     formData.append("deposit_amount", amount.toString());
+    formData.append("payment_plan", paymentPlan || "cash");
     if (couponId) {
       formData.append("coupon_id", couponId);
     }
@@ -370,7 +372,8 @@ export function createCoursesService(request) {
     paymentMethod,
     amount,
     couponId = null,
-    usePoints = false
+    usePoints = false,
+    paymentPlan = "cash"
   ) => {
     const formData = new FormData();
     const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -381,6 +384,7 @@ export function createCoursesService(request) {
     formData.append("payment_method", paymentMethod);
     formData.append("amount", amount.toString());
     formData.append("deposit_amount", amount.toString());
+    formData.append("payment_plan", paymentPlan || "cash");
     if (couponId) {
       formData.append("coupon_id", couponId);
     }
