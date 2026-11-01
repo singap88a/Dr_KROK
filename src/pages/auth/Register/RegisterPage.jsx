@@ -8,8 +8,8 @@ import loginAnimation from "../../../components/animations/Login_animation.json"
 import { toast } from "react-toastify";
 import he from "he";
 import { GoogleIcon, AppleIcon } from "../SocialIcons";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { getDeviceInfo } from "../../../utils/device";
+import { FaEye, FaEyeSlash, FaExclamationTriangle } from "react-icons/fa";
+import { getDeviceInfo, isInAppBrowser } from "../../../utils/device";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -145,7 +145,7 @@ export default function RegisterPage() {
     }
   }
 
-  const handleGoogleRegister = () => {
+  const handleGoogleRegister = async () => {
     localStorage.setItem('DR_KROK_auth_flow', 'register');
     if (location.state?.from) {
       localStorage.setItem('DR_KROK_return_url', location.state.from);
@@ -153,7 +153,7 @@ export default function RegisterPage() {
     
     // Build callback URL dynamically for environment compatibility
     const callbackUrl = `${window.location.origin}/auth/callback`;
-    const deviceData = getDeviceInfo();
+    const deviceData = await getDeviceInfo();
     const queryParams = new URLSearchParams({
       callback: callbackUrl,
       register: 'true',
@@ -168,10 +168,29 @@ export default function RegisterPage() {
     window.location.href = googleAuthUrl;
   };
 
+  const inApp = isInAppBrowser();
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">
       <div className="container p-6 mx-auto">
+        {/* In-app Browser Warning Alert */}
+        {inApp && (
+          <div className="max-w-5xl mx-auto mb-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 flex items-start gap-3 shadow-sm">
+            <FaExclamationTriangle className="text-xl flex-shrink-0 mt-0.5 text-amber-500" />
+            <div className="text-sm">
+              <span className="font-bold">
+                {t('common.warning', 'Notice')}:{" "}
+              </span>
+              {t(
+                'auth.inAppBrowserNotice',
+                'You are currently viewing this page inside an in-app browser. To ensure your account remains securely bound to your device, please open this page in your primary browser (Chrome or Safari).'
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid max-w-5xl grid-cols-1 mx-auto overflow-hidden shadow-xl bg-surface rounded-2xl md:grid-cols-2">
+
           {/* Left Animation */}
           <div className="relative flex-col items-center justify-center hidden p-8 md:flex bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
             <div className="w-full mb-6 text-center text-text">
@@ -410,14 +429,14 @@ export default function RegisterPage() {
 
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   localStorage.setItem('DR_KROK_auth_flow', 'register');
                   if (location.state?.from) {
                     localStorage.setItem('DR_KROK_return_url', location.state.from);
                   }
                   
                   const callbackUrl = `${window.location.origin}/auth/callback`;
-                  const deviceData = getDeviceInfo();
+                  const deviceData = await getDeviceInfo();
                   const queryParams = new URLSearchParams({
                     callback: callbackUrl,
                     register: 'true',

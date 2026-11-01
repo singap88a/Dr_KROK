@@ -19,6 +19,17 @@ const SocialCallback = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const email = urlParams.get('email');
+        const code = urlParams.get('code');
+        const message = urlParams.get('message') || urlParams.get('error');
+
+        if (code === 'DEVICE_MISMATCH' || (message && (message.toLowerCase().includes('device') || message.toLowerCase().includes('mobile') || message.toLowerCase().includes('laptop')))) {
+          const params = new URLSearchParams();
+          params.set('code', code || 'DEVICE_MISMATCH');
+          if (email) params.set('email', email);
+          if (message) params.set('deviceError', message);
+          navigate(`/login?${params.toString()}`, { replace: true });
+          return;
+        }
 
         console.log("Social Auth Callback - Token received:", !!token);
         if (email) console.log("Social Auth Callback - Email received:", email);

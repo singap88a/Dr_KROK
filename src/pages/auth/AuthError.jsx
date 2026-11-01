@@ -6,14 +6,20 @@ export default function AuthError() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const message = searchParams.get("message");
+    const code = searchParams.get("code") || "";
+    const email = searchParams.get("email") || "";
+    const message = searchParams.get("message") || "";
+
+    const params = new URLSearchParams();
+    if (code) params.set("code", code);
+    if (email) params.set("email", email);
     if (message) {
-      // Redirect to login page and pass the error message to trigger the modal
-      navigate(`/login?deviceError=${encodeURIComponent(message)}`, { replace: true });
+      params.set("deviceError", message);
     } else {
-      // Default fallback
-      navigate(`/login?deviceError=Authentication+failed`, { replace: true });
+      params.set("deviceError", "Authentication failed");
     }
+
+    navigate(`/login?${params.toString()}`, { replace: true });
   }, [searchParams, navigate]);
 
   return (

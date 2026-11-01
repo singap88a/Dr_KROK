@@ -9,7 +9,7 @@ export function createAuthService(request) {
 
   const login = async (email, password, type = null) => {
     const { getDeviceInfo } = await import("../../utils/device");
-    const deviceData = getDeviceInfo();
+    const deviceData = await getDeviceInfo();
     const body =
       type === "google"
         ? { type: "google", ...deviceData }
@@ -30,7 +30,7 @@ export function createAuthService(request) {
     role = "student"
   ) => {
     const { getDeviceInfo } = await import("../../utils/device");
-    const deviceData = getDeviceInfo();
+    const deviceData = await getDeviceInfo();
     return await request("auth/register", {
       method: "POST",
       body: {
@@ -50,6 +50,32 @@ export function createAuthService(request) {
     return await request("auth/send-otp", {
       method: "POST",
       body: { email },
+    });
+  };
+
+  const sendDeviceVerifyOtp = async (email) => {
+    return await request("auth/device/send-otp", {
+      method: "POST",
+      body: { email },
+    });
+  };
+
+  const confirmDevice = async ({
+    email,
+    otp,
+    device_id,
+    device_type,
+    device_name,
+  }) => {
+    return await request("auth/device/confirm", {
+      method: "POST",
+      body: {
+        email,
+        otp,
+        device_id,
+        device_type,
+        device_name,
+      },
     });
   };
 
@@ -78,7 +104,10 @@ export function createAuthService(request) {
     login,
     register,
     sendOtp,
+    sendDeviceVerifyOtp,
+    confirmDevice,
     forgotPassword,
     resetPassword,
   };
 }
+
