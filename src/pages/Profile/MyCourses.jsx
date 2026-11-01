@@ -184,7 +184,7 @@ export default function MyCourses({ enrolledCourses: propEnrolledCourses = [] })
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {coursesList.map((course, idx) => (
             <CourseProgressCard
-              key={course.course_id || course.id || idx}
+              key={`${course.course_id || course.id || 'c'}-${idx}`}
               course={course}
               onOpenTests={(c) => setSelectedCourseForTests(c)}
               onOpenSchedule={(c) => setSelectedCourseForSchedule(c)}

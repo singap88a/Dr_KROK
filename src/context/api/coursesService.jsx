@@ -299,10 +299,20 @@ export function createCoursesService(request) {
       };
 
       if (type) {
-        return myCourses.some((c) => {
+        // First try: match by both ID and type
+        const strictMatch = myCourses.some((c) => {
           const itemId = Number(c.id || c.course_id || c.id_course || 0);
           const itemType = detectType(c);
           return itemId === Number(courseId) && itemType && itemType.includes(type);
+        });
+        if (strictMatch) return true;
+
+        // Fallback: if API doesn't return type info, match by ID alone
+        // (user is enrolled but type field missing in the response)
+        return myCourses.some((c) => {
+          const itemId = Number(c.id || c.course_id || c.id_course || 0);
+          const itemType = detectType(c);
+          return itemId === Number(courseId) && !itemType;
         });
       }
 

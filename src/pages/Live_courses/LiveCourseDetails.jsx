@@ -126,6 +126,7 @@ export default function LiveCourseDetails() {
           setShowAll={setShowAll}
           renderStaticStars={renderStaticStars}
           t={t}
+          type="live_course"
         />
 
         <LiveCourseInstructorSidebar course={course} t={t} />

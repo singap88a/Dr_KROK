@@ -62,9 +62,8 @@ export default function LiveCourseScheduleModal({
     };
   }, [isOpen, courseId, course, getMyLiveSchedule]);
 
-  if (!isOpen || !course) return null;
-
-  const currentCourse = fetchedData || course;
+  // ── Derive data BEFORE any early return so hooks always run in the same order ──
+  const currentCourse = fetchedData || course || {};
   const batch = currentCourse.batch || {};
   const instructor = batch.instructor || {};
   const schedule = currentCourse.schedule || [];
@@ -86,6 +85,9 @@ export default function LiveCourseScheduleModal({
 
   const upcomingCount = schedule.filter((i) => i.is_upcoming || i.is_today).length;
   const attendedCount = schedule.filter((i) => i.is_attended).length;
+
+  // Early return AFTER all hooks have been called
+  if (!isOpen || !course) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-fadeIn">

@@ -11,6 +11,7 @@ export default function CourseReviewsSection({
   setShowAll,
   renderStaticStars,
   t,
+  type = "video_course",
 }) {
   return (
     <div className="lg:col-span-2">
@@ -20,6 +21,7 @@ export default function CourseReviewsSection({
           courseId={courseId}
           onReviewSubmitted={handleReviewSubmitted}
           userHasReviewed={userHasReviewed}
+          type={type}
         />
       </div>
 
