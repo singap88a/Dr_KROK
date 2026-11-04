@@ -1,5 +1,45 @@
+import axios from "axios";
 import i18n from "../../i18n";
 import { apiCache, globalEvents } from "./apiCache.jsx";
+
+export const DEFAULT_SESSION_DURATION_SEC = 604800; // 7 days in seconds
+
+/**
+ * Helper to clear all authentication data across localStorage and cookies
+ */
+export const clearAuthStorageClient = () => {
+  try {
+    localStorage.removeItem("DR_KROK_tokenData");
+    localStorage.removeItem("DR_KROK_token");
+    localStorage.removeItem("DR_KROK_userToken");
+    localStorage.removeItem("DR_KROK_user");
+    localStorage.removeItem("DR_KROK_userName");
+    localStorage.removeItem("token");
+  } catch (err) {
+    console.error("Error clearing auth storage:", err);
+  }
+
+  try {
+    document.cookie = "DR_KROK_token=; max-age=0; path=/; SameSite=Lax";
+  } catch {
+    // Ignore
+  }
+};
+
+// Global axios interceptor ensuring ONLY 401 Unauthorized clears token & logs out.
+// Temporary network errors, timeouts, 422, 429, 500 etc. must NEVER clear tokens or log out.
+if (axios && axios.interceptors) {
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error?.response && error.response.status === 401) {
+        clearAuthStorageClient();
+        window.dispatchEvent(new CustomEvent("user-logout"));
+      }
+      return Promise.reject(error);
+    }
+  );
+}
 
 export const getAuthToken = () => {
   const tokenData = localStorage.getItem("DR_KROK_tokenData");
@@ -7,25 +47,45 @@ export const getAuthToken = () => {
     try {
       const parsed = JSON.parse(tokenData);
       const now = Date.now();
-      if (parsed.expiresAt > now) {
+
+      // Check expiry: prioritize expires_at, then expires_in, then expiresAt, fallback 7 days
+      let tokenExpiry = parsed.expiresAt;
+      if (parsed.expires_at) {
+        const parsedExpiry = new Date(parsed.expires_at).getTime();
+        if (!isNaN(parsedExpiry)) {
+          tokenExpiry = parsedExpiry;
+        }
+      } else if (parsed.expires_in) {
+        const base = parsed.savedAt || now;
+        tokenExpiry = base + Number(parsed.expires_in) * 1000;
+      }
+
+      if (tokenExpiry && tokenExpiry > now) {
+        return parsed.token;
+      } else if (!parsed.expires_at && parsed.token) {
+        // Migration grace period: old stored token didn't have expires_at from server.
+        // Return token and let server 401 invalidate if actually expired.
         return parsed.token;
       } else {
-        // Token expired, clear it
-        localStorage.removeItem("DR_KROK_tokenData");
-        localStorage.removeItem("DR_KROK_user");
-        localStorage.removeItem("DR_KROK_token");
-        localStorage.removeItem("DR_KROK_userToken");
-        localStorage.removeItem("DR_KROK_userName");
-        // Emit logout event
+        // Token genuinely expired, clear it
+        clearAuthStorageClient();
         window.dispatchEvent(new CustomEvent("user-logout"));
         return null;
       }
     } catch (error) {
       console.error("Error parsing token data:", error);
-      localStorage.removeItem("DR_KROK_tokenData");
+      clearAuthStorageClient();
       return null;
     }
   }
+
+  // Fallback to legacy token keys
+  const legacyToken =
+    localStorage.getItem("DR_KROK_token") || localStorage.getItem("token");
+  if (legacyToken) {
+    return legacyToken;
+  }
+
   return null;
 };
 
@@ -263,11 +323,10 @@ export async function executeRequest(
 
     let message = data?.message || `Request failed: ${res.status}`;
 
+    // ONLY 401 Unauthorized clears the token and triggers logout.
+    // Temporary network errors, timeouts, 422, 429, 500, etc. MUST NEVER clear session.
     if (res.status === 401) {
-      localStorage.removeItem("DR_KROK_token");
-      localStorage.removeItem("DR_KROK_userToken");
-      localStorage.removeItem("DR_KROK_user");
-      localStorage.removeItem("DR_KROK_userName");
+      clearAuthStorageClient();
       window.dispatchEvent(new CustomEvent("user-logout"));
       message = "Session expired. Please login again.";
     } else if (res.status === 302) {

@@ -76,8 +76,13 @@ export default function LoginPage() {
           position: "top-right",
         });
         const token = data?.data?.token || data?.token;
-        const user = data?.data || data;
-        userLogin(token, user);
+        const user = data?.data?.user || data?.data || data;
+        const expiryData = {
+          expires_in: data?.data?.expires_in ?? data?.expires_in ?? 604800,
+          expires_at: data?.data?.expires_at ?? data?.expires_at ?? null,
+          token_type: data?.data?.token_type ?? data?.token_type ?? "Bearer",
+        };
+        userLogin(token, user, expiryData);
         localStorage.setItem('DR_KROK_show_completion_modal', 'true');
         setTimeout(() => {
           navigate("/profile", { replace: true });

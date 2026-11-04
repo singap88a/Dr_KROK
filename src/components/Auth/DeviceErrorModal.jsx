@@ -149,7 +149,12 @@ export default function DeviceErrorModal({
         res?.data?.token ||
         res?.token ||
         res?.data?.accessToken;
-      const userData = res?.data || res;
+      const userData = res?.data?.user || res?.data || res;
+      const expiryData = {
+        expires_in: res?.data?.expires_in ?? res?.expires_in ?? 604800,
+        expires_at: res?.data?.expires_at ?? res?.expires_at ?? null,
+        token_type: res?.data?.token_type ?? res?.token_type ?? "Bearer",
+      };
 
       toast.success(
         res?.message ||
@@ -157,7 +162,7 @@ export default function DeviceErrorModal({
       );
 
       if (token) {
-        userLogin(token, userData);
+        userLogin(token, userData, expiryData);
         localStorage.setItem('DR_KROK_show_completion_modal', 'true');
       }
 

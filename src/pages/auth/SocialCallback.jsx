@@ -19,6 +19,8 @@ const SocialCallback = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const email = urlParams.get('email');
+        const expiresInParam = urlParams.get('expires_in');
+        const expiresAtParam = urlParams.get('expires_at');
         const code = urlParams.get('code');
         const message = urlParams.get('message') || urlParams.get('error');
 
@@ -43,6 +45,13 @@ const SocialCallback = () => {
           sessionStorage.setItem('DR_KROK_consumed_token', token);
 
           localStorage.setItem("token", token);
+          localStorage.setItem("DR_KROK_token", token);
+
+          const defaultExpiryData = {
+            expires_in: expiresInParam ? Number(expiresInParam) : 604800,
+            expires_at: expiresAtParam || null,
+            token_type: "Bearer",
+          };
 
           try {
             console.log("Fetching user profile with token...");
@@ -59,7 +68,14 @@ const SocialCallback = () => {
             console.log("User data response success:", userResponse.data.success);
 
             if (userResponse.data.success) {
-              login(token, userResponse.data.data);
+              const profileData = userResponse.data.data;
+              const mergedExpiry = {
+                expires_in: profileData?.expires_in || defaultExpiryData.expires_in,
+                expires_at: profileData?.expires_at || defaultExpiryData.expires_at,
+                token_type: profileData?.token_type || defaultExpiryData.token_type,
+              };
+
+              login(token, profileData, mergedExpiry);
               
               toast.success(t('auth.social.login_success'), {
                 position: 'top-right',
@@ -96,7 +112,7 @@ const SocialCallback = () => {
               name: email?.split('@')[0] || 'User',
             };
             
-            login(token, basicUserData);
+            login(token, basicUserData, defaultExpiryData);
             
             toast.success(t('auth.social.login_success'), {
               position: 'top-right',
@@ -128,7 +144,7 @@ const SocialCallback = () => {
     };
 
     handleSocialCallback();
-  }, [navigate, login]);
+  }, [navigate, login, t]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-text">

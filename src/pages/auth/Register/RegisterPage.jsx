@@ -120,7 +120,14 @@ export default function RegisterPage() {
       );
 
       if (data.success) {
-        userRegister(data.data.token, data.data);
+        const token = data?.data?.token || data?.token;
+        const user = data?.data?.user || data?.data || data;
+        const expiryData = {
+          expires_in: data?.data?.expires_in ?? data?.expires_in ?? 604800,
+          expires_at: data?.data?.expires_at ?? data?.expires_at ?? null,
+          token_type: data?.data?.token_type ?? data?.token_type ?? "Bearer",
+        };
+        userRegister(token, user, expiryData);
         localStorage.setItem('DR_KROK_show_completion_modal', 'true');
         localStorage.setItem('DR_KROK_new_student_onboarding', 'true');
         localStorage.setItem('DR_KROK_selected_role', form.role === "university_representative" ? "university_rep" : form.role);
