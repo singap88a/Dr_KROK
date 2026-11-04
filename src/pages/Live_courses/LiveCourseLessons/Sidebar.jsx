@@ -63,7 +63,7 @@ export default function Sidebar({
         `}
         style={{ direction: "ltr" }}
       >
-        <div style={{ direction: isRtl ? "rtl" : "ltr" }} className="w-full flex flex-col h-full">
+        <div style={{ direction: "ltr" }} className="w-full flex flex-col h-full">
           {/* Close Button inside sidebar for mobile */}
           <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
             <h3 className="text-lg font-semibold text-text">
@@ -82,7 +82,7 @@ export default function Sidebar({
             className="p-4 lg:p-0 h-[calc(100vh-80px)] lg:h-auto overflow-y-auto sidebar-content custom-sidebar-scrollbar"
             style={{ direction: "ltr" }}
           >
-            <div style={{ direction: isRtl ? "rtl" : "ltr" }} className="w-full">
+            <div style={{ direction: "ltr" }} className="w-full">
               <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
                 {t("courses.courseContent", "Course Content")}
               </h3>

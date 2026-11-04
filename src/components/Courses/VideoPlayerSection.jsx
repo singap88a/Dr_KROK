@@ -168,8 +168,22 @@ export default function VideoPlayerSection({
                   {isLoggedIn && currentLesson?.video && onLessonComplete && (
                     <div className="mt-3">
                       {(() => {
-                        const isCompleted = lessonStatuses && lessonStatuses[currentLesson.id] &&
-                          (lessonStatuses[currentLesson.id].progress_status === 'completed' || lessonStatuses[currentLesson.id].percentage >= 100);
+                        const currentStatus = lessonStatuses && lessonStatuses[currentLesson.id];
+                        const lessonHasTests = Boolean(
+                          (currentLesson?.lesson_end_tests && currentLesson.lesson_end_tests.length > 0) ||
+                          (currentLesson?.periodic_quizzes && currentLesson.periodic_quizzes.length > 0) ||
+                          (currentLesson?.quizzes && currentLesson.quizzes.length > 0) ||
+                          (currentLesson?.tests && currentLesson.tests.length > 0) ||
+                          currentLesson?.has_quiz ||
+                          currentLesson?.has_tests
+                        );
+
+                        const isCompleted = currentStatus && (
+                          currentStatus.progress_status === 'completed' ||
+                          currentStatus.status === 'completed' ||
+                          currentStatus.percentage >= 100 ||
+                          (!lessonHasTests && (currentStatus.percentage >= 50 || currentStatus.lesson_percentage >= 100))
+                        );
 
                         return (
                           <button

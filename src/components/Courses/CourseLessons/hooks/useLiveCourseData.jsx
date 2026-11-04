@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../../../context/ApiContext";
 import { useUser } from "../../../../context/UserContext";
 import i18n from "../../../../i18n";
-import { useLessonProgress } from "../../ProgressSystem/LessonProgress";
+import { useLessonProgress, checkLessonHasTests } from "../../ProgressSystem/LessonProgress";
 
 export function useLiveCourseData(id) {
   const location = useLocation();
@@ -25,6 +25,12 @@ export function useLiveCourseData(id) {
   const [serverTimeOffset, setServerTimeOffset] = useState(0);
   const [lessons, setLessons] = useState([]);
   const [sections, setSections] = useState([]);
+  const lessonsRef = useRef([]);
+  const sectionsRef = useRef([]);
+  useEffect(() => {
+    lessonsRef.current = lessons;
+    sectionsRef.current = sections;
+  }, [lessons, sections]);
   const [hasAccess, setHasAccess] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -89,9 +95,26 @@ export function useLiveCourseData(id) {
         }
 
         if (updatedLessonProgress?.lesson) {
+          let lessonData = updatedLessonProgress.lesson;
+          const matchingLesson =
+            lessonsRef.current.find((l) => l.id === lessonId) ||
+            sectionsRef.current.flatMap((s) => s.lessons || []).find((l) => l.id === lessonId);
+
+          const hasTests = checkLessonHasTests(matchingLesson);
+
+          if (!hasTests && (lessonData.percentage >= 50 || lessonData.lesson_percentage >= 100)) {
+            lessonData = {
+              ...lessonData,
+              percentage: 100,
+              status: "completed",
+              lesson_percentage: 100,
+              quiz_percentage: 100,
+            };
+          }
+
           setLessonStatuses((prev) => ({
             ...prev,
-            [lessonId]: updatedLessonProgress.lesson,
+            [lessonId]: lessonData,
           }));
         }
       } catch (err) {
@@ -120,11 +143,11 @@ export function useLiveCourseData(id) {
     if (!lesson) return;
 
     const hasVideo = !!lesson.video;
-    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+    const hasTests = checkLessonHasTests(lesson);
 
     let newPercentage = 100;
     let lessonPercentage = 100;
-    let quizPercentage = 0;
+    let quizPercentage = 100;
 
     if (hasVideo && hasTests) {
       const currentStatus = lessonStatuses[lessonId] || {};
@@ -135,6 +158,7 @@ export function useLiveCourseData(id) {
     } else if (hasVideo && !hasTests) {
       newPercentage = 100;
       lessonPercentage = 100;
+      quizPercentage = 100;
     } else if (hasTests && !hasVideo) {
       newPercentage = 100;
       quizPercentage = 100;
@@ -156,13 +180,31 @@ export function useLiveCourseData(id) {
 
     try {
       const response = await completeLiveLessonProgress(realId, lessonId, "lesson");
-      if (response.success) {
+
+      // If the lesson has no tests, also complete the quiz part on backend so database registers 100%
+      if (!hasTests) {
+        try {
+          await completeLiveLessonProgress(realId, lessonId, "quiz");
+        } catch {
+          /* ignore if server does not require quiz */
+        }
+      }
+
+      if (response && response.success) {
         if (response.data && response.data.lesson) {
+          const respLesson = response.data.lesson;
+          const finalPercentage = !hasTests ? 100 : (respLesson.percentage || newPercentage);
+          const finalStatus = finalPercentage >= 100 ? "completed" : (respLesson.status || "in_progress");
+
           setLessonStatuses((prev) => ({
             ...prev,
             [lessonId]: {
               ...prev[lessonId],
-              ...response.data.lesson,
+              ...respLesson,
+              percentage: finalPercentage,
+              status: finalStatus,
+              lesson_percentage: 100,
+              quiz_percentage: !hasTests ? 100 : (respLesson.quiz_percentage || 0),
             },
           }));
         }
@@ -290,6 +332,18 @@ export function useLiveCourseData(id) {
 
         const realId = courseData.id;
 
+        // Fire independent requests in parallel instead of sequentially
+
+        const progressPromise = isLoggedIn ? getLiveCourseProgressDetails(realId) : null;
+
+        const accessPromise = isLoggedIn
+
+          ? getCourseAccess(realId, "live_course").catch(() => courseData.price === 0 || courseData.price === "0")
+
+          : Promise.resolve(false);
+
+        if (progressPromise) progressPromise.catch(() => {});
+
         if (courseData.server_time) {
           const serverTime = new Date(courseData.server_time).getTime();
           const localTime = Date.now();
@@ -366,7 +420,7 @@ export function useLiveCourseData(id) {
 
         if (isLoggedIn) {
           try {
-            const courseProgressDetails = await getLiveCourseProgressDetails(realId);
+            const courseProgressDetails = await progressPromise;
             if (courseProgressDetails) {
               setCourseProgress(courseProgressDetails);
               const updatedStatuses = { ...lessonStatuses };
@@ -375,10 +429,27 @@ export function useLiveCourseData(id) {
                   if (section.lessons) {
                     section.lessons.forEach((lesson) => {
                       if (lesson.lesson_id) {
+                        const matchingLesson =
+                          (courseData.lessons && courseData.lessons.find((l) => l.id === lesson.lesson_id)) ||
+                          (courseData.sections &&
+                            courseData.sections.flatMap((s) => s.lessons || []).find((l) => l.id === lesson.lesson_id));
+
+                        const hasTests = checkLessonHasTests(matchingLesson);
+
+                        let p = lesson.percentage || 0;
+                        let s = lesson.status || "not_started";
+
+                        if (!hasTests && (p >= 50 || lesson.lesson_percentage >= 100)) {
+                          p = 100;
+                          s = "completed";
+                        }
+
                         updatedStatuses[lesson.lesson_id] = {
                           ...updatedStatuses[lesson.lesson_id],
-                          percentage: lesson.percentage || 0,
-                          status: lesson.status || "not_started",
+                          percentage: p,
+                          status: s,
+                          lesson_percentage: lesson.lesson_percentage || (p >= 100 ? 100 : 0),
+                          quiz_percentage: !hasTests && p >= 100 ? 100 : (lesson.quiz_percentage || 0),
                         };
                       }
                     });
@@ -402,14 +473,7 @@ export function useLiveCourseData(id) {
           }
         }
 
-        let hasProfileAccess = false;
-        if (isLoggedIn) {
-          try {
-            hasProfileAccess = await getCourseAccess(realId, "live_course");
-          } catch {
-            hasProfileAccess = courseData.price === 0 || courseData.price === "0";
-          }
-        }
+        const hasProfileAccess = await accessPromise;
 
         if (courseData.enrollment_status) {
           const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
@@ -445,21 +509,19 @@ export function useLiveCourseData(id) {
         if (targetLesson) {
           setCurrentLesson(targetLesson);
           if (isLoggedIn) {
-            try {
-              const res = await startLiveLessonProgress(realId, targetLesson.id);
-              if (res?.course_progress) setCourseProgress(res.course_progress);
-              if (res?.lesson) {
-                setLessonStatuses((prev) => ({
-                  ...prev,
-                  [targetLesson.id]: {
-                    ...prev[targetLesson.id],
-                    ...res.lesson,
-                  },
-                }));
-              }
-            } catch {
-              /* noop */
-            }
+            // Run in background so it does not block the page from rendering
+            startLiveLessonProgress(realId, targetLesson.id)
+              .then((res) => {
+                if (!mounted) return;
+                if (res?.course_progress) setCourseProgress(res.course_progress);
+                if (res?.lesson) {
+                  setLessonStatuses((prev) => ({
+                    ...prev,
+                    [targetLesson.id]: { ...prev[targetLesson.id], ...res.lesson },
+                  }));
+                }
+              })
+              .catch(() => {});
           }
           saveLastLesson(realId, targetLesson.id);
         } else if (targetSection) {
@@ -495,7 +557,6 @@ export function useLiveCourseData(id) {
     startLiveLessonProgress,
     getLiveLessonProgress,
     isLoggedIn,
-    updateLessonStatus,
     getLastLesson,
     saveLastLesson,
   ]);

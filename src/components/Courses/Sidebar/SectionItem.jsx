@@ -55,8 +55,15 @@ const SectionItem = ({
     if (!isLoggedIn || !lessons || lessons.length === 0) return 0;
     
     const completedLessons = lessons.filter(lesson => {
-      const status = lessonStatuses[lesson.id];
-      return status && (status.progress_status === 'completed' || status.percentage >= 100);
+      const status = lessonStatuses?.[lesson.id];
+      if (calculateTotalProgress) {
+        return calculateTotalProgress(lesson, status) >= 100;
+      }
+      return status && (
+        status.progress_status === 'completed' ||
+        status.status === 'completed' ||
+        status.percentage >= 100
+      );
     });
     
     return (completedLessons.length / lessons.length) * 100;
@@ -64,8 +71,6 @@ const SectionItem = ({
 
   const sectionCompletionPercentage = calculateSectionCompletion();
   const isSectionCompleted = sectionCompletionPercentage >= 100;
-
-
 
   // عرض اختبارات السيكشن
   const renderSectionTests = () => {
@@ -177,7 +182,7 @@ const SectionItem = ({
                 )}
               </div>
 
-              {/* 🔥 التعديل: إعادة تنظيم المحتوى بحيث يكون العنوان والمعلومات في عمود واحد */}
+              {/* العنوان والمعلومات في عمود واحد */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between w-full">
                   <div className="flex-1 min-w-0 mr-2">
@@ -199,13 +204,6 @@ const SectionItem = ({
                           ? t("courses.hasFree", "Has Free")
                           : t("courses.premium", "Premium")}
                       </span>
-
-                      {/* {(section.video || section.video_related || section.zoom_link) && (
-                        // <div className="flex items-center gap-1 text-primary">
-                        //   <FaVideo size={10} />
-                        //   <span>{t("courses.video", "Video")}</span>
-                        // </div>
-                      )} */}
                   
                       {!hasFree && section.type !== "Free" && section.type !== "free" && !hasAccess && (
                         <FaLock
@@ -216,7 +214,6 @@ const SectionItem = ({
                     </div>
                   </div>
 
-                  {/* 🔥 نقل السهم إلى هنا بحيث يكون في نفس الصف مع العنوان */}
                   <div className="flex-shrink-0">
                     <button
                       onClick={handleToggleClick}
@@ -258,7 +255,7 @@ const SectionItem = ({
               lesson={lesson}
               lessonIndex={lessonIndex}
               totalLessons={lessons.length}
-              lessonStatus={lessonStatuses[lesson.id]}
+              lessonStatus={lessonStatuses?.[lesson.id]}
               isActive={currentLesson?.id === lesson.id}
               isAccessible={lesson.type === "free" || lesson.type === "Free"}
               onLessonClick={onLessonClick}

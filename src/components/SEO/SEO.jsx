@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 const SEO = ({ title, description, image, url, noindex }) => {
   const location = useLocation();
   const siteTitle = 'DR-KROK';
-  const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
+  const fullTitle = title ? `${title} | ${siteTitle}` : 'DR-KROK';
   const defaultDescription = 'DR-KROK is a medical education platform for KROK exam preparation, courses, practice tests, simulations, and clinical cases for medical, dental, and pharmacy students.';
   const defaultImage = 'https://dr-krok.com/logo.png';
   

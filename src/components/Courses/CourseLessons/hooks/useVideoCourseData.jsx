@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../../../context/ApiContext";
 import { useUser } from "../../../../context/UserContext";
 import i18n from "../../../../i18n";
-import { useLessonProgress } from "../../ProgressSystem/LessonProgress";
+import { useLessonProgress, checkLessonHasTests } from "../../ProgressSystem/LessonProgress";
 
 export function useVideoCourseData(id) {
   const location = useLocation();
@@ -16,6 +16,7 @@ export function useVideoCourseData(id) {
     getLessonProgress,
     getCourseProgressDetails,
     markLessonAsCompleted,
+    completeLessonProgress,
   } = useApi();
   const { isLoggedIn } = useUser();
 
@@ -24,6 +25,12 @@ export function useVideoCourseData(id) {
   const [course, setCourse] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [sections, setSections] = useState([]);
+  const lessonsRef = useRef([]);
+  const sectionsRef = useRef([]);
+  useEffect(() => {
+    lessonsRef.current = lessons;
+    sectionsRef.current = sections;
+  }, [lessons, sections]);
   const [hasAccess, setHasAccess] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -75,9 +82,26 @@ export function useVideoCourseData(id) {
         }
 
         if (updatedLessonProgress?.lesson) {
+          let lessonData = updatedLessonProgress.lesson;
+          const matchingLesson =
+            lessonsRef.current.find((l) => l.id === lessonId) ||
+            sectionsRef.current.flatMap((s) => s.lessons || []).find((l) => l.id === lessonId);
+
+          const hasTests = checkLessonHasTests(matchingLesson);
+
+          if (!hasTests && (lessonData.percentage >= 50 || lessonData.lesson_percentage >= 100)) {
+            lessonData = {
+              ...lessonData,
+              percentage: 100,
+              status: "completed",
+              lesson_percentage: 100,
+              quiz_percentage: 100,
+            };
+          }
+
           setLessonStatuses((prev) => ({
             ...prev,
-            [lessonId]: updatedLessonProgress.lesson,
+            [lessonId]: lessonData,
           }));
         }
       } catch (err) {
@@ -106,7 +130,7 @@ export function useVideoCourseData(id) {
     if (!lesson) return;
 
     const hasVideo = !!lesson.video;
-    const hasTests = lesson.lesson_end_tests && lesson.lesson_end_tests.length > 0;
+    const hasTests = checkLessonHasTests(lesson);
     let newPercentage = 100;
 
     if (hasVideo && hasTests) {
@@ -122,7 +146,7 @@ export function useVideoCourseData(id) {
         percentage: newPercentage,
         status: newPercentage === 100 ? "completed" : "in_progress",
         lesson_percentage: hasVideo ? 100 : prev[lessonId]?.lesson_percentage || 0,
-        quiz_percentage: hasTests && newPercentage === 100 ? 100 : prev[lessonId]?.quiz_percentage || 0,
+        quiz_percentage: !hasTests || newPercentage === 100 ? 100 : prev[lessonId]?.quiz_percentage || 0,
       },
     }));
 
@@ -131,6 +155,16 @@ export function useVideoCourseData(id) {
 
     try {
       const res = await markLessonAsCompleted(realId, lessonId);
+
+      // If testless lesson, also send quiz completion
+      if (!hasTests && completeLessonProgress) {
+        try {
+          await completeLessonProgress(realId, lessonId, "quiz");
+        } catch {
+          /* ignore */
+        }
+      }
+
       if (res) {
         const updatedProgress = await getCourseProgressDetails(realId);
         if (updatedProgress) {
@@ -171,6 +205,18 @@ export function useVideoCourseData(id) {
         setSections(courseData.sections || []);
 
         const realId = courseData.id;
+
+        // Fire independent requests in parallel instead of sequentially
+
+        const progressPromise = isLoggedIn ? getCourseProgressDetails(realId) : null;
+
+        const accessPromise = isLoggedIn
+
+          ? getCourseAccess(realId, "video_course").catch(() => courseData.price === 0 || courseData.price === "0")
+
+          : Promise.resolve(false);
+
+        if (progressPromise) progressPromise.catch(() => {});
         setExpandedSections(new Set());
 
         const lastLessonId = getLastLesson(realId);
@@ -225,7 +271,7 @@ export function useVideoCourseData(id) {
 
         if (isLoggedIn) {
           try {
-            const courseProgressDetails = await getCourseProgressDetails(realId);
+            const courseProgressDetails = await progressPromise;
             if (courseProgressDetails) {
               setCourseProgress(courseProgressDetails);
               const updatedStatuses = { ...lessonStatuses };
@@ -234,10 +280,27 @@ export function useVideoCourseData(id) {
                   if (section.lessons) {
                     section.lessons.forEach((lesson) => {
                       if (lesson.lesson_id) {
+                        const matchingLesson =
+                          (courseData.lessons && courseData.lessons.find((l) => l.id === lesson.lesson_id)) ||
+                          (courseData.sections &&
+                            courseData.sections.flatMap((s) => s.lessons || []).find((l) => l.id === lesson.lesson_id));
+
+                        const hasTests = checkLessonHasTests(matchingLesson);
+
+                        let p = lesson.percentage || 0;
+                        let s = lesson.status || "not_started";
+
+                        if (!hasTests && (p >= 50 || lesson.lesson_percentage >= 100)) {
+                          p = 100;
+                          s = "completed";
+                        }
+
                         updatedStatuses[lesson.lesson_id] = {
                           ...updatedStatuses[lesson.lesson_id],
-                          percentage: lesson.percentage || 0,
-                          status: lesson.status || "not_started",
+                          percentage: p,
+                          status: s,
+                          lesson_percentage: lesson.lesson_percentage || (p >= 100 ? 100 : 0),
+                          quiz_percentage: !hasTests && p >= 100 ? 100 : (lesson.quiz_percentage || 0),
                         };
                       }
                     });
@@ -261,14 +324,7 @@ export function useVideoCourseData(id) {
           }
         }
 
-        let hasProfileAccess = false;
-        if (isLoggedIn) {
-          try {
-            hasProfileAccess = await getCourseAccess(realId, "video_course");
-          } catch {
-            hasProfileAccess = courseData.price === 0 || courseData.price === "0";
-          }
-        }
+        const hasProfileAccess = await accessPromise;
 
         if (courseData.enrollment_status) {
           const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
@@ -304,21 +360,19 @@ export function useVideoCourseData(id) {
         if (targetLesson) {
           setCurrentLesson(targetLesson);
           if (isLoggedIn) {
-            try {
-              const res = await startLessonProgress(realId, targetLesson.id);
-              if (res?.course_progress) setCourseProgress(res.course_progress);
-              if (res?.lesson) {
-                setLessonStatuses((prev) => ({
-                  ...prev,
-                  [targetLesson.id]: {
-                    ...prev[targetLesson.id],
-                    ...res.lesson,
-                  },
-                }));
-              }
-            } catch {
-              /* noop */
-            }
+            // Run in background so it does not block the page from rendering
+            startLessonProgress(realId, targetLesson.id)
+              .then((res) => {
+                if (!mounted) return;
+                if (res?.course_progress) setCourseProgress(res.course_progress);
+                if (res?.lesson) {
+                  setLessonStatuses((prev) => ({
+                    ...prev,
+                    [targetLesson.id]: { ...prev[targetLesson.id], ...res.lesson },
+                  }));
+                }
+              })
+              .catch(() => {});
           }
           saveLastLesson(realId, targetLesson.id);
         } else if (targetSection) {
@@ -354,7 +408,6 @@ export function useVideoCourseData(id) {
     startLessonProgress,
     getLessonProgress,
     isLoggedIn,
-    updateLessonStatus,
     getLastLesson,
     saveLastLesson,
   ]);

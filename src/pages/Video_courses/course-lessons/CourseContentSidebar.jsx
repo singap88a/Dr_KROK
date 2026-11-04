@@ -150,7 +150,7 @@ const CourseContentSidebar = ({
           className="p-4 lg:p-0 h-[calc(100vh-80px)] lg:h-auto overflow-y-auto sidebar-content custom-sidebar-scrollbar"
           style={{ direction: "ltr" }}
         >
-          <div style={{ direction: i18n.language === "ar" ? "rtl" : "ltr" }} className="w-full">
+          <div style={{ direction: "ltr" }} className="w-full">
             <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
               {t("courses.courseContent", "Course Content")}
             </h3>

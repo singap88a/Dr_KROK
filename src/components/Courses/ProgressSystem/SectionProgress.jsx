@@ -4,12 +4,13 @@ import { useTranslation } from "react-i18next";
 
 export const SectionProgressBar = ({ sectionId, sectionProgress, calculateSectionProgress }) => {
   const { t } = useTranslation();
-  const progress = calculateSectionProgress(sectionId);
-  const sectionProgressData = sectionProgress[sectionId];
+  const progress = calculateSectionProgress ? calculateSectionProgress(sectionId) : null;
+  const sectionProgressData = sectionProgress?.[sectionId];
 
-  const displayPercentage = sectionProgressData?.percentage || progress.percentage;
-  const displayCompleted = sectionProgressData?.completed_lessons || progress.completedLessons;
-  const displayTotal = sectionProgressData?.total_lessons || progress.totalLessons;
+  // Prioritize dynamically calculated progress so testless completed lessons are reflected accurately
+  const displayPercentage = progress?.percentage !== undefined ? progress.percentage : (sectionProgressData?.percentage || 0);
+  const displayCompleted = progress?.completedLessons !== undefined ? progress.completedLessons : (sectionProgressData?.completed_lessons || 0);
+  const displayTotal = progress?.totalLessons !== undefined ? progress.totalLessons : (sectionProgressData?.total_lessons || 0);
 
   return (
     <div className="mt-2">
