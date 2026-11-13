@@ -10,7 +10,7 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
   const dialogRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (quizModal.isOpen && quizModal.currentQuiz) {
+    if (quizModal?.isOpen && quizModal?.currentQuiz) {
       if (dialogRef.current && !dialogRef.current.open) {
         try {
           dialogRef.current.showModal();
@@ -23,9 +23,9 @@ export const QuizModal = ({ quizModal, setQuizModal, setAnsweredQuizzes, setQuiz
         dialogRef.current.close();
       }
     }
-  }, [quizModal.isOpen, quizModal.currentQuiz]);
+  }, [quizModal?.isOpen, quizModal?.currentQuiz]);
 
-  if (!quizModal.isOpen || !quizModal.currentQuiz) return null;
+  if (!quizModal || !quizModal.isOpen || !quizModal.currentQuiz) return null;
 
   const { currentQuiz, currentQuestionIndex } = quizModal;
   const correctAnswerIndex = currentQuiz.correct_answer_index;

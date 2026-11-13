@@ -2,8 +2,6 @@ import React from "react";
 import PurchaseModal from "../ContentModals/PurchaseModal";
 import ImagePopup from "../ContentModals/ImagePopup";
 import VideoPopup from "../ContentModals/VideoPopup";
-import { QuizModal } from "../QuizSystem/QuizModal";
-import { ResultsModal } from "../QuizSystem/ResultsModal";
 
 export default function CourseLessonsModals({
   showPurchaseModal,
@@ -15,11 +13,6 @@ export default function CourseLessonsModals({
   showVideoPopup,
   selectedVideo,
   setShowVideoPopup,
-  quizModal,
-  setQuizModal,
-  resultsModal,
-  setResultsModal,
-  onQuizSubmit,
 }) {
   return (
     <>
@@ -40,30 +33,6 @@ export default function CourseLessonsModals({
         video={selectedVideo}
         onClose={() => setShowVideoPopup(false)}
       />
-
-      {quizModal?.isOpen && (
-        <QuizModal
-          isOpen={quizModal.isOpen}
-          onClose={() => setQuizModal((prev) => ({ ...prev, isOpen: false }))}
-          quiz={quizModal.currentQuiz}
-          test={quizModal.currentTest}
-          questionIndex={quizModal.currentQuestionIndex}
-          onSubmit={onQuizSubmit}
-        />
-      )}
-
-      {resultsModal?.isOpen && (
-        <ResultsModal
-          isOpen={resultsModal.isOpen}
-          onClose={() =>
-            setResultsModal((prev) => ({ ...prev, isOpen: false }))
-          }
-          test={resultsModal.test}
-          totalQuestions={resultsModal.totalQuestions}
-          correctAnswers={resultsModal.correctAnswers}
-          score={resultsModal.score}
-        />
-      )}
     </>
   );
 }

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 export const ResultsModal = ({ resultsModal, setResultsModal }) => {
   const { t } = useTranslation();
 
-  if (!resultsModal.isOpen) return null;
+  if (!resultsModal || !resultsModal.isOpen) return null;
 
   const { totalQuestions, correctAnswers, score } = resultsModal;
   const isExcellent = score >= 90;
