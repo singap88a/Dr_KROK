@@ -176,6 +176,66 @@ export function createInteractionsService(request) {
     });
   };
 
+  // ─── Recreational Quizzes ─────────────────────────────────────────────────
+
+  const getLessonRecreationalQuizzes = async (
+    lessonId,
+    lessonType = "video"
+  ) => {
+    if (!lessonId) throw new Error("lessonId is required");
+    const endpoint =
+      lessonType === "live"
+        ? `live-lesson/${lessonId}/recreational-quizzes`
+        : `video-lesson/${lessonId}/recreational-quizzes`;
+
+    try {
+      const res = await request(endpoint, { auth: true, useCache: false });
+      const list =
+        res?.data?.quizzes ||
+        res?.data ||
+        res?.quizzes ||
+        (Array.isArray(res) ? res : []);
+      return {
+        quizzes: Array.isArray(list) ? list : [],
+        forbidden: false,
+        message: null,
+        raw: res,
+      };
+    } catch (err) {
+      if (err?.status === 403) {
+        return {
+          quizzes: [],
+          forbidden: true,
+          message:
+            err?.data?.message ||
+            err?.message ||
+            "You must be subscribed to this course to access recreational quizzes.",
+        };
+      }
+      return {
+        quizzes: [],
+        forbidden: false,
+        message: null,
+      };
+    }
+  };
+
+  const getRecreationalQuizDetails = async (
+    quizId,
+    lessonType = "video",
+    limit = null
+  ) => {
+    if (!quizId) throw new Error("quizId is required");
+    const query = limit ? `?limit=${limit}` : "";
+    const endpoint =
+      lessonType === "live"
+        ? `live-lesson/recreational-quizzes/${quizId}${query}`
+        : `video-lesson/recreational-quizzes/${quizId}${query}`;
+
+    const res = await request(endpoint, { auth: true, useCache: false });
+    return res?.data || res;
+  };
+
   return {
     getVideoLessonInteractions,
     toggleVideoLessonLike,
@@ -191,5 +251,7 @@ export function createInteractionsService(request) {
     getLiveLessonFlashCards,
     getLessonEssayQuestions,
     submitEssayAnswer,
+    getLessonRecreationalQuizzes,
+    getRecreationalQuizDetails,
   };
 }

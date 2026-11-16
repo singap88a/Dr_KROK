@@ -44,7 +44,27 @@ export const LessonEndTestsSection = ({ lesson, lessonStatuses, id, course, isLi
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {lessonEndTests.map((test, idx) => (
+        {lessonEndTests.map((test, idx) => {
+          const questionsCount =
+            test.number_student_questions > 0
+              ? test.number_student_questions
+              : test.questions_count ??
+                test.total_questions ??
+                (Array.isArray(test.quizzes) ? test.quizzes.length : null);
+          const totalScore =
+            test.total_score ??
+            test.score ??
+            test.max_score ??
+            (Array.isArray(test.quizzes) &&
+            test.quizzes.length > 0 &&
+            !(test.number_student_questions > 0)
+              ? test.quizzes.reduce(
+                  (sum, q) => sum + Number(q.question_score || 1),
+                  0
+                )
+              : null);
+
+          return (
           <div
             key={test.id || idx}
             className={`p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
@@ -84,6 +104,20 @@ export const LessonEndTestsSection = ({ lesson, lessonStatuses, id, course, isLi
                       test.description.replace(/<[^>]*>/g, "").substring(0, 100)}
                     {test.description && test.description.length > 100 ? "..." : ""}
                   </p>
+                  {(questionsCount !== null || totalScore !== null) && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {questionsCount !== null && (
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                          {questionsCount} {t("homework.questionsCountLabel", "Questions")}
+                        </span>
+                      )}
+                      {totalScore !== null && (
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          {totalScore} {t("essay.pts", "pts")}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               <div
@@ -123,7 +157,8 @@ export const LessonEndTestsSection = ({ lesson, lessonStatuses, id, course, isLi
               </p>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

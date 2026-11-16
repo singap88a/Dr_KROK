@@ -1,5 +1,5 @@
 import React from "react";
-import { FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaRegCopy, FaFileAlt, FaEdit } from "react-icons/fa";
+import { FaGraduationCap, FaCheckCircle, FaPaperclip, FaComments, FaFileAlt } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { VideoPlayer } from "./LessonPlayer/VideoPlayer";
 import { QuizModal } from "./QuizSystem/QuizModal";
@@ -47,10 +47,21 @@ export default function VideoPlayerSection({
   groupId = null,
 }) {
   const { t } = useTranslation();
-  const { getLessonEssayQuestions } = useApi();
+  const {
+    getLessonEssayQuestions,
+    getLessonRecreationalQuizzes,
+    getLessonFlashCards,
+    getLiveLessonFlashCards,
+  } = useApi();
   const [activeTab, setActiveTab] = React.useState("about");
   const [essayQuestions, setEssayQuestions] = React.useState([]);
   const [essayLoading, setEssayLoading] = React.useState(false);
+  const [recreationalQuizzes, setRecreationalQuizzes] = React.useState([]);
+  const [recreationalForbidden, setRecreationalForbidden] = React.useState(false);
+  const [recreationalForbiddenMessage, setRecreationalForbiddenMessage] = React.useState(null);
+  const [recreationalLoading, setRecreationalLoading] = React.useState(false);
+  const [flashcardsCount, setFlashcardsCount] = React.useState(0);
+  const [flashcardsLoading, setFlashcardsLoading] = React.useState(false);
 
   const content = currentLesson || currentSection;
   const hasAttachments = content && (
@@ -59,30 +70,55 @@ export default function VideoPlayerSection({
     (content.video_related && content.video_related.length > 0)
   );
 
-  const hasQuizzes = currentLesson && (
-    (currentLesson.lesson_end_tests && currentLesson.lesson_end_tests.length > 0) ||
-    (currentLesson.periodic_quizzes && currentLesson.periodic_quizzes.length > 0)
-  );
+  const endTestType = isLiveCourse
+    ? "Lesson-End Test (Live Session)"
+    : "Lesson-End Test (Video Session)";
+  const matchingLessonTestsCount = currentLesson
+    ? (currentLesson.lesson_end_tests || []).filter(
+        (test) =>
+          test.test_type === endTestType ||
+          (test.test_type && test.test_type.includes("Periodic Quiz"))
+      ).length + (currentLesson.periodic_quizzes?.length || 0)
+    : 0;
+
+  const totalHomeworkItems =
+    recreationalQuizzes.length +
+    matchingLessonTestsCount +
+    (flashcardsCount > 0 ? 1 : 0) +
+    (essayQuestions.length > 0 ? 1 : 0);
 
   const tabs = [
     { id: "about", label: t("courses.tabs.about", "About"), icon: <FaFileAlt className="text-xs" /> },
     ...(hasAttachments ? [{ id: "attachments", label: t("courses.tabs.attachments", "Files"), icon: <FaPaperclip className="text-xs" /> }] : []),
-    ...(hasQuizzes ? [{ id: "quizzes", label: t("courses.tabs.quizzes", "Quizzes"), icon: <FaGraduationCap className="text-xs" /> }] : []),
-    ...(currentLesson ? [{ id: "flashcards", label: t("courses.tabs.flashcards", "Flashcards"), icon: <FaRegCopy className="text-xs" /> }] : []),
-    ...(essayQuestions.length > 0 ? [{ id: "essay", label: t("courses.tabs.essay", "Essay"), icon: <FaEdit className="text-xs" /> }] : []),
+    ...(currentLesson
+      ? [
+          {
+            id: "homework",
+            label: t("courses.tabs.homework", "Homework"),
+            icon: <FaGraduationCap className="text-xs" />,
+            badge: totalHomeworkItems > 0 ? totalHomeworkItems : null,
+          },
+        ]
+      : []),
     ...(currentLesson ? [{ id: "comments", label: t("courses.tabs.comments", "Discussions"), icon: <FaComments className="text-xs" /> }] : []),
   ];
 
-  // Fetch essay questions whenever lesson changes
+  // Fetch homework resources (essay questions, recreational quizzes, flashcards count) whenever lesson changes
   React.useEffect(() => {
     if (!currentLesson?.id) {
       setEssayQuestions([]);
+      setRecreationalQuizzes([]);
+      setRecreationalForbidden(false);
+      setRecreationalForbiddenMessage(null);
+      setFlashcardsCount(0);
       return;
     }
     let cancelled = false;
+    const lessonType = isLiveCourse ? "live" : "video";
+
+    // 1. Essay questions
     setEssayLoading(true);
     setEssayQuestions([]);
-    const lessonType = isLiveCourse ? "live" : "video";
     getLessonEssayQuestions(currentLesson.id, lessonType)
       .then((data) => {
         if (!cancelled) setEssayQuestions(Array.isArray(data) ? data : []);
@@ -92,15 +128,71 @@ export default function VideoPlayerSection({
         if (!cancelled) setEssayQuestions([]);
       })
       .finally(() => { if (!cancelled) setEssayLoading(false); });
+
+    // 2. Recreational quizzes
+    setRecreationalLoading(true);
+    setRecreationalQuizzes([]);
+    setRecreationalForbidden(false);
+    setRecreationalForbiddenMessage(null);
+    getLessonRecreationalQuizzes(currentLesson.id, lessonType)
+      .then((res) => {
+        if (!cancelled) {
+          setRecreationalQuizzes(Array.isArray(res?.quizzes) ? res.quizzes : []);
+          setRecreationalForbidden(Boolean(res?.forbidden));
+          setRecreationalForbiddenMessage(res?.message || null);
+        }
+      })
+      .catch((err) => {
+        console.error("🎮 [Recreational] Error:", err);
+        if (!cancelled) {
+          setRecreationalQuizzes([]);
+          setRecreationalForbidden(false);
+          setRecreationalForbiddenMessage(null);
+        }
+      })
+      .finally(() => { if (!cancelled) setRecreationalLoading(false); });
+
+    // 3. Flashcards count
+    setFlashcardsLoading(true);
+    setFlashcardsCount(0);
+    const fetchFlash = isLiveCourse
+      ? getLiveLessonFlashCards(currentLesson.id, 1, 5)
+      : getLessonFlashCards(currentLesson.id, 1, 5);
+    fetchFlash
+      .then((res) => {
+        if (!cancelled) {
+          const total =
+            res?.meta?.total ??
+            res?.pagination?.total ??
+            (Array.isArray(res?.data) ? res.data.length : 0);
+          setFlashcardsCount(Number(total || 0));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setFlashcardsCount(0);
+      })
+      .finally(() => { if (!cancelled) setFlashcardsLoading(false); });
+
     return () => { cancelled = true; };
-  }, [currentLesson?.id, isLiveCourse]);
+  }, [
+    currentLesson?.id,
+    isLiveCourse,
+    getLessonEssayQuestions,
+    getLessonRecreationalQuizzes,
+    getLessonFlashCards,
+    getLiveLessonFlashCards,
+  ]);
 
   React.useEffect(() => {
-    const isTabAvailable = tabs.some(tab => tab.id === activeTab);
-    if (!isTabAvailable) {
+    const availableTabIds = [
+      "about",
+      ...(hasAttachments ? ["attachments"] : []),
+      ...(currentLesson ? ["homework", "comments"] : []),
+    ];
+    if (!availableTabIds.includes(activeTab)) {
       setActiveTab("about");
     }
-  }, [currentLesson?.id, currentSection?.id, hasAttachments, hasQuizzes, essayQuestions.length]);
+  }, [currentLesson, currentSection, hasAttachments, activeTab]);
 
   const shouldShowContent = () => {
     if (currentLesson) {
@@ -226,8 +318,15 @@ export default function VideoPlayerSection({
                     isDescriptionExpanded={isDescriptionExpanded}
                     setIsDescriptionExpanded={setIsDescriptionExpanded}
                     hasAttachments={hasAttachments}
-                    hasQuizzes={hasQuizzes}
                     essayQuestions={essayQuestions}
+                    essayLoading={essayLoading}
+                    recreationalQuizzes={recreationalQuizzes}
+                    recreationalForbidden={recreationalForbidden}
+                    recreationalForbiddenMessage={recreationalForbiddenMessage}
+                    recreationalLoading={recreationalLoading}
+                    flashcardsCount={flashcardsCount}
+                    flashcardsLoading={flashcardsLoading}
+                    setShowPurchaseModal={setShowPurchaseModal}
                     onImageClick={onImageClick}
                     onFileClick={onFileClick}
                     onVideoClick={onVideoClick}

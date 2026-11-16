@@ -1,11 +1,8 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { LessonAttachments } from "./LessonAttachments";
-import { PeriodicQuizzesSection } from "../QuizSystem/PeriodicQuizzes";
-import { LessonEndTestsSection } from "../QuizSystem/LessonEndTests";
-import LessonFlashCards from "../LessonFlashCards";
-import LessonEssayQuestions from "../LessonEssayQuestions";
+import LessonHomeworkSection from "../Homework/LessonHomeworkSection";
 import LessonInteractions from "../LessonInteractions";
 import { LiveActiveSessionCard } from "./LiveSessionStatus";
 
@@ -21,8 +18,15 @@ export default function LessonPlayerTabs({
   isDescriptionExpanded,
   setIsDescriptionExpanded,
   hasAttachments,
-  hasQuizzes,
   essayQuestions,
+  essayLoading,
+  recreationalQuizzes,
+  recreationalForbidden,
+  recreationalForbiddenMessage,
+  recreationalLoading,
+  flashcardsCount,
+  flashcardsLoading,
+  setShowPurchaseModal,
   onImageClick,
   onFileClick,
   onVideoClick,
@@ -47,14 +51,14 @@ export default function LessonPlayerTabs({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-colors duration-300 whitespace-nowrap outline-none select-none ${
+              className={`relative flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-colors duration-300 whitespace-nowrap outline-none select-none cursor-pointer ${
                 isActive
                   ? "text-white animate-in scale-in-95 duration-100"
                   : "text-text-secondary hover:text-text"
               }`}
             >
               {isActive && (
-                <motion.div
+                <Motion.div
                   layoutId="activeTabIndicator"
                   className="absolute inset-0 bg-primary rounded-xl"
                   style={{ originY: "0px" }}
@@ -64,6 +68,17 @@ export default function LessonPlayerTabs({
               <span className="relative z-10 flex items-center gap-2">
                 {tab.icon}
                 <span>{tab.label}</span>
+                {tab.badge !== undefined && tab.badge !== null && (
+                  <span
+                    className={`px-1.5 py-0.5 text-[10px] font-black rounded-full leading-none ${
+                      isActive
+                        ? "bg-white/25 text-white"
+                        : "bg-primary/15 text-primary"
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
               </span>
             </button>
           );
@@ -120,32 +135,23 @@ export default function LessonPlayerTabs({
           />
         )}
 
-        {activeTab === "quizzes" && hasQuizzes && currentLesson && (
-          <div className="space-y-6">
-            <PeriodicQuizzesSection lesson={currentLesson} />
-            <LessonEndTestsSection
-              lesson={currentLesson}
-              lessonStatuses={lessonStatuses}
-              id={id}
-              course={course}
-              isLive={isLiveCourse}
-            />
-          </div>
-        )}
-
-        {activeTab === "flashcards" && currentLesson && (
-          <LessonFlashCards
-            lessonId={currentLesson.id}
+        {activeTab === "homework" && currentLesson && (
+          <LessonHomeworkSection
+            currentLesson={currentLesson}
+            course={course}
+            id={id}
             isLiveCourse={isLiveCourse}
             hasAccess={hasAccess}
-          />
-        )}
-
-        {activeTab === "essay" && essayQuestions.length > 0 && (
-          <LessonEssayQuestions
-            key={currentLesson?.id}
-            questions={essayQuestions}
-            isLiveCourse={isLiveCourse}
+            lessonStatuses={lessonStatuses}
+            setShowPurchaseModal={setShowPurchaseModal}
+            essayQuestions={essayQuestions}
+            essayLoading={essayLoading}
+            recreationalQuizzes={recreationalQuizzes}
+            recreationalForbidden={recreationalForbidden}
+            recreationalForbiddenMessage={recreationalForbiddenMessage}
+            recreationalLoading={recreationalLoading}
+            flashcardsCount={flashcardsCount}
+            flashcardsLoading={flashcardsLoading}
           />
         )}
 
