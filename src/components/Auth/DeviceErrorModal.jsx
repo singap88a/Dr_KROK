@@ -26,8 +26,7 @@ export default function DeviceErrorModal({
   defaultEmail = '',
   onSuccess,
 }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n?.language === 'ar' || i18n?.language?.startsWith('ar');
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { sendDeviceVerifyOtp, confirmDevice } = useApi();
   const { login: userLogin } = useUser();
@@ -77,9 +76,7 @@ export default function DeviceErrorModal({
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     if (!email || !email.includes('@')) {
-      setActionError(
-        isRtl ? 'يرجى كتابة بريد إلكتروني صالح' : 'Please enter a valid email address.'
-      );
+      setActionError('Please enter a valid email address.');
       return;
     }
 
@@ -97,18 +94,13 @@ export default function DeviceErrorModal({
       setRemainingChanges(rem);
       setIsOtpSent(true);
       setCooldown(60);
-      toast.success(
-        res?.message ||
-          (isRtl
-            ? 'تم إرسال كود التأكيد إلى بريدك الإلكتروني.'
-            : 'Verification code sent to your email.')
-      );
+      toast.success(res?.message || 'Verification code sent to your email.');
     } catch (err) {
       console.error('Error sending device OTP:', err);
       const errMsg =
         err?.data?.message ||
         err?.message ||
-        (isRtl ? 'تعذر إرسال كود التأكيد' : 'Failed to send verification code');
+        'Failed to send verification code';
       setActionError(errMsg);
 
       if (err?.status === 403 || errMsg?.toLowerCase().includes('limit')) {
@@ -122,9 +114,7 @@ export default function DeviceErrorModal({
   const handleConfirmDevice = async (e) => {
     if (e) e.preventDefault();
     if (!otp || otp.trim().length < 4) {
-      setActionError(
-        isRtl ? 'يرجى إدخال رمز التحقق بشكل صحيح' : 'Please enter the verification code.'
-      );
+      setActionError('Please enter the verification code.');
       return;
     }
 
@@ -156,10 +146,7 @@ export default function DeviceErrorModal({
         token_type: res?.data?.token_type ?? res?.token_type ?? "Bearer",
       };
 
-      toast.success(
-        res?.message ||
-          (isRtl ? 'تم تأكيد الجهاز بنجاح!' : 'Device confirmed successfully!')
-      );
+      toast.success(res?.message || 'Device confirmed successfully!');
 
       if (token) {
         userLogin(token, userData, expiryData);
@@ -177,7 +164,7 @@ export default function DeviceErrorModal({
       const errMsg =
         err?.data?.message ||
         err?.message ||
-        (isRtl ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired verification code');
+        'Invalid or expired verification code';
       setActionError(errMsg);
 
       if (err?.status === 403 || errMsg?.toLowerCase().includes('limit')) {
@@ -241,7 +228,7 @@ export default function DeviceErrorModal({
 
               {/* Title */}
               <h3 className="mb-2 text-2xl font-black text-gray-900 dark:text-white">
-                {t('auth.deviceModal.title', isRtl ? 'تأكيد واستبدال الجهاز' : 'Device Verification & Replacement')}
+                {t('auth.deviceModal.title', 'Device Verification & Replacement')}
               </h3>
 
               {/* Subtitle / Explanation */}
@@ -249,9 +236,7 @@ export default function DeviceErrorModal({
                 {errorMessage ||
                   t(
                     'auth.deviceModal.subtitle',
-                    isRtl
-                      ? 'هذا الحساب مسجل على جهاز آخر. يمكنك استبداله بجهازك الحالي عبر رمز تأكيد يُرسل لبريدك الإلكتروني (لك 4 استبدالات شهرياً).'
-                      : 'This account is registered on another device. You can verify and link your current device via an OTP sent to your email (up to 4 changes monthly).'
+                    'This account is registered on another device. You can verify and link your current device via an OTP sent to your email (up to 4 changes monthly).'
                   )}
               </p>
 
@@ -262,9 +247,7 @@ export default function DeviceErrorModal({
                   <span>
                     {t('auth.deviceModal.remainingChanges', {
                       count: remainingChanges,
-                      defaultValue: isRtl
-                        ? `متبقي لك ${remainingChanges} تغييرات هذا الشهر من أصل 4`
-                        : `You have ${remainingChanges} of 4 device changes remaining this month`,
+                      defaultValue: `You have ${remainingChanges} of 4 device changes remaining this month`,
                     })}
                   </span>
                 </div>
@@ -287,9 +270,7 @@ export default function DeviceErrorModal({
                   <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
                     {t(
                       'auth.deviceModal.limitReached',
-                      isRtl
-                        ? 'لقد استنفدت الحد الأقصى لتغيير الأجهزة هذا الشهر (4 مرات). يرجى التواصل مع الدعم الفني لإعادة تعيين أجهزتك.'
-                        : 'You have reached the monthly device change limit (4 times). Please contact support to reset your devices.'
+                      'You have reached the monthly device change limit (4 times). Please contact support to reset your devices.'
                     )}
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -299,14 +280,14 @@ export default function DeviceErrorModal({
                       className="flex-1 flex items-center justify-center gap-2 px-5 py-3 font-bold text-white transition-all rounded-xl bg-gradient-to-r from-primary to-secondary hover:shadow-lg active:scale-95"
                     >
                       <FaHeadset />
-                      <span>{t('auth.deviceModal.contactSupport', isRtl ? 'تواصل مع الدعم' : 'Contact Support')}</span>
+                      <span>{t('auth.deviceModal.contactSupport', 'Contact Support')}</span>
                     </button>
                     <button
                       type="button"
                       onClick={onClose}
                       className="px-5 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
                     >
-                      {t('auth.deviceModal.close', isRtl ? 'إلغاء' : 'Cancel')}
+                      {t('auth.deviceModal.close', 'Cancel')}
                     </button>
                   </div>
                 </div>
@@ -315,7 +296,7 @@ export default function DeviceErrorModal({
                 <form onSubmit={handleSendOtp} className="w-full space-y-4">
                   <div className="text-left w-full">
                     <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      {isRtl ? 'البريد الإلكتروني المسجل به الحساب' : 'Account Email'}
+                      Account Email
                     </label>
                     <div className="relative">
                       <FaEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -341,7 +322,7 @@ export default function DeviceErrorModal({
                       ) : (
                         <>
                           <FaKey />
-                          <span>{t('auth.deviceModal.sendOtp', isRtl ? 'إرسال رمز التأكيد (OTP)' : 'Send Verification OTP')}</span>
+                          <span>{t('auth.deviceModal.sendOtp', 'Send Verification OTP')}</span>
                         </>
                       )}
                     </button>
@@ -350,7 +331,7 @@ export default function DeviceErrorModal({
                       onClick={onClose}
                       className="px-5 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
                     >
-                      {t('auth.deviceModal.close', isRtl ? 'إغلاق' : 'Close')}
+                      {t('auth.deviceModal.close', 'Close')}
                     </button>
                   </div>
                 </form>
@@ -360,15 +341,13 @@ export default function DeviceErrorModal({
                   <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-300 text-center">
                     {t('auth.deviceModal.otpSentTo', {
                       email,
-                      defaultValue: isRtl
-                        ? `تم إرسال رمز التحقق إلى: ${email}`
-                        : `Verification code sent to: ${email}`,
+                      defaultValue: `Verification code sent to: ${email}`,
                     })}
                   </div>
 
                   <div className="text-left w-full">
                     <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 text-center">
-                      {isRtl ? 'أدخل رمز التحقق (OTP)' : 'Enter 6-Digit OTP Code'}
+                      Enter 6-Digit OTP Code
                     </label>
                     <input
                       type="text"
@@ -388,9 +367,7 @@ export default function DeviceErrorModal({
                       <span>
                         {t('auth.deviceModal.resendIn', {
                           seconds: cooldown,
-                          defaultValue: isRtl
-                            ? `يمكنك إعادة طلب الرمز بعد ${cooldown} ثانية`
-                            : `Resend code in ${cooldown}s`,
+                          defaultValue: `Resend code in ${cooldown}s`,
                         })}
                       </span>
                     ) : (
@@ -401,7 +378,7 @@ export default function DeviceErrorModal({
                         className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline"
                       >
                         <FaRedo className="text-[10px]" />
-                        <span>{t('auth.deviceModal.resendOtp', isRtl ? 'إعادة إرسال الرمز' : 'Resend Code')}</span>
+                        <span>{t('auth.deviceModal.resendOtp', 'Resend Code')}</span>
                       </button>
                     )}
                   </div>
@@ -417,7 +394,7 @@ export default function DeviceErrorModal({
                       ) : (
                         <>
                           <FaCheckCircle />
-                          <span>{t('auth.deviceModal.confirmDevice', isRtl ? 'تأكيد واستبدال الجهاز' : 'Confirm & Replace Device')}</span>
+                          <span>{t('auth.deviceModal.confirmDevice', 'Confirm & Replace Device')}</span>
                         </>
                       )}
                     </button>
@@ -426,7 +403,7 @@ export default function DeviceErrorModal({
                       onClick={() => setIsOtpSent(false)}
                       className="px-4 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
                     >
-                      {t('auth.deviceModal.back', isRtl ? 'رجوع' : 'Back')}
+                      {t('auth.deviceModal.back', 'Back')}
                     </button>
                   </div>
                 </form>

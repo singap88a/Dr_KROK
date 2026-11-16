@@ -8,6 +8,7 @@ export default function CoursesFilterBar({
   filterStatus,
   handleStatusChange,
   summary,
+  counts,
 }) {
   const { t } = useTranslation();
 
@@ -36,17 +37,18 @@ export default function CoursesFilterBar({
             >
               <Icon className="text-xs" />
               <span>{tab.label}</span>
-              {summary && (
+              {(summary || counts) && (
                 <span
                   className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                     active ? "bg-white/20 text-white" : "bg-border text-text-secondary"
                   }`}
                 >
-                  {tab.id === "all"
-                    ? summary.total_enrolled_courses || 0
-                    : tab.id === "video"
-                    ? summary.video_courses_count || 0
-                    : summary.live_courses_count || 0}
+                  {counts?.[tab.id] ??
+                    (tab.id === "all"
+                      ? summary?.total_enrolled_courses || 0
+                      : tab.id === "video"
+                      ? summary?.video_courses_count || 0
+                      : summary?.live_courses_count || 0)}
                 </span>
               )}
             </button>
@@ -57,7 +59,7 @@ export default function CoursesFilterBar({
       {/* Status Filter (All / Active / Expired) */}
       <div className="flex items-center gap-1.5 self-start md:self-auto bg-background p-1 rounded-xl border border-border/80 text-xs">
         {[
-          { id: "all", label: t("myCourses.filterAll", "All") },
+          { id: "all", label: t("myCourses.statusAll", "All") },
           { id: "active", label: t("myCourses.filterActive", "Active") },
           { id: "expired", label: t("myCourses.filterExpired", "Expired") },
         ].map((st) => (

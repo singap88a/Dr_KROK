@@ -30,7 +30,7 @@ export default function CourseStatusModals({
               onClick={() => setShowExpiredModal(false)}
               className="w-full px-4 py-3 font-semibold text-white transition-colors bg-primary rounded-xl hover:bg-secondary"
             >
-              {t("common.close", "إغلاق")}
+              {t("common.close", "Close")}
             </button>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function CourseStatusModals({
               onClick={() => setShowCompletedModal(false)}
               className="w-full px-6 py-3 font-semibold text-white transition-all rounded-xl bg-primary hover:bg-secondary hover:scale-105"
             >
-              {t("common.close", "إغلاق")}
+              {t("common.close", "Close")}
             </button>
           </div>
         </div>

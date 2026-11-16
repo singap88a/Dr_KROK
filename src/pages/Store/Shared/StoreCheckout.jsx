@@ -411,20 +411,20 @@ const handleDeliveryOrder = async (e) => {
     // Validate required fields
     const firstNames = (formData.client_name || '').trim().split(/\s+/).filter(Boolean);
     if (firstNames.length === 0) {
-      setError(t('books.enter_first_name_error', 'يرجى إدخال الاسم الأول واسم الأب في الحقل الأول.'));
+      setError(t('books.enter_first_name_error', 'Please enter your first and middle name in the first field.'));
       setLoading(false);
       return;
     }
 
     if (firstNames.length < 2) {
-      setError(t('books.enter_two_names_error', 'متطلبات شركة الشحن: يجب إدخال اسمين على الأقل في حقل الاسم الأول (الاسم الأول واسم الأب).'));
+      setError(t('books.enter_two_names_error', 'Shipping requirement: Please enter at least two names in the first field (first and middle name).'));
       setLoading(false);
       return;
     }
 
     const secondNames = (formData.second_client_name || '').trim().split(/\s+/).filter(Boolean);
     if (secondNames.length === 0) {
-      setError(t('books.enter_second_name_error', 'متطلبات شركة الشحن: يرجى إدخال الاسم الثالث أو اللقب (اسم العائلة) في الحقل الثاني.'));
+      setError(t('books.enter_second_name_error', 'Shipping requirement: Please enter your last name / surname in the second field.'));
       setLoading(false);
       return;
     }

@@ -19,6 +19,7 @@ function InstructorsCarousel() {
 
   useEffect(() => {
     let fetched = false;
+    let isMounted = true;
 
     const fetchInstructors = async () => {
       if (fetched) return;
@@ -36,17 +37,27 @@ function InstructorsCarousel() {
           (v, i, a) => a.findIndex((t) => t.id === v.id) === i
         );
 
-        setInstructors(uniqueInstructors);
+        if (isMounted) {
+          setInstructors(uniqueInstructors);
+        }
       } catch (err) {
         console.error("Error fetching instructors:", err);
-        setError(err.message);
-        toast.error(t("instructors.error"));
+        if (isMounted && !err?.isMaintenance && err?.status !== 503) {
+          setError(err.message);
+          toast.error(t("instructors.error"));
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchInstructors();
+
+    return () => {
+      isMounted = false;
+    };
   }, []); // ← خالي عشان يتنادى مرة واحدة فقط
 
   const handleViewAll = () => {

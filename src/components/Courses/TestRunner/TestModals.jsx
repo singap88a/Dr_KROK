@@ -72,7 +72,7 @@ export default function TestModals({
               }}
               className="w-full bg-primary text-white rounded-lg py-3 font-semibold hover:bg-secondary transition-colors"
             >
-              {t("common.continue", "متابعة")}
+              {t("common.continue", "Continue")}
             </button>
           </div>
         </div>

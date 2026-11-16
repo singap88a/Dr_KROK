@@ -29,14 +29,14 @@ export default function CheckoutDeliveryForm({
           <span>
             {t(
               "books.shipping_name_notice_title",
-              "متطلبات شركة الشحن: الاسم ثلاثي بالكامل"
+              "Shipping Requirement: Full Name (3 Parts)"
             )}
           </span>
         </div>
         <p className="text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
           {t(
             "books.shipping_name_notice_desc",
-            "حرصاً على وصول شحنتك بدون تأخير، يُشترط إدخال الاسم الأول واسم الأب في الحقل الأول، والاسم الثالث (أو اللقب / اسم العائلة) في الحقل الثاني."
+            "To ensure timely delivery, please enter your first and middle name in the first field, and your last/family name in the second field."
           )}
         </p>
       </div>
@@ -46,10 +46,10 @@ export default function CheckoutDeliveryForm({
         <div>
           <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-1">
             <span className="flex items-center gap-1.5">
-              <FiUser /> {t("books.client_name", "الاسم الأول واسم الأب")} *
+              <FiUser /> {t("books.client_name", "First & Middle Name")} *
             </span>
             <span className="text-[11px] font-normal text-text-muted">
-              ({t("books.min_two_names", "اسمان على الأقل")})
+              ({t("books.min_two_names", "at least 2 names")})
             </span>
           </label>
           <input
@@ -61,7 +61,7 @@ export default function CheckoutDeliveryForm({
             className="w-full p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
             placeholder={t(
               "books.enter_client_name",
-              "الاسم الأول واسم الأب (مثال: أحمد محمد)"
+              "First & Middle Name (e.g. John Michael)"
             )}
           />
         </div>
@@ -70,10 +70,10 @@ export default function CheckoutDeliveryForm({
         <div>
           <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-1">
             <span className="flex items-center gap-1.5">
-              <FiUser /> {t("books.second_client_name", "الاسم الثالث / اللقب")} *
+              <FiUser /> {t("books.second_client_name", "Last Name / Surname")} *
             </span>
             <span className="text-[11px] font-normal text-text-muted">
-              ({t("books.min_one_name", "اسم واحد على الأقل")})
+              ({t("books.min_one_name", "at least 1 name")})
             </span>
           </label>
           <input
@@ -85,7 +85,7 @@ export default function CheckoutDeliveryForm({
             className="w-full p-3 border rounded-lg border-border bg-background text-text focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
             placeholder={t(
               "books.enter_second_client_name",
-              "الاسم الثالث أو اللقب (مثال: الشامي)"
+              "Last Name / Surname (e.g. Smith)"
             )}
           />
         </div>

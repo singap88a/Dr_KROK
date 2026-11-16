@@ -21,11 +21,15 @@ import {
   FaCreditCard,
 } from "react-icons/fa";
 
-const isLive = (course) =>
-  course?.course_type === "live" ||
-  course?.course_type === "live_course" ||
-  course?.type === "live_course" ||
-  course?.type === "live";
+const isLive = (course) => {
+  const type = String(course?.course_type || course?.type || "").toLowerCase();
+  return (
+    type === "live" ||
+    type === "live_course" ||
+    Boolean(course?.is_live) ||
+    Boolean(course?.batch?.id || course?.batch?.name || course?.batch_id)
+  );
+};
 
 const formatDate = (dateStr) => {
   if (!dateStr) return null;

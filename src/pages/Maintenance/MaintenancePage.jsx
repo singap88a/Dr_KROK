@@ -29,6 +29,16 @@ export default function MaintenancePage({ maintenanceData, onRefresh }) {
 
   const currentLangObj = languages.find((l) => l.code === currentLanguage) || languages[0];
 
+  // Dismiss any error toasts shown before maintenance mode and suppress error toasts while mounted
+  useEffect(() => {
+    toast.dismiss();
+    const originalToastError = toast.error;
+    toast.error = () => {};
+    return () => {
+      toast.error = originalToastError;
+    };
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {

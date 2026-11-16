@@ -311,11 +311,12 @@ export async function executeRequest(
   }
 
   if (!res.ok) {
-    if (
+    const isMaintenanceResponse =
       res.status === 503 ||
       data?.is_maintenance === true ||
-      data?.data?.is_maintenance === true
-    ) {
+      data?.data?.is_maintenance === true;
+
+    if (isMaintenanceResponse) {
       if (onMaintenanceTrigger) {
         onMaintenanceTrigger(data?.data || data);
       }
@@ -338,6 +339,9 @@ export async function executeRequest(
     const error = new Error(message);
     error.status = res.status;
     error.data = data;
+    if (isMaintenanceResponse) {
+      error.isMaintenance = true;
+    }
     throw error;
   }
 

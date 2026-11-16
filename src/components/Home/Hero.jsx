@@ -3,13 +3,11 @@ import { FaStar, FaUserFriends } from "react-icons/fa";
 import Lottie from "lottie-react";
 import HeroAnimation from "../animations/hero.json";
 import { Link } from "react-router-dom";
-import { useUser } from "../../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../context/ApiContext";
 import he from 'he';
 
 export default function Hero() {
-  const { isLoggedIn } = useUser();
   const { t, i18n } = useTranslation();
   const { getSettings, request } = useApi();
 
@@ -130,15 +128,9 @@ export default function Hero() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-wrap gap-4">
-                  {!isLoggedIn ? (
-                    <Link to="/register" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
-                      {t('hero.cta.getStarted')}
-                    </Link>
-                  ) : (
-                    <Link to="/courses" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
-                      {t('hero.cta.goToCourses')}
-                    </Link>
-                  )}
+                  <Link to="/courses" className="px-6 py-3 font-medium text-white transition rounded-full bg-primary hover:brightness-110">
+                    {t('hero.cta.goToCourses')}
+                  </Link>
                   <Link to="/test" className="px-6 py-3 font-medium transition border rounded-full text-text border-border hover:bg-accent">
                     {t('hero.cta.startTest')}
                   </Link>

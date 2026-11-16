@@ -175,8 +175,12 @@ export default function App() {
           </Routes>
         </Suspense>
       </main>
-      <AI_Icon />
-      <TelegramIcon />
+      {!isProfilePage && (
+        <>
+          <AI_Icon />
+          <TelegramIcon />
+        </>
+      )}
       {!isChatPage && !isProfilePage && (
         <>
           <CTA />

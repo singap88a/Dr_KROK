@@ -12,8 +12,7 @@ import { getDeviceInfo, isInAppBrowser } from "../../../utils/device";
 import DeviceErrorModal from "../../../components/Auth/DeviceErrorModal";
 
 export default function LoginPage() {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n?.language === 'ar' || i18n?.language?.startsWith('ar');
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -38,13 +37,11 @@ export default function LoginPage() {
     if (code === "DEVICE_MISMATCH" || errorMsg) {
       setDeviceErrorMessage(
         errorMsg ||
-          (isRtl
-            ? "هذا الحساب مسجل على جهاز آخر. يرجى تأكيد جهازك الجديد."
-            : "This device is not registered for your account.")
+          t('auth.deviceModal.subtitle', 'This device is not registered for your account.')
       );
       setShowDeviceError(true);
     }
-  }, [searchParams, isRtl]);
+  }, [searchParams, t]);
 
   function validate() {
     const e = {};
@@ -58,9 +55,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validate()) {
       toast.error(
-        isRtl
-          ? "يرجى تصحيح الأخطاء قبل المتابعة."
-          : "Please fix the errors before submitting.",
+        t('auth.login.errors.fix_errors', 'Please fix the errors before submitting.'),
         { position: "top-right" }
       );
       return;
@@ -72,7 +67,7 @@ export default function LoginPage() {
       console.log("Login response:", data);
 
       if (data?.success || data?.status) {
-        toast.success(isRtl ? "✅ تم تسجيل الدخول بنجاح!" : "✅ Login successful!", {
+        toast.success("✅ " + t('auth.login.toast.success', 'Login successful!'), {
           position: "top-right",
         });
         const token = data?.data?.token || data?.token;
@@ -99,7 +94,7 @@ export default function LoginPage() {
           setShowDeviceError(true);
         } else {
           toast.error(
-            "❌ " + (data?.message || (isRtl ? "فشل تسجيل الدخول" : "Login failed")),
+            "❌ " + (data?.message || t('auth.login.toast.fail', 'Login failed')),
             { position: "top-right" }
           );
         }
@@ -119,14 +114,12 @@ export default function LoginPage() {
         setDeviceErrorMessage(
           err?.data?.message ||
             err?.message ||
-            (isRtl
-              ? "هذا الحساب مسجل على جهاز آخر."
-              : "This device is not registered for your account.")
+            t('auth.deviceModal.subtitle', 'This device is not registered for your account.')
         );
         setShowDeviceError(true);
       } else {
         toast.error(
-          err?.message || (isRtl ? "⚠️ خطأ في الاتصال بالسيرفر!" : "⚠️ Server connection error!"),
+          err?.message || ("⚠️ " + t('auth.login.toast.error', 'Server connection error!')),
           { position: "top-right" }
         );
       }

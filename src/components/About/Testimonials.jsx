@@ -208,7 +208,7 @@ export default function Testimonials() {
                         onClick={() => openTextModal(item)}
                         className="mt-2 text-sm font-medium text-primary hover:underline"
                       >
-                        {t("testimonials.read_more", "عرض المزيد")}
+                        {t("testimonials.read_more", "Read more")}
                       </button>
                     )}
                   </div>
@@ -238,7 +238,7 @@ export default function Testimonials() {
             to="/testimonials"
             className="px-8 py-3 text-sm font-semibold text-white transition-all rounded-xl bg-primary hover:shadow-lg hover:bg-primary/90"
           >
-            {t("testimonials.view_all", "عرض المزيد")}
+            {t("testimonials.view_all", "View all")}
           </Link>
         </div>
       </div>

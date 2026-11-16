@@ -19,8 +19,11 @@ export default function Navbar() {
 
   const [language, setLanguage] = useState(() => {
     const saved =
-      localStorage.getItem("i18nextLng") || localStorage.getItem("language");
-    return saved ? saved.toLowerCase().split("-")[0] : "en";
+      localStorage.getItem("DR_KROK_i18nextLng") ||
+      localStorage.getItem("i18nextLng") ||
+      localStorage.getItem("language");
+    const code = saved ? saved.toLowerCase().split("-")[0] : "en";
+    return code === "ua" ? "ua" : "en";
   });
 
   const [logoUrl, setLogoUrl] = useState("/logo.png");
@@ -60,6 +63,8 @@ export default function Navbar() {
   useEffect(() => {
     i18n.changeLanguage(language);
     localStorage.setItem("language", language);
+    localStorage.setItem("DR_KROK_i18nextLng", language);
+    localStorage.setItem("i18nextLng", language);
   }, [language, i18n]);
 
   useEffect(() => {
@@ -319,11 +324,11 @@ export default function Navbar() {
             </div>
           ) : (
             <Link
-              to="/register"
+              to="/login"
               state={{ from: location.pathname }}
               className="px-4 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base text-white transition rounded-lg bg-primary hover:bg-primary-dark whitespace-nowrap"
             >
-              {t("navbar.signUp")}
+              {t("navbar.login", "Sign In")}
             </Link>
           )}
 
@@ -518,12 +523,12 @@ export default function Navbar() {
               </>
             ) : (
               <Link
-                to="/register"
+                to="/login"
                 state={{ from: location.pathname }}
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-center text-white transition rounded-lg bg-primary hover:bg-primary-dark"
               >
-                {t("navbar.signUp")}
+                {t("navbar.login", "Sign In")}
               </Link>
             )}
           </div>

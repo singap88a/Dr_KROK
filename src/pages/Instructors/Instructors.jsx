@@ -44,7 +44,9 @@ function Instructors() {
     } catch (err) {
       console.error("Error fetching instructors:", err);
       setError(err.message);
-      toast.error(t("instructors.error"));
+      if (!err?.isMaintenance && err?.status !== 503) {
+        toast.error(t("instructors.error"));
+      }
     } finally {
       setLoading(false);
     }

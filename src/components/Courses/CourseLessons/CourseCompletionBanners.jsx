@@ -28,7 +28,7 @@ export default function CourseCompletionBanners({
             to={`/live-courses/${courseId}`}
             className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
           >
-            {t("courses.backToDetails", "العودة لتفاصيل الدورة")}
+            {t("courses.backToDetails", "Back to Course Details")}
           </Link>
         </div>
       </div>
@@ -55,7 +55,7 @@ export default function CourseCompletionBanners({
             to={`/live-courses/${courseId}`}
             className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
           >
-            {t("courses.backToDetails", "العودة لتفاصيل الدورة")}
+            {t("courses.backToDetails", "Back to Course Details")}
           </Link>
         </div>
       </div>
