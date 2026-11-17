@@ -88,7 +88,12 @@ export default function VideoCourses({ courses, favoriteIds, onToggleFavorite, g
           </div>
           <div className="px-6 pb-4">
             <button
-              onClick={() => goToDetails(course)}
+              onClick={(e) => {
+                // The card itself also navigates; without this the click bubbles
+                // and pushes the details page onto history twice (Back needs 2 clicks).
+                e.stopPropagation();
+                goToDetails(course);
+              }}
               className="block w-full px-4 py-2 text-sm font-medium text-center text-white rounded-xl bg-primary hover:shadow-md hover:brightness-110"
             >
               {t("courses.details", "Details")}

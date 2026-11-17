@@ -4,18 +4,24 @@ import { useApi } from "../../../../context/ApiContext";
 import { useUser } from "../../../../context/UserContext";
 import i18n from "../../../../i18n";
 import { useLessonProgress, checkLessonHasTests } from "../../ProgressSystem/LessonProgress";
+import {
+  getSavedLastLessonId,
+  setSavedLastLessonId,
+  clearSavedLastLessonId,
+  extractAllLessons,
+  calculateOutlineProgress,
+  isLessonAccessible,
+} from "../courseLazyLoadingUtils";
 
 export function useLiveCourseData(id) {
   const location = useLocation();
   const navigate = useNavigate();
   const {
-    getLiveCourseById,
+    getLiveCourseOutline,
+    getLiveCourseLessonsByIds,
     getCourseAccess,
-    getLiveCourseProgress,
     startLiveLessonProgress,
     completeLiveLessonProgress,
-    getLiveLessonProgress,
-    getLiveCourseProgressDetails,
   } = useApi();
   const { isLoggedIn, user } = useUser();
 
@@ -27,13 +33,19 @@ export function useLiveCourseData(id) {
   const [sections, setSections] = useState([]);
   const lessonsRef = useRef([]);
   const sectionsRef = useRef([]);
+
   useEffect(() => {
     lessonsRef.current = lessons;
     sectionsRef.current = sections;
   }, [lessons, sections]);
+
   const [hasAccess, setHasAccess] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isSuspended, setIsSuspended] = useState(false);
+  const [isWaitingForBatch, setIsWaitingForBatch] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+
+  // Lesson state & In-Memory RAM Cache
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentSection, setCurrentSection] = useState(null);
   const [expandedSections, setExpandedSections] = useState(new Set());
@@ -44,188 +56,20 @@ export function useLiveCourseData(id) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(Date.now());
 
-  const { calculateTotalProgress: calcTotalProgress, calculateSectionProgress: calcSectionProgress } = useLessonProgress();
+  // Lazy Loading specific states
+  const [lessonLoading, setLessonLoading] = useState(false);
+  const [lessonError, setLessonError] = useState(null);
+  const lessonsCacheRef = useRef(new Map()); // In-Memory Cache: lessonId -> fullLessonData
 
-  const calculateTotalProgress = useCallback((lesson, lessonStatus) => {
-    return calcTotalProgress(lesson, lessonStatus);
-  }, [calcTotalProgress]);
+  const { calculateTotalProgress: calcTotalProgress, calculateSectionProgress: calcSectionProgress } =
+    useLessonProgress();
 
-  // Update current time every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTimeMs(Date.now());
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const saveLastLesson = useCallback((courseId, lessonId) => {
-    if (courseId && lessonId) {
-      localStorage.setItem(`last_live_lesson_${courseId}`, lessonId.toString());
-    }
-  }, []);
-
-  const getLastLesson = useCallback((courseId) => {
-    if (!courseId) return null;
-    return localStorage.getItem(`last_live_lesson_${courseId}`);
-  }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const updateLessonStatus = useCallback(
-    async (lessonId) => {
-      if (!isLoggedIn || !course?.id) return;
-      const realId = course.id;
-      try {
-        const [updatedCourseProgress, updatedLessonProgress] = await Promise.all([
-          getLiveCourseProgressDetails(realId),
-          getLiveLessonProgress(realId, lessonId),
-        ]);
-
-        if (updatedCourseProgress) {
-          setCourseProgress(updatedCourseProgress);
-          if (updatedCourseProgress.sections_progress) {
-            const sectionProgressData = {};
-            updatedCourseProgress.sections_progress.forEach((section) => {
-              sectionProgressData[section.section_id] = section.progress;
-            });
-            setSectionProgress(sectionProgressData);
-          }
-        }
-
-        if (updatedLessonProgress?.lesson) {
-          let lessonData = updatedLessonProgress.lesson;
-          const matchingLesson =
-            lessonsRef.current.find((l) => l.id === lessonId) ||
-            sectionsRef.current.flatMap((s) => s.lessons || []).find((l) => l.id === lessonId);
-
-          const hasTests = checkLessonHasTests(matchingLesson);
-
-          if (!hasTests && (lessonData.percentage >= 50 || lessonData.lesson_percentage >= 100)) {
-            lessonData = {
-              ...lessonData,
-              percentage: 100,
-              status: "completed",
-              lesson_percentage: 100,
-              quiz_percentage: 100,
-            };
-          }
-
-          setLessonStatuses((prev) => ({
-            ...prev,
-            [lessonId]: lessonData,
-          }));
-        }
-      } catch (err) {
-        console.error(`Error updating lesson ${lessonId} status:`, err);
-      }
+  const calculateTotalProgress = useCallback(
+    (lesson, lessonStatus) => {
+      return calcTotalProgress(lesson, lessonStatus);
     },
-    [isLoggedIn, course?.id, getLiveCourseProgressDetails, getLiveLessonProgress]
+    [calcTotalProgress]
   );
-
-  const handleLessonComplete = async (lessonId) => {
-    let lesson = lessons.find((l) => l.id === lessonId);
-
-    if (!lesson && sections.length > 0) {
-      for (const section of sections) {
-        if (section.lessons) {
-          lesson = section.lessons.find((l) => l.id === lessonId);
-          if (lesson) break;
-        }
-      }
-    }
-
-    if (!lesson && currentLesson && currentLesson.id === lessonId) {
-      lesson = currentLesson;
-    }
-
-    if (!lesson) return;
-
-    const hasVideo = !!lesson.video;
-    const hasTests = checkLessonHasTests(lesson);
-
-    let newPercentage = 100;
-    let lessonPercentage = 100;
-    let quizPercentage = 100;
-
-    if (hasVideo && hasTests) {
-      const currentStatus = lessonStatuses[lessonId] || {};
-      const quizCompleted = currentStatus.quiz_percentage >= 100;
-      newPercentage = quizCompleted ? 100 : 50;
-      lessonPercentage = 100;
-      quizPercentage = quizCompleted ? 100 : currentStatus.quiz_percentage || 0;
-    } else if (hasVideo && !hasTests) {
-      newPercentage = 100;
-      lessonPercentage = 100;
-      quizPercentage = 100;
-    } else if (hasTests && !hasVideo) {
-      newPercentage = 100;
-      quizPercentage = 100;
-    }
-
-    setLessonStatuses((prev) => ({
-      ...prev,
-      [lessonId]: {
-        ...prev[lessonId],
-        percentage: newPercentage,
-        status: newPercentage === 100 ? "completed" : "in_progress",
-        lesson_percentage: lessonPercentage,
-        quiz_percentage: quizPercentage,
-      },
-    }));
-
-    if (!course?.id) return;
-    const realId = course.id;
-
-    try {
-      const response = await completeLiveLessonProgress(realId, lessonId, "lesson");
-
-      // If the lesson has no tests, also complete the quiz part on backend so database registers 100%
-      if (!hasTests) {
-        try {
-          await completeLiveLessonProgress(realId, lessonId, "quiz");
-        } catch {
-          /* ignore if server does not require quiz */
-        }
-      }
-
-      if (response && response.success) {
-        if (response.data && response.data.lesson) {
-          const respLesson = response.data.lesson;
-          const finalPercentage = !hasTests ? 100 : (respLesson.percentage || newPercentage);
-          const finalStatus = finalPercentage >= 100 ? "completed" : (respLesson.status || "in_progress");
-
-          setLessonStatuses((prev) => ({
-            ...prev,
-            [lessonId]: {
-              ...prev[lessonId],
-              ...respLesson,
-              percentage: finalPercentage,
-              status: finalStatus,
-              lesson_percentage: 100,
-              quiz_percentage: !hasTests ? 100 : (respLesson.quiz_percentage || 0),
-            },
-          }));
-        }
-
-        const updatedProgress = await getLiveCourseProgressDetails(realId);
-        if (updatedProgress) {
-          setCourseProgress(updatedProgress);
-          if (updatedProgress.sections_progress) {
-            const sectionProgressData = {};
-            updatedProgress.sections_progress.forEach((section) => {
-              sectionProgressData[section.section_id] = section.progress;
-            });
-            setSectionProgress(sectionProgressData);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error completing lesson:", err);
-      await updateLessonStatus(lessonId);
-    }
-  };
 
   const calculateSectionProgress = useCallback(
     (sectionId) => {
@@ -234,8 +78,239 @@ export function useLiveCourseData(id) {
     [sections, lessonStatuses, calculateTotalProgress, calcSectionProgress]
   );
 
+  // Update current time periodically for live countdowns
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
+
+  const userId = user?.id || user?.user_id || null;
+
+  // Silent background prefetch for the next lesson
+  const prefetchNextLesson = useCallback(
+    async (courseId, nextLessonId) => {
+      if (!courseId || !nextLessonId || lessonsCacheRef.current.has(nextLessonId)) return;
+      try {
+        const res = await getLiveCourseLessonsByIds(courseId, [nextLessonId], true);
+        if (Array.isArray(res) && res.length > 0) {
+          const loaded = res.find((l) => l.id === nextLessonId) || res[0];
+          if (loaded) {
+            lessonsCacheRef.current.set(loaded.id, loaded);
+          }
+        }
+      } catch (err) {
+        console.debug("Silent prefetch failed for live lesson", nextLessonId, err);
+      }
+    },
+    [getLiveCourseLessonsByIds]
+  );
+
+  // Helper to load live lesson(s) by IDs with in-memory caching
+  const loadLessonsByIds = useCallback(
+    async (courseId, idsToLoad, targetIdToDisplay) => {
+      if (!courseId || !idsToLoad || idsToLoad.length === 0) return null;
+
+      // Filter IDs not already in RAM cache
+      const uncachedIds = idsToLoad.filter((lid) => !lessonsCacheRef.current.has(lid));
+
+      if (uncachedIds.length > 0) {
+        setLessonLoading(true);
+        setLessonError(null);
+        try {
+          const fetchedLessons = await getLiveCourseLessonsByIds(courseId, uncachedIds, true);
+          if (Array.isArray(fetchedLessons)) {
+            fetchedLessons.forEach((l) => {
+              lessonsCacheRef.current.set(l.id, l);
+            });
+          }
+        } catch (fetchErr) {
+          console.error("Error fetching live lesson content:", fetchErr);
+          setLessonError(fetchErr?.message || "Failed to load lesson content");
+          setLessonLoading(false);
+          return null;
+        } finally {
+          setLessonLoading(false);
+        }
+      }
+
+      const displayLesson = lessonsCacheRef.current.get(targetIdToDisplay);
+      if (displayLesson) {
+        setCurrentLesson(displayLesson);
+        setCurrentSection(null);
+        setSavedLastLessonId(userId, "live", courseId, displayLesson.id);
+
+        if (isLoggedIn) {
+          startLiveLessonProgress(courseId, displayLesson.id).catch(() => {});
+        }
+        return displayLesson;
+      }
+      return null;
+    },
+    [getLiveCourseLessonsByIds, userId, isLoggedIn, startLiveLessonProgress]
+  );
+
+  // Main load function for Live Course Outline (Lazy Loading)
+  const loadOutlineData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      setLessonError(null);
+
+      // 1. Fetch lightweight outline (No show endpoint used!)
+      const outlineData = await getLiveCourseOutline(id, true);
+      if (!outlineData) {
+        throw new Error("Live course outline not found");
+      }
+
+      setCourse(outlineData);
+
+      if (outlineData.server_time) {
+        const serverTime = new Date(outlineData.server_time).getTime();
+        const localTime = Date.now();
+        setServerTimeOffset(serverTime - localTime);
+      }
+
+      const rawSections = outlineData.sections || [];
+      setSections(rawSections);
+
+      const allLessons = extractAllLessons(rawSections);
+      setLessons(allLessons);
+
+      const realId = outlineData.id;
+
+      // 2. Parse enrollment, batch assignment & access status
+      const enrollment = outlineData.enrollment_status || {};
+      const isEnrolled = enrollment.is_enrolled === true;
+      const expired = enrollment.is_expired === true || enrollment.status === "expired";
+      const suspended = enrollment.is_suspended === true || enrollment.status === "suspended";
+      const completed = enrollment.status === "completed";
+      const assignedToBatch = enrollment.is_assigned_to_batch !== false; // true if assigned or not specified
+
+      const waitingForBatch = isEnrolled && enrollment.is_assigned_to_batch === false;
+      setIsWaitingForBatch(waitingForBatch);
+
+      let finalAccess = isEnrolled && !expired && !suspended;
+
+      if (!isEnrolled && isLoggedIn) {
+        try {
+          const profileAccess = await getCourseAccess(realId, "live_course").catch(() => false);
+          if (profileAccess) {
+            finalAccess = true;
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
+      setIsCompleted(completed);
+      setIsExpired(expired);
+      setIsSuspended(suspended);
+      setHasAccess(finalAccess);
+
+      // 3. Build initial lessonStatuses & progress directly from outline
+      const initialStatuses = {};
+      allLessons.forEach((l) => {
+        const perc = l.percentage || 0;
+        const status =
+          l.progress_status || (perc >= 100 ? "completed" : perc > 0 ? "in_progress" : "not_started");
+        initialStatuses[l.id] = {
+          percentage: perc,
+          status: status,
+          progress_status: status,
+          lesson_percentage: l.lesson_percentage || perc,
+          quiz_percentage: l.quiz_percentage || (perc >= 100 ? 100 : 0),
+        };
+      });
+      setLessonStatuses(initialStatuses);
+
+      const { sectionProgressMap, overallPercentage, totalLessonsCount, totalCompletedCount } =
+        calculateOutlineProgress(rawSections);
+      setSectionProgress(sectionProgressMap);
+      setCourseProgress({
+        percentage: overallPercentage,
+        completed_lessons_count: totalCompletedCount,
+        total_lessons_count: totalLessonsCount,
+      });
+
+      // Outline loaded! Page can render sidebar and headers now
+      setLoading(false);
+
+      if (suspended || waitingForBatch || allLessons.length === 0) {
+        return;
+      }
+
+      // 4. Determine which lesson to load first based on last_lesson in localStorage
+      const savedLastId = getSavedLastLessonId(userId, "live", realId);
+      let targetIndex = -1;
+
+      if (savedLastId) {
+        targetIndex = allLessons.findIndex((l) => String(l.id) === String(savedLastId));
+        if (targetIndex === -1) {
+          clearSavedLastLessonId(userId, "live", realId);
+        }
+      }
+
+      if (targetIndex === -1) {
+        // Fallback: start with the first accessible/free lesson or first lesson
+        const firstFreeIdx = allLessons.findIndex(
+          (l) => l.type?.toLowerCase() === "free" || l.is_free === true
+        );
+        targetIndex = firstFreeIdx !== -1 ? firstFreeIdx : 0;
+      }
+
+      const targetLesson = allLessons[targetIndex];
+      const nextLesson = allLessons[targetIndex + 1];
+
+      if (targetLesson) {
+        if (targetLesson.section_id) {
+          setExpandedSections(new Set([targetLesson.section_id]));
+        }
+
+        // Fetch target lesson and next lesson in parallel (batch up to 2 ids)
+        const idsToFetch = [targetLesson.id, nextLesson?.id].filter(Boolean);
+        await loadLessonsByIds(realId, idsToFetch, targetLesson.id);
+      } else if (rawSections.length > 0) {
+        setCurrentSection(rawSections[0]);
+      }
+    } catch (err) {
+      console.error("Error loading live course outline:", err);
+      setError(err?.message || "Failed to load live course");
+      setLoading(false);
+    }
+  }, [
+    id,
+    userId,
+    isLoggedIn,
+    getLiveCourseOutline,
+    getCourseAccess,
+    loadLessonsByIds,
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    loadOutlineData();
+
+    const handleLanguageChange = () => {
+      if (active) loadOutlineData();
+    };
+    i18n.on("languageChanged", handleLanguageChange);
+
+    return () => {
+      active = false;
+      i18n.off("languageChanged", handleLanguageChange);
+    };
+  }, [loadOutlineData]);
+
+  // Click on a lesson
   const handleLessonClick = async (lesson) => {
-    const isFree = lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true;
+    if (!lesson) return;
+    const isFree = isLessonAccessible(lesson, course?.enrollment_status, hasAccess);
 
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
@@ -246,13 +321,39 @@ export function useLiveCourseData(id) {
       return;
     }
 
-    setCurrentLesson(lesson);
-    setCurrentSection(null);
-
     if (!course?.id) return;
     const realId = course.id;
-    saveLastLesson(realId, lesson.id);
 
+    // Check if lesson is in RAM cache
+    if (lessonsCacheRef.current.has(lesson.id)) {
+      const cached = lessonsCacheRef.current.get(lesson.id);
+      setCurrentLesson(cached);
+      setCurrentSection(null);
+      setSavedLastLessonId(userId, "live", realId, lesson.id);
+
+      if (isLoggedIn) {
+        startLiveLessonProgress(realId, lesson.id).catch(() => {});
+      }
+
+      // Silent prefetch next lesson
+      const all = extractAllLessons(sectionsRef.current);
+      const currIdx = all.findIndex((l) => l.id === lesson.id);
+      if (currIdx !== -1 && all[currIdx + 1]) {
+        prefetchNextLesson(realId, all[currIdx + 1].id);
+      }
+    } else {
+      // Fetch target lesson
+      await loadLessonsByIds(realId, [lesson.id], lesson.id);
+
+      // Silent prefetch next lesson
+      const all = extractAllLessons(sectionsRef.current);
+      const currIdx = all.findIndex((l) => l.id === lesson.id);
+      if (currIdx !== -1 && all[currIdx + 1]) {
+        prefetchNextLesson(realId, all[currIdx + 1].id);
+      }
+    }
+
+    // Scroll into view on mobile
     if (window.innerWidth < 1024) {
       setTimeout(() => {
         const videoSection = document.getElementById("video-player-section");
@@ -261,38 +362,17 @@ export function useLiveCourseData(id) {
         }
       }, 300);
     }
-
-    if (isLoggedIn) {
-      try {
-        const res = await startLiveLessonProgress(realId, lesson.id);
-        if (res?.course_progress) setCourseProgress(res.course_progress);
-        if (res?.lesson) {
-          setLessonStatuses((prev) => ({
-            ...prev,
-            [lesson.id]: {
-              ...prev[lesson.id],
-              ...res.lesson,
-            },
-          }));
-        }
-      } catch {
-        /* ignore */
-      }
-    }
   };
 
   const handleSectionClick = (section) => {
-    const hasFree = (sectionId) => {
-      const sectionData = sections.find((s) => s.id === sectionId);
-      if (!sectionData) return false;
-      if (sectionData.type === "free" || sectionData.type === "Free") return true;
-      if (!sectionData.lessons) return false;
-      return sectionData.lessons.some(
-        (lesson) => lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
-      );
-    };
+    if (!section) return;
+    const isFree =
+      section.type?.toLowerCase() === "free" ||
+      (section.lessons &&
+        section.lessons.some(
+          (l) => l.type?.toLowerCase() === "free" || l.is_free === true
+        ));
 
-    const isFree = section.type === "free" || section.type === "Free" || hasFree(section.id);
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
         navigate("/login", { state: { from: location.pathname } });
@@ -320,271 +400,135 @@ export function useLiveCourseData(id) {
     handleSectionClick(section);
   };
 
-  useEffect(() => {
-    let mounted = true;
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const courseData = await getLiveCourseById(id, isLoggedIn);
-        if (!mounted) return;
-        setCourse(courseData);
+  const toggleSection = (sectionId) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) newSet.delete(sectionId);
+      else newSet.add(sectionId);
+      return newSet;
+    });
+  };
 
-        const realId = courseData.id;
+  // Start from Beginning Action ("ابدأ من الأول")
+  const handleStartFromBeginning = async () => {
+    if (!course?.id) return;
+    const realId = course.id;
+    const all = extractAllLessons(sectionsRef.current);
+    if (all.length === 0) return;
 
-        // Fire independent requests in parallel instead of sequentially
+    const firstLesson = all[0];
+    const secondLesson = all[1];
 
-        const progressPromise = isLoggedIn ? getLiveCourseProgressDetails(realId) : null;
-
-        const accessPromise = isLoggedIn
-
-          ? getCourseAccess(realId, "live_course").catch(() => courseData.price === 0 || courseData.price === "0")
-
-          : Promise.resolve(false);
-
-        if (progressPromise) progressPromise.catch(() => {});
-
-        if (courseData.server_time) {
-          const serverTime = new Date(courseData.server_time).getTime();
-          const localTime = Date.now();
-          setServerTimeOffset(serverTime - localTime);
-        }
-        setLessons(courseData.lessons || []);
-        setSections(courseData.sections || []);
-        setExpandedSections(new Set());
-
-        const lastLessonId = getLastLesson(realId);
-        let targetLesson = null;
-        let targetSection = null;
-
-        if (lastLessonId && courseData.sections) {
-          for (const section of courseData.sections) {
-            if (section.lessons) {
-              const foundLesson = section.lessons.find((lesson) => lesson.id.toString() === lastLessonId);
-              if (foundLesson) {
-                targetLesson = foundLesson;
-                targetSection = section;
-                setExpandedSections((prev) => new Set(prev).add(section.id));
-                break;
-              }
-            }
-          }
-        }
-
-        if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
-          const firstSectionWithFree = courseData.sections.find(
-            (section) =>
-              section.type === "free" ||
-              section.type === "Free" ||
-              (section.lessons &&
-                section.lessons.some(
-                  (lesson) => lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
-                ))
-          );
-
-          if (firstSectionWithFree) {
-            setExpandedSections((prev) => new Set(prev).add(firstSectionWithFree.id));
-            const firstFreeLesson = firstSectionWithFree.lessons.find(
-              (lesson) => lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
-            );
-            if (firstFreeLesson) {
-              targetLesson = firstFreeLesson;
-              targetSection = firstSectionWithFree;
-            }
-          }
-        }
-
-        if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
-          const firstSection = courseData.sections[0];
-          if (firstSection.lessons && firstSection.lessons.length > 0) {
-            targetLesson = firstSection.lessons[0];
-            targetSection = firstSection;
-            setExpandedSections((prev) => new Set(prev).add(firstSection.id));
-          }
-        }
-
-        if (courseData?.lessons?.length) {
-          const initialStatuses = {};
-          courseData.lessons.forEach((lesson) => {
-            if (lesson.percentage !== undefined || lesson.status) {
-              initialStatuses[lesson.id] = {
-                percentage: lesson.percentage || 0,
-                status: lesson.status || "not_started",
-                lesson_percentage: lesson.lesson_percentage || 0,
-                quiz_percentage: lesson.quiz_percentage || 0,
-              };
-            }
-          });
-          setLessonStatuses(initialStatuses);
-        }
-
-        if (isLoggedIn) {
-          try {
-            const courseProgressDetails = await progressPromise;
-            if (courseProgressDetails) {
-              setCourseProgress(courseProgressDetails);
-              const updatedStatuses = { ...lessonStatuses };
-              if (courseProgressDetails.sections_progress) {
-                courseProgressDetails.sections_progress.forEach((section) => {
-                  if (section.lessons) {
-                    section.lessons.forEach((lesson) => {
-                      if (lesson.lesson_id) {
-                        const matchingLesson =
-                          (courseData.lessons && courseData.lessons.find((l) => l.id === lesson.lesson_id)) ||
-                          (courseData.sections &&
-                            courseData.sections.flatMap((s) => s.lessons || []).find((l) => l.id === lesson.lesson_id));
-
-                        const hasTests = checkLessonHasTests(matchingLesson);
-
-                        let p = lesson.percentage || 0;
-                        let s = lesson.status || "not_started";
-
-                        if (!hasTests && (p >= 50 || lesson.lesson_percentage >= 100)) {
-                          p = 100;
-                          s = "completed";
-                        }
-
-                        updatedStatuses[lesson.lesson_id] = {
-                          ...updatedStatuses[lesson.lesson_id],
-                          percentage: p,
-                          status: s,
-                          lesson_percentage: lesson.lesson_percentage || (p >= 100 ? 100 : 0),
-                          quiz_percentage: !hasTests && p >= 100 ? 100 : (lesson.quiz_percentage || 0),
-                        };
-                      }
-                    });
-                  }
-                });
-                const sectionProgressData = {};
-                courseProgressDetails.sections_progress.forEach((section) => {
-                  sectionProgressData[section.section_id] = section.progress;
-                });
-                setSectionProgress(sectionProgressData);
-              }
-              setLessonStatuses(updatedStatuses);
-            }
-          } catch {
-            try {
-              const oldProgress = await getLiveCourseProgress(realId);
-              setCourseProgress(oldProgress);
-            } catch {
-              /* ignore */
-            }
-          }
-        }
-
-        const hasProfileAccess = await accessPromise;
-
-        if (courseData.enrollment_status) {
-          const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
-          const completed = status === "completed";
-          let actuallyExpired = expired === true || status === "expired";
-          if (!actuallyExpired && !is_enrolled && hasProfileAccess && !completed) {
-            actuallyExpired = true;
-          }
-          setIsCompleted(completed);
-          setIsExpired(actuallyExpired);
-          setHasAccess(is_enrolled === true && !actuallyExpired && !completed);
-        } else if (isLoggedIn) {
-          if (hasProfileAccess && typeof hasProfileAccess === "object") {
-            const enrolled = hasProfileAccess.is_enrolled === true;
-            const expired = hasProfileAccess.is_expired === true;
-            const completed = hasProfileAccess.status === "completed";
-            let actuallyExpired = expired;
-            if (!actuallyExpired && !enrolled && !completed) actuallyExpired = true;
-            setIsCompleted(completed);
-            setIsExpired(actuallyExpired && !completed);
-            setHasAccess(enrolled && !actuallyExpired && !completed);
-          } else {
-            setIsCompleted(false);
-            setIsExpired(false);
-            setHasAccess(!!hasProfileAccess);
-          }
-        } else {
-          setIsCompleted(false);
-          setIsExpired(false);
-          setHasAccess(false);
-        }
-
-        if (targetLesson) {
-          setCurrentLesson(targetLesson);
-          if (isLoggedIn) {
-            // Run in background so it does not block the page from rendering
-            startLiveLessonProgress(realId, targetLesson.id)
-              .then((res) => {
-                if (!mounted) return;
-                if (res?.course_progress) setCourseProgress(res.course_progress);
-                if (res?.lesson) {
-                  setLessonStatuses((prev) => ({
-                    ...prev,
-                    [targetLesson.id]: { ...prev[targetLesson.id], ...res.lesson },
-                  }));
-                }
-              })
-              .catch(() => {});
-          }
-          saveLastLesson(realId, targetLesson.id);
-        } else if (targetSection) {
-          setCurrentSection(targetSection);
-        } else if (courseData.sections && courseData.sections.length > 0) {
-          setCurrentSection(courseData.sections[0]);
-        }
-      } catch (err) {
-        if (!mounted) return;
-        setError(err?.message || "Failed to load course lessons");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    loadData();
-
-    const handleLanguageChange = () => {
-      loadData();
-    };
-    i18n.on("languageChanged", handleLanguageChange);
-
-    return () => {
-      mounted = false;
-      i18n.off("languageChanged", handleLanguageChange);
-    };
-  }, [
-    id,
-    getLiveCourseById,
-    getCourseAccess,
-    getLiveCourseProgress,
-    getLiveCourseProgressDetails,
-    startLiveLessonProgress,
-    getLiveLessonProgress,
-    isLoggedIn,
-    getLastLesson,
-    saveLastLesson,
-  ]);
-
-  useEffect(() => {
-    const s = location.state || {};
-    if (s.lessonCompleted && s.lessonId && isLoggedIn) {
-      updateLessonStatus(s.lessonId).catch((err) =>
-        console.error("Error updating lesson status after quiz:", err)
-      );
-    } else if (s.courseCompleted && isLoggedIn) {
-      getLiveCourseProgressDetails(id)
-        .then((updated) => updated && setCourseProgress(updated))
-        .catch((err) => console.error("Error updating course progress:", err));
+    if (firstLesson.section_id) {
+      setExpandedSections(new Set([firstLesson.section_id]));
     }
-  }, [location.state, id, isLoggedIn, getLiveCourseProgressDetails, updateLessonStatus]);
+
+    const idsToLoad = [firstLesson.id, secondLesson?.id].filter(Boolean);
+    await loadLessonsByIds(realId, idsToLoad, firstLesson.id);
+  };
+
+  // Retry loading current lesson if failed
+  const retryCurrentLesson = async () => {
+    if (!course?.id || !currentLesson?.id) return;
+    await loadLessonsByIds(course.id, [currentLesson.id], currentLesson.id);
+  };
+
+  // Lesson completion handler
+  const handleLessonComplete = async (lessonId) => {
+    const all = extractAllLessons(sectionsRef.current);
+    const target = all.find((l) => l.id === lessonId) || currentLesson;
+    if (!target) return;
+
+    const hasVideo = !!target.video;
+    const hasTests = checkLessonHasTests(target);
+    let newPercentage = 100;
+    let lessonPercentage = 100;
+    let quizPercentage = 100;
+
+    if (hasVideo && hasTests) {
+      const currentStatus = lessonStatuses[lessonId] || {};
+      const quizCompleted = currentStatus.quiz_percentage >= 100;
+      newPercentage = quizCompleted ? 100 : 50;
+      lessonPercentage = 100;
+      quizPercentage = quizCompleted ? 100 : currentStatus.quiz_percentage || 0;
+    }
+
+    // 1. Optimistic UI update
+    setLessonStatuses((prev) => ({
+      ...prev,
+      [lessonId]: {
+        ...prev[lessonId],
+        percentage: newPercentage,
+        status: newPercentage === 100 ? "completed" : "in_progress",
+        progress_status: newPercentage === 100 ? "completed" : "in_progress",
+        lesson_percentage: lessonPercentage,
+        quiz_percentage: quizPercentage,
+      },
+    }));
+
+    setSections((prevSections) => {
+      const updated = prevSections.map((sec) => {
+        if (!sec.lessons) return sec;
+        return {
+          ...sec,
+          lessons: sec.lessons.map((l) =>
+            l.id === lessonId
+              ? {
+                  ...l,
+                  percentage: newPercentage,
+                  progress_status: newPercentage === 100 ? "completed" : "in_progress",
+                }
+              : l
+          ),
+        };
+      });
+
+      const { sectionProgressMap, overallPercentage, totalLessonsCount, totalCompletedCount } =
+        calculateOutlineProgress(updated);
+      setSectionProgress(sectionProgressMap);
+      setCourseProgress({
+        percentage: overallPercentage,
+        completed_lessons_count: totalCompletedCount,
+        total_lessons_count: totalLessonsCount,
+      });
+
+      return updated;
+    });
+
+    // 2. Server API calls in background
+    if (!course?.id) return;
+    const realId = course.id;
+
+    try {
+      await completeLiveLessonProgress(realId, lessonId, "lesson");
+      if (!hasTests && completeLiveLessonProgress) {
+        try {
+          await completeLiveLessonProgress(realId, lessonId, "quiz");
+        } catch {
+          // Ignore
+        }
+      }
+    } catch (err) {
+      console.error("Error completing live lesson on server:", err);
+    }
+  };
 
   const hasFreeLessons = useMemo(() => {
     return (sectionId) => {
-      const section = sections.find((s) => s.id === sectionId);
-      if (!section) return false;
-      if (section.type === "free" || section.type === "Free") return true;
-      if (!section.lessons) return false;
-      return section.lessons.some(
-        (lesson) => lesson.type === "free" || lesson.type === "Free" || lesson.is_free === true
+      const sec = sections.find((s) => s.id === sectionId);
+      if (!sec) return false;
+      if (sec.type?.toLowerCase() === "free") return true;
+      if (!sec.lessons) return false;
+      return sec.lessons.some(
+        (l) => l.type?.toLowerCase() === "free" || l.is_free === true
       );
     };
   }, [sections]);
+
+  const canStartFromBeginning = useMemo(() => {
+    if (!lessons || lessons.length <= 1) return false;
+    return currentLesson?.id !== lessons[0]?.id;
+  }, [lessons, currentLesson?.id]);
 
   return {
     loading,
@@ -594,6 +538,8 @@ export function useLiveCourseData(id) {
     sections,
     hasAccess,
     isExpired,
+    isSuspended,
+    isWaitingForBatch,
     isCompleted,
     currentLesson,
     setCurrentLesson,
@@ -601,6 +547,7 @@ export function useLiveCourseData(id) {
     setCurrentSection,
     expandedSections,
     setExpandedSections,
+    toggleSection,
     showPurchaseModal,
     setShowPurchaseModal,
     lessonStatuses,
@@ -620,8 +567,12 @@ export function useLiveCourseData(id) {
     handleLessonClickWithClose,
     handleSectionClickWithClose,
     hasFreeLessons,
-    updateLessonStatus,
     isLoggedIn,
     user,
+    lessonLoading,
+    lessonError,
+    retryCurrentLesson,
+    handleStartFromBeginning,
+    canStartFromBeginning,
   };
 }

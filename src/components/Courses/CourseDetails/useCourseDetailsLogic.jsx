@@ -4,20 +4,69 @@ import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
 import { FaStar } from "react-icons/fa";
 
-export function useCourseDetailsLogic({ id, isLive = false }) {
-  const { t } = useTranslation();
-  const { getVideoCourseById, getLiveCourseById, getCourseAccess } = useApi();
-  const { userData, isLoggedIn } = useUser();
+import {
+  buildOutlineKey,
+  fetchOutline,
+  getCachedOutline,
+} from "./courseOutlineCache";
 
-  const [loading, setLoading] = useState(true);
+const NO_ACCESS = { userHasAccess: false, isExpired: false, isCompleted: false };
+// Derived access per outline key, so a cached course renders with the right
+// buttons on the first frame instead of flashing "Subscribe".
+const accessMemo = new Map();
+
+function deriveAccess(data, hasProfileAccess, isLoggedIn) {
+  if (data?.enrollment_status) {
+    const { is_enrolled, is_expired: expired, status } = data.enrollment_status;
+    const completed = status === "completed";
+    let actuallyExpired = expired === true || status === "expired";
+    if (!actuallyExpired && !is_enrolled && hasProfileAccess && !completed) {
+      actuallyExpired = true;
+    }
+    return {
+      isCompleted: completed,
+      isExpired: actuallyExpired,
+      userHasAccess: is_enrolled === true && !actuallyExpired && !completed,
+    };
+  }
+  if (!isLoggedIn) return NO_ACCESS;
+  if (hasProfileAccess && typeof hasProfileAccess === "object") {
+    const enrolled = hasProfileAccess.is_enrolled === true;
+    const expired = hasProfileAccess.is_expired === true;
+    const completed = hasProfileAccess.status === "completed";
+    let actuallyExpired = expired;
+    if (!actuallyExpired && !enrolled && !completed) actuallyExpired = true;
+    return {
+      isCompleted: completed,
+      isExpired: actuallyExpired && !completed,
+      userHasAccess: enrolled && !actuallyExpired && !completed,
+    };
+  }
+  return { isCompleted: false, isExpired: false, userHasAccess: !!hasProfileAccess };
+}
+
+export function useCourseDetailsLogic({ id, isLive = false }) {
+  const { t, i18n } = useTranslation();
+  // Course Details uses the lightweight outline endpoint (~1s) instead of the
+  // heavy show endpoint (13-60s). Ratings come from the paginated ratings
+  // endpoint (CourseReviewsSection/useCourseRatings).
+  const { getVideoCourseOutline, getLiveCourseOutline, getCourseAccess } = useApi();
+  const { isLoggedIn, userData } = useUser();
+
+  const courseType = isLive ? "live_course" : "video_course";
+  const viewer = isLoggedIn ? `u${userData?.id ?? userData?.user_id ?? "auth"}` : "guest";
+  const lang = (i18n?.language || "en").split("-")[0];
+  const cacheKey = id ? buildOutlineKey({ courseType, idOrSlug: id, viewer, lang }) : null;
+
+  const initialCached = cacheKey ? getCachedOutline(cacheKey) : null;
+  const initialAccess = (cacheKey && accessMemo.get(cacheKey)) || NO_ACCESS;
+
+  const [loading, setLoading] = useState(!initialCached);
   const [error, setError] = useState("");
-  const [course, setCourse] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [showAll, setShowAll] = useState(false);
-  const [userHasReviewed, setUserHasReviewed] = useState(false);
-  const [userHasAccess, setUserHasAccess] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [course, setCourse] = useState(initialCached?.data ?? null);
+  const [userHasAccess, setUserHasAccess] = useState(initialAccess.userHasAccess);
+  const [isExpired, setIsExpired] = useState(initialAccess.isExpired);
+  const [isCompleted, setIsCompleted] = useState(initialAccess.isCompleted);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -26,66 +75,73 @@ export function useCourseDetailsLogic({ id, isLive = false }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
+    if (!cacheKey) return undefined;
     let mounted = true;
-    const loadData = async () => {
+
+    const applyAccess = (access) => {
+      accessMemo.set(cacheKey, access);
+      setUserHasAccess(access.userHasAccess);
+      setIsExpired(access.isExpired);
+      setIsCompleted(access.isCompleted);
+    };
+
+    const resolveAccess = async (data) => {
+      let hasProfileAccess = false;
+      if (isLoggedIn) {
+        try {
+          hasProfileAccess = await getCourseAccess(id, courseType);
+        } catch {
+          hasProfileAccess = data.price === 0 || data.price === "0";
+        }
+      }
+      return deriveAccess(data, hasProfileAccess, isLoggedIn);
+    };
+
+    const load = () =>
+      fetchOutline(
+        cacheKey,
+        () => (isLive ? getLiveCourseOutline(id, true) : getVideoCourseOutline(id, true)),
+        { courseType, idOrSlug: id }
+      );
+
+    const run = async () => {
+      const cached = getCachedOutline(cacheKey);
+
+      if (cached) {
+        // Serve instantly from cache; revalidate in the background if stale.
+        setCourse(cached.data);
+        setError("");
+        setLoading(false);
+        if (accessMemo.has(cacheKey)) applyAccess(accessMemo.get(cacheKey));
+
+        const access = await resolveAccess(cached.data);
+        if (mounted) applyAccess(access);
+
+        if (cached.isStale) {
+          try {
+            const fresh = await load();
+            if (!mounted) return;
+            setCourse(fresh);
+            const freshAccess = await resolveAccess(fresh);
+            if (mounted) applyAccess(freshAccess);
+          } catch (e) {
+            // Keep showing the cached copy if background revalidation fails.
+            console.warn("Course outline revalidation failed:", e);
+          }
+        }
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
-
-        const data = await (isLive
-          ? getLiveCourseById(id, isLoggedIn)
-          : getVideoCourseById(id, isLoggedIn));
-
+        setCourse(null);
+        const data = await load();
+        if (!mounted) return;
+        const access = await resolveAccess(data);
         if (!mounted) return;
         setCourse(data);
-
-        if (data && data.ratings && Array.isArray(data.ratings)) {
-          setReviews(data.ratings);
-        }
-
-        let hasProfileAccess = false;
-        if (isLoggedIn) {
-          try {
-            hasProfileAccess = await getCourseAccess(id, isLive ? "live_course" : "video_course");
-          } catch {
-            hasProfileAccess = data.price === 0 || data.price === "0";
-          }
-        }
-
-        if (data.enrollment_status) {
-          const { is_enrolled, is_expired: expired, status } = data.enrollment_status;
-          const completed = status === "completed";
-
-          let actuallyExpired = expired === true || status === "expired";
-          if (!actuallyExpired && !is_enrolled && hasProfileAccess && !completed) {
-            actuallyExpired = true;
-          }
-
-          setIsCompleted(completed);
-          setIsExpired(actuallyExpired);
-          setUserHasAccess(is_enrolled === true && !actuallyExpired && !completed);
-        } else if (isLoggedIn) {
-          if (hasProfileAccess && typeof hasProfileAccess === "object") {
-            const enrolled = hasProfileAccess.is_enrolled === true;
-            const expired = hasProfileAccess.is_expired === true;
-            const completed = hasProfileAccess.status === "completed";
-
-            let actuallyExpired = expired;
-            if (!actuallyExpired && !enrolled && !completed) actuallyExpired = true;
-
-            setIsCompleted(completed);
-            setIsExpired(actuallyExpired && !completed);
-            setUserHasAccess(enrolled && !actuallyExpired && !completed);
-          } else {
-            setIsCompleted(false);
-            setIsExpired(false);
-            setUserHasAccess(!!hasProfileAccess);
-          }
-        } else {
-          setIsCompleted(false);
-          setIsExpired(false);
-          setUserHasAccess(false);
-        }
+        applyAccess(access);
       } catch (e) {
         if (!mounted) return;
         setError(e?.message || "Failed to load course details");
@@ -94,28 +150,12 @@ export function useCourseDetailsLogic({ id, isLive = false }) {
       }
     };
 
-    loadData();
+    run();
 
     return () => {
       mounted = false;
     };
-  }, [id, isLive, getVideoCourseById, getLiveCourseById, getCourseAccess, isLoggedIn]);
-
-  useEffect(() => {
-    if (isLoggedIn && userData && reviews.length > 0) {
-      const userReview = reviews.find((review) => review.client?.id === userData.id);
-      setUserHasReviewed(!!userReview);
-    } else {
-      setUserHasReviewed(false);
-    }
-  }, [isLoggedIn, userData, reviews]);
-
-  const handleReviewSubmitted = (newReview) => {
-    if (newReview && newReview.id) {
-      setReviews([newReview, ...reviews]);
-      setUserHasReviewed(true);
-    }
-  };
+  }, [cacheKey, id, isLive, courseType, isLoggedIn, getVideoCourseOutline, getLiveCourseOutline, getCourseAccess]);
 
   const renderStaticStars = (rating) => {
     return Array.from({ length: 5 }, (_, index) => {
@@ -254,10 +294,6 @@ export function useCourseDetailsLogic({ id, isLive = false }) {
     loading,
     error,
     course,
-    reviews,
-    showAll,
-    setShowAll,
-    userHasReviewed,
     userHasAccess,
     isExpired,
     isCompleted,
@@ -272,7 +308,6 @@ export function useCourseDetailsLogic({ id, isLive = false }) {
     isInstructorExpanded,
     setIsInstructorExpanded,
     videoRef,
-    handleReviewSubmitted,
     renderStaticStars,
     isLoggedIn,
     imageUrl,

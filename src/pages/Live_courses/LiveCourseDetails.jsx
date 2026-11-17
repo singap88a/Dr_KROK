@@ -20,10 +20,6 @@ export default function LiveCourseDetails() {
     loading,
     error,
     course,
-    reviews,
-    showAll,
-    setShowAll,
-    userHasReviewed,
     userHasAccess,
     isExpired,
     isCompleted,
@@ -32,13 +28,10 @@ export default function LiveCourseDetails() {
     showCompletedModal,
     setShowCompletedModal,
     isPlaying,
-    setIsPlaying,
     isDescriptionExpanded,
     setIsDescriptionExpanded,
     videoRef,
-    handleReviewSubmitted,
     renderStaticStars,
-    isLoggedIn,
     imageUrl,
     videoUrl,
     handlePlay,
@@ -119,11 +112,7 @@ export default function LiveCourseDetails() {
       <div className="grid max-w-6xl gap-8 mx-auto mt-12 sm:mt-16 lg:grid-cols-3">
         <CourseReviewsSection
           courseId={course.id}
-          handleReviewSubmitted={handleReviewSubmitted}
-          userHasReviewed={userHasReviewed}
-          reviews={reviews}
-          showAll={showAll}
-          setShowAll={setShowAll}
+          idOrSlug={id}
           renderStaticStars={renderStaticStars}
           t={t}
           type="live_course"

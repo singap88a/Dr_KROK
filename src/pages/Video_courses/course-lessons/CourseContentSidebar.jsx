@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FaAward, FaLock, FaBars, FaTimes } from "react-icons/fa";
+import { FaAward, FaLock, FaBars, FaTimes, FaRedo } from "react-icons/fa";
 import SectionItem from "../../../components/Courses/Sidebar/SectionItem";
 import { useApi } from "../../../context/ApiContext";
 import { useUser } from "../../../context/UserContext";
@@ -23,7 +23,8 @@ const CourseContentSidebar = ({
   onSectionClick,
   onToggleSection,
   hasFreeLessons,
-  navigate
+  navigate,
+  onStartFromBeginning,
 }) => {
   const { t } = useTranslation();
   const { getCertificateFile, getAuthToken, checkCertificateExists } = useApi();
@@ -137,12 +138,25 @@ const CourseContentSidebar = ({
           <h3 className="text-lg font-semibold text-text">
             {t("courses.courseContent", "Course Content")}
           </h3>
-          <button
-            onClick={toggleSidebar}
-            className="p-2 transition-colors text-text hover:text-primary"
-          >
-            <FaTimes size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {onStartFromBeginning && (
+              <button
+                type="button"
+                onClick={onStartFromBeginning}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary hover:bg-primary/10 border border-primary/20 transition-colors"
+                title={t("courses.startFromBeginning", "Start from beginning")}
+              >
+                <FaRedo className="text-[11px]" />
+                <span>{t("courses.startFromBeginning", "Start from beginning")}</span>
+              </button>
+            )}
+            <button
+              onClick={toggleSidebar}
+              className="p-2 transition-colors text-text hover:text-primary"
+            >
+              <FaTimes size={20} />
+            </button>
+          </div>
         </div>
 
         {/* محتوى القائمة */}
@@ -151,9 +165,22 @@ const CourseContentSidebar = ({
           style={{ direction: "ltr" }}
         >
           <div style={{ direction: "ltr" }} className="w-full">
-            <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
-              {t("courses.courseContent", "Course Content")}
-            </h3>
+            <div className="hidden lg:flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-text">
+                {t("courses.courseContent", "Course Content")}
+              </h3>
+              {onStartFromBeginning && (
+                <button
+                  type="button"
+                  onClick={onStartFromBeginning}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary hover:bg-primary/10 border border-primary/20 transition-colors"
+                  title={t("courses.startFromBeginning", "Start from beginning")}
+                >
+                  <FaRedo className="text-[11px]" />
+                  <span>{t("courses.startFromBeginning", "Start from beginning")}</span>
+                </button>
+              )}
+            </div>
 
             <div className="space-y-2">
             {sortedSections.map((section) => (

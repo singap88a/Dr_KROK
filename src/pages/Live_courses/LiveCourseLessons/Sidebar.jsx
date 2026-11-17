@@ -1,6 +1,6 @@
 // LiveCourseLessons/Sidebar.jsx - Updated to force Vite reload
 import React from "react";
-import { FaTimes, FaBars } from "react-icons/fa";
+import { FaTimes, FaBars, FaRedo } from "react-icons/fa";
 import SectionItem from "../../../components/Courses/Sidebar/SectionItem";
 import { FinalTestsSection } from "../../../components/Courses/QuizSystem/FinalTests.jsx";
 import { CertificateSection } from "../../../components/Courses/CertificateSection/CertificateSection.jsx";
@@ -27,7 +27,8 @@ export default function Sidebar({
   id,
   courseProgress,
   navigate,
-  t
+  t,
+  onStartFromBeginning,
 }) {
   const getSectionLessons = (sectionId) => {
     const section = sections.find((s) => s.id === sectionId);
@@ -69,12 +70,25 @@ export default function Sidebar({
             <h3 className="text-lg font-semibold text-text">
               {t("courses.courseContent", "Course Content")}
             </h3>
-            <button
-              onClick={onToggleSidebar}
-              className="p-2 transition-colors text-text hover:text-primary"
-            >
-              <FaTimes size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              {onStartFromBeginning && (
+                <button
+                  type="button"
+                  onClick={onStartFromBeginning}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary hover:bg-primary/10 border border-primary/20 transition-colors"
+                  title={t("courses.startFromBeginning", "Start from beginning")}
+                >
+                  <FaRedo className="text-[11px]" />
+                  <span>{t("courses.startFromBeginning", "Start from beginning")}</span>
+                </button>
+              )}
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 transition-colors text-text hover:text-primary"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Sidebar Content */}
@@ -83,9 +97,22 @@ export default function Sidebar({
             style={{ direction: "ltr" }}
           >
             <div style={{ direction: "ltr" }} className="w-full">
-              <h3 className="hidden mb-3 text-lg font-semibold lg:block text-text">
-                {t("courses.courseContent", "Course Content")}
-              </h3>
+              <div className="hidden lg:flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-text">
+                  {t("courses.courseContent", "Course Content")}
+                </h3>
+                {onStartFromBeginning && (
+                  <button
+                    type="button"
+                    onClick={onStartFromBeginning}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary hover:bg-primary/10 border border-primary/20 transition-colors"
+                    title={t("courses.startFromBeginning", "Start from beginning")}
+                  >
+                    <FaRedo className="text-[11px]" />
+                    <span>{t("courses.startFromBeginning", "Start from beginning")}</span>
+                  </button>
+                )}
+              </div>
 
               <div className="space-y-2">
                 {sections.map((section) => (

@@ -4,21 +4,27 @@ import { useApi } from "../../../../context/ApiContext";
 import { useUser } from "../../../../context/UserContext";
 import i18n from "../../../../i18n";
 import { useLessonProgress, checkLessonHasTests } from "../../ProgressSystem/LessonProgress";
+import {
+  getSavedLastLessonId,
+  setSavedLastLessonId,
+  clearSavedLastLessonId,
+  extractAllLessons,
+  calculateOutlineProgress,
+  isLessonAccessible,
+} from "../courseLazyLoadingUtils";
 
 export function useVideoCourseData(id) {
   const location = useLocation();
   const navigate = useNavigate();
   const {
-    getVideoCourseById,
+    getVideoCourseOutline,
+    getVideoCourseLessonsByIds,
     getCourseAccess,
-    getCourseProgress,
     startLessonProgress,
-    getLessonProgress,
-    getCourseProgressDetails,
     markLessonAsCompleted,
     completeLessonProgress,
   } = useApi();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user } = useUser();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,13 +33,18 @@ export function useVideoCourseData(id) {
   const [sections, setSections] = useState([]);
   const lessonsRef = useRef([]);
   const sectionsRef = useRef([]);
+
   useEffect(() => {
     lessonsRef.current = lessons;
     sectionsRef.current = sections;
   }, [lessons, sections]);
+
   const [hasAccess, setHasAccess] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isSuspended, setIsSuspended] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+
+  // Lesson state & In-Memory RAM Cache
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentSection, setCurrentSection] = useState(null);
   const [expandedSections, setExpandedSections] = useState(new Set());
@@ -42,147 +53,21 @@ export function useVideoCourseData(id) {
   const [courseProgress, setCourseProgress] = useState(null);
   const [sectionProgress, setSectionProgress] = useState({});
 
-  const { calculateTotalProgress: calcTotalProgress, calculateSectionProgress: calcSectionProgress } = useLessonProgress();
+  // Lazy Loading specific states
+  const [lessonLoading, setLessonLoading] = useState(false);
+  const [lessonError, setLessonError] = useState(null);
+  const lessonsCacheRef = useRef(new Map()); // In-Memory Cache: lessonId -> fullLessonData
+  const activeFetchAbortRef = useRef(null);
 
-  const calculateTotalProgress = useCallback((lesson, lessonStatus) => {
-    return calcTotalProgress(lesson, lessonStatus);
-  }, [calcTotalProgress]);
+  const { calculateTotalProgress: calcTotalProgress, calculateSectionProgress: calcSectionProgress } =
+    useLessonProgress();
 
-  const saveLastLesson = useCallback((courseId, lessonId) => {
-    if (courseId && lessonId) {
-      localStorage.setItem(`last_video_lesson_${courseId}`, lessonId.toString());
-    }
-  }, []);
-
-  const getLastLesson = useCallback((courseId) => {
-    if (!courseId) return null;
-    return localStorage.getItem(`last_video_lesson_${courseId}`);
-  }, []);
-
-  const updateLessonStatus = useCallback(
-    async (lessonId) => {
-      if (!isLoggedIn || !course?.id) return;
-      const realId = course.id;
-
-      try {
-        const [updatedCourseProgress, updatedLessonProgress] = await Promise.all([
-          getCourseProgressDetails(realId),
-          getLessonProgress(realId, lessonId),
-        ]);
-
-        if (updatedCourseProgress) {
-          setCourseProgress(updatedCourseProgress);
-          if (updatedCourseProgress.sections_progress) {
-            const sectionProgressData = {};
-            updatedCourseProgress.sections_progress.forEach((section) => {
-              sectionProgressData[section.section_id] = section.progress;
-            });
-            setSectionProgress(sectionProgressData);
-          }
-        }
-
-        if (updatedLessonProgress?.lesson) {
-          let lessonData = updatedLessonProgress.lesson;
-          const matchingLesson =
-            lessonsRef.current.find((l) => l.id === lessonId) ||
-            sectionsRef.current.flatMap((s) => s.lessons || []).find((l) => l.id === lessonId);
-
-          const hasTests = checkLessonHasTests(matchingLesson);
-
-          if (!hasTests && (lessonData.percentage >= 50 || lessonData.lesson_percentage >= 100)) {
-            lessonData = {
-              ...lessonData,
-              percentage: 100,
-              status: "completed",
-              lesson_percentage: 100,
-              quiz_percentage: 100,
-            };
-          }
-
-          setLessonStatuses((prev) => ({
-            ...prev,
-            [lessonId]: lessonData,
-          }));
-        }
-      } catch (err) {
-        console.error(`Error updating lesson ${lessonId} status:`, err);
-      }
+  const calculateTotalProgress = useCallback(
+    (lesson, lessonStatus) => {
+      return calcTotalProgress(lesson, lessonStatus);
     },
-    [isLoggedIn, course?.id, getCourseProgressDetails, getLessonProgress]
+    [calcTotalProgress]
   );
-
-  const handleLessonComplete = async (lessonId) => {
-    let lesson = lessons.find((l) => l.id === lessonId);
-
-    if (!lesson && sections.length > 0) {
-      for (const section of sections) {
-        if (section.lessons) {
-          lesson = section.lessons.find((l) => l.id === lessonId);
-          if (lesson) break;
-        }
-      }
-    }
-
-    if (!lesson && currentLesson && currentLesson.id === lessonId) {
-      lesson = currentLesson;
-    }
-
-    if (!lesson) return;
-
-    const hasVideo = !!lesson.video;
-    const hasTests = checkLessonHasTests(lesson);
-    let newPercentage = 100;
-
-    if (hasVideo && hasTests) {
-      const currentStatus = lessonStatuses[lessonId] || {};
-      const quizCompleted = currentStatus.quiz_percentage >= 100;
-      newPercentage = quizCompleted ? 100 : 50;
-    }
-
-    setLessonStatuses((prev) => ({
-      ...prev,
-      [lessonId]: {
-        ...prev[lessonId],
-        percentage: newPercentage,
-        status: newPercentage === 100 ? "completed" : "in_progress",
-        lesson_percentage: hasVideo ? 100 : prev[lessonId]?.lesson_percentage || 0,
-        quiz_percentage: !hasTests || newPercentage === 100 ? 100 : prev[lessonId]?.quiz_percentage || 0,
-      },
-    }));
-
-    if (!course?.id) return;
-    const realId = course.id;
-
-    try {
-      const res = await markLessonAsCompleted(realId, lessonId);
-
-      // If testless lesson, also send quiz completion
-      if (!hasTests && completeLessonProgress) {
-        try {
-          await completeLessonProgress(realId, lessonId, "quiz");
-        } catch {
-          /* ignore */
-        }
-      }
-
-      if (res) {
-        const updatedProgress = await getCourseProgressDetails(realId);
-        if (updatedProgress) {
-          setCourseProgress(updatedProgress);
-          if (updatedProgress.sections_progress) {
-            const sectionProgressData = {};
-            updatedProgress.sections_progress.forEach((section) => {
-              sectionProgressData[section.section_id] = section.progress;
-            });
-            setSectionProgress(sectionProgressData);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error completing lesson:", err);
-      await updateLessonStatus(lessonId);
-    }
-  };
 
   const calculateSectionProgress = useCallback(
     (sectionId) => {
@@ -191,299 +76,220 @@ export function useVideoCourseData(id) {
     [sections, lessonStatuses, calculateTotalProgress, calcSectionProgress]
   );
 
-  useEffect(() => {
-    let mounted = true;
-    const loadData = async () => {
+  const userId = user?.id || user?.user_id || null;
+
+  // Silent background prefetch for the next lesson
+  const prefetchNextLesson = useCallback(
+    async (courseId, nextLessonId) => {
+      if (!courseId || !nextLessonId || lessonsCacheRef.current.has(nextLessonId)) return;
       try {
-        setLoading(true);
-        setError("");
-
-        const courseData = await getVideoCourseById(id, isLoggedIn);
-        if (!mounted) return;
-        setCourse(courseData);
-        setLessons(courseData.lessons || []);
-        setSections(courseData.sections || []);
-
-        const realId = courseData.id;
-
-        // Fire independent requests in parallel instead of sequentially
-
-        const progressPromise = isLoggedIn ? getCourseProgressDetails(realId) : null;
-
-        const accessPromise = isLoggedIn
-
-          ? getCourseAccess(realId, "video_course").catch(() => courseData.price === 0 || courseData.price === "0")
-
-          : Promise.resolve(false);
-
-        if (progressPromise) progressPromise.catch(() => {});
-        setExpandedSections(new Set());
-
-        const lastLessonId = getLastLesson(realId);
-        let targetLesson = null;
-        let targetSection = null;
-
-        if (lastLessonId && courseData.sections) {
-          for (const section of courseData.sections) {
-            if (section.lessons) {
-              const foundLesson = section.lessons.find((lesson) => lesson.id.toString() === lastLessonId);
-              if (foundLesson) {
-                targetLesson = foundLesson;
-                targetSection = section;
-                setExpandedSections((prev) => new Set(prev).add(section.id));
-                break;
-              }
-            }
+        const res = await getVideoCourseLessonsByIds(courseId, [nextLessonId], true);
+        if (Array.isArray(res) && res.length > 0) {
+          const loaded = res.find((l) => l.id === nextLessonId) || res[0];
+          if (loaded) {
+            lessonsCacheRef.current.set(loaded.id, loaded);
           }
-        }
-
-        if (!targetLesson && courseData.sections && courseData.sections.length > 0) {
-          const firstSectionWithFree = courseData.sections.find(
-            (section) => section.lessons && section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free")
-          );
-
-          if (firstSectionWithFree) {
-            setExpandedSections((prev) => new Set(prev).add(firstSectionWithFree.id));
-            const firstFreeLesson = firstSectionWithFree.lessons.find(
-              (lesson) => lesson.type === "free" || lesson.type === "Free"
-            );
-            if (firstFreeLesson) {
-              targetLesson = firstFreeLesson;
-              targetSection = firstSectionWithFree;
-            }
-          }
-        }
-
-        if (courseData?.lessons?.length) {
-          const initialStatuses = {};
-          courseData.lessons.forEach((lesson) => {
-            if (lesson.percentage !== undefined || lesson.status) {
-              initialStatuses[lesson.id] = {
-                percentage: lesson.percentage || 0,
-                status: lesson.status || "not_started",
-                lesson_percentage: lesson.lesson_percentage || 0,
-                quiz_percentage: lesson.quiz_percentage || 0,
-              };
-            }
-          });
-          setLessonStatuses(initialStatuses);
-        }
-
-        if (isLoggedIn) {
-          try {
-            const courseProgressDetails = await progressPromise;
-            if (courseProgressDetails) {
-              setCourseProgress(courseProgressDetails);
-              const updatedStatuses = { ...lessonStatuses };
-              if (courseProgressDetails.sections_progress) {
-                courseProgressDetails.sections_progress.forEach((section) => {
-                  if (section.lessons) {
-                    section.lessons.forEach((lesson) => {
-                      if (lesson.lesson_id) {
-                        const matchingLesson =
-                          (courseData.lessons && courseData.lessons.find((l) => l.id === lesson.lesson_id)) ||
-                          (courseData.sections &&
-                            courseData.sections.flatMap((s) => s.lessons || []).find((l) => l.id === lesson.lesson_id));
-
-                        const hasTests = checkLessonHasTests(matchingLesson);
-
-                        let p = lesson.percentage || 0;
-                        let s = lesson.status || "not_started";
-
-                        if (!hasTests && (p >= 50 || lesson.lesson_percentage >= 100)) {
-                          p = 100;
-                          s = "completed";
-                        }
-
-                        updatedStatuses[lesson.lesson_id] = {
-                          ...updatedStatuses[lesson.lesson_id],
-                          percentage: p,
-                          status: s,
-                          lesson_percentage: lesson.lesson_percentage || (p >= 100 ? 100 : 0),
-                          quiz_percentage: !hasTests && p >= 100 ? 100 : (lesson.quiz_percentage || 0),
-                        };
-                      }
-                    });
-                  }
-                });
-                const sectionProgressData = {};
-                courseProgressDetails.sections_progress.forEach((section) => {
-                  sectionProgressData[section.section_id] = section.progress;
-                });
-                setSectionProgress(sectionProgressData);
-              }
-              setLessonStatuses(updatedStatuses);
-            }
-          } catch {
-            try {
-              const oldProgress = await getCourseProgress(realId);
-              setCourseProgress(oldProgress);
-            } catch {
-              /* ignore */
-            }
-          }
-        }
-
-        const hasProfileAccess = await accessPromise;
-
-        if (courseData.enrollment_status) {
-          const { is_enrolled, is_expired: expired, status } = courseData.enrollment_status;
-          const completed = status === "completed";
-          let actuallyExpired = expired === true || status === "expired";
-          if (!actuallyExpired && !is_enrolled && hasProfileAccess && !completed) {
-            actuallyExpired = true;
-          }
-          setIsCompleted(completed);
-          setIsExpired(actuallyExpired);
-          setHasAccess(is_enrolled === true && !actuallyExpired && !completed);
-        } else if (isLoggedIn) {
-          if (hasProfileAccess && typeof hasProfileAccess === "object") {
-            const enrolled = hasProfileAccess.is_enrolled === true;
-            const expired = hasProfileAccess.is_expired === true;
-            const completed = hasProfileAccess.status === "completed";
-            let actuallyExpired = expired;
-            if (!actuallyExpired && !enrolled && !completed) actuallyExpired = true;
-            setIsCompleted(completed);
-            setIsExpired(actuallyExpired && !completed);
-            setHasAccess(enrolled && !actuallyExpired && !completed);
-          } else {
-            setIsCompleted(false);
-            setIsExpired(false);
-            setHasAccess(!!hasProfileAccess);
-          }
-        } else {
-          setIsCompleted(false);
-          setIsExpired(false);
-          setHasAccess(false);
-        }
-
-        if (targetLesson) {
-          setCurrentLesson(targetLesson);
-          if (isLoggedIn) {
-            // Run in background so it does not block the page from rendering
-            startLessonProgress(realId, targetLesson.id)
-              .then((res) => {
-                if (!mounted) return;
-                if (res?.course_progress) setCourseProgress(res.course_progress);
-                if (res?.lesson) {
-                  setLessonStatuses((prev) => ({
-                    ...prev,
-                    [targetLesson.id]: { ...prev[targetLesson.id], ...res.lesson },
-                  }));
-                }
-              })
-              .catch(() => {});
-          }
-          saveLastLesson(realId, targetLesson.id);
-        } else if (targetSection) {
-          setCurrentSection(targetSection);
-        } else if (courseData.sections && courseData.sections.length > 0) {
-          setCurrentSection(courseData.sections[0]);
         }
       } catch (err) {
-        if (!mounted) return;
-        setError(err?.message || "Failed to load course lessons");
-      } finally {
-        if (mounted) setLoading(false);
+        // Silent failure for prefetch
+        console.debug("Silent prefetch failed for lesson", nextLessonId, err);
       }
-    };
+    },
+    [getVideoCourseLessonsByIds]
+  );
 
-    loadData();
+  // Helper to load lesson(s) by IDs with in-memory caching
+  const loadLessonsByIds = useCallback(
+    async (courseId, idsToLoad, targetIdToDisplay) => {
+      if (!courseId || !idsToLoad || idsToLoad.length === 0) return null;
+
+      // Filter IDs not already in cache
+      const uncachedIds = idsToLoad.filter((lid) => !lessonsCacheRef.current.has(lid));
+
+      if (uncachedIds.length > 0) {
+        setLessonLoading(true);
+        setLessonError(null);
+        try {
+          const fetchedLessons = await getVideoCourseLessonsByIds(courseId, uncachedIds, true);
+          if (Array.isArray(fetchedLessons)) {
+            fetchedLessons.forEach((l) => {
+              lessonsCacheRef.current.set(l.id, l);
+            });
+          }
+        } catch (fetchErr) {
+          console.error("Error fetching lesson content:", fetchErr);
+          setLessonError(fetchErr?.message || "Failed to load lesson content");
+          setLessonLoading(false);
+          return null;
+        } finally {
+          setLessonLoading(false);
+        }
+      }
+
+      const displayLesson = lessonsCacheRef.current.get(targetIdToDisplay);
+      if (displayLesson) {
+        setCurrentLesson(displayLesson);
+        setCurrentSection(null);
+        setSavedLastLessonId(userId, "video", courseId, displayLesson.id);
+
+        if (isLoggedIn) {
+          startLessonProgress(courseId, displayLesson.id).catch(() => {});
+        }
+        return displayLesson;
+      }
+      return null;
+    },
+    [getVideoCourseLessonsByIds, userId, isLoggedIn, startLessonProgress]
+  );
+
+  // Main load function for Outline (Lazy Loading)
+  const loadOutlineData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      setLessonError(null);
+
+      // 1. Fetch lightweight outline (No show endpoint used!)
+      const outlineData = await getVideoCourseOutline(id, true);
+      if (!outlineData) {
+        throw new Error("Course outline not found");
+      }
+
+      setCourse(outlineData);
+      const rawSections = outlineData.sections || [];
+      setSections(rawSections);
+
+      const allLessons = extractAllLessons(rawSections);
+      setLessons(allLessons);
+
+      const realId = outlineData.id;
+
+      // 2. Parse enrollment & access status
+      const enrollment = outlineData.enrollment_status || {};
+      const isEnrolled = enrollment.is_enrolled === true;
+      const expired = enrollment.is_expired === true || enrollment.status === "expired";
+      const suspended = enrollment.is_suspended === true || enrollment.status === "suspended";
+      const completed = enrollment.status === "completed";
+
+      let finalAccess = isEnrolled && !expired && !suspended;
+
+      if (!isEnrolled && isLoggedIn) {
+        try {
+          const profileAccess = await getCourseAccess(realId, "video_course").catch(() => false);
+          if (profileAccess) {
+            finalAccess = true;
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
+      setIsCompleted(completed);
+      setIsExpired(expired);
+      setIsSuspended(suspended);
+      setHasAccess(finalAccess);
+
+      // 3. Build initial lessonStatuses & progress directly from outline
+      const initialStatuses = {};
+      allLessons.forEach((l) => {
+        const perc = l.percentage || 0;
+        const status =
+          l.progress_status || (perc >= 100 ? "completed" : perc > 0 ? "in_progress" : "not_started");
+        initialStatuses[l.id] = {
+          percentage: perc,
+          status: status,
+          progress_status: status,
+          lesson_percentage: l.lesson_percentage || perc,
+          quiz_percentage: l.quiz_percentage || (perc >= 100 ? 100 : 0),
+        };
+      });
+      setLessonStatuses(initialStatuses);
+
+      const { sectionProgressMap, overallPercentage, totalLessonsCount, totalCompletedCount } =
+        calculateOutlineProgress(rawSections);
+      setSectionProgress(sectionProgressMap);
+      setCourseProgress({
+        percentage: overallPercentage,
+        completed_lessons_count: totalCompletedCount,
+        total_lessons_count: totalLessonsCount,
+      });
+
+      // Outline loaded! Page can render sidebar and headers now
+      setLoading(false);
+
+      if (suspended || allLessons.length === 0) {
+        return;
+      }
+
+      // 4. Determine which lesson to load first based on last_lesson in localStorage
+      const savedLastId = getSavedLastLessonId(userId, "video", realId);
+      let targetIndex = -1;
+
+      if (savedLastId) {
+        targetIndex = allLessons.findIndex((l) => String(l.id) === String(savedLastId));
+        if (targetIndex === -1) {
+          // Saved ID was deleted or no longer valid; clear and start fresh
+          clearSavedLastLessonId(userId, "video", realId);
+        }
+      }
+
+      if (targetIndex === -1) {
+        // Fallback: start with the first accessible/free lesson or first lesson
+        const firstFreeIdx = allLessons.findIndex(
+          (l) => l.type?.toLowerCase() === "free" || l.is_free === true
+        );
+        targetIndex = firstFreeIdx !== -1 ? firstFreeIdx : 0;
+      }
+
+      const targetLesson = allLessons[targetIndex];
+      const nextLesson = allLessons[targetIndex + 1];
+
+      if (targetLesson) {
+        // Expand the section containing the target lesson
+        if (targetLesson.section_id) {
+          setExpandedSections(new Set([targetLesson.section_id]));
+        }
+
+        // Fetch target lesson and next lesson in parallel (batch up to 2 ids)
+        const idsToFetch = [targetLesson.id, nextLesson?.id].filter(Boolean);
+        await loadLessonsByIds(realId, idsToFetch, targetLesson.id);
+      } else if (rawSections.length > 0) {
+        setCurrentSection(rawSections[0]);
+      }
+    } catch (err) {
+      console.error("Error loading course outline:", err);
+      setError(err?.message || "Failed to load course");
+      setLoading(false);
+    }
+  }, [
+    id,
+    userId,
+    isLoggedIn,
+    getVideoCourseOutline,
+    getCourseAccess,
+    loadLessonsByIds,
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    loadOutlineData();
 
     const handleLanguageChange = () => {
-      loadData();
+      if (active) loadOutlineData();
     };
     i18n.on("languageChanged", handleLanguageChange);
 
     return () => {
-      mounted = false;
+      active = false;
       i18n.off("languageChanged", handleLanguageChange);
     };
-  }, [
-    id,
-    getVideoCourseById,
-    getCourseAccess,
-    getCourseProgress,
-    getCourseProgressDetails,
-    startLessonProgress,
-    getLessonProgress,
-    isLoggedIn,
-    getLastLesson,
-    saveLastLesson,
-  ]);
+  }, [loadOutlineData]);
 
-  // Update on route state changes
-  useEffect(() => {
-    const s = location.state || {};
-    if (s.lessonCompleted && s.lessonId && isLoggedIn) {
-      updateLessonStatus(s.lessonId).catch((err) =>
-        console.error("Error updating lesson status after quiz:", err)
-      );
-    } else if (s.courseCompleted && isLoggedIn) {
-      getCourseProgressDetails(id)
-        .then((updated) => updated && setCourseProgress(updated))
-        .catch((err) => console.error("Error updating course progress:", err));
-    }
-  }, [location.state, id, isLoggedIn, getCourseProgressDetails, updateLessonStatus]);
-
-  const hasFreeLessons = useMemo(() => {
-    return (sectionId) => {
-      const section = sections.find((s) => s.id === sectionId);
-      if (!section) return false;
-      if (section.type === "free" || section.type === "Free") return true;
-      if (!section.lessons) return false;
-      return section.lessons.some((lesson) => lesson.type === "free" || lesson.type === "Free");
-    };
-  }, [sections]);
-
+  // Click on a lesson
   const handleLessonClick = async (lesson) => {
-    const isFree = lesson.type === "free" || lesson.type === "Free";
-    if (!isFree) {
-      if (!isLoggedIn) {
-        navigate("/login", { state: { from: location.pathname } });
-        return;
-      }
-      setShowPurchaseModal(true);
-      return;
-    }
+    if (!lesson) return;
+    const isFree = isLessonAccessible(lesson, course?.enrollment_status, hasAccess);
 
-    setCurrentLesson(lesson);
-    setCurrentSection(null);
-
-    if (!course?.id) return;
-    const realId = course.id;
-    saveLastLesson(realId, lesson.id);
-
-    if (window.innerWidth < 1024) {
-      setTimeout(() => {
-        const videoSection = document.getElementById("video-player-section");
-        if (videoSection) {
-          videoSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 300);
-    }
-
-    if (isLoggedIn) {
-      try {
-        const res = await startLessonProgress(realId, lesson.id);
-        if (res?.course_progress) setCourseProgress(res.course_progress);
-        if (res?.lesson) {
-          setLessonStatuses((prev) => ({
-            ...prev,
-            [lesson.id]: {
-              ...prev[lesson.id],
-              ...res.lesson,
-            },
-          }));
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-  };
-
-  const handleSectionClick = (section) => {
-    const isFree = section.type === "free" || section.type === "Free" || hasFreeLessons(section.id);
     if (!isFree && !hasAccess) {
       if (!isLoggedIn) {
         navigate("/login", { state: { from: location.pathname } });
@@ -492,6 +298,69 @@ export function useVideoCourseData(id) {
       setShowPurchaseModal(true);
       return;
     }
+
+    if (!course?.id) return;
+    const realId = course.id;
+
+    // Check if lesson is in RAM cache
+    if (lessonsCacheRef.current.has(lesson.id)) {
+      const cached = lessonsCacheRef.current.get(lesson.id);
+      setCurrentLesson(cached);
+      setCurrentSection(null);
+      setSavedLastLessonId(userId, "video", realId, lesson.id);
+
+      if (isLoggedIn) {
+        startLessonProgress(realId, lesson.id).catch(() => {});
+      }
+
+      // Silent prefetch next lesson
+      const all = extractAllLessons(sectionsRef.current);
+      const currIdx = all.findIndex((l) => l.id === lesson.id);
+      if (currIdx !== -1 && all[currIdx + 1]) {
+        prefetchNextLesson(realId, all[currIdx + 1].id);
+      }
+    } else {
+      // Fetch target lesson
+      await loadLessonsByIds(realId, [lesson.id], lesson.id);
+
+      // Silent prefetch next lesson
+      const all = extractAllLessons(sectionsRef.current);
+      const currIdx = all.findIndex((l) => l.id === lesson.id);
+      if (currIdx !== -1 && all[currIdx + 1]) {
+        prefetchNextLesson(realId, all[currIdx + 1].id);
+      }
+    }
+
+    // Scroll into view on mobile
+    if (window.innerWidth < 1024) {
+      setTimeout(() => {
+        const videoSection = document.getElementById("video-player-section");
+        if (videoSection) {
+          videoSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
+  };
+
+  // Section click
+  const handleSectionClick = (section) => {
+    if (!section) return;
+    const isFree =
+      section.type?.toLowerCase() === "free" ||
+      (section.lessons &&
+        section.lessons.some(
+          (l) => l.type?.toLowerCase() === "free" || l.is_free === true
+        ));
+
+    if (!isFree && !hasAccess) {
+      if (!isLoggedIn) {
+        navigate("/login", { state: { from: location.pathname } });
+        return;
+      }
+      setShowPurchaseModal(true);
+      return;
+    }
+
     setCurrentSection(section);
     setCurrentLesson(null);
   };
@@ -505,6 +374,124 @@ export function useVideoCourseData(id) {
     });
   };
 
+  // Start from Beginning Action ("ابدأ من الأول")
+  const handleStartFromBeginning = async () => {
+    if (!course?.id) return;
+    const realId = course.id;
+    const all = extractAllLessons(sectionsRef.current);
+    if (all.length === 0) return;
+
+    const firstLesson = all[0];
+    const secondLesson = all[1];
+
+    if (firstLesson.section_id) {
+      setExpandedSections(new Set([firstLesson.section_id]));
+    }
+
+    const idsToLoad = [firstLesson.id, secondLesson?.id].filter(Boolean);
+    await loadLessonsByIds(realId, idsToLoad, firstLesson.id);
+  };
+
+  // Retry loading current lesson if failed
+  const retryCurrentLesson = async () => {
+    if (!course?.id || !currentLesson?.id) return;
+    await loadLessonsByIds(course.id, [currentLesson.id], currentLesson.id);
+  };
+
+  // Lesson completion handler
+  const handleLessonComplete = async (lessonId) => {
+    const all = extractAllLessons(sectionsRef.current);
+    const target = all.find((l) => l.id === lessonId) || currentLesson;
+    if (!target) return;
+
+    const hasVideo = !!target.video;
+    const hasTests = checkLessonHasTests(target);
+    let newPercentage = 100;
+
+    if (hasVideo && hasTests) {
+      const currentStatus = lessonStatuses[lessonId] || {};
+      const quizCompleted = currentStatus.quiz_percentage >= 100;
+      newPercentage = quizCompleted ? 100 : 50;
+    }
+
+    // 1. Optimistic UI updates
+    setLessonStatuses((prev) => ({
+      ...prev,
+      [lessonId]: {
+        ...prev[lessonId],
+        percentage: newPercentage,
+        status: newPercentage === 100 ? "completed" : "in_progress",
+        progress_status: newPercentage === 100 ? "completed" : "in_progress",
+        lesson_percentage: hasVideo ? 100 : prev[lessonId]?.lesson_percentage || 0,
+        quiz_percentage:
+          !hasTests || newPercentage === 100 ? 100 : prev[lessonId]?.quiz_percentage || 0,
+      },
+    }));
+
+    setSections((prevSections) => {
+      const updated = prevSections.map((sec) => {
+        if (!sec.lessons) return sec;
+        return {
+          ...sec,
+          lessons: sec.lessons.map((l) =>
+            l.id === lessonId
+              ? {
+                  ...l,
+                  percentage: newPercentage,
+                  progress_status: newPercentage === 100 ? "completed" : "in_progress",
+                }
+              : l
+          ),
+        };
+      });
+
+      const { sectionProgressMap, overallPercentage, totalLessonsCount, totalCompletedCount } =
+        calculateOutlineProgress(updated);
+      setSectionProgress(sectionProgressMap);
+      setCourseProgress({
+        percentage: overallPercentage,
+        completed_lessons_count: totalCompletedCount,
+        total_lessons_count: totalLessonsCount,
+      });
+
+      return updated;
+    });
+
+    // 2. Server API calls in background
+    if (!course?.id) return;
+    const realId = course.id;
+
+    try {
+      await markLessonAsCompleted(realId, lessonId);
+      if (!hasTests && completeLessonProgress) {
+        try {
+          await completeLessonProgress(realId, lessonId, "quiz");
+        } catch {
+          // Ignore
+        }
+      }
+    } catch (err) {
+      console.error("Error marking lesson completed on server:", err);
+    }
+  };
+
+  const hasFreeLessons = useMemo(() => {
+    return (sectionId) => {
+      const sec = sections.find((s) => s.id === sectionId);
+      if (!sec) return false;
+      if (sec.type?.toLowerCase() === "free") return true;
+      if (!sec.lessons) return false;
+      return sec.lessons.some(
+        (l) => l.type?.toLowerCase() === "free" || l.is_free === true
+      );
+    };
+  }, [sections]);
+
+  const canStartFromBeginning = useMemo(() => {
+    if (!lessons || lessons.length <= 1) return false;
+    return currentLesson?.id !== lessons[0]?.id;
+  }, [lessons, currentLesson?.id]);
+
   return {
     loading,
     error,
@@ -513,17 +500,21 @@ export function useVideoCourseData(id) {
     sections,
     hasAccess,
     isExpired,
+    isSuspended,
     isCompleted,
     currentLesson,
     setCurrentLesson,
     currentSection,
     setCurrentSection,
     expandedSections,
+    setExpandedSections,
     toggleSection,
     showPurchaseModal,
     setShowPurchaseModal,
     lessonStatuses,
+    setLessonStatuses,
     courseProgress,
+    setCourseProgress,
     sectionProgress,
     calculateTotalProgress,
     calculateSectionProgress,
@@ -532,5 +523,10 @@ export function useVideoCourseData(id) {
     handleSectionClick,
     hasFreeLessons,
     isLoggedIn,
+    lessonLoading,
+    lessonError,
+    retryCurrentLesson,
+    handleStartFromBeginning,
+    canStartFromBeginning,
   };
 }

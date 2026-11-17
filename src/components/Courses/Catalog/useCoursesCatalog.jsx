@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 
 const PER_PAGE = 12;
 
+let lastDetailsNav = { target: "", at: 0 };
+
 export function useCoursesCatalog() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -414,13 +416,19 @@ export function useCoursesCatalog() {
 
   function goToDetails(course) {
     if (!course?.id && !course?.slug) return;
-    if (activeTab === "live") {
-      navigate(`/live-courses/${course.slug || course.id}`);
-    } else if (activeTab === "center") {
-      navigate(`/center-courses/${course.slug || course.id}`);
-    } else {
-      navigate(`/courses/${course.slug || course.id}`);
-    }
+    const key = course.slug || course.id;
+    const target =
+      activeTab === "live"
+        ? `/live-courses/${key}`
+        : activeTab === "center"
+        ? `/center-courses/${key}`
+        : `/courses/${key}`;
+    // Guard against a nested clickable (button inside a clickable card) firing
+    // twice for one click, which would push the same page onto history twice.
+    const now = Date.now();
+    if (lastDetailsNav.target === target && now - lastDetailsNav.at < 500) return;
+    lastDetailsNav = { target, at: now };
+    navigate(target);
   }
 
   const currentPage = activeTab === "video" ? videoPage : activeTab === "live" ? livePage : centerPage;

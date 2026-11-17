@@ -24,6 +24,8 @@ export default function LiveCourseLessons() {
     sections,
     hasAccess,
     isExpired,
+    isSuspended,
+    isWaitingForBatch,
     isCompleted,
     currentLesson,
     currentSection,
@@ -46,8 +48,11 @@ export default function LiveCourseLessons() {
     handleLessonClickWithClose,
     handleSectionClickWithClose,
     hasFreeLessons,
-    updateLessonStatus,
     isLoggedIn,
+    lessonLoading,
+    lessonError,
+    retryCurrentLesson,
+    handleStartFromBeginning,
   } = useLiveCourseData(id);
 
   const [showImagePopup, setShowImagePopup] = useState(false);
@@ -136,10 +141,12 @@ export default function LiveCourseLessons() {
         <BatchInfoCard course={course} t={t} />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {isCompleted || isExpired ? (
+          {isCompleted || isExpired || isSuspended || isWaitingForBatch ? (
             <CourseCompletionBanners
               isCompleted={isCompleted}
               isExpired={isExpired}
+              isSuspended={isSuspended}
+              isWaitingForBatch={isWaitingForBatch}
               courseId={id}
               t={t}
             />
@@ -174,6 +181,7 @@ export default function LiveCourseLessons() {
                 courseProgress={courseProgress}
                 navigate={navigate}
                 t={t}
+                onStartFromBeginning={handleStartFromBeginning}
               />
 
               <div id="video-player-section" className="space-y-6 lg:col-span-2">
@@ -210,6 +218,9 @@ export default function LiveCourseLessons() {
                   getTimeUntilStart={getTimeUntilStart}
                   setShowPurchaseModal={setShowPurchaseModal}
                   isLiveCourse={true}
+                  lessonLoading={lessonLoading}
+                  lessonError={lessonError}
+                  onRetryLesson={retryCurrentLesson}
                   groupId={
                     course?.batch_info?.batch_id ??
                     course?.id ??

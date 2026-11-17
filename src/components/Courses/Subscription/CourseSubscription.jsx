@@ -71,6 +71,7 @@ export default function CourseSubscription() {
   // Coupon states
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponId, setCouponId] = useState(null);
+  const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
 
@@ -190,9 +191,11 @@ export default function CourseSubscription() {
       setCouponMessage("");
       setCouponDiscount(0);
       setCouponId(null);
+      setCouponCode("");
     } else {
       setCouponDiscount(result.discount);
       setCouponId(result.id);
+      setCouponCode(result.code || "");
       setCouponError("");
       setCouponMessage(t('courses.coupon.applied') || 'Coupon applied successfully!');
     }
@@ -277,11 +280,11 @@ export default function CourseSubscription() {
       let response;
 
       if (isCenterCourse) {
-        response = await subscribeToCenterCourse(id, selectedPayment, finalAmount, couponId, usePoints);
+        response = await subscribeToCenterCourse(id, selectedPayment, finalAmount, couponId, usePoints, couponCode);
       } else if (isLiveCourse) {
-        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId, usePoints, planToSend);
+        response = await subscribeToLiveCourse(id, selectedPayment, finalAmount, couponId, usePoints, planToSend, couponCode);
       } else {
-        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId, usePoints, planToSend);
+        response = await subscribeToCourse(id, selectedPayment, finalAmount, couponId, usePoints, planToSend, couponCode);
       }
 
       console.log('Subscription response:', response);

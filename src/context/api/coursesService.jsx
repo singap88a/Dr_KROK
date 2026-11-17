@@ -1,6 +1,22 @@
 import { globalEvents } from "./apiCache.jsx";
+import {
+  RATINGS_DEFAULT_LIMIT,
+  RATINGS_MAX_LIMIT,
+  normalizeCourseRatingsResponse,
+} from "../../components/Courses/CourseDetails/courseRatingsTypes.js";
 
 export function createCoursesService(request) {
+  // The backend recalculates the price server-side and validates the coupon by its
+  // code (same "coupon" key used by POST /check_coupon). Sending only coupon_id
+  // makes it ignore the coupon and create the payment with the full price.
+  const appendCouponCode = (formData, couponCode) => {
+    const code = typeof couponCode === "string" ? couponCode.trim() : "";
+    if (code) {
+      formData.append("coupon", code);
+      formData.append("coupon_code", code);
+    }
+  };
+
   // Placement Courses API
   const getPlacementCourses = async (params = {}) => {
     const type = params.type || "all";
@@ -173,6 +189,96 @@ export function createCoursesService(request) {
     return itemData;
   };
 
+  /**
+   * Video Course Outline (Lazy loading lightweight tree)
+   * GET /api/video_course/{id}/outline
+   */
+  const getVideoCourseOutline = async (id, auth = true) => {
+    if (!id) throw new Error("Course id is required");
+    const response = await request(`video_course/${id}/outline`, {
+      auth,
+      useCache: false,
+    });
+    return response?.data || response;
+  };
+
+  /**
+   * Video Course Lessons content (up to 5 ids)
+   * GET /api/video_course/{id}/lessons?ids=...
+   */
+  const getVideoCourseLessonsByIds = async (id, ids, auth = true) => {
+    if (!id) throw new Error("Course id is required");
+    const sanitizedIds = (Array.isArray(ids) ? ids : String(ids || "").split(","))
+      .map((x) => Number(String(x).trim()))
+      .filter((x) => !isNaN(x) && x > 0)
+      .slice(0, 5);
+
+    if (sanitizedIds.length === 0) return [];
+
+    const response = await request(
+      `video_course/${id}/lessons?ids=${sanitizedIds.join(",")}`,
+      { auth, useCache: false }
+    );
+    return Array.isArray(response?.data) ? response.data : [];
+  };
+
+  /**
+   * Live Course Outline (Lazy loading lightweight tree)
+   * GET /api/live_course/{id}/outline
+   */
+  const getLiveCourseOutline = async (id, auth = true) => {
+    if (!id) throw new Error("Course id is required");
+    const response = await request(`live_course/${id}/outline`, {
+      auth,
+      useCache: false,
+    });
+    return response?.data || response;
+  };
+
+  /**
+   * Live Course Lessons content (up to 5 ids)
+   * GET /api/live_course/{id}/lessons?ids=...
+   */
+  const getLiveCourseLessonsByIds = async (id, ids, auth = true) => {
+    if (!id) throw new Error("Course id is required");
+    const sanitizedIds = (Array.isArray(ids) ? ids : String(ids || "").split(","))
+      .map((x) => Number(String(x).trim()))
+      .filter((x) => !isNaN(x) && x > 0)
+      .slice(0, 5);
+
+    if (sanitizedIds.length === 0) return [];
+
+    const response = await request(
+      `live_course/${id}/lessons?ids=${sanitizedIds.join(",")}`,
+      { auth, useCache: false }
+    );
+    return Array.isArray(response?.data) ? response.data : [];
+  };
+
+  /**
+   * Paginated course ratings (summary + items) for live or video courses.
+   * GET /api/{live_course|video_course}/{idOrSlug}/ratings?page=&limit=
+   * `limit` defaults to 10 and is clamped to 50 (server returns 422 above 50).
+   */
+  const getCourseRatings = async (
+    type,
+    idOrSlug,
+    { page = 1, limit = RATINGS_DEFAULT_LIMIT } = {}
+  ) => {
+    if (!idOrSlug) throw new Error("Course id is required");
+    const courseType = type === "live_course" ? "live_course" : "video_course";
+    const safePage = Math.max(1, parseInt(page, 10) || 1);
+    const safeLimit = Math.min(
+      RATINGS_MAX_LIMIT,
+      Math.max(1, parseInt(limit, 10) || RATINGS_DEFAULT_LIMIT)
+    );
+    const response = await request(
+      `${courseType}/${encodeURIComponent(idOrSlug)}/ratings?page=${safePage}&limit=${safeLimit}`,
+      { auth: true, useCache: false }
+    );
+    return normalizeCourseRatingsResponse(response);
+  };
+
   const getCenterCourses = async (params = {}) => {
     const query = new URLSearchParams();
     if (params.page) query.set("page", params.page);
@@ -329,7 +435,8 @@ export function createCoursesService(request) {
     amount,
     couponId = null,
     usePoints = false,
-    paymentPlan = "cash"
+    paymentPlan = "cash",
+    couponCode = ""
   ) => {
     const formData = new FormData();
     const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -344,6 +451,7 @@ export function createCoursesService(request) {
     if (couponId) {
       formData.append("coupon_id", couponId);
     }
+    appendCouponCode(formData, couponCode);
     if (usePoints) {
       formData.append("use_points", "1");
     }
@@ -383,7 +491,8 @@ export function createCoursesService(request) {
     amount,
     couponId = null,
     usePoints = false,
-    paymentPlan = "cash"
+    paymentPlan = "cash",
+    couponCode = ""
   ) => {
     const formData = new FormData();
     const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -398,6 +507,7 @@ export function createCoursesService(request) {
     if (couponId) {
       formData.append("coupon_id", couponId);
     }
+    appendCouponCode(formData, couponCode);
     if (usePoints) {
       formData.append("use_points", "1");
     }
@@ -436,7 +546,8 @@ export function createCoursesService(request) {
     paymentMethod,
     amount,
     couponId = null,
-    usePoints = false
+    usePoints = false,
+    couponCode = ""
   ) => {
     const formData = new FormData();
     const userData = JSON.parse(localStorage.getItem("DR_KROK_user") || "{}");
@@ -450,6 +561,7 @@ export function createCoursesService(request) {
     if (couponId) {
       formData.append("coupon_id", couponId);
     }
+    appendCouponCode(formData, couponCode);
     if (usePoints) {
       formData.append("use_points", "1");
     }
@@ -536,6 +648,11 @@ export function createCoursesService(request) {
     getLiveCourses,
     getVideoCourseById,
     getLiveCourseById,
+    getCourseRatings,
+    getVideoCourseOutline,
+    getVideoCourseLessonsByIds,
+    getLiveCourseOutline,
+    getLiveCourseLessonsByIds,
     getCenterCourses,
     filterCourses,
     getCenterCourseById,

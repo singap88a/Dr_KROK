@@ -45,6 +45,9 @@ export default function VideoPlayerSection({
   setShowPurchaseModal,
   isLiveCourse = false,
   groupId = null,
+  lessonLoading = false,
+  lessonError = null,
+  onRetryLesson = null,
 }) {
   const { t } = useTranslation();
   const {
@@ -213,8 +216,27 @@ export default function VideoPlayerSection({
   return (
     <div className="space-y-6 lg:col-span-2">
       {/* Video Player */}
-      <div className="border rounded-lg bg-surface border-border">
-        {currentLesson || currentSection ? (
+      <div className="border rounded-lg bg-surface border-border overflow-hidden">
+        {lessonLoading ? (
+          <div className="relative aspect-video flex flex-col items-center justify-center bg-gray-900/95 text-white animate-pulse">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-sm font-medium text-gray-300">
+              {t("courses.loadingLesson", "Loading lesson content...")}
+            </p>
+          </div>
+        ) : lessonError ? (
+          <div className="relative aspect-video flex flex-col items-center justify-center bg-surface p-6 text-center">
+            <p className="text-red-500 font-medium mb-3">{lessonError}</p>
+            {onRetryLesson && (
+              <button
+                onClick={onRetryLesson}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+              >
+                {t("common.retry", "Retry")}
+              </button>
+            )}
+          </div>
+        ) : (currentLesson || currentSection) ? (
           <div className="relative">
             {showContent ? (
               <>

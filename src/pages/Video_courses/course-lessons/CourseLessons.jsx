@@ -25,6 +25,7 @@ export default function CourseLessons() {
     sections,
     hasAccess,
     isExpired,
+    isSuspended,
     isCompleted,
     currentLesson,
     currentSection,
@@ -42,6 +43,10 @@ export default function CourseLessons() {
     handleSectionClick,
     hasFreeLessons,
     isLoggedIn,
+    lessonLoading,
+    lessonError,
+    retryCurrentLesson,
+    handleStartFromBeginning,
   } = useVideoCourseData(id);
 
   const [showImagePopup, setShowImagePopup] = useState(false);
@@ -123,10 +128,11 @@ export default function CourseLessons() {
         />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {isCompleted || isExpired ? (
+          {isCompleted || isExpired || isSuspended ? (
             <CourseLessonsBanners
               isCompleted={isCompleted}
               isExpired={isExpired}
+              isSuspended={isSuspended}
               courseId={id}
               t={t}
             />
@@ -156,6 +162,7 @@ export default function CourseLessons() {
                     onToggleSection={toggleSection}
                     hasFreeLessons={hasFreeLessons}
                     navigate={navigate}
+                    onStartFromBeginning={handleStartFromBeginning}
                   />
                 </div>
               </div>
@@ -189,6 +196,9 @@ export default function CourseLessons() {
                   setIsDescriptionExpanded={setIsDescriptionExpanded}
                   setShowPurchaseModal={setShowPurchaseModal}
                   isLiveCourse={false}
+                  lessonLoading={lessonLoading}
+                  lessonError={lessonError}
+                  onRetryLesson={retryCurrentLesson}
                 />
                 <InstructorCard course={course} t={t} />
               </div>

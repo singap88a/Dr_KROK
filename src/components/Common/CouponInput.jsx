@@ -27,7 +27,8 @@ const CouponInput = ({ onApply, t, initialDiscount = 0, type = "book" }) => {
       if (response.success) {
         onApply({
           discount: parseFloat(response.data.coupon_discount),
-          id: response.data.id
+          id: response.data.id,
+          code: couponCode.trim()
         });
       } else {
         onApply({ error: response.message || (t(`${type}s.coupon.invalid`) || "The coupon is not valid") });

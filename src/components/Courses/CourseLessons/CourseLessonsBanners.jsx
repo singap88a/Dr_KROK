@@ -1,13 +1,40 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaCertificate, FaLock } from "react-icons/fa";
+import { FaCertificate, FaLock, FaExclamationTriangle } from "react-icons/fa";
 
 export default function CourseLessonsBanners({
   isCompleted,
   isExpired,
+  isSuspended,
   courseId,
   t,
 }) {
+  if (isSuspended) {
+    return (
+      <div className="lg:col-span-3">
+        <div className="flex flex-col items-center justify-center p-8 my-8 text-center border shadow-xl bg-surface rounded-3xl border-border animate-fade-in sm:p-12 sm:my-12">
+          <div className="flex items-center justify-center w-20 h-20 mb-6 bg-amber-100 rounded-full dark:bg-amber-900/30 sm:w-24 sm:h-24">
+            <FaExclamationTriangle className="text-4xl text-amber-600 dark:text-amber-400 sm:text-5xl" />
+          </div>
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+            {t("courses.courseSuspendedTitle", "Subscription Suspended")}
+          </h2>
+          <p className="max-w-md mx-auto mb-8 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
+            {t(
+              "courses.courseSuspendedMessage",
+              "Your subscription has been suspended temporarily. Please contact administration."
+            )}
+          </p>
+          <Link
+            to={`/courses/${courseId}`}
+            className="px-6 py-3 font-semibold text-white transition-all sm:px-8 bg-primary rounded-xl hover:bg-secondary hover:scale-105"
+          >
+            {t("courses.backToDetails", "Back to Course Details")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
   if (isCompleted) {
     return (
       <div className="lg:col-span-3">

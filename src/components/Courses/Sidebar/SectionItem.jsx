@@ -257,7 +257,12 @@ const SectionItem = ({
               totalLessons={lessons.length}
               lessonStatus={lessonStatuses?.[lesson.id]}
               isActive={currentLesson?.id === lesson.id}
-              isAccessible={lesson.type === "free" || lesson.type === "Free"}
+              isAccessible={
+                lesson.type?.toLowerCase() === "free" ||
+                lesson.is_free === true ||
+                hasAccess ||
+                course?.enrollment_status?.is_enrolled === true
+              }
               onLessonClick={onLessonClick}
               calculateTotalProgress={calculateTotalProgress}
             />
