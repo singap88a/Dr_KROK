@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function useVideoPeriodicQuiz({
   currentLesson,
@@ -35,37 +35,79 @@ export function useVideoPeriodicQuiz({
     setQuizResults({});
   }, [currentLesson?.id]);
 
+  // Synchronous guard: state updates are async, so several timeupdate events
+  // can fire before processedQuizzes re-renders. The ref prevents double-opens.
+  const triggeredRef = useRef(new Set());
+  useEffect(() => {
+    triggeredRef.current = new Set();
+  }, [currentLesson?.id]);
+
+  // Backend sends "Periodic Quiz (Video Session)", "Periodic Quiz", etc.
+  // Accept any periodic quiz that isn't explicitly a live-session one.
   const getPeriodicQuizzes = () => {
-    if (!currentLesson || !currentLesson.lesson_end_tests) return [];
-    return currentLesson.lesson_end_tests.filter(
-      (test) => test.test_type === "Periodic Quiz (Video)"
+    if (!currentLesson) return [];
+    const fromEndTests = (currentLesson.lesson_end_tests || []).filter(
+      (test) =>
+        typeof test?.test_type === "string" &&
+        test.test_type.includes("Periodic Quiz") &&
+        !test.test_type.includes("Live")
     );
+
+    // Some responses ship periodic quizzes separately: either as tests
+    // (with a `quizzes` array) or as a flat list of quiz questions.
+    const separate = Array.isArray(currentLesson.periodic_quizzes)
+      ? currentLesson.periodic_quizzes
+      : [];
+    const separateTests = separate.filter((item) => Array.isArray(item?.quizzes));
+    const looseQuizzes = separate.filter((item) => !Array.isArray(item?.quizzes));
+    const extra = looseQuizzes.length
+      ? [{ id: `periodic-${currentLesson.id}`, test_type: "Periodic Quiz", quizzes: looseQuizzes }]
+      : [];
+
+    return [...fromEndTests, ...separateTests, ...extra];
   };
+
+  // Max seconds after show_at_time we still accept, to survive skipped
+  // timeupdate ticks (playback-rate changes, frame drops, ~250ms cadence).
+  const TRIGGER_WINDOW = 1;
 
   const handleVideoTimeUpdate = (e) => {
     const time = Math.floor(e.target.currentTime);
-    if (processedTimes.has(time)) return;
 
     const periodicQuizzes = getPeriodicQuizzes();
     let foundQuiz = null;
     let foundTest = null;
     let questionIndex = 0;
 
-    periodicQuizzes.forEach((test) => {
-      test.quizzes.forEach((quiz, idx) => {
+    for (const test of periodicQuizzes) {
+      const quizzes = Array.isArray(test.quizzes) ? test.quizzes : [];
+      for (let idx = 0; idx < quizzes.length; idx++) {
+        const quiz = quizzes[idx];
+        // show_at_time may arrive as number, "15" or "15.00"
+        const raw = quiz?.show_at_time;
+        if (raw === null || raw === undefined || raw === "") continue;
+        const quizTime = Math.floor(Number(raw));
+        if (!Number.isFinite(quizTime)) continue;
+
+        const delta = time - quizTime;
         if (
-          quiz.show_at_time === time &&
+          delta >= 0 &&
+          delta <= TRIGGER_WINDOW &&
+          !triggeredRef.current.has(quiz.id) &&
           !processedQuizzes.has(quiz.id) &&
           !answeredQuizzes.has(quiz.id)
         ) {
           foundQuiz = quiz;
           foundTest = test;
           questionIndex = idx;
+          break;
         }
-      });
-    });
+      }
+      if (foundQuiz) break;
+    }
 
     if (foundQuiz) {
+      triggeredRef.current.add(foundQuiz.id);
       e.target.pause();
       if (document.fullscreenElement || document.webkitFullscreenElement) {
         if (document.exitFullscreen) {
