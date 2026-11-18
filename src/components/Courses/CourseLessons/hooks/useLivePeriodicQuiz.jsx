@@ -158,7 +158,9 @@ export function useLivePeriodicQuiz({
             },
           }));
         }
-        await updateLessonStatus(currentLesson.id);
+        if (typeof updateLessonStatus === "function") {
+          await updateLessonStatus(currentLesson.id);
+        }
       } catch {
         // Handle error silently
       }

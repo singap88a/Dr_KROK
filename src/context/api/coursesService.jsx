@@ -197,7 +197,6 @@ export function createCoursesService(request) {
     if (!id) throw new Error("Course id is required");
     const response = await request(`video_course/${id}/outline`, {
       auth,
-      useCache: false,
     });
     return response?.data || response;
   };
@@ -230,7 +229,6 @@ export function createCoursesService(request) {
     if (!id) throw new Error("Course id is required");
     const response = await request(`live_course/${id}/outline`, {
       auth,
-      useCache: false,
     });
     return response?.data || response;
   };

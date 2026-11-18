@@ -53,9 +53,7 @@ export default function Testimonials() {
     try {
       setLoading(true);
       setError(null);
-      const response = await request(`testimonial?page=${page}&per_page=${PER_PAGE}`, {
-        useCache: false,
-      });
+      const response = await request(`testimonial?page=${page}&per_page=${PER_PAGE}`);
       setTestimonials(response.data || []);
       if (response.pagination) {
         setTotalPages(response.pagination.total_pages || 1);

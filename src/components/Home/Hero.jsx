@@ -9,7 +9,7 @@ import he from 'he';
 
 export default function Hero() {
   const { t, i18n } = useTranslation();
-  const { getSettings, request } = useApi();
+  const { getSettings } = useApi();
 
   const [loading, setLoading] = useState(true);
   const [heroData, setHeroData] = useState({
@@ -28,8 +28,8 @@ export default function Hero() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        // Use request directly with useCache: false to bypass cache and get fresh data
-        const response = await request("setting", { useCache: false });
+        // Settings are served from the long-lived (6h, persistent) static cache
+        const response = await getSettings();
         if (response && response.data) {
           setHeroData({
             titleOne: response.data.title_one_section_one_home || "",

@@ -28,9 +28,7 @@ export default function HomeBanners() {
   const fetchBanners = async (page = 1) => {
     try {
       setLoading(true);
-      const data = await request(`banner?page=${page}&per_page=${PER_PAGE}`, {
-        useCache: false,
-      });
+      const data = await request(`banner?page=${page}&per_page=${PER_PAGE}`);
       if (data.success && Array.isArray(data.data)) {
         setBanners(data.data);
         if (data.pagination) {

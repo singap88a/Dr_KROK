@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useApi } from "../../../context/ApiContext";
 import LoadingSpinner from "../../../components/Common/LoadingSpinner";
 import CourseHeader from "../../../components/Courses/CourseHeader";
 import VideoPlayerSection from "../../../components/Courses/VideoPlayerSection";
@@ -16,6 +17,7 @@ export default function LiveCourseLessons() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { completeLiveLessonProgress } = useApi();
 
   const {
     loading,
@@ -85,7 +87,7 @@ export default function LiveCourseLessons() {
     currentLesson,
     lessonStatuses,
     setLessonStatuses,
-    updateLessonStatus,
+    completeLiveLessonProgress,
     id,
     isLoggedIn,
     setCourseProgress,

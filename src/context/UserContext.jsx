@@ -1,5 +1,6 @@
 // UserContext.js
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { clearUserCache } from "./api/apiClient.jsx";
 
 const UserContext = createContext();
 
@@ -179,12 +180,14 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   const login = useCallback((token, user, authMeta = {}) => {
+    clearUserCache(); // account switch: drop previous user's cached data
     persistAuthData(token, user, authMeta);
     setIsLoggedIn(true);
     setUserData(user);
   }, []);
 
   const register = useCallback((token, user, authMeta = {}) => {
+    clearUserCache();
     persistAuthData(token, user, authMeta);
     if (user?.name) {
       localStorage.setItem("DR_KROK_userName", user.name);
@@ -194,6 +197,7 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
+    clearUserCache(); // keep public static cache, drop user-specific entries
     clearAuthData();
     setIsLoggedIn(false);
     setUserData(null);

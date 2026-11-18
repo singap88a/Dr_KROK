@@ -3,6 +3,7 @@ import {
   getAuthToken,
   buildUrlHelper,
   clearCache,
+  clearUserCache,
   invalidateCache,
   updateCache,
   emitDataUpdate,
@@ -96,6 +97,7 @@ export const ApiProvider = ({
 
       // Cache & Realtime Event Helpers
       clearCache,
+      clearUserCache,
       invalidateCache,
       updateCache,
       emitDataUpdate,

@@ -1,6 +1,11 @@
 import axios from "axios";
 import i18n from "../../i18n";
-import { apiCache, globalEvents } from "./apiCache.jsx";
+import {
+  apiCache,
+  globalEvents,
+  CACHE_POLICIES,
+  resolveCachePolicy,
+} from "./apiCache.jsx";
 
 export const DEFAULT_SESSION_DURATION_SEC = 604800; // 7 days in seconds
 
@@ -96,6 +101,11 @@ export const buildUrlHelper = (baseUrl, path) => {
   return `${baseUrl}/${trimmed}`;
 };
 
+/**
+ * Cache key = path + language + auth scope (+ method/body).
+ * `publicScope: true` drops the auth flag so public static data is shared between
+ * logged-in and logged-out states (and can be persisted safely).
+ */
 export const generateCacheKey = (path, options = {}) => {
   const authToken = getAuthToken();
   const lang = (
@@ -106,7 +116,7 @@ export const generateCacheKey = (path, options = {}) => {
 
   return JSON.stringify({
     path,
-    auth: !!authToken,
+    auth: options.publicScope ? false : !!authToken,
     lang,
     method: options.method || "GET",
     body: options.body ? JSON.stringify(options.body) : null,
@@ -115,7 +125,7 @@ export const generateCacheKey = (path, options = {}) => {
 
 export const clearCache = (pattern = null) => {
   if (pattern) {
-    for (const key of apiCache.data.keys()) {
+    for (const key of apiCache.keys()) {
       if (key.includes(pattern)) {
         apiCache.delete(key);
       }
@@ -125,13 +135,18 @@ export const clearCache = (pattern = null) => {
   }
 };
 
+/** Clear user-specific cached responses, keeping public static/catalog data. */
+export const clearUserCache = () => {
+  apiCache.clearUserScoped();
+};
+
 export const invalidateCache = (patterns = []) => {
   if (patterns.length === 0) {
     apiCache.clear();
     return;
   }
 
-  for (const key of apiCache.data.keys()) {
+  for (const key of apiCache.keys()) {
     for (const pattern of patterns) {
       if (key.includes(pattern)) {
         apiCache.delete(key);
@@ -147,6 +162,11 @@ export const invalidateCache = (patterns = []) => {
   });
 };
 
+// Logout (incl. 401-triggered) must drop user-specific cached data.
+if (typeof window !== "undefined") {
+  window.addEventListener("user-logout", () => apiCache.clearUserScoped());
+}
+
 export const updateCache = (key, value) => {
   apiCache.set(key, value);
 };
@@ -160,10 +180,103 @@ export const onDataUpdate = (callback) => {
   return () => globalEvents.off("dataUpdated", callback);
 };
 
+const logCache = (...args) => {
+  if (import.meta.env.DEV) console.log(...args);
+};
+
 /**
- * Execute HTTP request with caching, auth, headers, CORS protection, and redirect bypass
+ * Decide how a request should be cached.
+ * Precedence:
+ *   1. Non-GET / FormData            → never cached
+ *   2. useCache === false            → never cached (explicit opt-out)
+ *   3. Matching endpoint policy      → policy (STATIC_LONG / STATIC_MEDIUM / CATALOG)
+ *      - DYNAMIC policy is only cached when the caller explicitly opts in (useCache: true)
+ *   4. useCache === true, no policy  → DEFAULT (10 min in-memory)
+ *   5. useCache unset, no policy     → DEFAULT for public calls, no cache for auth calls
+ * An explicit `cacheTTL` always overrides the policy TTL.
  */
-export async function executeRequest(
+export const resolveRequestCaching = (path, { method = "GET", isFormData = false, auth = false, useCache, cacheTTL } = {}) => {
+  const off = { enabled: false };
+  if (method !== "GET" || isFormData || useCache === false) return off;
+
+  const policy = resolveCachePolicy(path);
+  let chosen;
+
+  if (policy === CACHE_POLICIES.DYNAMIC) {
+    if (useCache !== true) return off;
+    chosen = { ...CACHE_POLICIES.DEFAULT, name: "DYNAMIC(opt-in)" };
+  } else if (policy) {
+    chosen = { ...policy };
+  } else if (useCache === true || !auth) {
+    chosen = { ...CACHE_POLICIES.DEFAULT };
+  } else {
+    return off;
+  }
+
+  if (typeof cacheTTL === "number") chosen.ttl = cacheTTL;
+
+  // Persist only public data: anything requested with auth may be user-specific.
+  const isStatic = chosen.name === "STATIC_LONG" || chosen.name === "STATIC_MEDIUM";
+  const publicScope = isStatic && !auth;
+  chosen.persistent = !!chosen.persistent && publicScope;
+
+  return { enabled: true, policy: chosen, publicScope };
+};
+
+// In-flight GET de-duplication: concurrent identical requests share one network call.
+const inflightRequests = new Map();
+
+/**
+ * Execute HTTP request with tiered caching, auth, headers, CORS protection, and redirect bypass
+ */
+export async function executeRequest(path, options = {}, ctx) {
+  const { method = "GET", body, signal = null } = options;
+  const caching = resolveRequestCaching(path, options);
+  const cacheKey = generateCacheKey(path, { method, body, publicScope: caching.publicScope });
+
+  const fetchAndStore = () => {
+    // Only share in-flight promises for GETs without an AbortSignal (an abort must not
+    // reject other callers' requests).
+    const canDedupe = method === "GET" && !signal;
+    if (canDedupe && inflightRequests.has(cacheKey)) {
+      return inflightRequests.get(cacheKey);
+    }
+    const promise = performRequest(path, options, ctx)
+      .then((data) => {
+        if (caching.enabled) apiCache.set(cacheKey, data, caching.policy);
+        return data;
+      })
+      .finally(() => {
+        if (canDedupe) inflightRequests.delete(cacheKey);
+      });
+    if (canDedupe) inflightRequests.set(cacheKey, promise);
+    return promise;
+  };
+
+  if (caching.enabled) {
+    const entry = apiCache.getEntry(cacheKey);
+    if (entry && entry.value != null) {
+      if (entry.fresh) {
+        logCache(`📦 Serving from cache [${caching.policy.name}]:`, path);
+        return entry.value;
+      }
+      if (entry.stale) {
+        logCache(`📦 Serving stale from cache, revalidating [${caching.policy.name}]:`, path);
+        fetchAndStore().catch(() => {
+          // Background revalidation failure: keep serving the stale value.
+        });
+        return entry.value;
+      }
+    }
+  }
+
+  return fetchAndStore();
+}
+
+/**
+ * Raw network request (no caching layer).
+ */
+async function performRequest(
   path,
   {
     method = "GET",
@@ -171,29 +284,11 @@ export async function executeRequest(
     body,
     auth = false,
     isFormData = false,
-    useCache = true,
-    cacheTTL = 10 * 60 * 1000,
     invalidateCacheOnSuccess = [],
     signal = null,
   } = {},
   { baseUrl, onMaintenanceTrigger }
 ) {
-  // Don't cache non-GET requests or form data
-  if (method !== "GET" || isFormData) {
-    useCache = false;
-  }
-
-  const cacheKey = generateCacheKey(path, { method, body });
-
-  // Try to get from cache first
-  if (useCache) {
-    const cached = apiCache.get(cacheKey);
-    if (cached) {
-      console.log("📦 Serving from cache:", path);
-      return cached;
-    }
-  }
-
   const url = buildUrlHelper(baseUrl, path);
   const finalHeaders = { ...headers };
 
@@ -343,11 +438,6 @@ export async function executeRequest(
       error.isMaintenance = true;
     }
     throw error;
-  }
-
-  // Cache successful GET responses
-  if (useCache && method === "GET" && res.ok) {
-    apiCache.set(cacheKey, data, cacheTTL);
   }
 
   // Invalidate specified cache on successful non-GET requests
